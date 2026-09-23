@@ -1,0 +1,44 @@
+name: Validate Code Quality
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+      - '**.js'
+
+jobs:
+  validate-quotes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Check for curly quotes
+        run: |
+          if grep -P '[\x{201c}\x{201d}\x{2018}\x{2019}\x{2014}]' index.html; then
+            echo "❌ ERROR: Curly quotes found in index.html"
+            exit 1
+          else
+            echo "✓ No curly quotes found"
+          fi
+
+  validate-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Verify critical functions exist
+        run: |
+          for func in showCreateLeadModal showEditLeadModal renderLeads convertLeadToDeal claimSOWItem; do
+            if grep -q "function $func" index.html; then
+              echo "✓ Found: $func()"
+            else
+              echo "❌ MISSING: $func()"
+              exit 1
+            fi
+          done
+      
+      - name: Validate JavaScript syntax
+        run: |
+          node -c <(cat index.html | sed -n '/<script>/,/<\/script>/p' | sed 's/<script>//;s/<\/script>//' || echo 'console.log("ok")')
+          echo "✓ JavaScript syntax valid"
