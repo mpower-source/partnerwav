@@ -1137,6 +1137,12 @@
 
   function programById(id){ for (var i=0;i<programs.length;i++){ if (programs[i].id===id) return programs[i]; } return null; }
   function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+  function formatCurrency(num){
+    if (!num) return "$0";
+    var n = parseInt(num);
+    return "$" + n.toLocaleString("en-US");
+  }
+
 
   function statusPill(status){
     var label = status.charAt(0).toUpperCase()+status.slice(1);
@@ -2007,7 +2013,7 @@
 
     var valueInput = document.createElement("input");
     valueInput.type = "number";
-    valueInput.value = lead.value;
+    valueInput.value = String(lead.value).replace(/[^0-9]/g, '');
     valueInput.style.cssText = "width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:16px;font-size:0.95rem;";
 
     var statusLabel = document.createElement("label");
@@ -2048,7 +2054,7 @@
     saveBtn.style.cssText = "padding:10px 24px;background:#5b3df5;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;";
     saveBtn.onclick = function(){
       lead.prospectName = prospectInput.value.trim();
-      lead.value = valueInput.value;
+      lead.value = formatCurrency(valueInput.value);
       lead.status = statusSelect.value;
       lead.notes = notesInput.value.trim();
       toast("✓ Lead updated");
