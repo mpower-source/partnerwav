@@ -1261,7 +1261,7 @@
           + '<div><span class="field-note">Value: <strong>'+esc(lead.value)+'</strong> · Created '+esc(lead.createdDate)+'</span></div>'
           + '<div style="color:var(--ink-soft);font-size:.88rem;">'+esc(lead.notes)+'</div>'
           + '<div style="display:flex;gap:8px;margin-top:6px;">'
-          + '<button class="btn secondary xs">Edit</button>'
+          + '<button class="btn secondary xs" data-edit-lead="'+lead.id+'">Edit</button>'
           + (lead.status !== "won" && lead.status !== "lost" ? '<button class="btn primary xs" data-convert-lead="'+lead.id+'">Convert to deal →</button>' : '')
           + '</div>'
           + '</div>';
@@ -2330,7 +2330,10 @@
     if (claimItemBtn){ claimSOWItem(claimItemBtn.getAttribute("data-claim-item")); return; }
 
     var createLeadBtn = e.target.closest("[data-create-lead]");
-    if (createLeadBtn){ showCreateLeadDialog(); return; }
+    if (createLeadBtn){ showCreateLeadModal(); return; }
+    
+    var editLeadBtn = e.target.closest("[data-edit-lead]");
+    if (editLeadBtn){ showEditLeadModal(editLeadBtn.getAttribute("data-edit-lead")); return; }
 
     var enrollBtn = e.target.closest("[data-enroll]");
     if (enrollBtn){ doEnroll(enrollBtn.getAttribute("data-enroll")); return; }
