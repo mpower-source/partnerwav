@@ -411,7 +411,10 @@
         <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         </button>
-      </div>
+          <button data-apply-partner style="width:100%;padding:12px;background:#5b3df5;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem;">
+      Apply as Partner
+    </button>
+    </div>
     </div>
   </aside>
 
@@ -1102,7 +1105,10 @@
     leadsStatusFilter: "all",
     sowDetailsProjectId: null,
     theme: (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"
-  };
+  ,
+  pendingApplications: [],
+  partnerApplications: {},
+  applicationsDraft: {}};
 
   function roleLabel(role){
     return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "operator" ? "Program Operator" : "Partner workspace"));
@@ -1888,6 +1894,161 @@
     render();
   }
 
+  function showPartnerApplicationModal(){
+    var overlay = document.createElement("div");
+    overlay.id = "appModalOverlay";
+    overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;overflow-y:auto;";
+    
+    var modal = document.createElement("div");
+    modal.style.cssText = "background:white;border-radius:16px;padding:32px;max-width:600px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.2);color:#000;margin:20px 0;";
+    
+    var title = document.createElement("h2");
+    title.textContent = "Apply to Become a CloudWAV Partner";
+    title.style.cssText = "margin:0 0 8px 0;font-size:1.4rem;color:#000;";
+    
+    var subtitle = document.createElement("p");
+    subtitle.textContent = "Join our growing partner network and expand your business opportunities.";
+    subtitle.style.cssText = "margin:0 0 24px 0;color:#666;font-size:0.95rem;";
+    
+    // Company Information Section
+    var companySection = document.createElement("h3");
+    companySection.textContent = "Company Information";
+    companySection.style.cssText = "margin:24px 0 12px 0;font-size:1rem;color:#000;border-bottom:1px solid #eee;padding-bottom:8px;";
+    modal.appendChild(companySection);
+    
+    var fields = [
+      {label: "Company Name", id: "app_company", type: "text", placeholder: "Your company name"},
+      {label: "Contact Name", id: "app_contact", type: "text", placeholder: "Primary contact person"},
+      {label: "Email", id: "app_email", type: "email", placeholder: "contact@company.com"},
+      {label: "Phone", id: "app_phone", type: "tel", placeholder: "+1 (555) 123-4567"}
+    ];
+    
+    fields.forEach(function(field){
+      var label = document.createElement("label");
+      label.textContent = field.label;
+      label.style.cssText = "display:block;font-size:0.9rem;font-weight:500;color:#000;margin-bottom:4px;margin-top:12px;";
+      
+      var input = document.createElement("input");
+      input.id = field.id;
+      input.type = field.type;
+      input.placeholder = field.placeholder;
+      input.style.cssText = "width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:0;font-size:0.95rem;";
+      
+      modal.appendChild(label);
+      modal.appendChild(input);
+    });
+    
+    // Address Section
+    var addressSection = document.createElement("h3");
+    addressSection.textContent = "Business Address";
+    addressSection.style.cssText = "margin:24px 0 12px 0;font-size:1rem;color:#000;border-bottom:1px solid #eee;padding-bottom:8px;";
+    modal.appendChild(addressSection);
+    
+    var addressFields = [
+      {label: "Street Address", id: "app_street", type: "text", placeholder: "123 Main Street"},
+      {label: "City", id: "app_city", type: "text", placeholder: "San Francisco"},
+      {label: "State/Province", id: "app_state", type: "text", placeholder: "CA"},
+      {label: "Postal Code", id: "app_zip", type: "text", placeholder: "94105"},
+      {label: "Country", id: "app_country", type: "text", placeholder: "United States"}
+    ];
+    
+    addressFields.forEach(function(field){
+      var label = document.createElement("label");
+      label.textContent = field.label;
+      label.style.cssText = "display:block;font-size:0.9rem;font-weight:500;color:#000;margin-bottom:4px;margin-top:12px;";
+      
+      var input = document.createElement("input");
+      input.id = field.id;
+      input.type = field.type;
+      input.placeholder = field.placeholder;
+      input.style.cssText = "width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:0;font-size:0.95rem;";
+      
+      modal.appendChild(label);
+      modal.appendChild(input);
+    });
+    
+    // Company Details Section
+    var detailsSection = document.createElement("h3");
+    detailsSection.textContent = "Company Details";
+    detailsSection.style.cssText = "margin:24px 0 12px 0;font-size:1rem;color:#000;border-bottom:1px solid #eee;padding-bottom:8px;";
+    modal.appendChild(detailsSection);
+    
+    var descLabel = document.createElement("label");
+    descLabel.textContent = "Company Description";
+    descLabel.style.cssText = "display:block;font-size:0.9rem;font-weight:500;color:#000;margin-bottom:4px;margin-top:12px;";
+    modal.appendChild(descLabel);
+    
+    var descInput = document.createElement("textarea");
+    descInput.id = "app_description";
+    descInput.placeholder = "Tell us about your company, services, and why you'd like to join our partner network...";
+    descInput.style.cssText = "width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:0;font-size:0.95rem;font-family:inherit;height:100px;";
+    modal.appendChild(descInput);
+    
+    var specsLabel = document.createElement("label");
+    specsLabel.textContent = "Areas of Focus (comma-separated)";
+    specsLabel.style.cssText = "display:block;font-size:0.9rem;font-weight:500;color:#000;margin-bottom:4px;margin-top:12px;";
+    modal.appendChild(specsLabel);
+    
+    var specsInput = document.createElement("input");
+    specsInput.id = "app_specs";
+    specsInput.type = "text";
+    specsInput.placeholder = "e.g., Cloud Migration, Security, AI Implementation";
+    specsInput.style.cssText = "width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:20px;font-size:0.95rem;";
+    modal.appendChild(specsInput);
+    
+    // Buttons
+    var buttonContainer = document.createElement("div");
+    buttonContainer.style.cssText = "display:flex;gap:12px;justify-content:flex-end;margin-top:24px;";
+    
+    var cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.style.cssText = "padding:11px 24px;border:1px solid #ddd;background:#f5f5f5;border-radius:8px;cursor:pointer;font-weight:500;color:#000;font-size:0.95rem;";
+    cancelBtn.onclick = function(){ overlay.remove(); };
+    
+    var submitBtn = document.createElement("button");
+    submitBtn.textContent = "Submit Application";
+    submitBtn.style.cssText = "padding:11px 28px;background:#5b3df5;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;font-size:0.95rem;";
+    submitBtn.onclick = function(){
+      var company = document.getElementById("app_company").value.trim();
+      if (!company){ alert("Please enter company name"); return; }
+      
+      var appData = {
+        id: "app-" + Date.now(),
+        status: "pending",
+        submittedDate: new Date().toISOString().split("T")[0],
+        company: company,
+        contact: document.getElementById("app_contact").value.trim(),
+        email: document.getElementById("app_email").value.trim(),
+        phone: document.getElementById("app_phone").value.trim(),
+        street: document.getElementById("app_street").value.trim(),
+        city: document.getElementById("app_city").value.trim(),
+        state: document.getElementById("app_state").value.trim(),
+        zip: document.getElementById("app_zip").value.trim(),
+        country: document.getElementById("app_country").value.trim(),
+        description: document.getElementById("app_description").value.trim(),
+        specs: document.getElementById("app_specs").value.trim(),
+        reviewedBy: null,
+        reviewNotes: ""
+      };
+      
+      state.pendingApplications.push(appData);
+      toast("✓ Application submitted! An operator will review it shortly.");
+      overlay.remove();
+    };
+    
+    buttonContainer.appendChild(cancelBtn);
+    buttonContainer.appendChild(submitBtn);
+    
+    modal.appendChild(title);
+    modal.insertBefore(subtitle, modal.children[1]);
+    modal.appendChild(buttonContainer);
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    document.getElementById("app_company").focus();
+  }
+
   function showCreateLeadModal(){
     // Create modal overlay
     var overlay = document.createElement("div");
@@ -2420,6 +2581,59 @@
     }
   }
 
+  function renderPartnerApplications(){
+    var grid = document.getElementById("mainGrid");
+    if (!grid) return;
+    
+    var pending = state.pendingApplications.filter(function(a){ return a.status === "pending"; });
+    var reviewed = state.pendingApplications.filter(function(a){ return a.status !== "pending"; });
+    
+    grid.innerHTML = '<div style="padding:20px;">'
+      + '<h2 style="margin:0 0 20px 0;">Partner Applications ('+pending.length+' pending)</h2>'
+      + (pending.length ? '<div style="display:grid;gap:16px;">'
+        + pending.map(function(app){
+          return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+            + '<div><strong>'+esc(app.company)+'</strong> · '+esc(app.contact)+'</div>'
+            + '<div class="field-note">'
+              + 'Email: '+esc(app.email)+' · Phone: '+esc(app.phone)+'<br/>'
+              + 'Location: '+esc(app.city)+', '+esc(app.state)+' '+esc(app.country)+'<br/>'
+              + 'Submitted: '+esc(app.submittedDate)
+            + '</div>'
+            + '<div style="color:var(--ink-soft);font-size:0.88rem;">'+esc(app.description)+'</div>'
+            + '<div style="display:flex;gap:8px;margin-top:8px;">'
+              + '<button class="btn primary xs" data-approve-app="'+app.id+'">Approve</button>'
+              + '<button class="btn secondary xs" data-reject-app="'+app.id+'">Reject</button>'
+            + '</div>'
+            + '</div>';
+        }).join("") + '</div>' : '<div class="empty">No pending applications</div>')
+      + '</div>';
+  }
+
+  function approvePartnerApplication(appId){
+    var app = state.pendingApplications.filter(function(a){ return a.id === appId; })[0];
+    if (!app) return;
+    
+    app.status = "approved";
+    app.reviewedBy = state.myProfileId;
+    app.reviewedDate = new Date().toISOString().split("T")[0];
+    
+    toast("✓ Application approved - Partner invite sent!");
+    renderPartnerApplications();
+  }
+  
+  function rejectPartnerApplication(appId){
+    var app = state.pendingApplications.filter(function(a){ return a.id === appId; })[0];
+    if (!app) return;
+    
+    app.status = "rejected";
+    app.reviewedBy = state.myProfileId;
+    app.reviewedDate = new Date().toISOString().split("T")[0];
+    
+    toast("✓ Application rejected");
+    renderPartnerApplications();
+  }
+
+
   console.log("Attaching click handler to document");
   document.addEventListener("click", function(e){
     console.log("Click detected on:", e.target.tagName, e.target.className);
@@ -2477,7 +2691,16 @@
     var removeSpecBtn = e.target.closest("[data-remove-specialty]");
     if (removeSpecBtn){
       var specValRemove = removeSpecBtn.getAttribute("data-remove-specialty");
-      state.mpSpecialtyDraft = (state.mpSpecialtyDraft||[]).filter(function(s){ return s !== specValRemove; });
+      state.mpSpecialtyDraft = (state.mpSpecialtyDraft||[]).filter(function(s){ return s !== specValRemove; 
+    var approveAppBtn = e.target.closest("[data-approve-app]");
+    if (approveAppBtn){ approvePartnerApplication(approveAppBtn.getAttribute("data-approve-app")); return; }
+
+    var rejectAppBtn = e.target.closest("[data-reject-app]");
+    if (rejectAppBtn){ rejectPartnerApplication(rejectAppBtn.getAttribute("data-reject-app")); return; }
+
+    var applyPartnerBtn = e.target.closest("[data-apply-partner]");
+    if (applyPartnerBtn){ showPartnerApplicationModal(); return; }
+});
       renderSpecialtyChips();
       renderSpecialtyDropdown();
       return;
