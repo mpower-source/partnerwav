@@ -1314,7 +1314,7 @@
         + '</tr>';
     });
     html += '</tbody></table></div>'
-      + '<p class="field-note" style="margin-top:8px;">Once you claim a line item, you're committing to deliver that scope. You can coordinate with other Partners through Project Threads in the Community screen.</p>'
+      + '<p class="field-note" style="margin-top:8px;">Once you claim a line item, you\'re committing to deliver that scope. You can coordinate with other Partners through Project Threads in the Community screen.</p>'
       + '</div>';
     document.getElementById("projectsList").innerHTML = html;
   }
@@ -1588,7 +1588,7 @@
       // SVG is already vector - store as-is rather than rasterizing through canvas.
       var svgReader = new FileReader();
       svgReader.onload = function(){ onDone(svgReader.result); };
-      svgReader.onerror = function(){ toast("Couldn't read that file - try again"); };
+      svgReader.onerror = function(){ toast("Couldn\'t read that file - try again"); };
       svgReader.readAsDataURL(file);
       return;
     }
@@ -1608,10 +1608,10 @@
         ctx.drawImage(img, sx, sy, side, side, 0, 0, outSize, outSize);
         onDone(canvas.toDataURL("image/png"));
       };
-      img.onerror = function(){ toast("Couldn't read that image - try a different file"); };
+      img.onerror = function(){ toast("Couldn\'t read that image - try a different file"); };
       img.src = reader.result;
     };
-    reader.onerror = function(){ toast("Couldn't read that file - try again"); };
+    reader.onerror = function(){ toast("Couldn\'t read that file - try again"); };
     reader.readAsDataURL(file);
   }
 
@@ -1685,7 +1685,7 @@
     myContactInfo.email = fieldVal("mpEmail");
     myContactInfo.address = fieldVal("mpAddress");
 
-    toast("Profile saved - you're now listed in the Partner Network");
+    toast("Profile saved - you\'re now listed in the Partner Network");
     render();
   }
 
