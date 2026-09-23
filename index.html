@@ -1261,7 +1261,7 @@
           + '<div><span class="field-note">Value: <strong>'+esc(lead.value)+'</strong> · Created '+esc(lead.createdDate)+'</span></div>'
           + '<div style="color:var(--ink-soft);font-size:.88rem;">'+esc(lead.notes)+'</div>'
           + '<div style="display:flex;gap:8px;margin-top:6px;">'
-          + '<button class="btn secondary xs" data-edit-lead="'+lead.id+'">Edit</button>'
+          + '<button class="btn secondary xs">Edit</button>'
           + (lead.status !== "won" && lead.status !== "lost" ? '<button class="btn primary xs" data-convert-lead="'+lead.id+'">Convert to deal →</button>' : '')
           + '</div>'
           + '</div>';
@@ -1877,28 +1877,28 @@
     var lead = leads.filter(function(l){ return l.id === leadId; })[0];
     if (!lead) return;
     lead.status = "deal";
-    toast("✓ Lead converted to deal - " + lead.prospectName + " - awaiting Operator approval");
-    state.screen = "partner-commissions";
+    toast("✓ Lead converted to deal - " + lead.prospectName + " is now registered in Deals");
+    state.screen = "partner-deals";
     render();
   }
 
   function showCreateLeadDialog(){
-    var prospectName = prompt("Prospect name:", "New prospect");
-    if (!prospectName) return;
+    var prospecName = prompt("Prospect name:", "New prospect");
+    if (!prospecName) return;
     var value = prompt("Deal value ($):", "50000");
     if (!value) return;
     var notes = prompt("Notes:", "");
     var newLead = {
       id: "lead-"+(leads.length+1),
       partnerId: state.myProfileId,
-      prospectName: prospectName,
+      prospectName: prospecName,
       value: value,
       status: "prospect",
       createdDate: new Date().toISOString().split('T')[0],
       notes: notes || ""
     };
     leads.push(newLead);
-    toast("✓ Lead created - " + prospectName);
+    toast("✓ Lead created - " + prospecName + "");
     renderLeads();
   }
 
@@ -2330,10 +2330,7 @@
     if (claimItemBtn){ claimSOWItem(claimItemBtn.getAttribute("data-claim-item")); return; }
 
     var createLeadBtn = e.target.closest("[data-create-lead]");
-    if (createLeadBtn){ showCreateLeadModal(); return; }
-    
-    var editLeadBtn = e.target.closest("[data-edit-lead]");
-    if (editLeadBtn){ showEditLeadModal(editLeadBtn.getAttribute("data-edit-lead")); return; }
+    if (createLeadBtn){ showCreateLeadDialog(); return; }
 
     var enrollBtn = e.target.closest("[data-enroll]");
     if (enrollBtn){ doEnroll(enrollBtn.getAttribute("data-enroll")); return; }
