@@ -1877,28 +1877,28 @@
     var lead = leads.filter(function(l){ return l.id === leadId; })[0];
     if (!lead) return;
     lead.status = "deal";
-    toast("✓ Lead converted to deal - " + lead.prospectName + " is now registered in Deals");
-    state.screen = "partner-deals";
+    toast("✓ Lead converted to deal - " + lead.prospectName + " - awaiting Operator approval");
+    state.screen = "partner-commissions";
     render();
   }
 
   function showCreateLeadDialog(){
-    var prospecName = prompt("Prospect name:", "New prospect");
-    if (!prospecName) return;
+    var prospectName = prompt("Prospect name:", "New prospect");
+    if (!prospectName) return;
     var value = prompt("Deal value ($):", "50000");
     if (!value) return;
     var notes = prompt("Notes:", "");
     var newLead = {
       id: "lead-"+(leads.length+1),
       partnerId: state.myProfileId,
-      prospectName: prospecName,
+      prospectName: prospectName,
       value: value,
       status: "prospect",
       createdDate: new Date().toISOString().split('T')[0],
       notes: notes || ""
     };
     leads.push(newLead);
-    toast("✓ Lead created - " + prospecName + "");
+    toast("✓ Lead created - " + prospectName);
     renderLeads();
   }
 
