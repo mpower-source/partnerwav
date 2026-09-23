@@ -421,7 +421,7 @@
       <div class="topbar-row">
         <h1 class="page-title" id="topTitle">Overview</h1>
         <div class="topbar-right">
-          <input class="search" placeholder="Search…" disabled>
+          <input class="search" placeholder="Search..." disabled>
           <div class="avatar">PP</div>
         </div>
       </div>
@@ -483,7 +483,7 @@
             <label>Specialties</label>
             <div class="tag-picker" id="mpSpecialtyPicker">
               <div class="tag-chips" id="mpSpecialtyChips"></div>
-              <input type="text" id="mpSpecialtySearch" placeholder="Search specialties - e.g. &quot;cloud&quot;, &quot;cyber&quot;…" autocomplete="off">
+              <input type="text" id="mpSpecialtySearch" placeholder="Search specialties - e.g. &quot;cloud&quot;, &quot;cyber&quot;..." autocomplete="off">
               <div class="tag-dropdown" id="mpSpecialtyDropdown" hidden></div>
             </div>
             <span class="field-note">Pick as many as apply - these power search on the Partner Network.</span>
@@ -506,7 +506,7 @@
               <div class="logo-upload-row">
                 <div class="logo-preview" id="mpLogoPreview"></div>
                 <div class="logo-upload-actions">
-                  <button type="button" class="btn secondary sm" data-browse-logo="mp">Browse…</button>
+                  <button type="button" class="btn secondary sm" data-browse-logo="mp">Browse...</button>
                   <button type="button" class="btn ghost sm" id="mpLogoRemoveBtn" data-remove-logo="mp" hidden>Remove</button>
                 </div>
               </div>
@@ -636,7 +636,7 @@
       <section id="scr-partner-network" hidden>
         <div class="section-head"><h2>Partner Network</h2><span class="hint">Other MSPs and VARs on PartnerWAV - skills, credentials, past work</span></div>
         <div style="height:12px"></div>
-        <input type="text" class="list-search" id="networkSearchInput" placeholder="Search by name or specialty - e.g. &quot;cybersecurity&quot;…" autocomplete="off">
+        <input type="text" class="list-search" id="networkSearchInput" placeholder="Search by name or specialty - e.g. &quot;cybersecurity&quot;..." autocomplete="off">
         <div style="height:14px"></div>
         <div class="directory-grid" id="networkGrid"></div>
       </section>
@@ -657,7 +657,7 @@
             <div class="msg-thread-head" id="msgThreadHeader"></div>
             <div class="msg-thread-body" id="msgThreadBody"></div>
             <div class="msg-compose-row">
-              <textarea id="msgCompose" placeholder="Write a message…"></textarea>
+              <textarea id="msgCompose" placeholder="Write a message..."></textarea>
               <button class="btn primary sm" id="msgSendBtn">Send</button>
             </div>
           </div>
@@ -699,7 +699,7 @@
               <div class="logo-upload-row">
                 <div class="logo-preview" id="vlLogoPreview"></div>
                 <div class="logo-upload-actions">
-                  <button type="button" class="btn secondary sm" data-browse-logo="vl">Browse…</button>
+                  <button type="button" class="btn secondary sm" data-browse-logo="vl">Browse...</button>
                   <button type="button" class="btn ghost sm" id="vlLogoRemoveBtn" data-remove-logo="vl" hidden>Remove</button>
                 </div>
               </div>
@@ -1176,7 +1176,7 @@
       ? '<img class="entity-logo-img" style="width:'+size+'px;height:'+size+'px;border-radius:'+radius+'px;" src="'+esc(entity.logo)+'" alt="'+esc(entity.name)+' logo">'
       : '<span class="entity-logo-fallback" style="width:'+size+'px;height:'+size+'px;border-radius:'+radius+'px;font-size:'+fontSize+'rem;">'+esc(entity.init || initials(entity.name))+'</span>';
     return entity.website
-      ? '<a class="logo-link" href="'+esc(entity.website)+'" target="_blank" rel="noopener" title="Visit '+esc(entity.name)+''s website" onclick="event.stopPropagation()">'+inner+'</a>'
+      ? '<a class="logo-link" href="'+esc(entity.website)+'" target="_blank" rel="noopener" title="Visit '+esc(entity.name)+'\'s website" onclick="event.stopPropagation()">'+inner+'</a>'
       : inner;
   }
 
@@ -1314,7 +1314,7 @@
         + '</tr>';
     });
     html += '</tbody></table></div>'
-      + '<p class="field-note" style="margin-top:8px;">Once you claim a line item, you're committing to deliver that scope. You can coordinate with other Partners through Project Threads in the Community screen.</p>'
+      + '<p class="field-note" style="margin-top:8px;">Once you claim a line item, you\'re committing to deliver that scope. You can coordinate with other Partners through Project Threads in the Community screen.</p>'
       + '</div>';
     document.getElementById("projectsList").innerHTML = html;
   }
@@ -1487,7 +1487,7 @@
             + '<div class="participants">'+participantsHtml+'</div></div>'
           + '<div style="display:flex;flex-direction:column;gap:10px;">'+postsHtml+'</div>'
           + '<div class="compose"><span class="p-avatar">PP</span>'
-            + '<textarea placeholder="Post an update to this project…" data-compose="'+t.id+'"></textarea>'
+            + '<textarea placeholder="Post an update to this project..." data-compose="'+t.id+'"></textarea>'
             + '<button class="btn primary sm" data-post="'+t.id+'">Post</button></div>'
         + '</div>';
       }).join("");
@@ -1869,7 +1869,7 @@
     var pr = projects.filter(function(x){ return x.id === id; })[0];
     if (!pr || pr.claimedBy) return;
     pr.claimedBy = currentPartnerName();
-    toast("Claimed - ""+pr.title+"" - CloudWAV will follow up to start Deal Registration");
+    toast("Claimed - " + pr.title + " - CloudWAV will follow up to start Deal Registration");
     render();
   }
 
@@ -1877,7 +1877,7 @@
     var lead = leads.filter(function(l){ return l.id === leadId; })[0];
     if (!lead) return;
     lead.status = "deal";
-    toast("✓ Lead converted to deal - ""+lead.prospectName+"" is now registered in Deals");
+    toast("✓ Lead converted to deal - " + lead.prospectName + " is now registered in Deals");
     state.screen = "partner-deals";
     render();
   }
@@ -1898,7 +1898,7 @@
       notes: notes || ""
     };
     leads.push(newLead);
-    toast("✓ Lead created - ""+prospecName+""");
+    toast("✓ Lead created - " + prospecName + "");
     renderLeads();
   }
 
@@ -1998,12 +1998,12 @@
     grid.innerHTML = list.map(function(r){
       var typeIcon = r.type === "pdf" ? "📄" : (r.type === "ppt" ? "🖼️" : "▶️");
       var typeLabel = r.type === "pdf" ? "PDF" : (r.type === "ppt" ? "PowerPoint" : "Webinar");
-      var details = r.type === "webinar" ? (r.webinarPlatform + " • " + r.duration) : (r.fileSize);
+      var details = r.type === "webinar" ? (r.webinarPlatform + " * " + r.duration) : (r.fileSize);
       return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
         + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">'
-          + '<div><div style="font-size:.78rem;color:var(--ink-faint);">'+typeIcon+' '+typeLabel+' • '+esc(r.vendor)+'</div>'
+          + '<div><div style="font-size:.78rem;color:var(--ink-faint);">'+typeIcon+' '+typeLabel+' * '+esc(r.vendor)+'</div>'
             + '<div style="font-weight:700;font-size:1rem;margin-top:2px;">'+esc(r.title)+'</div>'
-            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program)+' • '+details+'</div></div>'
+            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program)+' * '+details+'</div></div>'
           + '<span class="badge accent2">Published</span>'
         + '</div>'
         + '<p style="margin:0;font-size:.88rem;color:var(--ink);line-height:1.45;">'+esc(r.summary)+'</p>'
@@ -2041,9 +2041,9 @@
       var rejectionNote = r.status === "rejected" ? '<div style="margin-top:10px;padding:10px;background:var(--bad-soft);border-radius:8px;border-left:3px solid var(--bad);"><div style="font-size:.76rem;font-weight:600;color:var(--bad);">Rejection reason</div><div style="font-size:.85rem;color:var(--ink);margin-top:4px;">'+esc(r.rejectionComment || "")+'</div></div>' : '';
       return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
         + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">'
-          + '<div><div style="font-size:.78rem;color:var(--ink-faint);">'+typeIcon+' '+typeLabel+' • '+esc(r.uploadedBy)+'</div>'
+          + '<div><div style="font-size:.78rem;color:var(--ink-faint);">'+typeIcon+' '+typeLabel+' * '+esc(r.uploadedBy)+'</div>'
             + '<div style="font-weight:700;font-size:1rem;margin-top:2px;">'+esc(r.title)+'</div>'
-            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program || "Unknown")+' • Submitted '+r.submittedDate+'</div></div>'
+            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program || "Unknown")+' * Submitted '+r.submittedDate+'</div></div>'
           + '<span class="badge '+statusBadgeClass+'">'+statusText+'</span>'
         + '</div>'
         + '<p style="margin:0;font-size:.88rem;color:var(--ink);line-height:1.45;">'+esc(r.summary || r.previewText)+'</p>'
@@ -2214,7 +2214,7 @@
     var progOptions = mine.map(function(p){ return '<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>'; }).join("");
     var back = openModal(
       '<div class="modal-head"><h2>Submit a deal</h2><button class="modal-close" aria-label="Close">×</button></div>'
-      + '<p style="margin:0;color:var(--ink-soft);font-size:.9rem;line-height:1.5;">Registers this deal with the Program Operator for review - lands in the same approval queue as every other partner's submissions.</p>'
+      + '<p style="margin:0;color:var(--ink-soft);font-size:.9rem;line-height:1.5;">Registers this deal with the Program Operator for review - lands in the same approval queue as every other partner\'s submissions.</p>'
       + '<div class="field-row"><label>Program</label><select id="dealProgram">'+progOptions+'</select></div>'
       + '<div class="field-row"><label>Deal name</label><input type="text" id="dealName" placeholder="e.g. Riverside Hospital voice-AI rollout"></div>'
       + '<div class="field-row"><label>Estimated value</label><input type="text" id="dealValue" placeholder="e.g. $18,500 or ฿148,200"></div>'
@@ -2227,7 +2227,7 @@
       var value = document.getElementById("dealValue").value.trim();
       if (!name || !value){ toast("Add a deal name and estimated value first."); return; }
       state.approvals.push({ partner:"Peter Phelan", program:program, deal:name, value:value, submitted:"just now" });
-      toast("Deal submitted - ""+name+"" is now awaiting Program Operator review");
+      toast("Deal submitted - " + name + " is now awaiting Program Operator review");
       closeModal();
       render();
     });
