@@ -1176,7 +1176,7 @@
       ? '<img class="entity-logo-img" style="width:'+size+'px;height:'+size+'px;border-radius:'+radius+'px;" src="'+esc(entity.logo)+'" alt="'+esc(entity.name)+' logo">'
       : '<span class="entity-logo-fallback" style="width:'+size+'px;height:'+size+'px;border-radius:'+radius+'px;font-size:'+fontSize+'rem;">'+esc(entity.init || initials(entity.name))+'</span>';
     return entity.website
-      ? '<a class="logo-link" href="'+esc(entity.website)+'" target="_blank" rel="noopener" title="Visit '+esc(entity.name)+'’s website" onclick="event.stopPropagation()">'+inner+'</a>'
+      ? ‘<a class="logo-link" href="’+esc(entity.website)+’" target="_blank" rel="noopener" title="Visit ‘+esc(entity.name)+’\’s website" onclick="event.stopPropagation()">’+inner+’</a>’
       : inner;
   }
 
@@ -2386,7 +2386,7 @@
     var progOptions = mine.map(function(p){ return '<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>'; }).join("");
     var back = openModal(
       '<div class="modal-head"><h2>Submit a deal</h2><button class="modal-close" aria-label="Close">×</button></div>'
-      + '<p style="margin:0;color:var(--ink-soft);font-size:.9rem;line-height:1.5;">Registers this deal with the Program Operator for review — lands in the same approval queue as every other partner’s submissions.</p>'
+      + ‘<p style="margin:0;color:var(--ink-soft);font-size:.9rem;line-height:1.5;">Registers this deal with the Program Operator for review — lands in the same approval queue as every other partner\’s submissions.</p>’
       + '<div class="field-row"><label>Program</label><select id="dealProgram">'+progOptions+'</select></div>'
       + '<div class="field-row"><label>Deal name</label><input type="text" id="dealName" placeholder="e.g. Riverside Hospital voice-AI rollout"></div>'
       + '<div class="field-row"><label>Estimated value</label><input type="text" id="dealValue" placeholder="e.g. $18,500 or ฿148,200"></div>'
@@ -2399,7 +2399,7 @@
       var value = document.getElementById("dealValue").value.trim();
       if (!name || !value){ toast("Add a deal name and estimated value first."); return; }
       state.approvals.push({ partner:"Peter Phelan", program:program, deal:name, value:value, submitted:"just now" });
-      toast("Deal submitted — “"+name+"” is now awaiting Program Operator review");
+      toast(“Deal submitted - “ + name + “ is now awaiting Program Operator review”);
       closeModal();
       render();
     });
