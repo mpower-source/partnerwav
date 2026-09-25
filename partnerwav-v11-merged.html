@@ -2274,7 +2274,12 @@
     var social = socialLinksHtml(p.social);
     var referralHtml = '';
     // Show referral link to everyone, not just vendors viewing their own profile
+    // Construct proper URL for both local and GitHub Pages hosting
     var baseUrl = window.location.href.split('?')[0];
+    // Ensure GitHub Pages URLs include /partnerwav/partnerwav-v11-merged.html
+    if (baseUrl.includes('github.io') && !baseUrl.includes('/partnerwav/')) {
+      baseUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html';
+    }
     var referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id);
     var referralPartners = p.referralPartners || [];
     var pendingPartnersHtml = referralPartners.length > 0
