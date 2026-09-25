@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <style>
   :root{
     --bg:#ffffff; --surface:#ffffff; --surface-2:#f5f4ff;
@@ -403,6 +403,7 @@
       <button class="navlink" data-screen="operator-partners"><span class="ic">👨‍💼</span>Partners &amp; Tiers</button>
       <button class="navlink" data-screen="operator-approvals"><span class="ic">✅</span>Deal Approvals</button>
       <button class="navlink" data-screen="resource-approvals"><span class="ic">📚</span>Resource Approvals</button>
+      <button class="navlink" data-screen="operator-partner-map"><span class="ic">🗺️</span>Partner Discovery Map</button>
     </nav>
 
     <div class="sidebar-foot">
@@ -861,6 +862,55 @@
         <div id="approvalQueueGrid" style="display:flex;flex-direction:column;gap:14px;"></div>
       </section>
 
+      <!-- ===== OPERATOR: PARTNER DISCOVERY MAP ===== -->
+      <section id="scr-operator-partner-map" hidden>
+        <div class="section-head"><h2>Partner Discovery Map</h2><span class="hint">Global view of active resellers and installation partners</span></div>
+        <div style="height:14px"></div>
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;height:calc(100vh - 200px);padding:0 16px;">
+          <div id="partnerMapContainer" style="background:var(--surface);border-radius:12px;border:1px solid var(--line);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);">
+            <div style="text-align:center;padding:40px;">
+              <div style="font-size:3rem;margin-bottom:16px;">🗺️</div>
+              <div style="font-weight:600;margin-bottom:8px;">Interactive Map Coming Soon</div>
+              <div style="font-size:0.9rem;color:var(--ink-faint);">Phase 2: Real-time partner locations with Mapbox integration</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;overflow-y:auto;">
+            <div style="padding:12px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">
+              <div style="font-weight:600;font-size:0.9rem;margin-bottom:8px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.05em;">Filter by Status</div>
+              <select id="mapStatusFilter" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+                <option value="">All Partners</option>
+                <option value="active">Active</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+              </select>
+            </div>
+            <div style="padding:12px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">
+              <div style="font-weight:600;font-size:0.9rem;margin-bottom:8px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.05em;">Filter by Region</div>
+              <select id="mapRegionFilter" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+                <option value="">All Regions</option>
+                <option value="apac">Asia Pacific</option>
+                <option value="europe">Europe</option>
+                <option value="americas">Americas</option>
+                <option value="meaf">Middle East & Africa</option>
+              </select>
+            </div>
+            <div style="padding:12px;background:var(--accent-soft);border-radius:10px;border:1px solid var(--accent);color:var(--accent-strong);">
+              <div style="font-weight:600;font-size:0.85rem;margin-bottom:12px;">Active Partners</div>
+              <div id="partnerMapList" style="display:flex;flex-direction:column;gap:8px;font-size:0.85rem;max-height:300px;overflow-y:auto;">
+                <div style="padding:8px;background:var(--surface);border-radius:6px;text-align:center;color:var(--ink-faint);">No partners to display</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PUBLIC: PARTNER APPLICATION (No login required) ===== -->
+      <section id="scr-public-partner-apply" hidden>
+        <div style="max-width:600px;margin:0 auto;">
+          <div id="publicApplyContent"></div>
+        </div>
+      </section>
+
     </div>
   </div>
 </div>
@@ -870,6 +920,313 @@
 <script>
 (function(){
   console.log("=== PartnerWAV Script Starting ===");
+
+  // ===== SUPABASE INITIALIZATION =====
+  const SUPABASE_URL = 'https://lnawgyaapcpyrvdtkarp.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxuYXdneWFhcGNweXJ2ZHRrYXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNTk3ODMsImV4cCI6MjEwNTgzNTc4M30.o5csIk7DanXKJQLesAa1lLRrRIu6M4raZAuV8RIQzns';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ===== SUPABASE HELPER FUNCTIONS =====
+  async function submitPartnerApplicationSB(formData) {
+    try {
+      const { data, error } = await supabase
+        .from('partner_applications')
+        .insert([{
+          vendor_id: formData.vendorId,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          company_name: formData.companyName,
+          country_code: formData.countryCode,
+          phone_number: formData.phone,
+          region: formData.region,
+          work_email: formData.email,
+          website: formData.website,
+          years_in_business: formData.yearsInBusiness,
+          annual_revenue: formData.revenue,
+          num_employees: formData.numEmployees,
+          num_sales_people: formData.numSalesPeople,
+          vertical_markets: formData.verticalMarkets,
+          geographic_markets: formData.geographicMarkets,
+          status: 'pending'
+        }]);
+      if (error) throw error;
+      showToast('Application submitted successfully!', 'good');
+      return data;
+    } catch(e) {
+      console.error('Error submitting application:', e);
+      showToast('Error submitting application: ' + e.message, 'bad');
+      throw e;
+    }
+  }
+
+  async function fetchPartnerMapDataSB() {
+    try {
+      const { data, error } = await supabase
+        .from('v_partner_map_data')
+        .select('*')
+        .in('status', ['active', 'approved'])
+        .order('country', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } catch(e) {
+      console.error('Error fetching map data:', e);
+      return [];
+    }
+  }
+
+  async function createLeadSB(leadData) {
+    try {
+      const { data, error } = await supabase
+        .from('partner_leads')
+        .insert([{
+          partner_id: leadData.partnerId,
+          prospect_name: leadData.prospectName,
+          prospect_company: leadData.prospectCompany,
+          deal_value: leadData.dealValue,
+          lead_status: 'prospect',
+          notes: leadData.notes
+        }]);
+      if (error) throw error;
+      showToast('Lead created successfully!', 'good');
+      return data;
+    } catch(e) {
+      console.error('Error creating lead:', e);
+      showToast('Error creating lead: ' + e.message, 'bad');
+      throw e;
+    }
+  }
+
+  async function claimSOWItemSB(sowItemId, partnerId) {
+    try {
+      const { error } = await supabase
+        .from('sow_items')
+        .update({ assigned_partner_id: partnerId, item_status: 'claimed' })
+        .eq('id', sowItemId);
+      if (error) throw error;
+      showToast('Item claimed successfully!', 'good');
+      return true;
+    } catch(e) {
+      console.error('Error claiming item:', e);
+      showToast('Error claiming item: ' + e.message, 'bad');
+      throw e;
+    }
+  }
+
+  // ===== AUTHENTICATION FUNCTIONS =====
+  async function signUpSB(email, password, userRole) {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: { role: userRole }
+        }
+      });
+      if (error) throw error;
+      showToast('Account created! Check your email to confirm.', 'good');
+      return data;
+    } catch(e) {
+      console.error('Sign up error:', e);
+      showToast('Error creating account: ' + e.message, 'bad');
+      throw e;
+    }
+  }
+
+  async function signInSB(email, password) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+      if (error) throw error;
+      showToast('Logged in successfully!', 'good');
+      return data;
+    } catch(e) {
+      console.error('Sign in error:', e);
+      showToast('Login failed: ' + e.message, 'bad');
+      throw e;
+    }
+  }
+
+  async function signOutSB() {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      showToast('Logged out', 'good');
+      return true;
+    } catch(e) {
+      console.error('Sign out error:', e);
+      throw e;
+    }
+  }
+
+  async function getCurrentUserSB() {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      return user;
+    } catch(e) {
+      console.error('Error getting user:', e);
+      return null;
+    }
+  }
+
+  // ===== DEALS FUNCTIONS =====
+  async function submitDealSB(dealData) {
+    try {
+      const { data, error } = await supabase
+        .from('deals')
+        .insert([{
+          vendor_program_id: dealData.vendorProgramId,
+          partner_id: dealData.partnerId,
+          deal_name: dealData.dealName,
+          customer_name: dealData.customerName,
+          deal_value: dealData.dealValue,
+          deal_status: 'registered',
+          description: dealData.description
+        }]);
+      if (error) throw error;
+      showToast('Deal submitted for approval!', 'good');
+      return data;
+    } catch(e) {
+      console.error('Error submitting deal:', e);
+      showToast('Error submitting deal: ' + e.message, 'bad');
+      throw e;
+    }
+  }
+
+  async function fetchDealApprovalsQueueSB() {
+    try {
+      const { data, error } = await supabase
+        .from('deal_approvals')
+        .select('*, deals(*)')
+        .eq('approval_status', 'pending')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch(e) {
+      console.error('Error fetching deal queue:', e);
+      return [];
+    }
+  }
+
+  async function approveDealSB(dealApprovalId) {
+    try {
+      const { error } = await supabase
+        .from('deal_approvals')
+        .update({ approval_status: 'approved', approved_at: new Date().toISOString() })
+        .eq('id', dealApprovalId);
+      if (error) throw error;
+      showToast('Deal approved!', 'good');
+      return true;
+    } catch(e) {
+      console.error('Error approving deal:', e);
+      showToast('Error approving deal: ' + e.message, 'bad');
+      throw e;
+    }
+  }
+
+  // ===== COMMISSION FUNCTIONS =====
+  async function fetchCommissionSummarySB(partnerId) {
+    try {
+      const { data, error } = await supabase
+        .from('v_commission_summary')
+        .select('*')
+        .eq('partner_id', partnerId);
+      if (error) throw error;
+      return data || [];
+    } catch(e) {
+      console.error('Error fetching commission summary:', e);
+      return [];
+    }
+  }
+
+  async function fetchPartnerPayoutsSB(partnerId) {
+    try {
+      const { data, error } = await supabase
+        .from('payouts')
+        .select('*')
+        .eq('partner_id', partnerId)
+        .order('payout_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch(e) {
+      console.error('Error fetching payouts:', e);
+      return [];
+    }
+  }
+
+  // ===== INSTALLER FUNCTIONS =====
+  async function fetchInstallerJobsSB(partnerId) {
+    try {
+      const { data, error } = await supabase
+        .from('installation_jobs')
+        .select('*')
+        .eq('installer_partner_id', partnerId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch(e) {
+      console.error('Error fetching installer jobs:', e);
+      return [];
+    }
+  }
+
+  async function claimInstallerJobSB(jobId, partnerId) {
+    try {
+      const { error } = await supabase
+        .from('installation_jobs')
+        .update({ installer_partner_id: partnerId, job_status: 'claimed' })
+        .eq('id', jobId);
+      if (error) throw error;
+      showToast('Job claimed successfully!', 'good');
+      return true;
+    } catch(e) {
+      console.error('Error claiming job:', e);
+      showToast('Error claiming job: ' + e.message, 'bad');
+      throw e;
+    }
+  }
+
+  // ===== REAL-TIME SUBSCRIPTIONS =====
+  function subscribeToPartnerApplicationsSB(callback) {
+    try {
+      const subscription = supabase
+        .channel('public:partner_applications')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'partner_applications' },
+          (payload) => {
+            console.log('Partner applications change:', payload);
+            if (callback) callback(payload);
+          }
+        )
+        .subscribe();
+      return subscription;
+    } catch(e) {
+      console.error('Error setting up subscription:', e);
+      return null;
+    }
+  }
+
+  function subscribeToDealsApprovalsSB(callback) {
+    try {
+      const subscription = supabase
+        .channel('public:deal_approvals')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'deal_approvals' },
+          (payload) => {
+            console.log('Deal approval change:', payload);
+            if (callback) callback(payload);
+          }
+        )
+        .subscribe();
+      return subscription;
+    } catch(e) {
+      console.error('Error setting up deal subscription:', e);
+      return null;
+    }
+  }
+
   function dataLogo(letter, bg){
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="14" fill="'+bg+'"/>'
       + '<text x="32" y="43" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#fff" text-anchor="middle">'+letter+'</text></svg>';
@@ -1082,6 +1439,43 @@
     { partner:"Gulf Coast VAR", program:"Cross Connect", deal:"Regional clinic wearable pilot (60 units)", value:"$7,140", submitted:"5 hours ago" }
   ];
 
+  var pendingPartnerApplications = [];
+
+  // Load data from localStorage
+  function loadSavedData(){
+    try {
+      var saved = localStorage.getItem("partnerWAV_vendorReferralData");
+      if (saved){
+        var data = JSON.parse(saved);
+        if (data.referralPartners){
+          Object.keys(data.referralPartners).forEach(function(vendorId){
+            var vendor = programById(vendorId);
+            if (vendor){
+              vendor.referralPartners = data.referralPartners[vendorId];
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.log("Could not load saved data:", e);
+    }
+  }
+
+  // Save vendor referral data to localStorage
+  function saveVendorData(){
+    try {
+      var referralPartners = {};
+      programs.forEach(function(p){
+        if (p.referralPartners && p.referralPartners.length > 0){
+          referralPartners[p.id] = p.referralPartners;
+        }
+      });
+      localStorage.setItem("partnerWAV_vendorReferralData", JSON.stringify({ referralPartners: referralPartners }));
+    } catch (e) {
+      console.log("Could not save data:", e);
+    }
+  }
+
   var state = {
     role: "partner",
     screen: "partner-overview",
@@ -1105,8 +1499,21 @@
     resourceApprovalView: "pending",
     leadsStatusFilter: "all",
     sowDetailsProjectId: null,
+    applyingForVendorId: null,
+    applicationSubmitted: false,
     theme: (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"
   };
+
+  // ===== HANDLE URL PARAMETERS FOR DIRECT NAVIGATION =====
+  var urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('apply') && urlParams.get('apply') === 'vendor') {
+    var vendorId = urlParams.get('vendorId');
+    if (vendorId) {
+      state.screen = "public-partner-apply";
+      state.applyingForVendorId = vendorId;
+      console.log("URL Parameter Handler: Set screen to public-partner-apply with vendorId:", vendorId);
+    }
+  }
 
   function roleLabel(role){
     return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "operator" ? "Program Operator" : "Partner workspace"));
@@ -1124,6 +1531,7 @@
     "partner-network":"Partner Network",
     "partner-profile":"Partner Profile",
     "partner-messages":"Messages",
+    "public-partner-apply":"Partner Application",
     "resource-browse":"Resource Library",
     "resource-approvals":"Resource Approvals",
     "vendor-overview":"Overview",
@@ -1136,7 +1544,9 @@
     "operator-overview":"Overview",
     "operator-programs":"Manage Programs",
     "operator-partners":"Partners & Tiers",
-    "operator-approvals":"Deal Approvals"
+    "operator-approvals":"Deal Approvals",
+    "operator-partner-map":"Partner Discovery Map",
+    "public-partner-apply":"Apply to Partner"
   };
 
   function programById(id){ for (var i=0;i<programs.length;i++){ if (programs[i].id===id) return programs[i]; } return null; }
@@ -1324,6 +1734,15 @@
   }
 
   function render(){
+    // Detect referral URL for public partner application
+    if (window.location.search.includes("apply=vendor")) {
+      var vendorId = new URLSearchParams(window.location.search).get("vendorId");
+      if (vendorId) {
+        state.screen = "public-partner-apply";
+        state.applyingForVendorId = vendorId;
+      }
+    }
+
     // nav visibility
     document.getElementById("navPartner").hidden = state.role !== "partner";
     document.getElementById("navVendor").hidden = state.role !== "vendor";
@@ -1408,6 +1827,7 @@
     renderVendorPartners();
     renderVendorNetwork();
     renderVendorProfile();
+    renderPublicPartnerApplication();
 
     // ---- affiliate screens (shared: Partner + Vendor + Affiliate) ----
     renderAffiliate();
@@ -1450,6 +1870,9 @@
           + "<td class='row-actions'><button class='btn primary sm' data-approve='"+i+"'>Approve</button></td></tr>";
       }).join("") : "<tr><td colspan='6'><div class='empty'>Nothing waiting on review.</div></td></tr>";
     }
+
+    // ---- operator partner discovery map ----
+    renderPartnerMap();
 
     // ---- resource library ----
     renderResourceBrowse();
@@ -1850,40 +2273,43 @@
     }).join("");
     var social = socialLinksHtml(p.social);
     var referralHtml = '';
-    if (mine && p.referralPartners) {
-      var referralUrl = window.location.origin + '?apply=vendor&vendorId=' + encodeURIComponent(p.id);
-      var pendingPartnersHtml = p.referralPartners.length > 0
-        ? '<table style="width:100%;border-collapse:collapse;">'
-          + '<thead><tr style="border-bottom:1px solid var(--line);">'
-          + '<th style="text-align:left;padding:8px;font-size:.85rem;font-weight:600;">Company</th>'
-          + '<th style="text-align:left;padding:8px;font-size:.85rem;font-weight:600;">Country</th>'
-          + '<th style="text-align:left;padding:8px;font-size:.85rem;font-weight:600;">Status</th>'
-          + '<th style="text-align:right;padding:8px;font-size:.85rem;font-weight:600;">Actions</th></tr></thead>'
-          + '<tbody>'
-          + p.referralPartners.map(function(partner){
-            return '<tr style="border-bottom:1px solid var(--line);">'
-              + '<td style="padding:10px 8px;">'+esc(partner.name)+'</td>'
-              + '<td style="padding:10px 8px;">'+esc(partner.country)+'</td>'
-              + '<td style="padding:10px 8px;"><span class="badge neutral">'+esc(partner.status)+'</span></td>'
-              + '<td style="padding:10px 8px;text-align:right;">'
+    // Show referral link to everyone, not just vendors viewing their own profile
+    var baseUrl = window.location.href.split('?')[0];
+    var referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id);
+    var referralPartners = p.referralPartners || [];
+    var pendingPartnersHtml = referralPartners.length > 0
+      ? '<table style="width:100%;border-collapse:collapse;">'
+        + '<thead><tr style="border-bottom:1px solid var(--line);">'
+        + '<th style="text-align:left;padding:8px;font-size:.85rem;font-weight:600;">Company</th>'
+        + '<th style="text-align:left;padding:8px;font-size:.85rem;font-weight:600;">Country</th>'
+        + '<th style="text-align:left;padding:8px;font-size:.85rem;font-weight:600;">Status</th>'
+        + (mine ? '<th style="text-align:right;padding:8px;font-size:.85rem;font-weight:600;">Actions</th>' : '')
+        + '</tr></thead>'
+        + '<tbody>'
+        + referralPartners.map(function(partner){
+          return '<tr style="border-bottom:1px solid var(--line);">'
+            + '<td style="padding:10px 8px;">'+esc(partner.name)+'</td>'
+            + '<td style="padding:10px 8px;">'+esc(partner.country)+'</td>'
+            + '<td style="padding:10px 8px;"><span class="badge neutral">'+esc(partner.status)+'</span></td>'
+            + (mine ? '<td style="padding:10px 8px;text-align:right;">'
               + '<button class="btn primary xs" data-approve-referral="'+p.id+'" data-partner="'+esc(partner.name)+'">Approve</button> '
               + '<button class="btn secondary xs" data-deny-referral="'+p.id+'" data-partner="'+esc(partner.name)+'">Deny</button>'
-              + '</td></tr>';
-          }).join('')
-          + '</tbody></table>'
-        : '<div style="color:var(--ink-faint);font-size:.88rem;">No pending applications yet.</div>';
+              + '</td>' : '')
+            + '</tr>';
+        }).join('')
+        + '</tbody></table>'
+      : '<div style="color:var(--ink-faint);font-size:.88rem;">No partners joined via this link yet.</div>';
 
-      referralHtml = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">'
-        + '<div class="section-head"><h2 style="font-size:.9rem;">Partner Referral Link</h2></div>'
-        + '<div style="margin-top:10px;display:flex;gap:10px;align-items:center;">'
-        + '<input type="text" readonly value="'+esc(referralUrl)+'" style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:6px;font-family:monospace;font-size:.8rem;background:var(--surface);" />'
-        + '<button class="btn primary sm" data-copy-referral-link="'+p.id+'">Copy link</button>'
-        + '</div>'
-        + '<div style="margin-top:16px;">'
-        + '<div class="section-head"><h2 style="font-size:.9rem;">Partners via your referral link</h2></div>'
-        + '<div style="margin-top:10px;">' + pendingPartnersHtml + '</div>'
-        + '</div></div>';
-    }
+    referralHtml = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">'
+      + '<div class="section-head"><h2 style="font-size:.9rem;">Partner Referral Link</h2></div>'
+      + '<div style="margin-top:10px;display:flex;gap:10px;align-items:center;">'
+      + '<input type="text" readonly value="'+esc(referralUrl)+'" style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:6px;font-family:monospace;font-size:.8rem;background:var(--surface);" />'
+      + '<button class="btn primary sm" data-copy-referral-link="'+p.id+'">Copy link</button>'
+      + '</div>'
+      + '<div style="margin-top:16px;">'
+      + '<div class="section-head"><h2 style="font-size:.9rem;">Partners via your referral link</h2></div>'
+      + '<div style="margin-top:10px;">' + pendingPartnersHtml + '</div>'
+      + '</div></div>';
     body.innerHTML =
       '<button class="btn ghost sm" data-back-vendor-network>← Back to Vendor Network</button>'
       + '<div class="card card-pad" style="margin-top:14px; display:flex; flex-direction:column; gap:16px;">'
@@ -1902,6 +2328,326 @@
         + (social ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Elsewhere</h2></div><div style="margin-top:8px;">'+social+'</div></div>' : '')
         + referralHtml
       + '</div>';
+  }
+
+  function renderPublicPartnerApplication(){
+    var body = document.getElementById("publicApplyContent");
+    if (!body) return;
+    if (state.screen !== "public-partner-apply") return;
+
+    var vendorId = state.applyingForVendorId;
+    var vendor = programById(vendorId);
+
+    if (!vendor){
+      body.innerHTML = '<div class="empty" style="padding:40px;text-align:center;">Vendor not found.</div>';
+      return;
+    }
+
+    // Check if application was submitted
+    if (state.applicationSubmitted){
+      body.innerHTML =
+        '<div style="padding:40px;text-align:center;">'
+        + '<h2 style="color:#5b3df5;margin-bottom:16px;">✓ Application Submitted</h2>'
+        + '<p style="color:var(--ink-muted);margin-bottom:24px;line-height:1.6;">Thank you for your interest in partnering with ' + esc(vendor.name) + '. We\'ve received your application and will review it shortly.</p>'
+        + '<p style="color:var(--ink-faint);font-size:.9rem;margin-bottom:24px;">The vendor will contact you at the email address provided to discuss next steps.</p>'
+        + '<button class="btn primary" data-goto-screen="partner-directory" style="margin-top:16px;">← Back to Program Directory</button>'
+        + '</div>';
+      return;
+    }
+
+    // Render form
+    var vendorInfo =
+      '<div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding:16px;background:var(--surface-2);border-radius:12px;">'
+      + logoOrFallback(vendor, 64)
+      + '<div style="flex:1;">'
+      + '<h3 style="margin:0 0 4px 0;">' + esc(vendor.name) + '</h3>'
+      + '<p style="margin:0;color:var(--ink-muted);font-size:.9rem;">' + esc(vendor.vertical) + ' · ' + esc(vendor.origin) + '</p>'
+      + '</div>'
+      + '</div>';
+
+
+    var formHtml =
+      '<form id="partnerApplicationForm" style="display:flex;flex-direction:column;gap:16px;">'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+      + '<div>'
+      + '<label for="appFirstName" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">First Name *</label>'
+      + '<input type="text" id="appFirstName" placeholder="First name" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div>'
+      + '<label for="appLastName" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Last Name *</label>'
+      + '<input type="text" id="appLastName" placeholder="Last name" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '</div>'
+      + '<div>'
+      + '<label for="appCompanyName" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Company Name *</label>'
+      + '<input type="text" id="appCompanyName" placeholder="Your company name" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div>'
+      + '<label style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Phone Number *</label>'
+      + '<div style="display:grid;grid-template-columns:auto 1fr;gap:8px;">'
+      + '<select id="appCountryCode" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required>'
+      + '<option value="">Code</option>'
+      + '<optgroup label="North America">'
+      + '<option value="+1">🇺🇸 +1 (USA)</option>'
+      + '<option value="+1">🇨🇦 +1 (Canada)</option>'
+      + '<option value="+52">🇲🇽 +52 (Mexico)</option>'
+      + '</optgroup>'
+      + '<optgroup label="Europe">'
+      + '<option value="+44">🇬🇧 +44 (UK)</option>'
+      + '<option value="+33">🇫🇷 +33 (France)</option>'
+      + '<option value="+49">🇩🇪 +49 (Germany)</option>'
+      + '<option value="+39">🇮🇹 +39 (Italy)</option>'
+      + '<option value="+34">🇪🇸 +34 (Spain)</option>'
+      + '<option value="+31">🇳🇱 +31 (Netherlands)</option>'
+      + '<option value="+41">🇨🇭 +41 (Switzerland)</option>'
+      + '<option value="+46">🇸🇪 +46 (Sweden)</option>'
+      + '<option value="+47">🇳🇴 +47 (Norway)</option>'
+      + '</optgroup>'
+      + '<optgroup label="Asia Pacific">'
+      + '<option value="+61">🇦🇺 +61 (Australia)</option>'
+      + '<option value="+64">🇳🇿 +64 (New Zealand)</option>'
+      + '<option value="+65">🇸🇬 +65 (Singapore)</option>'
+      + '<option value="+81">🇯🇵 +81 (Japan)</option>'
+      + '<option value="+86">🇨🇳 +86 (China)</option>'
+      + '<option value="+91">🇮🇳 +91 (India)</option>'
+      + '<option value="+82">🇰🇷 +82 (South Korea)</option>'
+      + '<option value="+60">🇲🇾 +60 (Malaysia)</option>'
+      + '<option value="+66">🇹🇭 +66 (Thailand)</option>'
+      + '<option value="+84">🇻🇳 +84 (Vietnam)</option>'
+      + '<option value="+852">🇭🇰 +852 (Hong Kong)</option>'
+      + '<option value="+62">🇮🇩 +62 (Indonesia)</option>'
+      + '</optgroup>'
+      + '<optgroup label="Middle East & Africa">'
+      + '<option value="+971">🇦🇪 +971 (UAE)</option>'
+      + '<option value="+966">🇸🇦 +966 (Saudi Arabia)</option>'
+      + '<option value="+201">🇪🇬 +201 (Egypt)</option>'
+      + '<option value="+27">🇿🇦 +27 (South Africa)</option>'
+      + '<option value="+234">🇳🇬 +234 (Nigeria)</option>'
+      + '</optgroup>'
+      + '<optgroup label="South America">'
+      + '<option value="+55">🇧🇷 +55 (Brazil)</option>'
+      + '<option value="+54">🇦🇷 +54 (Argentina)</option>'
+      + '<option value="+56">🇨🇱 +56 (Chile)</option>'
+      + '<option value="+51">🇵🇪 +51 (Peru)</option>'
+      + '<option value="+57">🇨🇴 +57 (Colombia)</option>'
+      + '</optgroup>'
+      + '</select>'
+      + '<input type="tel" id="appPhone" placeholder="(555) 000-0000" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '</div>'
+      + '<div>'
+      + '<label for="appRegion" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Region *</label>'
+      + '<select id="appRegion" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required>'
+      + '<option value="">Select region...</option>'
+      + '<optgroup label="North America">'
+      + '<option value="USA">🇺🇸 United States</option>'
+      + '<option value="Canada">🇨🇦 Canada</option>'
+      + '<option value="Mexico">🇲🇽 Mexico</option>'
+      + '</optgroup>'
+      + '<optgroup label="Europe">'
+      + '<option value="UK">🇬🇧 United Kingdom</option>'
+      + '<option value="France">🇫🇷 France</option>'
+      + '<option value="Germany">🇩🇪 Germany</option>'
+      + '<option value="Italy">🇮🇹 Italy</option>'
+      + '<option value="Spain">🇪🇸 Spain</option>'
+      + '<option value="Netherlands">🇳🇱 Netherlands</option>'
+      + '<option value="Switzerland">🇨🇭 Switzerland</option>'
+      + '<option value="Sweden">🇸🇪 Sweden</option>'
+      + '<option value="Norway">🇳🇴 Norway</option>'
+      + '<option value="Other Europe">Other Europe</option>'
+      + '</optgroup>'
+      + '<optgroup label="Asia Pacific">'
+      + '<option value="Australia">🇦🇺 Australia</option>'
+      + '<option value="New Zealand">🇳🇿 New Zealand</option>'
+      + '<option value="Singapore">🇸🇬 Singapore</option>'
+      + '<option value="Japan">🇯🇵 Japan</option>'
+      + '<option value="China">🇨🇳 China</option>'
+      + '<option value="India">🇮🇳 India</option>'
+      + '<option value="South Korea">🇰🇷 South Korea</option>'
+      + '<option value="Malaysia">🇲🇾 Malaysia</option>'
+      + '<option value="Thailand">🇹🇭 Thailand</option>'
+      + '<option value="Vietnam">🇻🇳 Vietnam</option>'
+      + '<option value="Hong Kong">🇭🇰 Hong Kong</option>'
+      + '<option value="Indonesia">🇮🇩 Indonesia</option>'
+      + '<option value="Other APAC">Other Asia Pacific</option>'
+      + '</optgroup>'
+      + '<optgroup label="Middle East & Africa">'
+      + '<option value="UAE">🇦🇪 UAE</option>'
+      + '<option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>'
+      + '<option value="Egypt">🇪🇬 Egypt</option>'
+      + '<option value="South Africa">🇿🇦 South Africa</option>'
+      + '<option value="Nigeria">🇳🇬 Nigeria</option>'
+      + '<option value="Other MEAF">Other Middle East & Africa</option>'
+      + '</optgroup>'
+      + '<optgroup label="South America">'
+      + '<option value="Brazil">🇧🇷 Brazil</option>'
+      + '<option value="Argentina">🇦🇷 Argentina</option>'
+      + '<option value="Chile">🇨🇱 Chile</option>'
+      + '<option value="Peru">🇵🇪 Peru</option>'
+      + '<option value="Colombia">🇨🇴 Colombia</option>'
+      + '<option value="Other SA">Other South America</option>'
+      + '</optgroup>'
+      + '</select>'
+      + '</div>'
+      + '<div>'
+      + '<label for="appWorkEmail" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Work Email *</label>'
+      + '<input type="email" id="appWorkEmail" placeholder="contact@company.com" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div>'
+      + '<label for="appWebsite" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Website *</label>'
+      + '<input type="url" id="appWebsite" placeholder="https://www.company.com" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+      + '<div>'
+      + '<label for="appYearsInBusiness" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Years in Business *</label>'
+      + '<input type="number" id="appYearsInBusiness" placeholder="e.g., 5" min="0" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div>'
+      + '<label for="appAnnualRevenue" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Annual Revenue</label>'
+      + '<select id="appAnnualRevenue" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;"><option value="">Select range...</option><option value="250K-500K">$250K - $500K</option><option value="500K-1M">$500K - $1M</option><option value="1M-5M">$1M - $5M</option><option value="5M-10M">$5M - $10M</option><option value="10M-25M">$10M - $25M</option><option value="25M-50M">$25M - $50M</option><option value="50M-100M">$50M - $100M</option><option value="100M-250M">$100M - $250M</option><option value="250M-500M">$250M - $500M</option><option value="500M-1B">$500M - $1B</option><option value="1B-5B">$1B - $5B</option><option value="5B+">$5B+</option></select>'
+      + '</div>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+      + '<div>'
+      + '<label for="appNumEmployees" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Number of Employees *</label>'
+      + '<select id="appNumEmployees" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required><option value="">Select range...</option><option value="1-10">1 - 10</option><option value="10-50">10 - 50</option><option value="50-99">50 - 99</option><option value="100-499">100 - 499</option><option value="500+">500+</option></select>'
+      + '</div>'
+      + '<div>'
+      + '<label for="appNumSalesPeople" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Number of Sales People *</label>'
+      + '<input type="number" id="appNumSalesPeople" placeholder="e.g., 10" min="0" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '</div>'
+      + '<div>'
+      + '<label for="appVerticalMarkets" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Vertical Markets Served *</label>'
+      + '<input type="text" id="appVerticalMarkets" placeholder="e.g., Healthcare, Finance, Education..." style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div>'
+      + '<label for="appGeographicMarkets" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Geographic Markets Served *</label>'
+      + '<input type="text" id="appGeographicMarkets" placeholder="e.g., North America, Western Europe..." style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div style="background:rgba(91,61,245,0.1);border-left:3px solid var(--accent);padding:12px;border-radius:4px;margin:16px 0;font-size:.9rem;">'
+      + 'ℹ️ <strong>Note:</strong> Once you become a partner, you\'ll be able to complete your full company profile with detailed address and location information that will appear on the partner map.'
+      + '</div>'
+      + '<div style="display:flex;gap:12px;margin-top:16px;">'
+      + '<button type="submit" class="btn primary" style="flex:1;">Submit Application</button>'
+      + '<button type="button" class="btn secondary" data-goto-screen="partner-directory" style="flex:1;">Cancel</button>'
+      + '</div>'
+      + '<p style="font-size:.85rem;color:var(--ink-faint);margin-top:12px;">* Required fields</p>'
+      + '</form>';
+
+    body.innerHTML =
+      '<div style="max-width:600px;margin:0 auto;">'
+      + '<button class="btn ghost sm" data-goto-screen="partner-directory" style="margin-bottom:16px;">← Back to Programs</button>'
+      + vendorInfo
+      + '<div class="card card-pad">'
+      + '<div class="section-head"><h2 style="font-size:1.1rem;">Apply to Partner</h2></div>'
+      + formHtml
+      + '</div>'
+      + '</div>';
+
+    // Add form submission handler
+    var form = document.getElementById("partnerApplicationForm");
+    if (form){
+      form.addEventListener("submit", function(e){
+        e.preventDefault();
+
+        var firstName = document.getElementById("appFirstName").value.trim();
+        var lastName = document.getElementById("appLastName").value.trim();
+        var companyName = document.getElementById("appCompanyName").value.trim();
+        var countryCode = document.getElementById("appCountryCode").value.trim();
+        var phone = document.getElementById("appPhone").value.trim();
+        var region = document.getElementById("appRegion").value.trim();
+        var workEmail = document.getElementById("appWorkEmail").value.trim();
+        var website = document.getElementById("appWebsite").value.trim();
+        var yearsInBusiness = document.getElementById("appYearsInBusiness").value.trim();
+        var annualRevenue = document.getElementById("appAnnualRevenue").value.trim();
+        var numEmployees = document.getElementById("appNumEmployees").value.trim();
+        var numSalesPeople = document.getElementById("appNumSalesPeople").value.trim();
+        var verticalMarkets = document.getElementById("appVerticalMarkets").value.trim();
+        var geographicMarkets = document.getElementById("appGeographicMarkets").value.trim();
+
+        // Validation
+        if (!firstName || !lastName || !companyName || !countryCode || !phone || !region || !workEmail || !website || !yearsInBusiness || !numEmployees || !numSalesPeople || !verticalMarkets || !geographicMarkets){
+          toast("Please fill in all required fields");
+          return;
+        }
+
+        // Basic email validation
+        if (!workEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)){
+          toast("Please enter a valid email address");
+          return;
+        }
+
+        // Store application
+        var application = {
+          id: "app-" + Date.now(),
+          vendorId: vendorId,
+          firstName: firstName,
+          lastName: lastName,
+          companyName: companyName,
+          countryCode: countryCode,
+          phone: phone,
+          region: region,
+          workEmail: workEmail,
+          website: website,
+          yearsInBusiness: yearsInBusiness,
+          annualRevenue: annualRevenue,
+          numEmployees: numEmployees,
+          numSalesPeople: numSalesPeople,
+          verticalMarkets: verticalMarkets,
+          geographicMarkets: geographicMarkets,
+          submittedDate: new Date().toISOString(),
+          status: "pending"
+        };
+
+        // Submit to Supabase
+        submitPartnerApplicationSB({
+          vendorId: vendorId,
+          firstName: firstName,
+          lastName: lastName,
+          companyName: companyName,
+          countryCode: countryCode,
+          phone: phone,
+          region: region,
+          email: workEmail,
+          website: website,
+          yearsInBusiness: yearsInBusiness,
+          revenue: annualRevenue,
+          numEmployees: numEmployees,
+          numSalesPeople: numSalesPeople,
+          verticalMarkets: verticalMarkets,
+          geographicMarkets: geographicMarkets
+        }).then(function(){
+          // Also save locally for backward compatibility
+          pendingPartnerApplications.push(application);
+          if (vendor.referralPartners){
+            vendor.referralPartners.push({
+              name: companyName,
+              countryCode: countryCode,
+              region: region,
+              status: "pending",
+              firstName: firstName,
+              lastName: lastName,
+              phone: phone,
+              workEmail: workEmail,
+              website: website,
+              yearsInBusiness: yearsInBusiness,
+              annualRevenue: annualRevenue,
+              numEmployees: numEmployees,
+              numSalesPeople: numSalesPeople,
+              verticalMarkets: verticalMarkets,
+              geographicMarkets: geographicMarkets,
+              submittedDate: application.submittedDate
+            });
+          }
+          saveVendorData();
+          state.applicationSubmitted = true;
+          render();
+        }).catch(function(e){
+          console.error('Form submission error:', e);
+        });
+      });
+    }
   }
 
 
@@ -2562,6 +3308,7 @@
           return p.name !== partnerName || p.status !== "pending";
         });
         toast("Partner approved -- " + partnerName);
+        saveVendorData();
         render();
       }
       return;
@@ -2577,6 +3324,7 @@
           return p.name !== partnerName;
         });
         toast("Partner application denied");
+        saveVendorData();
         render();
       }
       return;
@@ -2740,6 +3488,81 @@
     renderLeads();
   });
 
+  document.getElementById("mapStatusFilter") && document.getElementById("mapStatusFilter").addEventListener("change", function(e){
+    state.mapStatusFilter = e.target.value;
+    renderPartnerMap();
+  });
+
+  document.getElementById("mapRegionFilter") && document.getElementById("mapRegionFilter").addEventListener("change", function(e){
+    state.mapRegionFilter = e.target.value;
+    renderPartnerMap();
+  });
+
+  var partnerMapCache = [];
+
+  function renderPartnerMap(){
+    var statusList = document.getElementById("partnerMapList");
+    if (!statusList) return;
+    var statusFilter = state.mapStatusFilter || "";
+    var regionFilter = state.mapRegionFilter || "";
+
+    // Try to use Supabase data first, fall back to local data
+    var allPartners = [];
+
+    // Use cached Supabase data if available
+    if (partnerMapCache && partnerMapCache.length > 0){
+      allPartners = partnerMapCache.map(function(partner){
+        return {
+          name: partner.company_name,
+          country: partner.country,
+          program: partner.vendor_name,
+          status: partner.status
+        };
+      });
+    } else {
+      // Fall back to local programs data
+      programs.forEach(function(prog){
+        if (prog.referralPartners && prog.referralPartners.length > 0){
+          prog.referralPartners.forEach(function(partner){
+            allPartners.push({ name: partner.name, country: partner.country, program: prog.name, status: partner.status });
+          });
+        }
+      });
+    }
+
+    var filtered = allPartners.filter(function(p){
+      var statusMatch = !statusFilter || p.status === statusFilter;
+      var regionMatch = !regionFilter || (
+        (regionFilter === "apac" && ["Thailand", "Vietnam", "Hong Kong", "Indonesia", "Malaysia"].indexOf(p.country) > -1) ||
+        (regionFilter === "europe" && ["UK", "France", "Germany"].indexOf(p.country) > -1) ||
+        (regionFilter === "americas" && ["USA", "Canada", "Mexico"].indexOf(p.country) > -1) ||
+        (regionFilter === "meaf" && ["UAE", "Saudi Arabia"].indexOf(p.country) > -1)
+      );
+      return statusMatch && regionMatch;
+    });
+    if (filtered.length === 0){
+      statusList.innerHTML = '<div style="padding:8px;color:var(--ink-faint);text-align:center;font-size:0.85rem;">No partners match filters</div>';
+      return;
+    }
+    statusList.innerHTML = filtered.map(function(p){
+      var statusBadge = p.status === "active" ? '<span style="display:inline-block;background:var(--good-soft);color:var(--good);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Active</span>'
+        : '<span style="display:inline-block;background:var(--warn-soft);color:var(--warn);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Pending</span>';
+      return '<div style="padding:8px;background:var(--surface);border-radius:6px;cursor:pointer;border:1px solid var(--line);transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
+        + '<div style="font-weight:600;font-size:0.9rem;color:var(--ink);">'+esc(p.name)+'</div>'
+        + '<div style="font-size:0.8rem;color:var(--ink-faint);margin-top:2px;">'+esc(p.country)+' • '+esc(p.program)+'</div>'
+        + '<div style="margin-top:4px;">'+statusBadge+'</div>'
+        + '</div>';
+    }).join("");
+  }
+
+  // Load partner map data from Supabase on initialization
+  fetchPartnerMapDataSB().then(function(data){
+    partnerMapCache = data;
+    renderPartnerMap();
+  }).catch(function(e){
+    console.error('Error loading partner map data:', e);
+  });
+
   (function(){
     var specInput = document.getElementById("mpSpecialtySearch");
     if (!specInput) return;
@@ -2780,6 +3603,35 @@
   document.documentElement.setAttribute("data-theme", state.theme);
 
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeModal(); });
+
+  // Load saved data on page initialization
+  loadSavedData();
+
+  // ===== SUPABASE AUTH STATE MONITORING =====
+  supabase.auth.onAuthStateChange(function(event, session) {
+    console.log('Auth state changed:', event, session ? 'User logged in' : 'User logged out');
+    if (session) {
+      console.log('Current user:', session.user.email);
+      // User is authenticated
+      state.currentUser = session.user;
+    } else {
+      // User is not authenticated
+      state.currentUser = null;
+    }
+  });
+
+  // ===== SET UP REAL-TIME SUBSCRIPTIONS =====
+  // Subscribe to partner applications changes (for operators)
+  subscribeToPartnerApplicationsSB(function(payload) {
+    console.log('Partner applications updated:', payload);
+    render();
+  });
+
+  // Subscribe to deal approvals changes (for operators)
+  subscribeToDealsApprovalsSB(function(payload) {
+    console.log('Deal approvals updated:', payload);
+    render();
+  });
 
   try {
     console.log("About to call render()");
