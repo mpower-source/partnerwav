@@ -2274,13 +2274,16 @@
     var social = socialLinksHtml(p.social);
     var referralHtml = '';
     // Show referral link to everyone, not just vendors viewing their own profile
-    // Construct proper URL for both local and GitHub Pages hosting
-    var baseUrl = window.location.href.split('?')[0];
-    // Ensure GitHub Pages URLs include /partnerwav/partnerwav-v11-merged.html
-    if (baseUrl.includes('github.io') && !baseUrl.includes('/partnerwav/')) {
-      baseUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html';
+    // Construct proper URL - handle GitHub Pages, local dev, and other hosting
+    var referralUrl;
+    if (window.location.hostname.includes('github.io')) {
+      // GitHub Pages - always use full path
+      referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(p.id);
+    } else {
+      // Local or other hosting - use current URL
+      var baseUrl = window.location.href.split('?')[0];
+      referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id);
     }
-    var referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id);
     var referralPartners = p.referralPartners || [];
     var pendingPartnersHtml = referralPartners.length > 0
       ? '<table style="width:100%;border-collapse:collapse;">'
@@ -2650,6 +2653,7 @@
           render();
         }).catch(function(e){
           console.error('Form submission error:', e);
+          showToast('Error submitting application: ' + (e.message || e), 'bad');
         });
       });
     }
@@ -3026,6 +3030,28 @@
     toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2200);
   }
 
+  function showToast(msg, type){
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.className = "toast show";
+    if (type === 'good') {
+      el.style.backgroundColor = '#4caf50';
+      el.style.color = 'white';
+    } else if (type === 'bad') {
+      el.style.backgroundColor = '#f44336';
+      el.style.color = 'white';
+    } else {
+      el.style.backgroundColor = '';
+      el.style.color = '';
+    }
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){
+      el.classList.remove("show");
+      el.style.backgroundColor = '';
+      el.style.color = '';
+    }, 2200);
+  }
+
   function openModal(html){
     var back = document.createElement("div");
     back.className = "modal-backdrop";
@@ -3285,7 +3311,15 @@
       var vendorId = copyReferralBtn.getAttribute("data-copy-referral-link");
       var vendor = programById(vendorId);
       if (vendor){
-        var referralUrl = window.location.origin + '?apply=vendor&vendorId=' + encodeURIComponent(vendorId);
+        var referralUrl;
+        if (window.location.hostname.includes('github.io')) {
+          // GitHub Pages - always use full path
+          referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(vendorId);
+        } else {
+          // Local or other hosting - use current URL
+          var baseUrl = window.location.href.split('?')[0];
+          referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(vendorId);
+        }
         if (navigator.clipboard && navigator.clipboard.writeText){
           navigator.clipboard.writeText(referralUrl).then(function(){
             toast("Referral link copied to clipboard");
