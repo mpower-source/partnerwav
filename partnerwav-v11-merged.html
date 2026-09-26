@@ -374,6 +374,7 @@
       <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
       <button class="navlink" data-screen="partner-community"><span class="ic">👥</span>Community</button>
       <button class="navlink" data-screen="partner-network"><span class="ic">🤝</span>Partner Network</button>
+      <button class="navlink" data-screen="partner-collaboration-finder"><span class="ic">🎯</span>Partner Collaborations</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
@@ -414,6 +415,7 @@
       <button class="navlink" data-screen="resource-approvals"><span class="ic">📚</span>Resource Approvals</button>
       <button class="navlink" data-screen="operator-marketing-approvals"><span class="ic">📢</span>Marketing Approvals</button>
       <button class="navlink" data-screen="operator-partner-map"><span class="ic">🗺️</span>Partner Discovery Map</button>
+      <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
     </nav>
 
     <div class="sidebar-foot">
@@ -1588,6 +1590,49 @@
         </div>
       </section>
 
+      <!-- ===== OPERATOR: MSP PROSPECTS ===== -->
+      <section id="scr-operator-msp-prospects" hidden>
+        <div class="section-head"><h2>MSP Prospecting</h2><span class="hint">Find MSPs in Thailand interested in selling vendor products</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+          <input type="text" class="list-search" id="mspSearchInput" placeholder="Search by company name, city, or specialty...">
+          <select id="mspCountryFilter" style="padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+            <option value="">All Locations</option>
+            <option value="Bangkok">Bangkok</option>
+            <option value="Chiang Mai">Chiang Mai</option>
+            <option value="Phuket">Phuket</option>
+            <option value="Rayong">Rayong</option>
+            <option value="Ubon Ratchathani">Ubon Ratchathani</option>
+          </select>
+          <button class="btn secondary sm" id="mspResetFilter">Reset Filters</button>
+        </div>
+        <div style="height:12px"></div>
+        <div id="mspProspectsList" style="display:flex;flex-direction:column;gap:14px;"></div>
+      </section>
+
+      <!-- ===== PARTNER: COLLABORATION FINDER ===== -->
+      <section id="scr-partner-collaboration-finder" hidden>
+        <div class="section-head"><h2>Partner Collaborations</h2><span class="hint">Find partners for joint projects, meetups, and marketing</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+          <input type="text" class="list-search" id="collabSearchInput" placeholder="Search by title or region...">
+          <select id="collabTypeFilter" style="padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+            <option value="">All Types</option>
+            <option value="project">Projects</option>
+            <option value="meetup">Meetups</option>
+            <option value="marketing">Joint Marketing</option>
+          </select>
+          <select id="collabRegionFilter" style="padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+            <option value="">All Regions</option>
+            <option value="apac">Asia Pacific</option>
+            <option value="europe">Europe</option>
+            <option value="americas">Americas</option>
+            <option value="meaf">Middle East & Africa</option>
+          </select>
+          <button class="btn secondary sm" id="collabResetFilter">Reset Filters</button>
+        </div>
+        <div style="height:12px"></div>
+        <div id="partnerCollaborationList" style="display:flex;flex-direction:column;gap:14px;"></div>
+      </section>
+
       <!-- ===== PUBLIC: PARTNER APPLICATION (No login required) ===== -->
       <section id="scr-public-partner-apply" hidden>
         <div style="max-width:600px;margin:0 auto;">
@@ -2261,6 +2306,24 @@
     { id:"africa-connect", name:"Africa Connect Ltd", region:"meaf", lat:-1.2921, lng:36.8219, city:"Nairobi, Kenya", status:"pending", program:"Intelsense AI", tier:"Bronze" }
   ];
 
+  // MSP Prospects for Thailand (Operator prospecting tool)
+  var mspProspects = [
+    { id:"msp-th-1", name:"Bangkok IT Services Co.", city:"Bangkok", country:"Thailand", address:"123 Rama IV Rd, Bangkok 10110", phone:"+66-2-XXX-XXXX", email:"sales@bangkokit.co.th", website:"www.bangkokit.co.th", employees:"50-100", specialties:"Enterprise IT, Cloud Services", acquisitionStage:"prospect" },
+    { id:"msp-th-2", name:"Chiang Mai Digital Solutions", city:"Chiang Mai", country:"Thailand", address:"456 Nimmanhaemin Rd, Chiang Mai 50100", phone:"+66-53-XXX-XXX", email:"info@cmdigi.co.th", website:"www.cmdigi.co.th", employees:"20-50", specialties:"SMB IT Support, Networking", acquisitionStage:"prospect" },
+    { id:"msp-th-3", name:"Phuket Tech Partners", city:"Phuket", country:"Thailand", address:"789 Patong Beach Rd, Phuket 83150", phone:"+66-76-XXX-XXX", email:"contact@phukettechpartners.th", website:"www.phukettechpartners.th", employees:"30-60", specialties:"Hospitality IT, POS Systems", acquisitionStage:"prospect" },
+    { id:"msp-th-4", name:"Rayong IT Consulting", city:"Rayong", country:"Thailand", address:"321 Sukhumvit Rd, Rayong 21000", phone:"+66-38-XXX-XXX", email:"sales@rayongit.co.th", website:"www.rayongit.co.th", employees:"15-40", specialties:"Manufacturing IT, Industrial IoT", acquisitionStage:"prospect" },
+    { id:"msp-th-5", name:"Ubon Ratchathani Tech Hub", city:"Ubon Ratchathani", country:"Thailand", address:"654 Chayangkul Rd, Ubon Ratchathani 34000", phone:"+66-45-XXX-XXX", email:"team@ubontech.co.th", website:"www.ubontech.co.th", employees:"10-30", specialties:"Retail IT, CCTV Systems", acquisitionStage:"prospect" }
+  ];
+
+  // Partner Collaboration Opportunities
+  var partnerCollaborations = [
+    { id:"collab-1", partnerId:"siam-digital", title:"Joint Healthcare Digitization Initiative", description:"Seeking partners for comprehensive healthcare provider IT modernization project in Thailand", type:"project", region:"Thailand", compensation:"Revenue share 70/30", status:"open", postedDate:"2026-09-20", endDate:"2026-12-31" },
+    { id:"collab-2", partnerId:"gulf-coast-var", title:"SMB Cloud Migration Meetup - Tampa Bay Area", description:"Monthly meetups for partners to discuss cloud migration strategies and best practices", type:"meetup", region:"USA", compensation:"Networking opportunity", status:"open", postedDate:"2026-09-15", endDate:"2026-12-31" },
+    { id:"collab-3", partnerId:"portonics-eu", title:"Joint Go-to-Market Campaign - Enterprise AI", description:"Co-marketing campaign targeting enterprise segment in EU market", type:"joint-marketing", region:"Europe", compensation:"Cost share 50/50", status:"open", postedDate:"2026-09-22", endDate:"2026-11-30" },
+    { id:"collab-4", partnerId:"aussie-partners", title:"Retail Transformation Project - Sydney", description:"Large retail chain modernization project seeking qualified implementation partners", type:"project", region:"Australia", compensation:"Fixed project fees + bonus", status:"open", postedDate:"2026-09-18", endDate:"2026-10-31" },
+    { id:"collab-5", partnerId:"nordic-resellers", title:"Nordics Partnership Summit 2026", description:"Annual conference for Nordic partners to collaborate and share success stories", type:"meetup", region:"Europe", compensation:"Networking + potential deals", status:"open", postedDate:"2026-09-25", endDate:"2026-11-15" }
+  ];
+
   // Load data from localStorage
   function loadSavedData(){
     try {
@@ -2323,6 +2386,14 @@
     applyingForVendorId: null,
     selectedProductId: null,
     applicationSubmitted: false,
+    mspSearchQuery: "",
+    mspCountryFilter: "",
+    collabSearchQuery: "",
+    collabTypeFilter: "",
+    collabRegionFilter: "",
+    collabInterests: [],
+    mapStatusFilter: "",
+    mapRegionFilter: "",
     theme: (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"
   };
 
@@ -2381,6 +2452,8 @@
     "operator-approvals":"Deal Approvals",
     "operator-marketing-approvals":"Marketing Approvals",
     "operator-partner-map":"Partner Discovery Map",
+    "operator-msp-prospects":"MSP Prospecting",
+    "partner-collaboration-finder":"Partner Collaborations",
     "public-partner-apply":"Apply to Partner"
   };
 
@@ -2744,6 +2817,12 @@
 
     // ---- operator partner discovery map ----
     renderPartnerMap();
+
+    // ---- operator msp prospects ----
+    renderMSPProspects();
+
+    // ---- partner collaborations ----
+    renderPartnerCollaborations();
 
     // ---- resource library ----
     renderResourceBrowse();
@@ -6482,6 +6561,24 @@
       }
       return;
     }
+
+    var expressInterestBtn = e.target.closest("[data-express-interest]");
+    if (expressInterestBtn){
+      var collabId = expressInterestBtn.getAttribute("data-collab-id");
+      var collab = partnerCollaborations.find(function(c){ return c.id === collabId; });
+      if (collab){
+        if (!state.collabInterests) state.collabInterests = [];
+        if (state.collabInterests.indexOf(collabId) === -1){
+          state.collabInterests.push(collabId);
+          toast("Interest expressed! Partners will be notified.");
+          savePartnerData();
+          renderPartnerCollaborations();
+        } else {
+          toast("You've already expressed interest in this collaboration");
+        }
+      }
+      return;
+    }
   });
 
   document.getElementById("commissionFilter") && document.getElementById("commissionFilter").addEventListener("change", function(e){
@@ -6502,6 +6599,72 @@
     state.mapRegionFilter = e.target.value;
     renderPartnerMap();
   });
+
+  // MSP Prospects Event Listeners
+  var mspSearchInput = document.getElementById("mspSearchInput");
+  if (mspSearchInput){
+    mspSearchInput.addEventListener("input", function(e){
+      state.mspSearchQuery = e.target.value;
+      renderMSPProspects();
+    });
+  }
+
+  var mspCountryFilter = document.getElementById("mspCountryFilter");
+  if (mspCountryFilter){
+    mspCountryFilter.addEventListener("change", function(e){
+      state.mspCountryFilter = e.target.value;
+      renderMSPProspects();
+    });
+  }
+
+  var mspResetBtn = document.getElementById("mspResetFilter");
+  if (mspResetBtn){
+    mspResetBtn.addEventListener("click", function(){
+      state.mspSearchQuery = "";
+      state.mspCountryFilter = "";
+      if (mspSearchInput) mspSearchInput.value = "";
+      if (mspCountryFilter) mspCountryFilter.value = "";
+      renderMSPProspects();
+    });
+  }
+
+  // Partner Collaboration Event Listeners
+  var collabSearchInput = document.getElementById("collabSearchInput");
+  if (collabSearchInput){
+    collabSearchInput.addEventListener("input", function(e){
+      state.collabSearchQuery = e.target.value;
+      renderPartnerCollaborations();
+    });
+  }
+
+  var collabTypeFilter = document.getElementById("collabTypeFilter");
+  if (collabTypeFilter){
+    collabTypeFilter.addEventListener("change", function(e){
+      state.collabTypeFilter = e.target.value;
+      renderPartnerCollaborations();
+    });
+  }
+
+  var collabRegionFilter = document.getElementById("collabRegionFilter");
+  if (collabRegionFilter){
+    collabRegionFilter.addEventListener("change", function(e){
+      state.collabRegionFilter = e.target.value;
+      renderPartnerCollaborations();
+    });
+  }
+
+  var collabResetBtn = document.getElementById("collabResetFilter");
+  if (collabResetBtn){
+    collabResetBtn.addEventListener("click", function(){
+      state.collabSearchQuery = "";
+      state.collabTypeFilter = "";
+      state.collabRegionFilter = "";
+      if (collabSearchInput) collabSearchInput.value = "";
+      if (collabTypeFilter) collabTypeFilter.value = "";
+      if (collabRegionFilter) collabRegionFilter.value = "";
+      renderPartnerCollaborations();
+    });
+  }
 
   var partnerMapCache = [];
 
@@ -6524,8 +6687,20 @@
           status: partner.status
         };
       });
+    } else if (partnerLocations && partnerLocations.length > 0){
+      // Fall back to local partnerLocations data
+      allPartners = partnerLocations.map(function(loc){
+        return {
+          id: loc.id,
+          name: loc.name,
+          country: loc.city.split(",")[1] ? loc.city.split(",")[1].trim() : "Thailand",
+          program: loc.program,
+          status: loc.status,
+          tier: loc.tier
+        };
+      });
     } else {
-      // Fall back to local programs data
+      // Fall back to programs referral data
       programs.forEach(function(prog){
         if (prog.referralPartners && prog.referralPartners.length > 0){
           prog.referralPartners.forEach(function(partner){
@@ -6538,10 +6713,10 @@
     var filtered = allPartners.filter(function(p){
       var statusMatch = !statusFilter || p.status === statusFilter;
       var regionMatch = !regionFilter || (
-        (regionFilter === "apac" && ["Thailand", "Vietnam", "Hong Kong", "Indonesia", "Malaysia"].indexOf(p.country) > -1) ||
-        (regionFilter === "europe" && ["UK", "France", "Germany"].indexOf(p.country) > -1) ||
-        (regionFilter === "americas" && ["USA", "Canada", "Mexico"].indexOf(p.country) > -1) ||
-        (regionFilter === "meaf" && ["UAE", "Saudi Arabia"].indexOf(p.country) > -1)
+        (regionFilter === "apac" && ["Thailand", "Vietnam", "Hong Kong", "Indonesia", "Malaysia", "Australia"].indexOf(p.country) > -1) ||
+        (regionFilter === "europe" && ["UK", "France", "Germany", "Norway"].indexOf(p.country) > -1) ||
+        (regionFilter === "americas" && ["USA", "Canada", "Mexico", "Brazil"].indexOf(p.country) > -1) ||
+        (regionFilter === "meaf" && ["UAE", "Saudi Arabia", "Kenya"].indexOf(p.country) > -1)
       );
       return statusMatch && regionMatch;
     });
@@ -6550,12 +6725,103 @@
       return;
     }
     statusList.innerHTML = filtered.map(function(p){
-      var statusBadge = p.status === "active" ? '<span style="display:inline-block;background:var(--good-soft);color:var(--good);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Active</span>'
-        : '<span style="display:inline-block;background:var(--warn-soft);color:var(--warn);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Pending</span>';
+      var statusLabel = p.status === "active" ? "Active" : (p.status === "approved" ? "Approved" : "Pending");
+      var statusBadgeColor = p.status === "active" ? "var(--good)" : (p.status === "approved" ? "var(--accent)" : "var(--warn)");
+      var statusBadgeBg = p.status === "active" ? "var(--good-soft)" : (p.status === "approved" ? "var(--accent-soft)" : "var(--warn-soft)");
+      var statusBadge = '<span style="display:inline-block;background:'+statusBadgeBg+';color:'+statusBadgeColor+';padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">'+statusLabel+'</span>';
       return '<div style="padding:8px;background:var(--surface);border-radius:6px;cursor:pointer;border:1px solid var(--line);transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
         + '<div style="font-weight:600;font-size:0.9rem;color:var(--ink);">'+esc(p.name)+'</div>'
         + '<div style="font-size:0.8rem;color:var(--ink-faint);margin-top:2px;">'+esc(p.country)+' • '+esc(p.program)+'</div>'
+        + (p.tier ? '<div style="font-size:0.75rem;color:var(--ink-soft);margin-top:2px;">'+esc(p.tier)+' Tier</div>' : '')
         + '<div style="margin-top:4px;">'+statusBadge+'</div>'
+        + '</div>';
+    }).join("");
+  }
+
+  function renderMSPProspects(){
+    var container = document.getElementById("mspProspectsList");
+    if (!container) return;
+
+    var searchQuery = (state.mspSearchQuery || "").toLowerCase();
+    var locationFilter = state.mspCountryFilter || "";
+
+    var filtered = mspProspects.filter(function(prospect){
+      var specialtiesStr = prospect.specialties || "";
+      var specialtyList = specialtiesStr.split(",").map(function(s){ return s.trim().toLowerCase(); });
+      var searchMatch = !searchQuery ||
+        prospect.name.toLowerCase().indexOf(searchQuery) > -1 ||
+        prospect.city.toLowerCase().indexOf(searchQuery) > -1 ||
+        specialtyList.some(function(s){ return s.indexOf(searchQuery) > -1; });
+      var locationMatch = !locationFilter || prospect.city === locationFilter;
+      return searchMatch && locationMatch;
+    });
+
+    if (filtered.length === 0){
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">No MSPs match your search criteria</div>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(function(prospect){
+      var specialtyList = (prospect.specialties || "").split(",").map(function(s){ return s.trim(); });
+      return '<div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;gap:12px;align-items:flex-start;">'
+        + '<div style="flex:1;">'
+        + '<div style="font-weight:600;font-size:1rem;color:var(--ink);">'+esc(prospect.name)+'</div>'
+        + '<div style="font-size:0.85rem;color:var(--ink-faint);margin-top:2px;">'+esc(prospect.city)+', '+esc(prospect.country)+'</div>'
+        + '<div style="font-size:0.85rem;color:var(--ink-soft);margin-top:4px;">📍 '+esc(prospect.address)+'</div>'
+        + '<div style="font-size:0.85rem;color:var(--ink-soft);margin-top:2px;">👥 '+prospect.employees+' employees</div>'
+        + '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">'
+        + specialtyList.slice(0,3).map(function(spec){ return '<span style="display:inline-block;background:var(--accent-soft);color:var(--accent-strong);padding:2px 6px;border-radius:4px;font-size:0.75rem;">'+esc(spec)+'</span>'; }).join("")
+        + '</div>'
+        + '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;font-size:0.8rem;color:var(--ink-faint);">'
+        + '<span>📧 '+esc(prospect.email)+'</span>'
+        + '<span>📞 '+esc(prospect.phone)+'</span>'
+        + '</div>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:8px;">'
+        + '<a href="mailto:'+encodeURIComponent(prospect.email)+'" class="btn primary sm" style="text-decoration:none;cursor:pointer;">Contact</a>'
+        + '<a href="'+esc(prospect.website)+'" target="_blank" class="btn secondary sm" style="text-decoration:none;cursor:pointer;">Visit Website</a>'
+        + '</div>'
+        + '</div>';
+    }).join("");
+  }
+
+  function renderPartnerCollaborations(){
+    var container = document.getElementById("partnerCollaborationList");
+    if (!container) return;
+
+    var searchQuery = (state.collabSearchQuery || "").toLowerCase();
+    var typeFilter = state.collabTypeFilter || "";
+    var regionFilter = state.collabRegionFilter || "";
+
+    var filtered = partnerCollaborations.filter(function(collab){
+      var searchMatch = !searchQuery ||
+        collab.title.toLowerCase().indexOf(searchQuery) > -1 ||
+        collab.region.toLowerCase().indexOf(searchQuery) > -1;
+      var typeMatch = !typeFilter || collab.type === typeFilter;
+      var regionMatch = !regionFilter || collab.region.toLowerCase().indexOf(regionFilter.replace("apac", "asia").replace("meaf", "africa")) > -1;
+      return searchMatch && typeMatch && regionMatch;
+    });
+
+    if (filtered.length === 0){
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">No collaborations match your criteria</div>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(function(collab){
+      var typeIcon = collab.type === "project" ? "🚀" : (collab.type === "meetup" ? "👥" : "📢");
+      var typeLabel = collab.type === "project" ? "Project" : (collab.type === "meetup" ? "Meetup" : "Joint Marketing");
+      return '<div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;gap:12px;align-items:flex-start;">'
+        + '<div style="flex:1;">'
+        + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'
+        + '<span style="font-size:1.1rem;">'+typeIcon+'</span>'
+        + '<span style="display:inline-block;background:var(--accent-soft);color:var(--accent-strong);padding:2px 6px;border-radius:4px;font-size:0.7rem;font-weight:600;">'+typeLabel+'</span>'
+        + '</div>'
+        + '<div style="font-weight:600;font-size:1rem;color:var(--ink);">'+esc(collab.title)+'</div>'
+        + '<div style="font-size:0.85rem;color:var(--ink-faint);margin-top:4px;">'+esc(collab.description)+'</div>'
+        + '<div style="font-size:0.85rem;color:var(--ink-soft);margin-top:6px;">🌍 '+esc(collab.region)+' • Posted by '+esc(collab.partnerId)+'</div>'
+        + (collab.compensation ? '<div style="font-size:0.85rem;color:var(--good);margin-top:4px;font-weight:600;">💰 '+esc(collab.compensation)+'</div>' : '')
+        + '</div>'
+        + '<button class="btn primary sm" data-collab-id="'+esc(collab.id)+'" data-express-interest="true" style="white-space:nowrap;">Express Interest</button>'
         + '</div>';
     }).join("");
   }
