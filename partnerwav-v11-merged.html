@@ -1,4 +1,6 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  </head><body>
 <style>
   :root{
     --bg:#ffffff; --surface:#ffffff; --surface-2:#f5f4ff;
@@ -868,11 +870,7 @@
         <div style="height:14px"></div>
         <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;height:calc(100vh - 200px);padding:0 16px;">
           <div id="partnerMapContainer" style="background:var(--surface);border-radius:12px;border:1px solid var(--line);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);">
-            <div style="text-align:center;padding:40px;">
-              <div style="font-size:3rem;margin-bottom:16px;">🗺️</div>
-              <div style="font-weight:600;margin-bottom:8px;">Interactive Map Coming Soon</div>
-              <div style="font-size:0.9rem;color:var(--ink-faint);">Phase 2: Real-time partner locations with Mapbox integration</div>
-            </div>
+            <div id="mapElement" style="width:100%;height:100%;"></div>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;overflow-y:auto;">
             <div style="padding:12px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">
@@ -1790,6 +1788,14 @@
     });
     document.getElementById("topEyebrow").textContent = roleLabel(state.role);
     document.getElementById("topTitle").textContent = titles[state.screen] || "";
+    
+    // Initialize map when operator-partner-map screen is shown
+    if (state.screen === "operator-partner-map") {
+      setTimeout(function(){
+        initPartnerMap();
+        renderPartnerMap();
+      }, 100);
+    }
 
     // ---- partner overview ----
     var banner = document.getElementById("profileBanner");
@@ -3595,7 +3601,9 @@
           name: partner.company_name,
           country: partner.country,
           program: partner.vendor_name,
-          status: partner.status
+          status: partner.status,
+          latitude: partner.latitude || 0,
+          longitude: partner.longitude || 0
         };
       });
     } else {
@@ -3603,7 +3611,14 @@
       programs.forEach(function(prog){
         if (prog.referralPartners && prog.referralPartners.length > 0){
           prog.referralPartners.forEach(function(partner){
-            allPartners.push({ name: partner.name, country: partner.country, program: prog.name, status: partner.status });
+            allPartners.push({ 
+              name: partner.name, 
+              country: partner.country, 
+              program: prog.name, 
+              status: partner.status,
+              latitude: partner.latitude || 0,
+              longitude: partner.longitude || 0
+            });
           });
         }
       });
@@ -3619,19 +3634,126 @@
       );
       return statusMatch && regionMatch;
     });
+
+    // Render list on right side
     if (filtered.length === 0){
       statusList.innerHTML = '<div style="padding:8px;color:var(--ink-faint);text-align:center;font-size:0.85rem;">No partners match filters</div>';
-      return;
+    } else {
+      statusList.innerHTML = filtered.map(function(p){
+        var statusBadge = p.status === "active" ? '<span style="display:inline-block;background:var(--good-soft);color:var(--good);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Active</span>'
+          : '<span style="display:inline-block;background:var(--warn-soft);color:var(--warn);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Pending</span>';
+        return '<div style="padding:8px;background:var(--surface);border-radius:6px;cursor:pointer;border:1px solid var(--line);transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--line)'">'
+          + '<div style="font-weight:600;font-size:0.9rem;color:var(--ink);">'+esc(p.name)+'</div>'
+          + '<div style="font-size:0.8rem;color:var(--ink-faint);margin-top:2px;">'+esc(p.country)+' • '+esc(p.program)+'</div>'
+          + '<div style="margin-top:4px;">'+statusBadge+'</div>'
+          + '</div>';
+      }).join("");
     }
-    statusList.innerHTML = filtered.map(function(p){
-      var statusBadge = p.status === "active" ? '<span style="display:inline-block;background:var(--good-soft);color:var(--good);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Active</span>'
-        : '<span style="display:inline-block;background:var(--warn-soft);color:var(--warn);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Pending</span>';
-      return '<div style="padding:8px;background:var(--surface);border-radius:6px;cursor:pointer;border:1px solid var(--line);transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
-        + '<div style="font-weight:600;font-size:0.9rem;color:var(--ink);">'+esc(p.name)+'</div>'
-        + '<div style="font-size:0.8rem;color:var(--ink-faint);margin-top:2px;">'+esc(p.country)+' • '+esc(p.program)+'</div>'
-        + '<div style="margin-top:4px;">'+statusBadge+'</div>'
-        + '</div>';
-    }).join("");
+
+    // Update map markers
+    updatePartnerMapMarkers(filtered);
+  }
+
+  var partnerMapInstance = null;
+
+  function initPartnerMap(){
+    var mapContainer = document.getElementById("mapElement");
+    if (!mapContainer) return;
+    
+    if (partnerMapInstance) {
+      partnerMapInstance.remove();
+    }
+
+    // Initialize map centered on world view
+    partnerMapInstance = L.map('mapElement').setView([20, 0], 2);
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(partnerMapInstance);
+  }
+
+  function updatePartnerMapMarkers(partners){
+    if (!partnerMapInstance) {
+      initPartnerMap();
+    }
+
+    // Remove existing markers
+    partnerMapInstance.eachLayer(function(layer){
+      if (layer instanceof L.Marker) {
+        partnerMapInstance.removeLayer(layer);
+      }
+    });
+
+    // Add markers for each partner
+    partners.forEach(function(p){
+      var coords = getCountryCoordinates(p.country);
+      if (coords && coords[0] && coords[1]) {
+        var markerColor = p.status === "active" ? "#1a8f5a" : "#a06a12";
+        var markerIcon = L.divIcon({
+          html: '<div style="background:' + markerColor + ';color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.2);">📍</div>',
+          iconSize: [28, 28],
+          className: ''
+        });
+
+        var marker = L.marker(coords, { icon: markerIcon }).addTo(partnerMapInstance);
+        marker.bindPopup(
+          '<div style="font-weight:600;margin-bottom:4px;">' + esc(p.name) + '</div>' +
+          '<div style="font-size:0.85rem;color:#666;margin-bottom:6px;">' + esc(p.country) + '</div>' +
+          '<div style="font-size:0.85rem;"><strong>Program:</strong> ' + esc(p.program) + '</div>' +
+          '<div style="font-size:0.85rem;"><strong>Status:</strong> ' + p.status + '</div>'
+        );
+      }
+    });
+
+    // Fit map to bounds of markers
+    var group = new L.featureGroup(partnerMapInstance.eachLayer(function(layer){
+      if (layer instanceof L.Marker) {
+        group.addLayer(layer);
+      }
+    }));
+    
+    if (group.getLayers().length > 0) {
+      try {
+        partnerMapInstance.fitBounds(group.getBounds().pad(0.1));
+      } catch(e) {}
+    }
+  }
+
+  function getCountryCoordinates(country){
+    var countryCoords = {
+      "Thailand": [15.8700, 100.9925],
+      "Vietnam": [14.0583, 108.2772],
+      "Hong Kong": [22.3193, 114.1694],
+      "Indonesia": [-0.7893, 113.9213],
+      "Malaysia": [4.2105, 101.6964],
+      "Singapore": [1.3521, 103.8198],
+      "Japan": [36.2048, 138.2529],
+      "China": [35.8617, 104.1954],
+      "India": [20.5937, 78.9629],
+      "South Korea": [35.9078, 127.7669],
+      "UK": [55.3781, -3.4360],
+      "France": [46.2276, 2.2137],
+      "Germany": [51.1657, 10.4515],
+      "USA": [37.0902, -95.7129],
+      "Canada": [56.1304, -106.3468],
+      "Mexico": [23.6345, -102.5528],
+      "UAE": [23.4241, 53.8478],
+      "Saudi Arabia": [23.8859, 45.0792],
+      "Egypt": [26.8206, 30.8025],
+      "South Africa": [-30.5595, 22.9375],
+      "Nigeria": [9.0820, 8.6753],
+      "Brazil": [-14.2350, -51.9253],
+      "Argentina": [-38.4161, -63.6167],
+      "Chile": [-35.6751, -71.5430],
+      "Peru": [-9.1900, -75.0152],
+      "Colombia": [4.5709, -74.2973],
+      "Bangladesh": [23.6850, 90.3563],
+      "Australia": [-25.2744, 133.7751],
+      "New Zealand": [-40.9006, 174.8860]
+    };
+    return countryCoords[country] || null;
   }
 
   // Load partner map data from Supabase on initialization
@@ -3679,6 +3801,32 @@
     state.theme = state.theme === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", state.theme);
   });
+
+  // Initialize map on page load
+  (function(){
+    initPartnerMap();
+  })();
+
+  // Handle partner map filters
+  (function(){
+    var statusFilter = document.getElementById("mapStatusFilter");
+    var regionFilter = document.getElementById("mapRegionFilter");
+    
+    if (statusFilter) {
+      statusFilter.addEventListener("change", function(e){
+        state.mapStatusFilter = e.target.value;
+        renderPartnerMap();
+      });
+    }
+    
+    if (regionFilter) {
+      regionFilter.addEventListener("change", function(e){
+        state.mapRegionFilter = e.target.value;
+        renderPartnerMap();
+      });
+    }
+  })();
+
   document.documentElement.setAttribute("data-theme", state.theme);
 
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeModal(); });
