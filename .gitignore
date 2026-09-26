@@ -1,0 +1,32 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Claude session files
+.claude/
+
+# Backup and temporary files
+*.backup
+*.bak
+*.tmp
+partnerwav-demo.html
+TEST_*.md
+*_IMPLEMENTATION_*.md
+*_ROADMAP.md
+*_SYSTEM.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules (if using Node.js)
+node_modules/
+npm-debug.log
+
+# OS files
+.DS_Store
+Thumbs.db
