@@ -4394,6 +4394,12 @@
     var offering = offeringId ? hardwareOfferings.find(function(h){ return h.id === offeringId; }) : null;
     var vendorId = state.myVendorId;
 
+    // CLEAR ALL FORM FIELDS FIRST to prevent stale data
+    document.getElementById("hwName").value = "";
+    document.getElementById("hwListPrice").value = "";
+    document.getElementById("hwCostPrice").value = "";
+    document.querySelectorAll(".hwRegionChk").forEach(function(chk){ chk.checked = false; });
+
     // Set title
     document.getElementById("hardwareEditorTitle").textContent = offering ? "Edit Hardware Offering" : "Add Hardware Offering";
 
@@ -4414,7 +4420,7 @@
       + vendorDists.map(function(d){ return '<option value="'+esc(d.id)+'">'+esc(d.name)+' - '+d.regions.join(', ')+'</option>'; }).join('');
     distSelect.value = offering ? offering.distributorId : "";
 
-    // Set form fields
+    // Set form fields with data
     document.getElementById("hwName").value = offering ? offering.hardwareName : "";
     document.getElementById("hwListPrice").value = offering ? offering.listPrice : "";
     document.getElementById("hwCostPrice").value = offering ? offering.costPrice : "";
@@ -5319,6 +5325,9 @@
 
     var partnerProjectForm = document.getElementById("partnerProjectForm");
     if (partnerProjectForm) partnerProjectForm.addEventListener("submit", savePartnerProject);
+
+    var hardwareOfferingForm = document.getElementById("hardwareOfferingForm");
+    if (hardwareOfferingForm) hardwareOfferingForm.addEventListener("submit", saveHardwareOffering);
   }
 
   console.log("Attaching click handler to document");
@@ -5358,6 +5367,7 @@
         else if (screen === "scr-resource-approvals-editor") loadApprovalForm(state.editingApprovalId);
         else if (screen === "scr-operator-program-editor") loadOperatorProgramForm(state.editingOperatorProgramId);
         else if (screen === "partner-project-editor") loadPartnerProjectForm(state.editingProjectId);
+        else if (screen === "vendor-hardware-offering-editor") loadHardwareOfferingForm(state.editingHardwareOfferingId);
         attachFormHandlers();
       }, 0);
       render();
@@ -5385,6 +5395,22 @@
     if (deleteAffiliateBtn){
       var affiliateId = deleteAffiliateBtn.getAttribute("data-affiliate-id");
       if (confirm("Archive this profile? It can be restored later.")) softDeleteProfile("affiliate", affiliateId);
+      return;
+    }
+
+    var deleteHardwareFormBtn = e.target.closest("#deleteHardwareBtn");
+    if (deleteHardwareFormBtn){
+      var offeringId = deleteHardwareFormBtn.getAttribute("data-offering-id");
+      if (confirm("Delete this hardware offering?")){
+        var idx = hardwareOfferings.findIndex(function(h){ return h.id === offeringId; });
+        if (idx >= 0){
+          hardwareOfferings.splice(idx, 1);
+          toast("Hardware offering deleted");
+          saveVendorData();
+          state.screen = "vendor-hardware-offerings";
+          render();
+        }
+      }
       return;
     }
 
@@ -5852,6 +5878,32 @@
       var projId = viewAffiliateProjectBtn.getAttribute("data-view-affiliate-project");
       viewAffiliateProjectDetails(projId);
       render();
+      return;
+    }
+
+    var editHardwareBtn = e.target.closest("[data-edit-hardware]");
+    if (editHardwareBtn){
+      var hwId = editHardwareBtn.getAttribute("data-edit-hardware");
+      state.screen = "vendor-hardware-offering-editor";
+      state.editingHardwareOfferingId = hwId;
+      setTimeout(function(){ loadHardwareOfferingForm(hwId); attachFormHandlers(); }, 0);
+      render();
+      return;
+    }
+
+    var deleteHardwareBtn = e.target.closest("[data-delete-hardware]");
+    if (deleteHardwareBtn){
+      var hwId = deleteHardwareBtn.getAttribute("data-delete-hardware");
+      if (confirm("Delete this hardware offering?")){
+        var idx = hardwareOfferings.findIndex(function(h){ return h.id === hwId; });
+        if (idx >= 0){
+          hardwareOfferings.splice(idx, 1);
+          toast("Hardware offering deleted");
+          saveVendorData();
+          state.screen = "vendor-hardware-offerings";
+          render();
+        }
+      }
       return;
     }
   });
