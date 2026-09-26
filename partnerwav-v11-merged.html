@@ -169,9 +169,12 @@
   .btn.primary:hover{ background:var(--accent-strong); }
   .btn.secondary{ background:var(--surface); color:var(--ink); border-color:var(--line); }
   .btn.secondary:hover{ background:var(--surface-2); }
+  .btn.outline{ background:transparent; color:var(--accent); border-color:var(--accent); }
+  .btn.outline:hover{ background:var(--accent-soft); }
   .btn.ghost{ background:transparent; color:var(--accent); padding:9px 8px; }
   .btn.ghost:hover{ background:var(--accent-soft); }
   .btn.sm{ padding:6px 12px; font-size:.78rem; }
+  .btn.xs{ padding:6px 10px; font-size:.8rem; }
   .btn:disabled{ opacity:.5; cursor:not-allowed; }
 
   .filter-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -365,8 +368,6 @@
       <button class="navlink" data-screen="partner-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="partner-my-profile"><span class="ic">👤</span>My Profile</button>
       <button class="navlink" data-screen="partner-directory"><span class="ic">🎯</span>Program Directory</button>
-      <button class="navlink" data-screen="training"><span class="ic">📚</span>Training</button>
-
       <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
       <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
       <button class="navlink" data-screen="partner-my-leads"><span class="ic">💼</span>My Leads</button>
@@ -376,6 +377,7 @@
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
+      <button class="navlink" data-screen="training"><span class="ic">🎓</span>Training</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
     </nav>
 
@@ -549,10 +551,14 @@
         </div>
       </section>
 
-      <!-- ===== PARTNER: DIRECTORY ===== -->
+      <!-- ===== PARTNER: TRAINING & CERTIFICATIONS ===== -->
       <section id="scr-training" hidden>
+        <div class="section-head"><h2>Training & Certifications</h2><span class="hint">Free cloud and AI training resources</span></div>
+        <div style="height:12px"></div>
         <div id="trainingContent" style="padding:20px;"></div>
       </section>
+
+      <!-- ===== PARTNER: DIRECTORY ===== -->
 
       <section id="scr-partner-directory" hidden>
         <div class="section-head"><h2>Browse programs</h2><span class="hint">One account, every vendor's program</span></div>
@@ -939,89 +945,20 @@
     'intelsense': 'b8e4ed3e-05b5-4aa6-a34b-d70d4e73de6f'
   };
 
-  // Product definitions for vendors with multiple products
-  var vendorProducts = {
-    'intelsense': [
-      { id: 'unisense-ai', name: 'Unisense AI', commission: '15% + 5%' },
-      { id: 'finsense-ai', name: 'Finsense AI', commission: '15% + 5%' },
-      { id: 'ai-hubspot', name: 'AI Hubspot', commission: '15% + 5%' },
-      { id: 'altercrew', name: 'AlterCrew', commission: '15% + 5%' }
-    ],
-    'botnoi': [
-      { id: 'botnoi-default', name: 'Botnoi (Single Product)', commission: 'TBD' }
-    ],
-    'unisense': [
-      { id: 'unisense-default', name: 'Unisense (Single Product)', commission: 'TBD' }
-    ]
-  };
-
-  function updateProductOptions() {
-    var vendor = document.getElementById('appProductVendor');
-    var productDiv = document.getElementById('productSelectionDiv');
-    var productSelect = document.getElementById('appProduct');
-
-    if (!vendor || !vendor.value || !vendorProducts[vendor.value]) {
-      if (productDiv) productDiv.style.display = 'none';
-      return;
-    }
-
-    var vendorVal = vendor.value;
-    if (vendorProducts[vendorVal].length > 1) {
-      if (productDiv) productDiv.style.display = 'block';
-      if (productSelect) {
-        productSelect.innerHTML = '<option value="">Select a product...</option>';
-        vendorProducts[vendorVal].forEach(function(product) {
-          var option = document.createElement('option');
-          option.value = product.id;
-          option.text = product.name + ' (' + product.commission + ')';
-          productSelect.appendChild(option);
-        });
-      }
-    } else {
-      if (productDiv) productDiv.style.display = 'none';
-      if (productSelect && vendorProducts[vendorVal].length === 1) {
-        productSelect.value = vendorProducts[vendorVal][0].id;
-      }
-    }
-  }
-
   // ===== SUPABASE HELPER FUNCTIONS =====
   async function submitPartnerApplicationSB(formData) {
     try {
-      console.log('Submitting partner application with vendorId:', formData.vendorId, 'productId:', formData.productId);
+      console.log('Submitting partner application with vendorId:', formData.vendorId);
       // Use vendor UUID mapping
       var vendorUUID = vendorUUIDs[formData.vendorId];
       if (!vendorUUID) {
         console.error('Vendor not found in mapping:', formData.vendorId);
         throw new Error('Vendor not found: ' + formData.vendorId);
       }
-
-      // Lookup product UUID if product selected
-      var vendorProductUUID = null;
-      if (formData.productId) {
-        try {
-          const { data: productData, error: productError } = await supabase
-            .from('vendor_products')
-            .select('id')
-            .eq('product_id', formData.productId)
-            .single();
-
-          if (productError || !productData) {
-            console.error('Product not found:', formData.productId, productError);
-            throw new Error('Product not found: ' + formData.productId);
-          }
-          vendorProductUUID = productData.id;
-        } catch(err) {
-          console.error('Error looking up product:', err);
-          throw new Error('Error loading product information');
-        }
-      }
-
       const { data, error } = await supabase
         .from('partner_applications')
         .insert([{
           vendor_id: vendorUUID,
-          vendor_product_id: vendorProductUUID,
           first_name: formData.firstName,
           last_name: formData.lastName,
           company_name: formData.companyName,
@@ -1328,14 +1265,20 @@
 
   var programs = [
     { id:"intelsense", name:"Intelsense AI", vertical:"Technology", origin:"Bangladesh", desc:"Conversational-AI platform for enterprise support automation.", relationships:["Vendor Program"], tiers:[
-        { tier:"Reseller", rate:"20% first-year + 5% renewal", base:"Net revenue (itemized deductions)" },
-        { tier:"Channel Manager", rate:"+8% override on sub-reseller team", base:"On sub-reseller collected revenue" }
+        { tier:"Reseller", rate:"15% + 5%", base:"Net revenue" },
+        { tier:"Channel Manager", rate:"15% + 5% + 5% override", base:"Sub-reseller revenue" }
       ], agreement:{ type:"Vendor Program Agreement", status:"active" }, status:"active",
       logo:dataLogo("I","#5b3df5"), website:"https://intelsense.ai",
       social:{ linkedin:"https://linkedin.com/company/intelsense-ai", twitter:"https://x.com/intelsenseai", facebook:"" },
       referralPartners:[
         { name:"TechBridge Solutions", country:"USA", status:"pending" },
         { name:"Asian Connect Services", country:"Singapore", status:"pending" }
+      ],
+      products:[
+        { product_id:"unisense-ai", name:"Unisense AI", desc:"Sales and marketing SaaS platform for enterprise customer engagement and automation." },
+        { product_id:"finsense-ai", name:"Finsense AI", desc:"Financial intelligence platform for automated analysis, reporting, and forecasting." },
+        { product_id:"ai-hubspot", name:"AI Hubspot", desc:"AI-enhanced CRM integration with Hubspot for intelligent customer relationship management." },
+        { product_id:"altercrew", name:"AlterCrew", desc:"Workforce management and talent optimization platform with AI-driven scheduling." }
       ] },
     { id:"crossconnect", name:"Cross Connect", vertical:"Consumer hardware", origin:"USA · via Portonics Ltd.", desc:"Prayer Pendant™ wearable -- ships direct to the customer, no install required (Model B fulfillment).", relationships:["Vendor Program"], tiers:[
         { tier:"Affiliate", rate:"12% on hardware sale + attach bonus", base:"Gross sale price" }
@@ -1624,6 +1567,7 @@
     leadsStatusFilter: "all",
     sowDetailsProjectId: null,
     applyingForVendorId: null,
+    selectedProductId: null,
     applicationSubmitted: false,
     theme: (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"
   };
@@ -1632,10 +1576,14 @@
   var urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('apply') && urlParams.get('apply') === 'vendor') {
     var vendorId = urlParams.get('vendorId');
+    var productId = urlParams.get('productId');
     if (vendorId) {
       state.screen = "public-partner-apply";
       state.applyingForVendorId = vendorId;
-      console.log("URL Parameter Handler: Set screen to public-partner-apply with vendorId:", vendorId);
+      if (productId) {
+        state.selectedProductId = productId;
+      }
+      console.log("URL Parameter Handler: Set screen to public-partner-apply with vendorId:", vendorId, "productId:", productId);
     }
   }
 
@@ -2374,11 +2322,14 @@
     var grid = document.getElementById("vendorNetworkGrid");
     if (!grid) return;
     var netFiltered = filteredPrograms();
+    var isLoggedInPartner = state.role === "partner" && state.myPartnerId;
     grid.innerHTML = netFiltered.length ? netFiltered.map(function(p){
       var mine = state.role === "vendor" && p.id === state.myVendorId;
       var actionBtn = mine
         ? '<button class="btn secondary sm" data-goto-screen="vendor-listing">Edit listing</button>'
-        : '<button class="btn secondary sm" data-message-vendor="'+esc(p.name)+'">Message</button>';
+        : isLoggedInPartner
+          ? '<button class="btn secondary sm" data-apply-vendor-reseller="'+p.id+'">Apply as Reseller →</button>'
+          : '<button class="btn secondary sm" data-message-vendor="'+esc(p.name)+'">Message</button>';
       return '<div class="program-card">'
         + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div>'+(mine?'<span class="badge accent2">You</span>':relBadges(p.relationships))+'</div>'
         + '<div class="program-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'
@@ -2435,21 +2386,66 @@
     var p = programById(state.viewingVendorId);
     if (!p){ body.innerHTML = '<div class="empty">Pick a vendor from the Vendor Network to see their profile.</div>'; return; }
     var mine = state.role === "vendor" && p.id === state.myVendorId;
+    var isOperator = state.role === "operator";
+    var isLoggedInPartner = state.role === "partner" && state.myPartnerId;
     var tiersHtml = p.tiers.map(function(t){
       return '<div class="tier-line"><span>'+esc(t.tier)+' <span style="color:var(--ink-faint)">· '+esc(t.base)+'</span></span><b>'+esc(t.rate)+'</b></div>';
     }).join("");
     var social = socialLinksHtml(p.social);
+
+    // Product tiles section
+    var productsHtml = '';
+    if (p.products && p.products.length > 0) {
+      var productsGrid = p.products.map(function(prod){
+        // Build referral URL for this product
+        var productReferralUrl;
+        if (window.location.hostname.includes('github.io')) {
+          productReferralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(p.id) + '&productId=' + encodeURIComponent(prod.product_id);
+        } else {
+          var baseUrl = window.location.href.split('?')[0];
+          productReferralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id) + '&productId=' + encodeURIComponent(prod.product_id);
+        }
+
+        var tileHtml = '<div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);min-height:200px;">'
+          + '<h3 style="margin:0;font-size:.95rem;font-weight:600;color:var(--ink);">'+esc(prod.name)+'</h3>'
+          + '<p style="margin:0;font-size:.85rem;color:var(--ink-soft);line-height:1.5;flex:1;">'+esc(prod.desc)+'</p>'
+          + '<div style="display:flex;gap:8px;flex-wrap:wrap;flex-direction:column;">';
+
+        // Show referral link only to vendor viewing own profile or operators
+        if (mine || isOperator) {
+          tileHtml += '<button class="btn primary xs" data-product-referral="'+esc(p.id)+'" data-product-id="'+esc(prod.product_id)+'" data-product-url="'+esc(productReferralUrl)+'">Get referral link →</button>';
+        }
+
+        // Show Apply and Demo buttons to logged-in partners
+        if (isLoggedInPartner) {
+          tileHtml += '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+            + '<button class="btn secondary xs" data-apply-reseller="'+esc(p.id)+'" data-product-id="'+esc(prod.product_id)+'">Apply as Reseller →</button>'
+            + '<button class="btn outline xs" data-request-demo="'+esc(p.id)+'" data-product-id="'+esc(prod.product_id)+'" data-product-name="'+esc(prod.name)+'">Request Demo →</button>'
+            + '</div>';
+        }
+
+        tileHtml += '</div></div>';
+        return tileHtml;
+      }).join('');
+
+      productsHtml = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">'
+        + '<div class="section-head"><h2 style="font-size:.9rem;">Products</h2></div>'
+        + '<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">'
+        + productsGrid
+        + '</div></div>';
+    }
+
     var referralHtml = '';
     // Show referral link to everyone, not just vendors viewing their own profile
     // Construct proper URL - handle GitHub Pages, local dev, and other hosting
     var referralUrl;
     if (window.location.hostname.includes('github.io')) {
       // GitHub Pages - always use full path
-      referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(p.vendor_id);
+      referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(p.id);
     } else {
       // Local or other hosting - use current URL
       var baseUrl = window.location.href.split('?')[0];
-      referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.vendor_id);
+      referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id);
     }
     var referralPartners = p.referralPartners || [];
     var pendingPartnersHtml = referralPartners.length > 0
@@ -2476,7 +2472,7 @@
       : '<div style="color:var(--ink-faint);font-size:.88rem;">No partners joined via this link yet.</div>';
 
     referralHtml = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">'
-      + '<div class="section-head"><h2 style="font-size:.9rem;">Partner Referral Link</h2></div>'
+      + '<div class="section-head"><h2 style="font-size:.9rem;">Vendor Referral Link</h2></div>'
       + '<div style="margin-top:10px;display:flex;gap:10px;align-items:center;">'
       + '<input type="text" readonly value="'+esc(referralUrl)+'" style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:6px;font-family:monospace;font-size:.8rem;background:var(--surface);" />'
       + '<button class="btn primary sm" data-copy-referral-link="'+p.id+'">Copy link</button>'
@@ -2501,6 +2497,7 @@
           + '</div>' : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Relationship &amp; tiers</h2></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">'+relBadges(p.relationships)+tiersHtml+'</div></div>'
         + (social ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Elsewhere</h2></div><div style="margin-top:8px;">'+social+'</div></div>' : '')
+        + productsHtml
         + referralHtml
       + '</div>';
   }
@@ -2540,9 +2537,26 @@
       + '</div>'
       + '</div>';
 
+    // Product selection (if vendor has products)
+    var productSelectionHtml = '';
+    if (vendor.products && vendor.products.length > 0) {
+      var productOptions = vendor.products.map(function(prod){
+        var selected = state.selectedProductId && state.selectedProductId === prod.product_id ? ' selected' : '';
+        return '<option value="'+esc(prod.product_id)+'"'+selected+'>'+esc(prod.name)+'</option>';
+      }).join('');
+
+      productSelectionHtml = '<div>'
+        + '<label for="appProduct" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Product *</label>'
+        + '<select id="appProduct" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required>'
+        + '<option value="">Select a product...</option>'
+        + productOptions
+        + '</select>'
+        + '</div>';
+    }
 
     var formHtml =
       '<form id="partnerApplicationForm" style="display:flex;flex-direction:column;gap:16px;">'
+      + productSelectionHtml
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
       + '<div>'
       + '<label for="appFirstName" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">First Name *</label>'
@@ -2664,12 +2678,6 @@
       + '</optgroup>'
       + '</select>'
       + '</div>'
-      + '<div id="productSelectionDiv" style="display:none;">'
-      + '<label for="appProduct" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Which product would you like to resell? *</label>'
-      + '<select id="appProduct" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;">'
-      + '<option value="">Select a product...</option>'
-      + '</select>'
-      + '</div>'
       + '<div>'
       + '<label for="appWorkEmail" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Work Email *</label>'
       + '<input type="email" id="appWorkEmail" placeholder="contact@company.com" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
@@ -2716,9 +2724,6 @@
       + '<p style="font-size:.85rem;color:var(--ink-faint);margin-top:12px;">* Required fields</p>'
       + '</form>';
 
-    // Create a hidden field to store vendor for product selection
-    var vendorHtml = '<input type="hidden" id="appProductVendor" value="' + vendorId + '" />';
-
     body.innerHTML =
       '<div style="max-width:600px;margin:0 auto;">'
       + '<button class="btn ghost sm" data-goto-screen="partner-directory" style="margin-bottom:16px;">← Back to Programs</button>'
@@ -2728,11 +2733,6 @@
       + formHtml
       + '</div>'
       + '</div>';
-
-    // Show product selection if vendor has multiple products
-    setTimeout(function() {
-      updateProductOptions();
-    }, 100);
 
     // Add form submission handler
     var form = document.getElementById("partnerApplicationForm");
@@ -2754,24 +2754,20 @@
         var numSalesPeople = document.getElementById("appNumSalesPeople").value.trim();
         var verticalMarkets = document.getElementById("appVerticalMarkets").value.trim();
         var geographicMarkets = document.getElementById("appGeographicMarkets").value.trim();
-        var productId = document.getElementById("appProduct") ? document.getElementById("appProduct").value.trim() : '';
-
-        // Check if product is required
-        var productDiv = document.getElementById("productSelectionDiv");
-        if (productDiv && productDiv.style.display !== 'none' && !productId) {
-          showToast('Please select a product', 'bad');
-          return;
-        }
+        var selectedProduct = document.getElementById("appProduct") ? document.getElementById("appProduct").value.trim() : "";
 
         // Validation
-        if (!firstName || !lastName || !companyName || !countryCode || !phone || !region || !workEmail || !website || !yearsInBusiness || !numEmployees || !numSalesPeople || !verticalMarkets || !geographicMarkets){
-          showToast('Please fill in all required fields', 'bad');
+        var requiredFields = [firstName, lastName, companyName, countryCode, phone, region, workEmail, website, yearsInBusiness, numEmployees, numSalesPeople, verticalMarkets, geographicMarkets];
+        if (document.getElementById("appProduct")) requiredFields.push(selectedProduct);
+
+        if (requiredFields.some(function(f){ return !f; })){
+          toast("Please fill in all required fields");
           return;
         }
 
         // Basic email validation
         if (!workEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)){
-          showToast('Please enter a valid email address', 'bad');
+          toast("Please enter a valid email address");
           return;
         }
 
@@ -2779,6 +2775,7 @@
         var application = {
           id: "app-" + Date.now(),
           vendorId: vendorId,
+          productId: selectedProduct,
           firstName: firstName,
           lastName: lastName,
           companyName: companyName,
@@ -2800,7 +2797,7 @@
         // Submit to Supabase
         submitPartnerApplicationSB({
           vendorId: vendorId,
-          productId: productId,
+          productId: selectedProduct,
           firstName: firstName,
           lastName: lastName,
           companyName: companyName,
@@ -3288,6 +3285,98 @@
     if (b) b.remove();
   }
 
+  function showDemoRequestModal(vendorId, productId, productName){
+    var vendor = programById(vendorId);
+    if (!vendor) return;
+
+    var html = '<div style="padding:24px;max-width:500px;">'
+      + '<h2 style="margin-top:0;margin-bottom:8px;">Request a Demo</h2>'
+      + '<p style="color:var(--ink-soft);margin-bottom:20px;">'+esc(vendor.name)+' • '+esc(productName)+'</p>'
+      + '<form id="demoRequestForm" style="display:flex;flex-direction:column;gap:14px;">'
+      + '<div>'
+      + '<label for="demoCompanyName" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Company Name *</label>'
+      + '<input type="text" id="demoCompanyName" placeholder="Your company name" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+      + '<div>'
+      + '<label for="demoFirstName" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">First Name *</label>'
+      + '<input type="text" id="demoFirstName" placeholder="First name" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div>'
+      + '<label for="demoLastName" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Last Name *</label>'
+      + '<input type="text" id="demoLastName" placeholder="Last name" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '</div>'
+      + '<div>'
+      + '<label for="demoEmail" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Email *</label>'
+      + '<input type="email" id="demoEmail" placeholder="contact@company.com" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div>'
+      + '<label for="demoPhone" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Phone Number *</label>'
+      + '<input type="tel" id="demoPhone" placeholder="+1 (555) 000-0000" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
+      + '</div>'
+      + '<div style="background:rgba(91,61,245,0.1);border-left:3px solid var(--accent);padding:12px;border-radius:4px;margin:8px 0;font-size:.85rem;">'
+      + '✓ The vendor will contact you shortly to schedule your demo.'
+      + '</div>'
+      + '<div style="display:flex;gap:12px;margin-top:16px;">'
+      + '<button type="submit" class="btn primary" style="flex:1;">Request Demo</button>'
+      + '<button type="button" class="btn secondary" onclick="closeModal();" style="flex:1;">Cancel</button>'
+      + '</div>'
+      + '</form>'
+      + '</div>';
+
+    openModal(html);
+
+    // Set up form submission
+    var form = document.getElementById("demoRequestForm");
+    if (form){
+      form.addEventListener("submit", function(e){
+        e.preventDefault();
+
+        var companyName = document.getElementById("demoCompanyName").value.trim();
+        var firstName = document.getElementById("demoFirstName").value.trim();
+        var lastName = document.getElementById("demoLastName").value.trim();
+        var email = document.getElementById("demoEmail").value.trim();
+        var phone = document.getElementById("demoPhone").value.trim();
+
+        if (!companyName || !firstName || !lastName || !email || !phone){
+          toast("Please fill in all required fields");
+          return;
+        }
+
+        if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)){
+          toast("Please enter a valid email address");
+          return;
+        }
+
+        // Create demo request object
+        var demoRequest = {
+          id: "demo-" + Date.now(),
+          vendorId: vendorId,
+          productId: productId,
+          productName: productName,
+          companyName: companyName,
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          phone: phone,
+          submittedDate: new Date().toISOString(),
+          status: "pending"
+        };
+
+        // Save demo request (could be to Supabase or localStorage for now)
+        if (!window.pendingDemoRequests) window.pendingDemoRequests = [];
+        window.pendingDemoRequests.push(demoRequest);
+
+        // Show confirmation
+        closeModal();
+        toast("Demo request submitted! "+vendor.name+" will contact you soon.");
+
+        console.log("Demo request submitted:", demoRequest);
+      });
+    }
+  }
+
   var ESIGN_PROVIDER = "SignWell";
 
   function esignCellHtml(p){
@@ -3595,6 +3684,51 @@
         saveVendorData();
         render();
       }
+      return;
+    }
+
+    var productReferralBtn = e.target.closest("[data-product-referral]");
+    if (productReferralBtn){
+      var productUrl = productReferralBtn.getAttribute("data-product-url");
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(productUrl).then(function(){
+          toast("Product referral link copied to clipboard");
+        }).catch(function(){
+          toast("Could not copy to clipboard");
+        });
+      } else {
+        toast("Clipboard copy not supported in your browser");
+      }
+      return;
+    }
+
+    var applyResellerBtn = e.target.closest("[data-apply-reseller]");
+    if (applyResellerBtn){
+      var vendorId = applyResellerBtn.getAttribute("data-apply-reseller");
+      var productId = applyResellerBtn.getAttribute("data-product-id");
+      state.applyingForVendorId = vendorId;
+      state.selectedProductId = productId;
+      state.screen = "public-partner-apply";
+      render();
+      return;
+    }
+
+    var requestDemoBtn = e.target.closest("[data-request-demo]");
+    if (requestDemoBtn){
+      var vendorId = requestDemoBtn.getAttribute("data-request-demo");
+      var productId = requestDemoBtn.getAttribute("data-product-id");
+      var productName = requestDemoBtn.getAttribute("data-product-name");
+      showDemoRequestModal(vendorId, productId, productName);
+      return;
+    }
+
+    var applyVendorResellerBtn = e.target.closest("[data-apply-vendor-reseller]");
+    if (applyVendorResellerBtn){
+      var vendorId = applyVendorResellerBtn.getAttribute("data-apply-vendor-reseller");
+      state.applyingForVendorId = vendorId;
+      state.selectedProductId = null;
+      state.screen = "public-partner-apply";
+      render();
       return;
     }
 
