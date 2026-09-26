@@ -2433,7 +2433,6 @@
     renderVendorOverview();
     populateVendorListingForm();
     renderVendorPartners();
-    renderHardwareOfferingsList();
     renderVendorNetwork();
     renderVendorProfile();
     renderPublicPartnerApplication();
@@ -4898,9 +4897,6 @@
 
     var productProfileForm = document.getElementById("productProfileForm");
     if (productProfileForm) productProfileForm.addEventListener("submit", saveProductProfile);
-
-    var hardwareOfferingForm = document.getElementById("hardwareOfferingForm");
-    if (hardwareOfferingForm) hardwareOfferingForm.addEventListener("submit", saveHardwareOffering);
   }
 
   console.log("Attaching click handler to document");
@@ -4939,8 +4935,6 @@
         else if (screen === "scr-resources-editor") loadResourceForm(state.editingResourceId);
         else if (screen === "scr-resource-approvals-editor") loadApprovalForm(state.editingApprovalId);
         else if (screen === "scr-operator-program-editor") loadOperatorProgramForm(state.editingOperatorProgramId);
-        else if (screen === "vendor-hardware-offerings") renderHardwareOfferingsList();
-        else if (screen === "vendor-hardware-offering-editor") loadHardwareOfferingForm(state.editingHardwareOfferingId);
         attachFormHandlers();
       }, 0);
       render();
@@ -5235,29 +5229,6 @@
 
     var editLeadBtn = e.target.closest("[data-edit-lead]");
     if (editLeadBtn){ showEditLeadModal(editLeadBtn.getAttribute("data-edit-lead")); return; }
-
-    var editHardwareBtn = e.target.closest("[data-edit-hardware]");
-    if (editHardwareBtn){
-      state.editingHardwareOfferingId = editHardwareBtn.getAttribute("data-edit-hardware");
-      state.screen = "vendor-hardware-offering-editor";
-      render();
-      return;
-    }
-
-    var deleteHardwareBtn = e.target.closest("[data-delete-hardware]");
-    if (deleteHardwareBtn){
-      var offeringId = deleteHardwareBtn.getAttribute("data-delete-hardware");
-      if (confirm("Archive this hardware offering?")){
-        var idx = hardwareOfferings.findIndex(function(h){ return h.id === offeringId; });
-        if (idx >= 0){
-          hardwareOfferings[idx].archivedAt = new Date().toISOString();
-          toast("Hardware offering archived");
-          saveVendorData();
-          render();
-        }
-      }
-      return;
-    }
 
     var enrollBtn = e.target.closest("[data-enroll]");
     if (enrollBtn){ doEnroll(enrollBtn.getAttribute("data-enroll")); return; }
