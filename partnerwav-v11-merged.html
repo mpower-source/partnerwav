@@ -1248,11 +1248,29 @@
 
   var programs = [
     { id:"intelsense", name:"Intelsense AI", vertical:"Technology", origin:"Bangladesh", desc:"Conversational-AI platform for enterprise support automation.", relationships:["Vendor Program"], tiers:[
-        { tier:"Reseller", rate:"20% first-year + 5% renewal", base:"Net revenue (itemized deductions)" },
-        { tier:"Channel Manager", rate:"+8% override on sub-reseller team", base:"On sub-reseller collected revenue" }
+        { tier:"Reseller", rate:"15% first-year + 5% renewal", base:"Net revenue (itemized deductions)", note:"Standard tier. CloudWAV Consulting: 20% first-year + 5% renewal" },
+        { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team", base:"On sub-reseller collected revenue" }
       ], agreement:{ type:"Vendor Program Agreement", status:"active" }, status:"active",
       logo:dataLogo("I","#5b3df5"), website:"https://intelsense.ai",
       social:{ linkedin:"https://linkedin.com/company/intelsense-ai", twitter:"https://x.com/intelsenseai", facebook:"" },
+      products:[
+        { product_id:"unisense-ai", name:"Unisense AI", desc:"Conversational AI platform for customer support automation", tiers:[
+          { tier:"Reseller", rate:"15% first-year + 5% renewal" },
+          { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team" }
+        ] },
+        { product_id:"finsense-ai", name:"Finsense AI", desc:"Financial services AI and automation platform", tiers:[
+          { tier:"Reseller", rate:"15% first-year + 5% renewal" },
+          { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team" }
+        ] },
+        { product_id:"ai-hubspot", name:"AI Hubspot", desc:"AI-powered HubSpot integration and automation", tiers:[
+          { tier:"Reseller", rate:"15% first-year + 5% renewal" },
+          { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team" }
+        ] },
+        { product_id:"altercrew", name:"AlterCrew", desc:"AI-powered workforce and team collaboration platform", tiers:[
+          { tier:"Reseller", rate:"15% first-year + 5% renewal" },
+          { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team" }
+        ] }
+      ],
       referralPartners:[
         { name:"TechBridge Solutions", country:"USA", status:"pending" },
         { name:"Asian Connect Services", country:"Singapore", status:"pending" }
@@ -2346,6 +2364,15 @@
             + '<button class="btn secondary sm" style="margin-left:auto;" data-view-profile="'+esc(p.partnerProfileId)+'">View Partner profile →</button>'
           + '</div>' : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Relationship &amp; tiers</h2></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">'+relBadges(p.relationships)+tiersHtml+'</div></div>'
+        + (p.products && p.products.length > 0 ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Products</h2></div><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">'+p.products.map(function(prod){
+          var prodTiersHtml = prod.tiers.map(function(t){ return '<div style="font-size:.8rem;color:var(--ink-soft);margin:4px 0;"><strong>'+esc(t.tier)+':</strong> '+esc(t.rate)+'</div>'; }).join('');
+          return '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--accent);">'
+            + '<div style="font-weight:600;margin-bottom:4px;">'+esc(prod.name)+'</div>'
+            + '<div style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">'+esc(prod.desc)+'</div>'
+            + prodTiersHtml
+            + '<button class="btn ghost xs" data-product-referral="'+p.id+'" data-product-id="'+esc(prod.product_id)+'" style="margin-top:6px;">Get referral link →</button>'
+            + '</div>';
+        }).join('')+'</div></div>' : '')
         + (social ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Elsewhere</h2></div><div style="margin-top:8px;">'+social+'</div></div>' : '')
         + referralHtml
       + '</div>';
