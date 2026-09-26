@@ -1046,6 +1046,83 @@
         </div>
       </section>
 
+      <!-- ===== TIER 4: OPERATOR PROGRAM EDITOR (create/edit) ===== -->
+      <section id="scr-operator-program-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="operator-programs">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="operatorProgramEditorTitle">Create Program</h2>
+          <div style="height:16px"></div>
+          <form id="operatorProgramForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Program Name</label><input type="text" id="opProgramName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Vertical/Category</label><input type="text" id="opProgramVertical" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Origin/Location</label><input type="text" id="opProgramOrigin" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Description</label><textarea id="opProgramDesc" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
+            <div><label>Relationship Type</label><select id="opProgramRelationship" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select relationship --</option>
+              <option value="Vendor Program">Vendor Program</option>
+              <option value="Joint Venture">Joint Venture</option>
+              <option value="Custom Marketing">Custom Marketing</option>
+              <option value="SaaS Resale">SaaS Resale</option>
+            </select></div>
+            <div><label>Status</label><select id="opProgramStatus" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select status --</option>
+              <option value="active">Active</option>
+              <option value="onboarding">Onboarding</option>
+              <option value="inactive">Inactive</option>
+              <option value="archived">Archived</option>
+            </select></div>
+            <div><label>Website</label><input type="url" id="opProgramWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div><label>Agreement Type (e.g., Vendor Program Agreement)</label><input type="text" id="opProgramAgreementType" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div><label>Agreement Status</label><select id="opProgramAgreementStatus" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;">
+              <option value="">-- Select status --</option>
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="active">Active</option>
+            </select></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Program</button>
+              <button type="button" class="btn secondary" data-back-screen="operator-programs">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteOperatorProgramBtn" style="margin-left:auto;display:none;">Delete Program</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== TIER 4: MARKETING MATERIALS EDITOR ===== -->
+      <section id="scr-marketing-materials-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="operator-marketing-approvals">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2>Submit Marketing Material</h2>
+          <div style="height:16px"></div>
+          <form id="marketingMaterialForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Title</label><input type="text" id="mmTitle" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Program</label><select id="mmProgram" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select program --</option>
+              <option value="Intelsense AI">Intelsense AI</option>
+              <option value="Cross Connect">Cross Connect</option>
+              <option value="Botnoi Voice">Botnoi Voice</option>
+              <option value="ZipEvent">ZipEvent</option>
+              <option value="Portonics Ltd.">Portonics Ltd.</option>
+              <option value="Unisense">Unisense</option>
+            </select></div>
+            <div><label>Material Type</label><select id="mmType" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select type --</option>
+              <option value="Sales Collateral">Sales Collateral</option>
+              <option value="Marketing Asset">Marketing Asset</option>
+              <option value="Training Material">Training Material</option>
+              <option value="Co-Marketing">Co-Marketing</option>
+              <option value="Demo Asset">Demo Asset</option>
+            </select></div>
+            <div><label>Description</label><textarea id="mmDescription" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
+            <div><label>Format/File Type</label><input type="text" id="mmFormat" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., PDF, PowerPoint, Video" /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Submit for Review</button>
+              <button type="button" class="btn secondary" data-back-screen="operator-marketing-approvals">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
       <!-- ===== AFFILIATE: OVERVIEW (own role, own nav) ===== -->
       <section id="scr-affiliate-overview" hidden>
         <div class="stat-row" id="affiliateStatRow"></div>
@@ -1082,7 +1159,9 @@
       <!-- ===== OPERATOR: MANAGE PROGRAMS ===== -->
       <section id="scr-operator-programs" hidden>
         <div class="section-head"><h2>Manage programs</h2><span class="hint">Every vendor program CloudWAV operates</span></div>
-        <div style="height:14px"></div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <button class="btn primary sm" data-goto-screen="scr-operator-program-editor">+ Create Program</button>
+        </div>
         <div class="card">
           <div class="table-scroll">
             <table>
@@ -1806,6 +1885,18 @@
   ];
 
   var pendingPartnerApplications = [];
+
+  var operatorPrograms = [
+    { id:"oprog1", programName:"Intelsense AI Enterprise", vertical:"Enterprise AI", origin:"US", desc:"Vendor program for Intelsense AI conversational platform targeting enterprise customers.",
+      relationshipType:"Vendor Program", status:"active", website:"https://intelsense.ai", agreementType:"Vendor Program Agreement", agreementStatus:"active", archivedAt:null },
+    { id:"oprog2", programName:"Cross Connect JV - APAC", vertical:"Wearables & IoT", origin:"Thailand", desc:"Joint venture with Cross Connect for regional expansion in Asia-Pacific markets.",
+      relationshipType:"Joint Venture", status:"active", website:"https://crossconnect.io", agreementType:"JV Agreement", agreementStatus:"active", archivedAt:null }
+  ];
+
+  var marketingMaterials = [
+    { id:"mm1", title:"Intelsense AI Partner Sales Deck", program:"Intelsense AI", materialType:"Sales Collateral", description:"Complete sales presentation for partner conversations", format:"PowerPoint", status:"published", uploadedDate:"1 week ago", submittedBy:"Intelsense", archivedAt:null },
+    { id:"mm2", title:"Cross Connect Product Demo Video", program:"Cross Connect", materialType:"Demo Asset", description:"Product demo walkthrough for partner training", format:"Video", status:"pending", submittedDate:"2 days ago", submittedBy:"Portonics", approvalNotes:"", archivedAt:null }
+  ];
 
   // Load data from localStorage
   function loadSavedData(){
@@ -4331,6 +4422,99 @@
     render();
   }
 
+  // ===== TIER 4: OPERATOR PROGRAMS =====
+  function loadOperatorProgramForm(programId){
+    var program = programId ? operatorPrograms.find(function(p){ return p.id === programId; }) : null;
+    document.getElementById("operatorProgramEditorTitle").textContent = program ? "Edit Program" : "Create Program";
+    document.getElementById("opProgramName").value = program ? program.programName : "";
+    document.getElementById("opProgramVertical").value = program ? program.vertical : "";
+    document.getElementById("opProgramOrigin").value = program ? program.origin : "";
+    document.getElementById("opProgramDesc").value = program ? program.desc : "";
+    document.getElementById("opProgramRelationship").value = program ? program.relationshipType : "";
+    document.getElementById("opProgramStatus").value = program ? program.status : "";
+    document.getElementById("opProgramWebsite").value = program ? program.website : "";
+    document.getElementById("opProgramAgreementType").value = program ? program.agreementType : "";
+    document.getElementById("opProgramAgreementStatus").value = program ? program.agreementStatus : "";
+    var deleteBtn = document.getElementById("deleteOperatorProgramBtn");
+    deleteBtn.style.display = program ? "block" : "none";
+    if (program) deleteBtn.setAttribute("data-program-id", programId);
+    state.editingOperatorProgramId = programId;
+  }
+
+  function saveOperatorProgram(e){
+    e.preventDefault();
+    var programName = document.getElementById("opProgramName").value.trim();
+    var vertical = document.getElementById("opProgramVertical").value.trim();
+    var origin = document.getElementById("opProgramOrigin").value.trim();
+    var desc = document.getElementById("opProgramDesc").value.trim();
+    var relationshipType = document.getElementById("opProgramRelationship").value;
+    var status = document.getElementById("opProgramStatus").value;
+    var website = document.getElementById("opProgramWebsite").value.trim();
+    var agreementType = document.getElementById("opProgramAgreementType").value.trim();
+    var agreementStatus = document.getElementById("opProgramAgreementStatus").value;
+
+    if (!programName || !vertical || !origin || !desc || !relationshipType || !status){
+      toast("Please fill in required fields"); return;
+    }
+
+    if (state.editingOperatorProgramId){
+      var idx = operatorPrograms.findIndex(function(p){ return p.id === state.editingOperatorProgramId; });
+      if (idx >= 0){
+        operatorPrograms[idx] = Object.assign(operatorPrograms[idx], {
+          programName: programName, vertical: vertical, origin: origin, desc: desc,
+          relationshipType: relationshipType, status: status, website: website,
+          agreementType: agreementType, agreementStatus: agreementStatus
+        });
+        toast("Program updated");
+      }
+    } else {
+      var newId = "oprog-" + Date.now();
+      operatorPrograms.push({
+        id: newId, programName: programName, vertical: vertical, origin: origin, desc: desc,
+        relationshipType: relationshipType, status: status, website: website,
+        agreementType: agreementType, agreementStatus: agreementStatus, archivedAt: null
+      });
+      toast("Program created");
+    }
+    state.editingOperatorProgramId = null;
+    state.screen = "operator-programs";
+    saveVendorData();
+    render();
+  }
+
+  // ===== TIER 4: MARKETING MATERIALS =====
+  function saveMarketingMaterial(e){
+    e.preventDefault();
+    var title = document.getElementById("mmTitle").value.trim();
+    var program = document.getElementById("mmProgram").value;
+    var materialType = document.getElementById("mmType").value;
+    var description = document.getElementById("mmDescription").value.trim();
+    var format = document.getElementById("mmFormat").value.trim();
+
+    if (!title || !program || !materialType || !description){
+      toast("Please fill in required fields"); return;
+    }
+
+    var newId = "mm-" + Date.now();
+    marketingMaterials.push({
+      id: newId, title: title, program: program, materialType: materialType,
+      description: description, format: format, status: "pending", submittedDate: "just now",
+      submittedBy: "Vendor", approvalNotes: "", archivedAt: null
+    });
+    toast("Marketing material submitted for review");
+
+    // Clear form
+    document.getElementById("mmTitle").value = "";
+    document.getElementById("mmProgram").value = "";
+    document.getElementById("mmType").value = "";
+    document.getElementById("mmDescription").value = "";
+    document.getElementById("mmFormat").value = "";
+
+    state.screen = "operator-marketing-approvals";
+    saveVendorData();
+    render();
+  }
+
   // Form submission handlers - attach after DOM is ready
   function attachFormHandlers(){
     var partnerForm = document.getElementById("partnerProfileForm");
@@ -4362,6 +4546,12 @@
 
     var approvalForm = document.getElementById("approvalForm");
     if (approvalForm) approvalForm.addEventListener("submit", saveApproval);
+
+    var operatorProgramForm = document.getElementById("operatorProgramForm");
+    if (operatorProgramForm) operatorProgramForm.addEventListener("submit", saveOperatorProgram);
+
+    var marketingMaterialForm = document.getElementById("marketingMaterialForm");
+    if (marketingMaterialForm) marketingMaterialForm.addEventListener("submit", saveMarketingMaterial);
   }
 
   console.log("Attaching click handler to document");
@@ -4399,6 +4589,7 @@
         else if (screen === "scr-threads-editor") loadThreadForm(state.editingThreadId);
         else if (screen === "scr-resources-editor") loadResourceForm(state.editingResourceId);
         else if (screen === "scr-resource-approvals-editor") loadApprovalForm(state.editingApprovalId);
+        else if (screen === "scr-operator-program-editor") loadOperatorProgramForm(state.editingOperatorProgramId);
         attachFormHandlers();
       }, 0);
       render();
@@ -4491,6 +4682,17 @@
         var idx = resources.findIndex(function(r){ return r.id === resourceId; });
         if (idx >= 0){ resources[idx].archivedAt = new Date().toISOString(); toast("Resource archived"); saveVendorData(); render(); }
         state.screen = "resource-browse";
+      }
+      return;
+    }
+
+    var deleteOperatorProgramBtn = e.target.closest("#deleteOperatorProgramBtn");
+    if (deleteOperatorProgramBtn){
+      var programId = deleteOperatorProgramBtn.getAttribute("data-program-id");
+      if (confirm("Archive this program? It can be restored later.")){
+        var idx = operatorPrograms.findIndex(function(p){ return p.id === programId; });
+        if (idx >= 0){ operatorPrograms[idx].archivedAt = new Date().toISOString(); toast("Program archived"); saveVendorData(); render(); }
+        state.screen = "operator-programs";
       }
       return;
     }
