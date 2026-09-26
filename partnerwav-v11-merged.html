@@ -2296,11 +2296,11 @@
     var referralUrl;
     if (window.location.hostname.includes('github.io')) {
       // GitHub Pages - always use full path
-      referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(p.id);
+      referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(p.vendor_id);
     } else {
       // Local or other hosting - use current URL
       var baseUrl = window.location.href.split('?')[0];
-      referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id);
+      referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.vendor_id);
     }
     var referralPartners = p.referralPartners || [];
     var pendingPartnersHtml = referralPartners.length > 0
@@ -3330,13 +3330,14 @@
       var vendor = programById(vendorId);
       if (vendor){
         var referralUrl;
+        var vendorNameId = vendor.vendor_id || vendorId;  // Use vendor_id (name) instead of UUID
         if (window.location.hostname.includes('github.io')) {
           // GitHub Pages - always use full path
-          referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(vendorId);
+          referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(vendorNameId);
         } else {
           // Local or other hosting - use current URL
           var baseUrl = window.location.href.split('?')[0];
-          referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(vendorId);
+          referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(vendorNameId);
         }
         if (navigator.clipboard && navigator.clipboard.writeText){
           navigator.clipboard.writeText(referralUrl).then(function(){
