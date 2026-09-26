@@ -934,10 +934,12 @@
           <div style="height:16px"></div>
           <form id="hardwareOfferingForm" style="display:flex;flex-direction:column;gap:16px;">
             <div>
-              <label style="display:block;font-weight:500;margin-bottom:6px;">Products *</label>
-              <div id="hwProductsCheckboxes" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">
-                <!-- Populated by loadHardwareOfferingForm() -->
-              </div>
+              <label for="hwProduct" style="display:block;font-weight:500;margin-bottom:6px;">Product *</label>
+              <select id="hwProduct" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;" required>
+                <option value="">Select a product...</option>
+                <option value="unisense-prod">Unisense</option>
+                <option value="altercrew-prod">AlterCrew</option>
+              </select>
             </div>
             <div>
               <label for="hwName" style="display:block;font-weight:500;margin-bottom:6px;">Hardware Name *</label>
@@ -1298,7 +1300,28 @@
       <section id="scr-affiliate-marketplace" hidden>
         <div class="section-head"><h2>Affiliate Marketplace</h2><span class="hint">Back-office tools CloudWAV resells to Partners and Vendors -- for running your own business, not for resale to your customers</span></div>
         <div style="height:14px"></div>
+        <button class="btn primary" data-goto-screen="affiliate-offer-editor" style="margin-bottom:16px;">+ Create Offer</button>
         <div class="directory-grid" id="affiliateMarketplaceGrid"></div>
+      </section>
+
+      <!-- ===== AFFILIATE: OFFER EDITOR ===== -->
+      <section id="scr-affiliate-offer-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="affiliate-marketplace">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="affiliateOfferEditorTitle">Create Affiliate Offer</h2>
+          <div style="height:16px"></div>
+          <form id="affiliateOfferForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Offer Name</label><input type="text" id="aoName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Category</label><input type="text" id="aoCategory" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., Analytics, Automation, Support" required /></div>
+            <div><label>Description</label><textarea id="aoDesc" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
+            <div><label>Affiliate Commission Rate (%)</label><input type="number" id="aoCommission" min="0" max="100" step="0.5" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., 15" required /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Offer</button>
+              <button type="button" class="btn secondary" data-back-screen="affiliate-marketplace">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteAffiliateOfferBtn" style="margin-left:auto;display:none;">Delete Offer</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <!-- ===== AFFILIATE: PARTNER PROJECTS ===== -->
@@ -2317,17 +2340,21 @@
 
   function affiliateById(id){ for (var i=0;i<affiliatePrograms.length;i++){ if (affiliatePrograms[i].id===id) return affiliatePrograms[i]; } return null; }
 
-  function affiliateCard(a){
+  function affiliateCard(a, showOps){
     var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
+    var isOperator = state.role === "operator";
     var actionBtn = enrolled
       ? '<button class="btn secondary sm" disabled>Enrolled ✓</button>'
       : '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>';
+    var opsButtons = (isOperator && showOps)
+      ? '<button class="btn secondary sm" data-edit-affiliate-offer="'+a.id+'">Edit</button> <button class="btn secondary sm" data-delete-affiliate-offer="'+a.id+'">Delete</button>'
+      : '';
     return '<div class="program-card">'
       + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(a)+'<span class="program-name">'+esc(a.name)+'</span></div><span class="badge neutral">'+esc(a.category)+'</span></div>'
       + '<p class="program-desc">'+esc(a.desc)+'</p>'
       + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
-      + '<div class="program-actions">'+actionBtn+'</div>'
+      + '<div class="program-actions">'+(showOps ? opsButtons : actionBtn)+'</div>'
     + '</div>';
   }
 
@@ -2350,7 +2377,7 @@
         : '<div class="empty">No affiliate tools enrolled yet -- visit the Affiliate Marketplace to add one.</div>';
     }
     var mktGrid = document.getElementById("affiliateMarketplaceGrid");
-    if (mktGrid){ mktGrid.innerHTML = affiliatePrograms.map(function(a){ return affiliateCard(a); }).join(""); }
+    if (mktGrid){ mktGrid.innerHTML = affiliatePrograms.map(function(a){ return affiliateCard(a, true); }).join(""); }
   }
 
   function renderLeads(){
@@ -4344,6 +4371,54 @@
     render();
   }
 
+  function loadAffiliateOfferForm(offerId){
+    var offer = offerId ? affiliatePrograms.find(function(a){ return a.id === offerId; }) : null;
+    document.getElementById("affiliateOfferEditorTitle").textContent = offer ? "Edit Affiliate Offer" : "Create Affiliate Offer";
+    document.getElementById("aoName").value = offer ? offer.name : "";
+    document.getElementById("aoCategory").value = offer ? offer.category : "";
+    document.getElementById("aoDesc").value = offer ? offer.desc : "";
+    document.getElementById("aoCommission").value = offer ? (offer.commission || 0) : "";
+    var deleteBtn = document.getElementById("deleteAffiliateOfferBtn");
+    deleteBtn.style.display = offer ? "block" : "none";
+    if (offer) deleteBtn.setAttribute("data-offer-id", offerId);
+    state.editingAffiliateOfferId = offerId;
+  }
+
+  function saveAffiliateOffer(e){
+    e.preventDefault();
+    var name = document.getElementById("aoName").value.trim();
+    var category = document.getElementById("aoCategory").value.trim();
+    var desc = document.getElementById("aoDesc").value.trim();
+    var commission = parseFloat(document.getElementById("aoCommission").value);
+
+    if (!name || !category || !desc || isNaN(commission)){
+      toast("Please fill in all required fields");
+      return;
+    }
+
+    if (state.editingAffiliateOfferId){
+      var idx = affiliatePrograms.findIndex(function(a){ return a.id === state.editingAffiliateOfferId; });
+      if (idx >= 0){
+        affiliatePrograms[idx].name = name;
+        affiliatePrograms[idx].category = category;
+        affiliatePrograms[idx].desc = desc;
+        affiliatePrograms[idx].commission = commission;
+        toast("Affiliate offer updated");
+      }
+    } else {
+      var newId = "affiliate-offer-" + Date.now();
+      affiliatePrograms.push({
+        id: newId, name: name, category: category, desc: desc, note: "",
+        commission: commission, apiIntegration: false, status: "active", archivedAt: null
+      });
+      toast("Affiliate offer created");
+    }
+    state.editingAffiliateOfferId = null;
+    state.screen = "affiliate-marketplace";
+    saveVendorData();
+    render();
+  }
+
   // ===== HARDWARE OFFERINGS =====
   function renderHardwareOfferingsList(){
     var content = document.getElementById("hardwareOfferingsContent");
@@ -4398,20 +4473,16 @@
     document.getElementById("hwName").value = "";
     document.getElementById("hwListPrice").value = "";
     document.getElementById("hwCostPrice").value = "";
+    document.getElementById("hwProduct").value = "";
     document.querySelectorAll(".hwRegionChk").forEach(function(chk){ chk.checked = false; });
 
     // Set title
     document.getElementById("hardwareEditorTitle").textContent = offering ? "Edit Hardware Offering" : "Add Hardware Offering";
 
-    // Populate product checkboxes
-    var checkboxContainer = document.getElementById("hwProductsCheckboxes");
-    var vendorProds = vendorProducts.filter(function(p){ return p.vendorId === vendorId; });
-    var selectedProductIds = offering && offering.productIds ? offering.productIds : (offering && offering.productId ? [offering.productId] : []);
-
-    checkboxContainer.innerHTML = vendorProds.map(function(p){
-      var isChecked = selectedProductIds.indexOf(p.id) >= 0;
-      return '<label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" class="hwProductChk" value="'+esc(p.id)+'" '+(isChecked ? 'checked' : '')+' /> '+esc(p.name)+'</label>';
-    }).join('');
+    // Set product dropdown (single selection for Unisense or AlterCrew)
+    var productSelect = document.getElementById("hwProduct");
+    var selectedProductId = offering && offering.productId ? offering.productId : (offering && offering.productIds && offering.productIds.length > 0 ? offering.productIds[0] : "");
+    productSelect.value = selectedProductId;
 
     // Populate distributor dropdown
     var distSelect = document.getElementById("hwDistributor");
@@ -4460,14 +4531,14 @@
 
   function saveHardwareOffering(e){
     e.preventDefault();
-    var productIds = Array.from(document.querySelectorAll(".hwProductChk:checked")).map(function(chk){ return chk.value; });
+    var productId = document.getElementById("hwProduct").value.trim();
     var hardwareName = document.getElementById("hwName").value.trim();
     var distributorId = document.getElementById("hwDistributor").value.trim();
     var listPrice = parseFloat(document.getElementById("hwListPrice").value);
     var costPrice = parseFloat(document.getElementById("hwCostPrice").value);
     var regions = Array.from(document.querySelectorAll(".hwRegionChk:checked")).map(function(chk){ return chk.value; });
 
-    if (productIds.length === 0 || !hardwareName || !distributorId || !listPrice || !costPrice || regions.length === 0){
+    if (!productId || !hardwareName || !distributorId || !listPrice || !costPrice || regions.length === 0){
       toast("Please fill in all required fields");
       return;
     }
@@ -4476,7 +4547,7 @@
       var idx = hardwareOfferings.findIndex(function(h){ return h.id === state.editingHardwareOfferingId; });
       if (idx >= 0){
         hardwareOfferings[idx] = Object.assign(hardwareOfferings[idx], {
-          productIds: productIds, hardwareName: hardwareName, distributorId: distributorId,
+          productId: productId, hardwareName: hardwareName, distributorId: distributorId,
           listPrice: listPrice, costPrice: costPrice, regions: regions
         });
         toast("Hardware offering updated");
@@ -4484,7 +4555,7 @@
     } else {
       var newId = "hw-" + Date.now();
       hardwareOfferings.push({
-        id: newId, productIds: productIds, vendorId: state.myVendorId, hardwareName: hardwareName,
+        id: newId, productId: productId, vendorId: state.myVendorId, hardwareName: hardwareName,
         distributorId: distributorId, regions: regions, listPrice: listPrice, costPrice: costPrice,
         commissionRate: 0.05, status: "active", archivedAt: null
       });
@@ -5328,6 +5399,9 @@
 
     var hardwareOfferingForm = document.getElementById("hardwareOfferingForm");
     if (hardwareOfferingForm) hardwareOfferingForm.addEventListener("submit", saveHardwareOffering);
+
+    var affiliateOfferForm = document.getElementById("affiliateOfferForm");
+    if (affiliateOfferForm) affiliateOfferForm.addEventListener("submit", saveAffiliateOffer);
   }
 
   console.log("Attaching click handler to document");
@@ -5901,6 +5975,47 @@
           toast("Hardware offering deleted");
           saveVendorData();
           state.screen = "vendor-hardware-offerings";
+          render();
+        }
+      }
+      return;
+    }
+
+    var editAffiliateOfferBtn = e.target.closest("[data-edit-affiliate-offer]");
+    if (editAffiliateOfferBtn){
+      var offerId = editAffiliateOfferBtn.getAttribute("data-edit-affiliate-offer");
+      state.screen = "affiliate-offer-editor";
+      state.editingAffiliateOfferId = offerId;
+      setTimeout(function(){ loadAffiliateOfferForm(offerId); attachFormHandlers(); }, 0);
+      render();
+      return;
+    }
+
+    var deleteAffiliateOfferBtn = e.target.closest("[data-delete-affiliate-offer]");
+    if (deleteAffiliateOfferBtn){
+      var offerId = deleteAffiliateOfferBtn.getAttribute("data-delete-affiliate-offer");
+      if (confirm("Delete this affiliate offer?")){
+        var idx = affiliatePrograms.findIndex(function(a){ return a.id === offerId; });
+        if (idx >= 0){
+          affiliatePrograms.splice(idx, 1);
+          toast("Affiliate offer deleted");
+          saveVendorData();
+          render();
+        }
+      }
+      return;
+    }
+
+    var deleteAffiliateOfferFormBtn = e.target.closest("#deleteAffiliateOfferBtn");
+    if (deleteAffiliateOfferFormBtn){
+      var offerId = deleteAffiliateOfferFormBtn.getAttribute("data-offer-id");
+      if (confirm("Delete this affiliate offer?")){
+        var idx = affiliatePrograms.findIndex(function(a){ return a.id === offerId; });
+        if (idx >= 0){
+          affiliatePrograms.splice(idx, 1);
+          toast("Affiliate offer deleted");
+          saveVendorData();
+          state.screen = "affiliate-marketplace";
           render();
         }
       }
