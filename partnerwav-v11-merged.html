@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <style>
   :root{
     --bg:#ffffff; --surface:#ffffff; --surface-2:#f5f4ff;
@@ -343,13 +343,6 @@
     .topbar{ padding:max(14px, env(safe-area-inset-top,0px)) 16px 12px; }
     .search{ display:none; }
   }
-
-  /* ===== LEAFLET MAP CUSTOMIZATION ===== */
-  .leaflet-container{ background:var(--surface); }
-  .leaflet-control-attribution{ background:var(--surface-2); color:var(--ink-soft); }
-  .leaflet-popup-content-wrapper{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow); border-radius:8px; }
-  .leaflet-popup-tip{ background:var(--surface); }
-  .leaflet-popup-content{ color:var(--ink); }
 </style>
 
 <div class="shell">
@@ -392,6 +385,7 @@
       <div class="navgroup-label">Vendor</div>
       <button class="navlink" data-screen="vendor-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="vendor-program-editor"><span class="ic">📝</span>My Program Listing</button>
+      <button class="navlink" data-screen="vendor-hardware-offerings"><span class="ic">📦</span>Hardware Offerings</button>
       <button class="navlink" data-screen="vendor-partners"><span class="ic">👨‍💼</span>Partners in My Program</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
@@ -788,6 +782,45 @@
         <div id="vendorProfileContent"></div>
       </section>
 
+      <!-- ===== PRODUCT PROFILE EDITOR (create/edit individual products) ===== -->
+      <section id="scr-product-profile-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="vendor-overview">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="productEditorTitle">Create Product Profile</h2>
+          <div style="height:16px"></div>
+          <form id="productProfileForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Product Name</label><input type="text" id="productName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Category/Vertical</label><input type="text" id="productCategory" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Description</label><textarea id="productDescription" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
+            <div><label>Key Features (comma-separated)</label><input type="text" id="productFeatures" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., AI-powered, Real-time, Cloud-based" /></div>
+            <div><label>Use Cases</label><textarea id="productUseCases" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:60px;" placeholder="Describe typical use cases for this product"></textarea></div>
+            <div><label>Website</label><input type="url" id="productWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <label style="font-weight:600;font-size:.9rem;">Product Logo</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <div id="productLogoPreview" style="width:80px;height:80px;background:var(--surface-2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:2rem;">📦</div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <button type="button" class="btn secondary sm" data-browse-logo="product">Upload Logo</button>
+                  <button type="button" class="btn ghost sm" data-remove-logo="product" style="color:var(--bad);">Remove</button>
+                </div>
+              </div>
+              <input type="file" id="productLogoFile" accept="image/*" style="display:none;" />
+              <input type="hidden" id="productLogo" value="" />
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Product</button>
+              <button type="button" class="btn secondary" data-back-screen="vendor-overview">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteProductProfileBtn" style="margin-left:auto;display:none;">Delete Product</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== PRODUCT PROFILE VIEW (public view of individual product) ===== -->
+      <section id="scr-product-profile-view" hidden>
+        <div id="productProfileViewContent"></div>
+      </section>
+
       <!-- ===== PARTNER PROFILE EDITOR (create/edit) ===== -->
       <section id="scr-partner-profile-editor" hidden>
         <button class="btn ghost sm" data-back-screen="partner-overview">← Back</button>
@@ -828,6 +861,77 @@
               <button type="submit" class="btn primary">Save Program</button>
               <button type="button" class="btn secondary" data-back-screen="vendor-overview">Cancel</button>
               <button type="button" class="btn secondary" id="deleteProgramBtn" style="margin-left:auto;display:none;">Delete Program</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== VENDOR: HARDWARE OFFERINGS ===== -->
+      <section id="scr-vendor-hardware-offerings" hidden>
+        <div class="section-head"><h2>Hardware Offerings</h2><span class="hint">Manage hardware products bundled with your software solutions</span></div>
+        <div style="height:14px"></div>
+        <button class="btn primary" data-goto-screen="vendor-hardware-offering-editor" style="margin-bottom:16px;">+ Add Hardware Offering</button>
+        <div class="card">
+          <div id="hardwareOfferingsContent">Loading...</div>
+        </div>
+      </section>
+
+      <!-- ===== VENDOR: HARDWARE OFFERING EDITOR ===== -->
+      <section id="scr-vendor-hardware-offering-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="vendor-hardware-offerings">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="hardwareEditorTitle">Add Hardware Offering</h2>
+          <div style="height:16px"></div>
+          <form id="hardwareOfferingForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label for="hwProduct" style="display:block;font-weight:500;margin-bottom:6px;">Product *</label>
+              <select id="hwProduct" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;" required>
+                <option value="">Select a product...</option>
+              </select>
+            </div>
+            <div>
+              <label for="hwName" style="display:block;font-weight:500;margin-bottom:6px;">Hardware Name *</label>
+              <input type="text" id="hwName" placeholder="e.g. Yealink IP Phone T54W" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required />
+            </div>
+            <div>
+              <label for="hwDistributor" style="display:block;font-weight:500;margin-bottom:6px;">Distributor *</label>
+              <select id="hwDistributor" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;" required>
+                <option value="">Select a distributor...</option>
+              </select>
+            </div>
+            <div>
+              <label for="hwRegions" style="display:block;font-weight:500;margin-bottom:6px;">Available Regions *</label>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">
+                <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" class="hwRegionChk" value="apac" /> Asia Pacific</label>
+                <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" class="hwRegionChk" value="europe" /> Europe</label>
+                <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" class="hwRegionChk" value="americas" /> Americas</label>
+                <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" class="hwRegionChk" value="meaf" /> Middle East & Africa</label>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label for="hwListPrice" style="display:block;font-weight:500;margin-bottom:6px;">List Price ($) *</label>
+                <input type="number" id="hwListPrice" placeholder="450" min="0" step="0.01" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required />
+              </div>
+              <div>
+                <label for="hwCostPrice" style="display:block;font-weight:500;margin-bottom:6px;">Cost Price ($) *</label>
+                <input type="number" id="hwCostPrice" placeholder="280" min="0" step="0.01" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required />
+              </div>
+            </div>
+            <div style="padding:12px;background:var(--surface-2);border-radius:8px;font-size:.9rem;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <span>Margin:</span>
+                <strong id="hwMarginCalc">—</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>CloudWAV Commission (5%):</span>
+                <strong id="hwCommissionCalc">—</strong>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Hardware Offering</button>
+              <button type="button" class="btn secondary" data-back-screen="vendor-hardware-offerings">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteHardwareBtn" style="margin-left:auto;display:none;">Delete Offering</button>
             </div>
           </form>
         </div>
@@ -1905,6 +2009,24 @@
     { id:"mm2", title:"Cross Connect Product Demo Video", program:"Cross Connect", materialType:"Demo Asset", description:"Product demo walkthrough for partner training", format:"Video", status:"pending", submittedDate:"2 days ago", submittedBy:"Portonics", approvalNotes:"", archivedAt:null }
   ];
 
+  var vendorProducts = [
+    { id:"intelsense-ai-prod", vendorId:"intelsense", name:"Intelsense AI", category:"Enterprise AI", description:"Conversational AI platform for enterprise support automation with multi-language NLP capabilities", features:"AI-powered NLP, Multi-language, Real-time Analytics, Integration APIs", useCases:"Customer support automation, Internal help desk, Employee training assistance", website:"https://intelsense.ai", logo:"", archivedAt:null },
+    { id:"intelsense-voice-prod", vendorId:"intelsense", name:"Intelsense Voice", category:"Voice AI", description:"Voice-to-text and voice analytics for call centers and customer service", features:"Real-time transcription, Sentiment analysis, Call recording, Quality scoring", useCases:"Call center monitoring, Quality assurance, Customer experience analysis", website:"https://intelsense.ai/voice", logo:"", archivedAt:null },
+    { id:"intelsense-chat-prod", vendorId:"intelsense", name:"Intelsense ChatBot", category:"Conversational AI", description:"Pre-built chatbot solutions for e-commerce and customer engagement", features:"Pre-trained models, No-code deployment, Omnichannel, Analytics dashboard", useCases:"E-commerce support, Lead qualification, FAQ automation", website:"https://intelsense.ai/chatbot", logo:"", archivedAt:null }
+  ];
+
+  var distributors = [
+    { id:"yealink-apac", vendorId:"intelsense", name:"Yealink Asia Pacific", regions:["apac","meaf"], apiEndpoint:"https://api.yealink.example.com", apiKey:"[configured]", hardware:["phones","video-endpoints"], shippingCountries:["Thailand","UAE","Kenya","Singapore"], status:"active", archivedAt:null },
+    { id:"yealink-eur", vendorId:"intelsense", name:"Yealink Europe", regions:["europe"], apiEndpoint:"https://api.yealink-eu.example.com", apiKey:"[configured]", hardware:["phones","video-endpoints"], shippingCountries:["Germany","UK","France","Sweden","Norway"], status:"active", archivedAt:null }
+  ];
+
+  var hardwareOfferings = [
+    { id:"hw-offering-1", productId:"intelsense-chat-prod", vendorId:"intelsense", hardwareName:"Yealink IP Phone T54W", distributorId:"yealink-apac", regions:["apac","meaf"], listPrice:450, costPrice:280, commissionRate:0.05, status:"active", archivedAt:null },
+    { id:"hw-offering-2", productId:"intelsense-chat-prod", vendorId:"intelsense", hardwareName:"Yealink Video Phone SIP-T58A", distributorId:"yealink-eur", regions:["europe"], listPrice:680, costPrice:410, commissionRate:0.05, status:"active", archivedAt:null }
+  ];
+
+  var hardwareOrders = [];
+
   var partnerLocations = [
     { id:"siam-digital", name:"Siam Digital MSP", region:"apac", lat:13.7563, lng:100.5018, city:"Bangkok, Thailand", status:"active", program:"Intelsense AI", tier:"Gold" },
     { id:"gulf-coast-var", name:"Gulf Coast VAR", region:"americas", lat:27.9506, lng:-82.4647, city:"Tampa, USA", status:"active", program:"Cross Connect", tier:"Silver" },
@@ -2017,6 +2139,8 @@
     "resource-approvals":"Resource Approvals",
     "vendor-overview":"Overview",
     "vendor-listing":"My Program Listing",
+    "vendor-hardware-offerings":"Hardware Offerings",
+    "vendor-hardware-offering-editor":"Hardware Offering",
     "vendor-partners":"Partners in My Program",
     "vendor-network":"Vendor Network",
     "vendor-profile":"Vendor Profile",
@@ -2214,97 +2338,6 @@
     document.getElementById("projectsList").innerHTML = html;
   }
 
-  // ===== PARTNER DISCOVERY MAP =====
-  var mapInstance = null;
-  var mapMarkers = [];
-
-  function getFilteredPartners(){
-    var statusFilter = document.getElementById("mapStatusFilter") ? document.getElementById("mapStatusFilter").value : "";
-    var regionFilter = document.getElementById("mapRegionFilter") ? document.getElementById("mapRegionFilter").value : "";
-
-    return partnerLocations.filter(function(p){
-      var statusMatch = !statusFilter || p.status === statusFilter;
-      var regionMatch = !regionFilter || p.region === regionFilter;
-      return statusMatch && regionMatch;
-    });
-  }
-
-  function initializeMap(){
-    var mapContainer = document.getElementById("partnerMapContainer");
-    if (!mapContainer) return;
-
-    // Clear existing map if it exists
-    if (mapInstance) {
-      mapInstance.remove();
-      mapInstance = null;
-      mapMarkers = [];
-    }
-
-    // Initialize map centered on world
-    mapInstance = L.map("partnerMapContainer").setView([20, 0], 2);
-
-    // Add tile layer from OpenStreetMap
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
-    }).addTo(mapInstance);
-
-    // Add partner markers
-    var filteredPartners = getFilteredPartners();
-    filteredPartners.forEach(function(partner){
-      var color = partner.status === "active" ? "#1a8f5a" : (partner.status === "approved" ? "#5b3df5" : "#a06a12");
-      var icon = L.circleMarker([partner.lat, partner.lng], {
-        radius: 8,
-        fillColor: color,
-        color: "#fff",
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 0.8
-      });
-
-      var popup = '<div style="font-weight:600;margin-bottom:4px;">'+esc(partner.name)+'</div>'
-        + '<div style="font-size:0.85rem;color:#666;">'+esc(partner.city)+'</div>'
-        + '<div style="font-size:0.85rem;color:#666;margin-top:4px;"><strong>Program:</strong> '+esc(partner.program)+'</div>'
-        + '<div style="font-size:0.85rem;color:#666;"><strong>Tier:</strong> '+esc(partner.tier)+'</div>'
-        + '<div style="font-size:0.85rem;margin-top:6px;"><span class="badge '+partner.status+'">'+esc(partner.status.charAt(0).toUpperCase()+partner.status.slice(1))+'</span></div>';
-
-      icon.bindPopup(popup);
-      icon.addTo(mapInstance);
-      mapMarkers.push({id: partner.id, marker: icon, data: partner});
-    });
-
-    // Update partner list
-    updateMapPartnerList(filteredPartners);
-  }
-
-  function updateMapPartnerList(filteredPartners){
-    var listElem = document.getElementById("partnerMapList");
-    if (!listElem) return;
-
-    if (filteredPartners.length === 0){
-      listElem.innerHTML = '<div style="padding:8px;background:var(--surface);border-radius:6px;text-align:center;color:var(--ink-faint);">No partners match filters</div>';
-      return;
-    }
-
-    listElem.innerHTML = filteredPartners.map(function(p){
-      var statusColor = p.status === "active" ? "good" : (p.status === "approved" ? "accent" : "warn");
-      return '<div style="padding:10px;background:var(--surface);border-radius:6px;cursor:pointer;" data-partner-id="'+p.id+'" onclick="event.stopPropagation();highlightMapMarker(\''+p.id+'\')">'
-        + '<div style="font-weight:600;font-size:0.9rem;margin-bottom:4px;">'+esc(p.name)+'</div>'
-        + '<div style="font-size:0.8rem;color:var(--ink-soft);">'+esc(p.city)+'</div>'
-        + '<div style="font-size:0.75rem;margin-top:4px;"><span class="badge '+statusColor+'">'+esc(p.status)+'</span> '+esc(p.tier)+'</div>'
-        + '</div>';
-    }).join("");
-  }
-
-  function highlightMapMarker(partnerId){
-    mapMarkers.forEach(function(m){
-      if (m.id === partnerId && m.marker){
-        m.marker.openPopup();
-        mapInstance.setView([m.data.lat, m.data.lng], 6);
-      }
-    });
-  }
-
   function render(){
     // Detect referral URL for public partner application
     if (window.location.search.includes("apply=vendor")) {
@@ -2400,6 +2433,7 @@
     renderVendorOverview();
     populateVendorListingForm();
     renderVendorPartners();
+    renderHardwareOfferingsList();
     renderVendorNetwork();
     renderVendorProfile();
     renderPublicPartnerApplication();
@@ -2447,16 +2481,7 @@
     }
 
     // ---- operator partner discovery map ----
-    if (state.screen === "operator-partner-map"){
-      setTimeout(function(){
-        initializeMap();
-        // Attach filter handlers
-        var statusFilter = document.getElementById("mapStatusFilter");
-        var regionFilter = document.getElementById("mapRegionFilter");
-        if (statusFilter) statusFilter.addEventListener("change", function(){ initializeMap(); });
-        if (regionFilter) regionFilter.addEventListener("change", function(){ initializeMap(); });
-      }, 100);
-    }
+    renderPartnerMap();
 
     // ---- resource library ----
     renderResourceBrowse();
@@ -2834,19 +2859,14 @@
     if (!grid) return;
     var netFiltered = filteredPrograms();
     var isLoggedInPartner = state.role === "partner" && state.myPartnerId;
-    var isOperator = state.role === "operator";
-    var html = '';
-
-    netFiltered.forEach(function(p){
+    grid.innerHTML = netFiltered.length ? netFiltered.map(function(p){
       var mine = state.role === "vendor" && p.id === state.myVendorId;
       var actionBtn = mine
         ? '<button class="btn secondary sm" data-goto-screen="vendor-listing">Edit listing</button>'
         : isLoggedInPartner
           ? '<button class="btn secondary sm" data-apply-vendor-reseller="'+p.id+'">Apply as Reseller →</button>'
           : '<button class="btn secondary sm" data-message-vendor="'+esc(p.name)+'">Message</button>';
-
-      // Add vendor card
-      html += '<div class="program-card">'
+      return '<div class="program-card">'
         + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div>'+(mine?'<span class="badge accent2">You</span>':relBadges(p.relationships))+'</div>'
         + '<div class="program-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'
         + '<p class="program-desc">'+esc(p.desc)+'</p>'
@@ -2854,23 +2874,7 @@
           + '<button class="btn ghost sm" data-view-vendor="'+p.id+'">View profile →</button>'
           + actionBtn
         + '</div></div>';
-
-      // Add individual product cards if vendor has products
-      if (p.products && p.products.length > 0 && (isLoggedInPartner || isOperator)) {
-        p.products.forEach(function(prod){
-          html += '<div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);min-height:160px;margin-left:20px;margin-top:8px;position:relative;">'
-            + '<div style="position:absolute;top:10px;right:10px;font-size:.75rem;color:var(--ink-faint);background:var(--surface);padding:4px 8px;border-radius:4px;">'+esc(p.name)+' product</div>'
-            + '<h3 style="margin:0;font-size:.95rem;font-weight:600;color:var(--ink);padding-right:120px;">'+esc(prod.name)+'</h3>'
-            + '<p style="margin:0;font-size:.85rem;color:var(--ink-soft);line-height:1.5;flex:1;">'+esc(prod.desc)+'</p>'
-            + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-            + '<button class="btn secondary xs" data-apply-vendor-product="'+esc(p.id)+'" data-product-id="'+esc(prod.product_id)+'">Become a Partner →</button>'
-            + '</div>'
-            + '</div>';
-        });
-      }
-    });
-
-    grid.innerHTML = html || '<div class="empty">No vendors match that relationship type yet.</div>';
+    }).join("") : '<div class="empty">No vendors match that relationship type yet.</div>';
   }
 
   function renderTraining(){
@@ -3072,33 +3076,18 @@
     // Product selection (if vendor has products)
     var productSelectionHtml = '';
     if (vendor.products && vendor.products.length > 0) {
-      // Check if a specific product was selected via URL
-      var selectedProduct = null;
-      if (state.selectedProductId) {
-        selectedProduct = vendor.products.find(function(p){ return p.product_id === state.selectedProductId; });
-      }
+      var productOptions = vendor.products.map(function(prod){
+        var selected = state.selectedProductId && state.selectedProductId === prod.product_id ? ' selected' : '';
+        return '<option value="'+esc(prod.product_id)+'"'+selected+'>'+esc(prod.name)+'</option>';
+      }).join('');
 
-      if (selectedProduct) {
-        // Show pre-filled product name (non-editable)
-        productSelectionHtml = '<div>'
-          + '<label style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Product *</label>'
-          + '<input type="hidden" id="appProduct" value="'+esc(selectedProduct.product_id)+'" />'
-          + '<div style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;background:var(--surface-2);color:var(--ink);">'+esc(selectedProduct.name)+'</div>'
-          + '</div>';
-      } else {
-        // Show product dropdown if no product is pre-selected
-        var productOptions = vendor.products.map(function(prod){
-          return '<option value="'+esc(prod.product_id)+'">'+esc(prod.name)+'</option>';
-        }).join('');
-
-        productSelectionHtml = '<div>'
-          + '<label for="appProduct" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Product *</label>'
-          + '<select id="appProduct" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required>'
-          + '<option value="">Select a product...</option>'
-          + productOptions
-          + '</select>'
-          + '</div>';
-      }
+      productSelectionHtml = '<div>'
+        + '<label for="appProduct" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Product *</label>'
+        + '<select id="appProduct" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required>'
+        + '<option value="">Select a product...</option>'
+        + productOptions
+        + '</select>'
+        + '</div>';
     }
 
     var formHtml =
@@ -4259,6 +4248,206 @@
     render();
   }
 
+  // ===== HARDWARE OFFERINGS =====
+  function renderHardwareOfferingsList(){
+    var content = document.getElementById("hardwareOfferingsContent");
+    if (!content) return;
+    var vendorId = state.myVendorId;
+    var offerings = hardwareOfferings.filter(function(h){ return h.vendorId === vendorId && !h.archivedAt; });
+
+    if (offerings.length === 0){
+      content.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--ink-faint);">No hardware offerings yet. Click "Add Hardware Offering" to create one.</div>';
+      return;
+    }
+
+    content.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
+      + '<thead><tr style="border-bottom:1px solid var(--line);">'
+      + '<th style="text-align:left;padding:12px;font-size:.9rem;font-weight:600;">Hardware</th>'
+      + '<th style="text-align:left;padding:12px;font-size:.9rem;font-weight:600;">Product</th>'
+      + '<th style="text-align:left;padding:12px;font-size:.9rem;font-weight:600;">Distributor</th>'
+      + '<th style="text-align:center;padding:12px;font-size:.9rem;font-weight:600;">Price</th>'
+      + '<th style="text-align:right;padding:12px;font-size:.9rem;font-weight:600;">Actions</th>'
+      + '</tr></thead><tbody>'
+      + offerings.map(function(offering){
+        var product = vendorProducts.find(function(p){ return p.id === offering.productId; });
+        var distributor = distributors.find(function(d){ return d.id === offering.distributorId; });
+        var productName = product ? product.name : "Unknown";
+        var distributorName = distributor ? distributor.name : "Unknown";
+        return '<tr style="border-bottom:1px solid var(--line);">'
+          + '<td style="padding:12px;"><strong>'+esc(offering.hardwareName)+'</strong></td>'
+          + '<td style="padding:12px;">'+esc(productName)+'</td>'
+          + '<td style="padding:12px;">'+esc(distributorName)+'</td>'
+          + '<td style="padding:12px;text-align:center;">$'+offering.listPrice.toFixed(2)+'</td>'
+          + '<td style="padding:12px;text-align:right;">'
+          + '<button class="btn primary xs" data-edit-hardware="'+esc(offering.id)+'">Edit</button> '
+          + '<button class="btn secondary xs" data-delete-hardware="'+esc(offering.id)+'">Delete</button>'
+          + '</td>'
+          + '</tr>';
+      }).join('')
+      + '</tbody></table>';
+  }
+
+  function loadHardwareOfferingForm(offeringId){
+    var offering = offeringId ? hardwareOfferings.find(function(h){ return h.id === offeringId; }) : null;
+    var vendorId = state.myVendorId;
+
+    // Set title
+    document.getElementById("hardwareEditorTitle").textContent = offering ? "Edit Hardware Offering" : "Add Hardware Offering";
+
+    // Populate products dropdown
+    var productSelect = document.getElementById("hwProduct");
+    var vendorProds = vendorProducts.filter(function(p){ return p.vendorId === vendorId; });
+    productSelect.innerHTML = '<option value="">Select a product...</option>'
+      + vendorProds.map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'; }).join('');
+    productSelect.value = offering ? offering.productId : "";
+
+    // Populate distributor dropdown
+    var distSelect = document.getElementById("hwDistributor");
+    var vendorDists = distributors.filter(function(d){ return d.vendorId === vendorId; });
+    distSelect.innerHTML = '<option value="">Select a distributor...</option>'
+      + vendorDists.map(function(d){ return '<option value="'+esc(d.id)+'">'+esc(d.name)+' - '+d.regions.join(', ')+'</option>'; }).join('');
+    distSelect.value = offering ? offering.distributorId : "";
+
+    // Set form fields
+    document.getElementById("hwName").value = offering ? offering.hardwareName : "";
+    document.getElementById("hwListPrice").value = offering ? offering.listPrice : "";
+    document.getElementById("hwCostPrice").value = offering ? offering.costPrice : "";
+
+    // Set region checkboxes
+    document.querySelectorAll(".hwRegionChk").forEach(function(chk){
+      chk.checked = offering && offering.regions.indexOf(chk.value) >= 0;
+    });
+
+    // Show/hide delete button
+    var deleteBtn = document.getElementById("deleteHardwareBtn");
+    deleteBtn.style.display = offering ? "block" : "none";
+    if (offering) deleteBtn.setAttribute("data-offering-id", offeringId);
+
+    state.editingHardwareOfferingId = offeringId;
+
+    // Add event listeners for margin calculation
+    setTimeout(function(){
+      var priceInputs = document.querySelectorAll("#hwListPrice, #hwCostPrice");
+      priceInputs.forEach(function(input){
+        input.addEventListener("input", calculateHardwareMargin);
+      });
+      calculateHardwareMargin();
+    }, 0);
+  }
+
+  function calculateHardwareMargin(){
+    var listPrice = parseFloat(document.getElementById("hwListPrice").value) || 0;
+    var costPrice = parseFloat(document.getElementById("hwCostPrice").value) || 0;
+    var margin = listPrice - costPrice;
+    var marginPercent = listPrice > 0 ? ((margin / listPrice) * 100).toFixed(1) : 0;
+    var commission = (listPrice * 0.05).toFixed(2);
+
+    document.getElementById("hwMarginCalc").textContent = '$' + margin.toFixed(2) + ' (' + marginPercent + '%)';
+    document.getElementById("hwCommissionCalc").textContent = '$' + commission;
+  }
+
+  function saveHardwareOffering(e){
+    e.preventDefault();
+    var productId = document.getElementById("hwProduct").value.trim();
+    var hardwareName = document.getElementById("hwName").value.trim();
+    var distributorId = document.getElementById("hwDistributor").value.trim();
+    var listPrice = parseFloat(document.getElementById("hwListPrice").value);
+    var costPrice = parseFloat(document.getElementById("hwCostPrice").value);
+    var regions = Array.from(document.querySelectorAll(".hwRegionChk:checked")).map(function(chk){ return chk.value; });
+
+    if (!productId || !hardwareName || !distributorId || !listPrice || !costPrice || regions.length === 0){
+      toast("Please fill in all required fields");
+      return;
+    }
+
+    if (state.editingHardwareOfferingId){
+      var idx = hardwareOfferings.findIndex(function(h){ return h.id === state.editingHardwareOfferingId; });
+      if (idx >= 0){
+        hardwareOfferings[idx] = Object.assign(hardwareOfferings[idx], {
+          productId: productId, hardwareName: hardwareName, distributorId: distributorId,
+          listPrice: listPrice, costPrice: costPrice, regions: regions
+        });
+        toast("Hardware offering updated");
+      }
+    } else {
+      var newId = "hw-" + Date.now();
+      hardwareOfferings.push({
+        id: newId, productId: productId, vendorId: state.myVendorId, hardwareName: hardwareName,
+        distributorId: distributorId, regions: regions, listPrice: listPrice, costPrice: costPrice,
+        commissionRate: 0.05, status: "active", archivedAt: null
+      });
+      toast("Hardware offering created");
+    }
+    state.editingHardwareOfferingId = null;
+    state.screen = "vendor-hardware-offerings";
+    saveVendorData();
+    render();
+  }
+
+  // ===== PRODUCT PROFILES (individual vendor products) =====
+  function loadProductProfileForm(productId){
+    var product = productId ? vendorProducts.find(function(p){ return p.id === productId; }) : null;
+    document.getElementById("productEditorTitle").textContent = product ? "Edit Product Profile" : "Create Product Profile";
+    document.getElementById("productName").value = product ? product.name : "";
+    document.getElementById("productCategory").value = product ? product.category : "";
+    document.getElementById("productDescription").value = product ? product.description : "";
+    document.getElementById("productFeatures").value = product ? product.features : "";
+    document.getElementById("productUseCases").value = product ? product.useCases : "";
+    document.getElementById("productWebsite").value = product ? product.website : "";
+    document.getElementById("productLogo").value = product ? product.logo : "";
+    updateProductLogoPreview(product ? product.logo : "");
+    var deleteBtn = document.getElementById("deleteProductProfileBtn");
+    deleteBtn.style.display = product ? "block" : "none";
+    if (product) deleteBtn.setAttribute("data-product-id", productId);
+    state.editingProductId = productId;
+  }
+
+  function updateProductLogoPreview(logoUrl){
+    var preview = document.getElementById("productLogoPreview");
+    if (!preview) return;
+    if (logoUrl && logoUrl.length > 0){
+      preview.innerHTML = '<img src="'+esc(logoUrl)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />';
+    } else {
+      preview.innerHTML = '📦';
+    }
+  }
+
+  function saveProductProfile(e){
+    e.preventDefault();
+    var name = document.getElementById("productName").value.trim();
+    var category = document.getElementById("productCategory").value.trim();
+    var description = document.getElementById("productDescription").value.trim();
+    var features = document.getElementById("productFeatures").value.trim();
+    var useCases = document.getElementById("productUseCases").value.trim();
+    var website = document.getElementById("productWebsite").value.trim();
+    var logo = document.getElementById("productLogo").value.trim();
+
+    if (!name || !category || !description){ toast("Please fill in required fields"); return; }
+
+    if (state.editingProductId){
+      var idx = vendorProducts.findIndex(function(p){ return p.id === state.editingProductId; });
+      if (idx >= 0){
+        vendorProducts[idx] = Object.assign(vendorProducts[idx], {
+          name: name, category: category, description: description, features: features,
+          useCases: useCases, website: website, logo: logo
+        });
+        toast("Product profile updated");
+      }
+    } else {
+      var newId = "prod-" + Date.now();
+      vendorProducts.push({
+        id: newId, vendorId: state.myVendorId || "intelsense", name: name, category: category,
+        description: description, features: features, useCases: useCases, website: website,
+        logo: logo, archivedAt: null
+      });
+      toast("Product profile created");
+    }
+    state.editingProductId = null;
+    state.screen = "vendor-overview";
+    saveVendorData();
+    render();
+  }
+
   // ===== TIER 2: PROJECTS/DEALS =====
   function loadProjectForm(projectId){
     var project = projectId ? projects.find(function(p){ return p.id === projectId; }) : null;
@@ -4706,6 +4895,12 @@
 
     var marketingMaterialForm = document.getElementById("marketingMaterialForm");
     if (marketingMaterialForm) marketingMaterialForm.addEventListener("submit", saveMarketingMaterial);
+
+    var productProfileForm = document.getElementById("productProfileForm");
+    if (productProfileForm) productProfileForm.addEventListener("submit", saveProductProfile);
+
+    var hardwareOfferingForm = document.getElementById("hardwareOfferingForm");
+    if (hardwareOfferingForm) hardwareOfferingForm.addEventListener("submit", saveHardwareOffering);
   }
 
   console.log("Attaching click handler to document");
@@ -4744,6 +4939,8 @@
         else if (screen === "scr-resources-editor") loadResourceForm(state.editingResourceId);
         else if (screen === "scr-resource-approvals-editor") loadApprovalForm(state.editingApprovalId);
         else if (screen === "scr-operator-program-editor") loadOperatorProgramForm(state.editingOperatorProgramId);
+        else if (screen === "vendor-hardware-offerings") renderHardwareOfferingsList();
+        else if (screen === "vendor-hardware-offering-editor") loadHardwareOfferingForm(state.editingHardwareOfferingId);
         attachFormHandlers();
       }, 0);
       render();
@@ -5021,17 +5218,6 @@
       return;
     }
 
-    var applyVendorProductBtn = e.target.closest("[data-apply-vendor-product]");
-    if (applyVendorProductBtn){
-      var vendorId = applyVendorProductBtn.getAttribute("data-apply-vendor-product");
-      var productId = applyVendorProductBtn.getAttribute("data-product-id");
-      state.applyingForVendorId = vendorId;
-      state.selectedProductId = productId;
-      state.screen = "public-partner-apply";
-      render();
-      return;
-    }
-
     var claimBtn = e.target.closest("[data-claim-project]");
     if (claimBtn){ claimProject(claimBtn.getAttribute("data-claim-project")); return; }
 
@@ -5049,6 +5235,29 @@
 
     var editLeadBtn = e.target.closest("[data-edit-lead]");
     if (editLeadBtn){ showEditLeadModal(editLeadBtn.getAttribute("data-edit-lead")); return; }
+
+    var editHardwareBtn = e.target.closest("[data-edit-hardware]");
+    if (editHardwareBtn){
+      state.editingHardwareOfferingId = editHardwareBtn.getAttribute("data-edit-hardware");
+      state.screen = "vendor-hardware-offering-editor";
+      render();
+      return;
+    }
+
+    var deleteHardwareBtn = e.target.closest("[data-delete-hardware]");
+    if (deleteHardwareBtn){
+      var offeringId = deleteHardwareBtn.getAttribute("data-delete-hardware");
+      if (confirm("Archive this hardware offering?")){
+        var idx = hardwareOfferings.findIndex(function(h){ return h.id === offeringId; });
+        if (idx >= 0){
+          hardwareOfferings[idx].archivedAt = new Date().toISOString();
+          toast("Hardware offering archived");
+          saveVendorData();
+          render();
+        }
+      }
+      return;
+    }
 
     var enrollBtn = e.target.closest("[data-enroll]");
     if (enrollBtn){ doEnroll(enrollBtn.getAttribute("data-enroll")); return; }
