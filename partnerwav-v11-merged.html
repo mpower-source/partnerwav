@@ -884,10 +884,10 @@
           <div style="height:16px"></div>
           <form id="hardwareOfferingForm" style="display:flex;flex-direction:column;gap:16px;">
             <div>
-              <label for="hwProduct" style="display:block;font-weight:500;margin-bottom:6px;">Product *</label>
-              <select id="hwProduct" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;" required>
-                <option value="">Select a product...</option>
-              </select>
+              <label style="display:block;font-weight:500;margin-bottom:6px;">Products *</label>
+              <div id="hwProductsCheckboxes" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">
+                <!-- Populated by loadHardwareOfferingForm() -->
+              </div>
             </div>
             <div>
               <label for="hwName" style="display:block;font-weight:500;margin-bottom:6px;">Hardware Name *</label>
@@ -921,11 +921,11 @@
             <div style="padding:12px;background:var(--surface-2);border-radius:8px;font-size:.9rem;">
               <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
                 <span>Margin:</span>
-                <strong id="hwMarginCalc">-</strong>
+                <strong id="hwMarginCalc">—</strong>
               </div>
               <div style="display:flex;justify-content:space-between;">
                 <span>CloudWAV Commission (5%):</span>
-                <strong id="hwCommissionCalc">-</strong>
+                <strong id="hwCommissionCalc">—</strong>
               </div>
             </div>
             <div style="display:flex;gap:8px;">
@@ -2012,7 +2012,9 @@
   var vendorProducts = [
     { id:"intelsense-ai-prod", vendorId:"intelsense", name:"Intelsense AI", category:"Enterprise AI", description:"Conversational AI platform for enterprise support automation with multi-language NLP capabilities", features:"AI-powered NLP, Multi-language, Real-time Analytics, Integration APIs", useCases:"Customer support automation, Internal help desk, Employee training assistance", website:"https://intelsense.ai", logo:"", archivedAt:null },
     { id:"intelsense-voice-prod", vendorId:"intelsense", name:"Intelsense Voice", category:"Voice AI", description:"Voice-to-text and voice analytics for call centers and customer service", features:"Real-time transcription, Sentiment analysis, Call recording, Quality scoring", useCases:"Call center monitoring, Quality assurance, Customer experience analysis", website:"https://intelsense.ai/voice", logo:"", archivedAt:null },
-    { id:"intelsense-chat-prod", vendorId:"intelsense", name:"Intelsense ChatBot", category:"Conversational AI", description:"Pre-built chatbot solutions for e-commerce and customer engagement", features:"Pre-trained models, No-code deployment, Omnichannel, Analytics dashboard", useCases:"E-commerce support, Lead qualification, FAQ automation", website:"https://intelsense.ai/chatbot", logo:"", archivedAt:null }
+    { id:"intelsense-chat-prod", vendorId:"intelsense", name:"Intelsense ChatBot", category:"Conversational AI", description:"Pre-built chatbot solutions for e-commerce and customer engagement", features:"Pre-trained models, No-code deployment, Omnichannel, Analytics dashboard", useCases:"E-commerce support, Lead qualification, FAQ automation", website:"https://intelsense.ai/chatbot", logo:"", archivedAt:null },
+    { id:"unisense-prod", vendorId:"intelsense", name:"Unisense", category:"Sales Intelligence", description:"AI-powered sales intelligence and conversation insights for revenue teams", features:"Call recording, Conversation analysis, Sales coaching, Deal tracking", useCases:"Sales team enablement, Deal visibility, Revenue intelligence", website:"https://unisense.ai", logo:"", archivedAt:null },
+    { id:"altercrew-prod", vendorId:"intelsense", name:"AlterCrew", category:"Virtual Staffing", description:"On-demand virtual staffing platform for customer support and operations", features:"Managed workforce, Training included, Quality assurance, Flexible scaling", useCases:"Customer support outsourcing, Back-office operations, Seasonal scaling", website:"https://altercrew.ai", logo:"", archivedAt:null }
   ];
 
   var distributors = [
@@ -2021,8 +2023,8 @@
   ];
 
   var hardwareOfferings = [
-    { id:"hw-offering-1", productId:"intelsense-chat-prod", vendorId:"intelsense", hardwareName:"Yealink IP Phone T54W", distributorId:"yealink-apac", regions:["apac","meaf"], listPrice:450, costPrice:280, commissionRate:0.05, status:"active", archivedAt:null },
-    { id:"hw-offering-2", productId:"intelsense-chat-prod", vendorId:"intelsense", hardwareName:"Yealink Video Phone SIP-T58A", distributorId:"yealink-eur", regions:["europe"], listPrice:680, costPrice:410, commissionRate:0.05, status:"active", archivedAt:null }
+    { id:"hw-offering-1", productIds:["intelsense-chat-prod","unisense-prod"], vendorId:"intelsense", hardwareName:"Yealink IP Phone T54W", distributorId:"yealink-apac", regions:["apac","meaf"], listPrice:450, costPrice:280, commissionRate:0.05, status:"active", archivedAt:null },
+    { id:"hw-offering-2", productIds:["intelsense-chat-prod","unisense-prod"], vendorId:"intelsense", hardwareName:"Yealink Video Phone SIP-T58A", distributorId:"yealink-eur", regions:["europe"], listPrice:680, costPrice:410, commissionRate:0.05, status:"active", archivedAt:null }
   ];
 
   var hardwareOrders = [];
@@ -4262,19 +4264,22 @@
     content.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
       + '<thead><tr style="border-bottom:1px solid var(--line);">'
       + '<th style="text-align:left;padding:12px;font-size:.9rem;font-weight:600;">Hardware</th>'
-      + '<th style="text-align:left;padding:12px;font-size:.9rem;font-weight:600;">Product</th>'
+      + '<th style="text-align:left;padding:12px;font-size:.9rem;font-weight:600;">Compatible Products</th>'
       + '<th style="text-align:left;padding:12px;font-size:.9rem;font-weight:600;">Distributor</th>'
       + '<th style="text-align:center;padding:12px;font-size:.9rem;font-weight:600;">Price</th>'
       + '<th style="text-align:right;padding:12px;font-size:.9rem;font-weight:600;">Actions</th>'
       + '</tr></thead><tbody>'
       + offerings.map(function(offering){
-        var product = vendorProducts.find(function(p){ return p.id === offering.productId; });
         var distributor = distributors.find(function(d){ return d.id === offering.distributorId; });
-        var productName = product ? product.name : "Unknown";
         var distributorName = distributor ? distributor.name : "Unknown";
+        var productIds = offering.productIds || (offering.productId ? [offering.productId] : []);
+        var productNames = productIds.map(function(pId){
+          var prod = vendorProducts.find(function(p){ return p.id === pId; });
+          return prod ? prod.name : "Unknown";
+        }).join(", ");
         return '<tr style="border-bottom:1px solid var(--line);">'
           + '<td style="padding:12px;"><strong>'+esc(offering.hardwareName)+'</strong></td>'
-          + '<td style="padding:12px;">'+esc(productName)+'</td>'
+          + '<td style="padding:12px;">'+esc(productNames)+'</td>'
           + '<td style="padding:12px;">'+esc(distributorName)+'</td>'
           + '<td style="padding:12px;text-align:center;">$'+offering.listPrice.toFixed(2)+'</td>'
           + '<td style="padding:12px;text-align:right;">'
@@ -4293,12 +4298,15 @@
     // Set title
     document.getElementById("hardwareEditorTitle").textContent = offering ? "Edit Hardware Offering" : "Add Hardware Offering";
 
-    // Populate products dropdown
-    var productSelect = document.getElementById("hwProduct");
+    // Populate product checkboxes
+    var checkboxContainer = document.getElementById("hwProductsCheckboxes");
     var vendorProds = vendorProducts.filter(function(p){ return p.vendorId === vendorId; });
-    productSelect.innerHTML = '<option value="">Select a product...</option>'
-      + vendorProds.map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'; }).join('');
-    productSelect.value = offering ? offering.productId : "";
+    var selectedProductIds = offering && offering.productIds ? offering.productIds : (offering && offering.productId ? [offering.productId] : []);
+
+    checkboxContainer.innerHTML = vendorProds.map(function(p){
+      var isChecked = selectedProductIds.indexOf(p.id) >= 0;
+      return '<label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" class="hwProductChk" value="'+esc(p.id)+'" '+(isChecked ? 'checked' : '')+' /> '+esc(p.name)+'</label>';
+    }).join('');
 
     // Populate distributor dropdown
     var distSelect = document.getElementById("hwDistributor");
@@ -4347,14 +4355,14 @@
 
   function saveHardwareOffering(e){
     e.preventDefault();
-    var productId = document.getElementById("hwProduct").value.trim();
+    var productIds = Array.from(document.querySelectorAll(".hwProductChk:checked")).map(function(chk){ return chk.value; });
     var hardwareName = document.getElementById("hwName").value.trim();
     var distributorId = document.getElementById("hwDistributor").value.trim();
     var listPrice = parseFloat(document.getElementById("hwListPrice").value);
     var costPrice = parseFloat(document.getElementById("hwCostPrice").value);
     var regions = Array.from(document.querySelectorAll(".hwRegionChk:checked")).map(function(chk){ return chk.value; });
 
-    if (!productId || !hardwareName || !distributorId || !listPrice || !costPrice || regions.length === 0){
+    if (productIds.length === 0 || !hardwareName || !distributorId || !listPrice || !costPrice || regions.length === 0){
       toast("Please fill in all required fields");
       return;
     }
@@ -4363,7 +4371,7 @@
       var idx = hardwareOfferings.findIndex(function(h){ return h.id === state.editingHardwareOfferingId; });
       if (idx >= 0){
         hardwareOfferings[idx] = Object.assign(hardwareOfferings[idx], {
-          productId: productId, hardwareName: hardwareName, distributorId: distributorId,
+          productIds: productIds, hardwareName: hardwareName, distributorId: distributorId,
           listPrice: listPrice, costPrice: costPrice, regions: regions
         });
         toast("Hardware offering updated");
@@ -4371,7 +4379,7 @@
     } else {
       var newId = "hw-" + Date.now();
       hardwareOfferings.push({
-        id: newId, productId: productId, vendorId: state.myVendorId, hardwareName: hardwareName,
+        id: newId, productIds: productIds, vendorId: state.myVendorId, hardwareName: hardwareName,
         distributorId: distributorId, regions: regions, listPrice: listPrice, costPrice: costPrice,
         commissionRate: 0.05, status: "active", archivedAt: null
       });
