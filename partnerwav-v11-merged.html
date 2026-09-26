@@ -4253,8 +4253,12 @@
   // ===== HARDWARE OFFERINGS =====
   function renderHardwareOfferingsList(){
     var content = document.getElementById("hardwareOfferingsContent");
-    if (!content) return;
+    if (!content || state.screen !== "vendor-hardware-offerings") return;
     var vendorId = state.myVendorId;
+    if (!vendorId) {
+      content.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--ink-faint);">Not logged in as a vendor.</div>';
+      return;
+    }
     var offerings = hardwareOfferings.filter(function(h){ return h.vendorId === vendorId && !h.archivedAt; });
 
     if (offerings.length === 0){
