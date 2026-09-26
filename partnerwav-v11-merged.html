@@ -365,6 +365,8 @@
       <button class="navlink" data-screen="partner-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="partner-my-profile"><span class="ic">👤</span>My Profile</button>
       <button class="navlink" data-screen="partner-directory"><span class="ic">🎯</span>Program Directory</button>
+      <button class="navlink" data-screen="training"><span class="ic">📚</span>Training</button>
+
       <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
       <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
       <button class="navlink" data-screen="partner-my-leads"><span class="ic">💼</span>My Leads</button>
@@ -548,6 +550,10 @@
       </section>
 
       <!-- ===== PARTNER: DIRECTORY ===== -->
+      <section id="scr-training" hidden>
+        <div id="trainingContent" style="padding:20px;"></div>
+      </section>
+
       <section id="scr-partner-directory" hidden>
         <div class="section-head"><h2>Browse programs</h2><span class="hint">One account, every vendor's program</span></div>
         <div style="height:12px"></div>
@@ -1290,6 +1296,37 @@
       social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] }
   ];
 
+  var trainingPrograms = [
+    // Cloud Architecture - AWS
+    { id: 'aws-cloud-essentials', title: 'AWS Cloud Essentials', category: 'Cloud Architecture', provider: 'AWS', level: 'Beginner', description: 'Learn AWS fundamentals including EC2, S3, and VPC. Free tier eligible for hands-on learning.', url: 'https://aws.amazon.com/training/digital/', logo: '☁️' },
+    { id: 'aws-builder-basics', title: 'AWS Builder Labs', category: 'Cloud Architecture', provider: 'AWS', level: 'Intermediate', description: 'Free hands-on labs to build real AWS solutions with guided instructions and temporary AWS credits.', url: 'https://aws.amazon.com/training/awsbuilderlab/', logo: '☁️' },
+    { id: 'aws-skill-builder', title: 'AWS Skill Builder', category: 'Cloud Architecture', provider: 'AWS', level: 'All Levels', description: 'Comprehensive AWS training platform with 500+ digital courses, labs, and certifications.', url: 'https://skillbuilder.aws.com/', logo: '☁️' },
+    
+    // Cloud Architecture - Google Cloud
+    { id: 'gcp-fundamentals', title: 'Google Cloud Fundamentals', category: 'Cloud Architecture', provider: 'Google Cloud', level: 'Beginner', description: 'Introduction to Google Cloud with labs on Compute, Storage, and Networking.', url: 'https://cloud.google.com/training', logo: '☁️' },
+    { id: 'gcp-skill-badges', title: 'Google Cloud Skill Badges', category: 'Cloud Architecture', provider: 'Google Cloud', level: 'Intermediate', description: 'Earn digital badges by completing hands-on labs and practical quests on Google Cloud.', url: 'https://www.cloudskillsboost.google/paths', logo: '☁️' },
+    
+    // Cloud Architecture - Microsoft Azure
+    { id: 'azure-fundamentals', title: 'Azure Fundamentals (AZ-900)', category: 'Cloud Architecture', provider: 'Microsoft Azure', level: 'Beginner', description: 'Free Microsoft Learn modules covering Azure core concepts, services, and best practices.', url: 'https://learn.microsoft.com/en-us/training/paths/azure-fundamentals/', logo: '☁️' },
+    { id: 'azure-administrator', title: 'Azure Administrator Associate (AZ-104)', category: 'Cloud Architecture', provider: 'Microsoft Azure', level: 'Intermediate', description: 'Learn to manage Azure subscriptions, resources, and infrastructure at scale.', url: 'https://learn.microsoft.com/en-us/training/paths/az-104-administrator-prerequisites/', logo: '☁️' },
+    
+    // AI Training - Claude
+    { id: 'claude-prompt-engineering', title: 'Claude Prompt Engineering Guide', category: 'AI Training', provider: 'Anthropic', level: 'Beginner', description: 'Learn effective prompting techniques to get the most out of Claude AI models.', url: 'https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview', logo: '🤖' },
+    { id: 'claude-api-docs', title: 'Claude API Documentation', category: 'AI Training', provider: 'Anthropic', level: 'Intermediate', description: 'Complete API reference and integration guides for building applications with Claude.', url: 'https://docs.anthropic.com/', logo: '🤖' },
+    
+    // AI Training - ChatGPT
+    { id: 'openai-prompt-engineering', title: 'OpenAI Prompt Engineering Guide', category: 'AI Training', provider: 'OpenAI', level: 'Beginner', description: 'Best practices for writing effective prompts with ChatGPT and GPT models.', url: 'https://platform.openai.com/docs/guides/prompt-engineering', logo: '🤖' },
+    { id: 'openai-api-docs', title: 'OpenAI API Documentation', category: 'AI Training', provider: 'OpenAI', level: 'Intermediate', description: 'Complete guide to integrating GPT models into your applications.', url: 'https://platform.openai.com/docs/guides/gpt', logo: '🤖' },
+    
+    // AI Training - Google Gemini
+    { id: 'gemini-api-guide', title: 'Google Gemini API Guide', category: 'AI Training', provider: 'Google AI', level: 'Beginner', description: 'Get started with the Gemini API for multimodal AI capabilities including text, image, and video.', url: 'https://ai.google.dev/tutorials/quickstart', logo: '🤖' },
+    { id: 'gemini-advanced', title: 'Advanced Gemini Techniques', category: 'AI Training', provider: 'Google AI', level: 'Intermediate', description: 'Advanced prompting and system instructions for Gemini model optimization.', url: 'https://ai.google.dev/docs/guides', logo: '🤖' },
+    
+    // Additional AI Training
+    { id: 'ai-fundamentals', title: 'Generative AI Fundamentals', category: 'AI Training', provider: 'Coursera', level: 'Beginner', description: 'Free course covering AI basics, machine learning, and introduction to large language models.', url: 'https://www.coursera.org/learn/introduction-to-generative-ai', logo: '🤖' },
+    { id: 'prompt-engineering-101', title: 'Prompt Engineering 101', category: 'AI Training', provider: 'DeepLearning.AI', level: 'Beginner', description: 'Free short course on mastering the art of prompt engineering for AI models.', url: 'https://www.deeplearning.ai/short-courses/prompt-engineering-for-business/', logo: '🤖' }
+  ];
+
   var affiliatePrograms = [
     { id:"xero", name:"Xero", category:"Accounting & Bookkeeping", desc:"Cloud accounting and bookkeeping -- run your MSP or VAR's own books without hiring a full finance team. CloudWAV holds an affiliate arrangement with Xero and passes the partner-only rate through to every enrolled Partner and Vendor.", note:"PartnerWAV rate: 20% off list price for the first 6 months.", apiIntegration:true,
       logo:"", website:"https://www.xero.com", social:{ linkedin:"", twitter:"", facebook:"" } },
@@ -1540,6 +1577,7 @@
   var titles = {
     "partner-overview":"Overview",
     "partner-my-profile":"My Profile",
+    "training":"Training & Certifications",
     "partner-directory":"Program Directory",
     "partner-agreements":"Agreements",
     "partner-commissions":"Commissions",
@@ -1829,6 +1867,9 @@
 
     // ---- partner community ----
     renderCommunity();
+
+    // ---- training ----
+    if (state.screen === "training") { renderTraining(); }
 
     // ---- partner network / profile / messages / my profile ----
     renderNetwork();
@@ -2278,6 +2319,45 @@
           + actionBtn
         + '</div></div>';
     }).join("") : '<div class="empty">No vendors match that relationship type yet.</div>';
+  }
+
+  function renderTraining(){
+    var content = document.getElementById("trainingContent");
+    if (!content) return;
+    
+    // Group by category
+    var grouped = {};
+    trainingPrograms.forEach(function(prog){
+      if (!grouped[prog.category]) grouped[prog.category] = [];
+      grouped[prog.category].push(prog);
+    });
+    
+    var html = '<div style="max-width:1200px;margin:0 auto;">';
+    
+    Object.keys(grouped).sort().forEach(function(category){
+      html += '<div style="margin-bottom:40px;">'
+        + '<h2 style="font-size:1.3rem;margin-bottom:16px;color:var(--accent);">'+esc(category)+'</h2>'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">';
+      
+      grouped[category].forEach(function(prog){
+        html += '<div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;transition:all 0.2s ease;">'
+          + '<div style="display:flex;align-items:center;gap:8px;">'
+            + '<span style="font-size:1.5rem;">'+prog.logo+'</span>'
+            + '<div>'
+              + '<h3 style="margin:0;font-size:1rem;color:var(--accent);">'+esc(prog.title)+'</h3>'
+              + '<div style="font-size:.8rem;color:var(--ink-faint);">'+esc(prog.provider)+' · '+esc(prog.level)+'</div>'
+            + '</div>'
+          + '</div>'
+          + '<p style="margin:0;font-size:.9rem;color:var(--ink-soft);line-height:1.5;">'+esc(prog.description)+'</p>'
+          + '<a href="'+esc(prog.url)+'" target="_blank" rel="noopener" style="margin-top:auto;padding:8px 12px;background:var(--accent);color:white;border-radius:6px;text-decoration:none;text-align:center;font-weight:600;font-size:.85rem;cursor:pointer;">Access Training →</a>'
+          + '</div>';
+      });
+      
+      html += '</div></div>';
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
   }
 
   function renderVendorProfile(){
