@@ -2314,8 +2314,8 @@
         + '<tbody>'
         + referralPartners.map(function(partner){
           return '<tr style="border-bottom:1px solid var(--line);">'
-            + '<td style="padding:10px 8px;">'+esc(partner.name)+'</td>'
-            + '<td style="padding:10px 8px;">'+esc(partner.country)+'</td>'
+            + '<td style="padding:10px 8px;"><a href="javascript:void(0)" data-review-application="'+esc(partner.name)+'" style="color:var(--accent);cursor:pointer;text-decoration:none;">'+esc(partner.name)+'</a></td>'
+            + '<td style="padding:10px 8px;">'+esc(partner.countryCode || partner.country || 'N/A')+'</td>'
             + '<td style="padding:10px 8px;"><span class="badge neutral">'+esc(partner.status)+'</span></td>'
             + (mine ? '<td style="padding:10px 8px;text-align:right;">'
               + '<button class="btn primary xs" data-approve-referral="'+p.id+'" data-partner="'+esc(partner.name)+'">Approve</button> '
@@ -3081,6 +3081,36 @@
     if (closeBtn) closeBtn.addEventListener("click", closeModal);
     return back;
   }
+  function reviewApplicationModal(vendorId, partnerName){
+    var vendor = programById(vendorId);
+    if (!vendor || !vendor.referralPartners) return;
+    var partner = vendor.referralPartners.find(function(p){ return p.name === partnerName; });
+    if (!partner) return;
+    
+    var html = '<div style="padding:20px;">'
+      + '<h2 style="margin-top:0;">Review Application</h2>'
+      + '<table style="width:100%;border-collapse:collapse;margin:16px 0;">'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Company:</td><td style="padding:8px;">'+esc(partner.name)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Contact Name:</td><td style="padding:8px;">'+esc(partner.firstName)+' '+esc(partner.lastName)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Email:</td><td style="padding:8px;">'+esc(partner.workEmail)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Phone:</td><td style="padding:8px;">'+esc(partner.phone)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Country:</td><td style="padding:8px;">'+esc(partner.countryCode)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Region:</td><td style="padding:8px;">'+esc(partner.region)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Website:</td><td style="padding:8px;"><a href="'+esc(partner.website)+'" target="_blank">'+esc(partner.website)+'</a></td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Years in Business:</td><td style="padding:8px;">'+esc(partner.yearsInBusiness)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Employees:</td><td style="padding:8px;">'+esc(partner.numEmployees)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Vertical Markets:</td><td style="padding:8px;">'+esc(partner.verticalMarkets)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Geographic Markets:</td><td style="padding:8px;">'+esc(partner.geographicMarkets)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Status:</td><td style="padding:8px;"><span class="badge '+partner.status+'">'+esc(partner.status)+'</span></td></tr>'
+      + '</table>'
+      + '<div style="display:flex;gap:10px;margin-top:20px;">'
+      + '<button class="btn primary" data-approve-referral="'+vendorId+'" data-partner="'+esc(partner.name)+'" onclick="closeModal();">Approve</button>'
+      + '<button class="btn secondary" data-deny-referral="'+vendorId+'" data-partner="'+esc(partner.name)+'" onclick="closeModal();">Reject</button>'
+      + '</div>'
+      + '</div>';
+    openModal(html);
+  }
+
   function closeModal(){
     var b = document.getElementById("modalBackdrop");
     if (b) b.remove();
@@ -3323,6 +3353,14 @@
 
     var msgVendorBtn = e.target.closest("[data-message-vendor]");
     if (msgVendorBtn){ openConversationWith(msgVendorBtn.getAttribute("data-message-vendor"), "vendor"); return; }
+
+    var reviewAppBtn = e.target.closest("[data-review-application]");
+    if (reviewAppBtn){
+      var partnerName = reviewAppBtn.getAttribute("data-review-application");
+      var vendorId = state.viewingVendorId;  // Will be set when viewing vendor profile
+      if (vendorId && partnerName) reviewApplicationModal(vendorId, partnerName);
+      return;
+    }
 
     var copyReferralBtn = e.target.closest("[data-copy-referral-link]");
     if (copyReferralBtn){
