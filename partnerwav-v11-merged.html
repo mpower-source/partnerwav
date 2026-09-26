@@ -366,7 +366,7 @@
     <nav class="navgroup" id="navPartner">
       <div class="navgroup-label">Partner</div>
       <button class="navlink" data-screen="partner-overview"><span class="ic">📊</span>Overview</button>
-      <button class="navlink" data-screen="partner-my-profile"><span class="ic">👤</span>My Profile</button>
+      <button class="navlink" data-screen="partner-profile-editor"><span class="ic">👤</span>My Profile</button>
       <button class="navlink" data-screen="partner-directory"><span class="ic">🎯</span>Program Directory</button>
       <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
       <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
@@ -384,7 +384,7 @@
     <nav class="navgroup" id="navVendor" hidden>
       <div class="navgroup-label">Vendor</div>
       <button class="navlink" data-screen="vendor-overview"><span class="ic">📊</span>Overview</button>
-      <button class="navlink" data-screen="vendor-listing"><span class="ic">📝</span>My Program Listing</button>
+      <button class="navlink" data-screen="vendor-program-editor"><span class="ic">📝</span>My Program Listing</button>
       <button class="navlink" data-screen="vendor-partners"><span class="ic">👨‍💼</span>Partners in My Program</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
@@ -396,6 +396,7 @@
     <nav class="navgroup" id="navAffiliate" hidden>
       <div class="navgroup-label">Affiliate</div>
       <button class="navlink" data-screen="affiliate-overview"><span class="ic">📊</span>Overview</button>
+      <button class="navlink" data-screen="affiliate-profile-editor"><span class="ic">👤</span>My Profile</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
     </nav>
@@ -408,6 +409,7 @@
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
       <button class="navlink" data-screen="operator-approvals"><span class="ic">✅</span>Deal Approvals</button>
       <button class="navlink" data-screen="resource-approvals"><span class="ic">📚</span>Resource Approvals</button>
+      <button class="navlink" data-screen="operator-marketing-approvals"><span class="ic">📢</span>Marketing Approvals</button>
       <button class="navlink" data-screen="operator-partner-map"><span class="ic">🗺️</span>Partner Discovery Map</button>
     </nav>
 
@@ -767,6 +769,81 @@
       <!-- ===== VENDOR PROFILE (shared: Partner + Vendor) ===== -->
       <section id="scr-vendor-profile" hidden>
         <div id="vendorProfileContent"></div>
+      </section>
+
+      <!-- ===== PARTNER PROFILE EDITOR (create/edit) ===== -->
+      <section id="scr-partner-profile-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="partner-overview">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="profileEditorTitle">Create Partner Profile</h2>
+          <div style="height:16px"></div>
+          <form id="partnerProfileForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Company Name</label><input type="text" id="profileName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Country</label><input type="text" id="profileCountry" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Tagline</label><textarea id="profileTagline" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:60px;" required></textarea></div>
+            <div><label>Specialties (comma-separated)</label><input type="text" id="profileSpecialties" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., AI Implementation, Enterprise Support" /></div>
+            <div><label>Credentials (comma-separated)</label><input type="text" id="profileCredentials" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., Reseller -- Intelsense AI" /></div>
+            <div><label>Website</label><input type="url" id="profileWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div><label>LinkedIn URL</label><input type="url" id="profileLinkedin" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Profile</button>
+              <button type="button" class="btn secondary" data-back-screen="partner-overview">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteProfileBtn" style="margin-left:auto;display:none;">Delete Profile</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== VENDOR PROGRAM EDITOR (create/edit) ===== -->
+      <section id="scr-vendor-program-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="vendor-overview">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="programEditorTitle">Create Vendor Program</h2>
+          <div style="height:16px"></div>
+          <form id="vendorProgramForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Program Name</label><input type="text" id="programName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Vertical/Category</label><input type="text" id="programVertical" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Origin/Location</label><input type="text" id="programOrigin" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Description</label><textarea id="programDesc" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
+            <div><label>Website</label><input type="url" id="programWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div><label>LinkedIn</label><input type="url" id="programLinkedin" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Program</button>
+              <button type="button" class="btn secondary" data-back-screen="vendor-overview">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteProgramBtn" style="margin-left:auto;display:none;">Delete Program</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== AFFILIATE PROFILE EDITOR (create/edit) ===== -->
+      <section id="scr-affiliate-profile-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="affiliate-overview">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="affiliateEditorTitle">Create Affiliate Profile</h2>
+          <div style="height:16px"></div>
+          <form id="affiliateProfileForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Business Name</label><input type="text" id="affiliateName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Country</label><input type="text" id="affiliateCountry" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Tagline</label><textarea id="affiliateTagline" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:60px;" required></textarea></div>
+            <div><label>Specialties (comma-separated)</label><input type="text" id="affiliateSpecialties" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div><label>Credentials (comma-separated)</label><input type="text" id="affiliateCredentials" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div><label>Website</label><input type="url" id="affiliateWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div><label>LinkedIn URL</label><input type="url" id="affiliateLinkedin" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Profile</button>
+              <button type="button" class="btn secondary" data-back-screen="affiliate-overview">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteAffiliateBtn" style="margin-left:auto;display:none;">Delete Profile</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== OPERATOR: MARKETING APPROVALS ===== -->
+      <section id="scr-operator-marketing-approvals" hidden>
+        <div class="section-head"><h2>Vendor Marketing Material Approvals</h2><span class="hint">Review and approve vendor marketing materials before they're published</span></div>
+        <div style="height:12px"></div>
+        <div id="marketingApprovalsContent"></div>
       </section>
 
       <!-- ===== AFFILIATE: OVERVIEW (own role, own nav) ===== -->
@@ -1427,6 +1504,25 @@
       credentials:["Channel Manager -- Botnoi Voice (draft)"],
       pastProjects:[],
       logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" } }
+  ];
+
+  // Affiliate profiles - same structure as partner profiles
+  var affiliateProfiles = [
+    { id:"techbridge-aff", name:"TechBridge Solutions", init:"TB", country:"USA", tagline:"AI implementation and enterprise support automation specialists.",
+      specialties:["AI Implementation","Enterprise Support","Technical Training"],
+      credentials:["Affiliate -- Intelsense AI"],
+      pastProjects:[],
+      logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" }, status:"active", archivedAt:null },
+    { id:"asian-connect-aff", name:"Asian Connect Services", init:"AC", country:"Singapore", tagline:"Pan-Asia technology distribution and partner enablement.",
+      specialties:["Distribution","Partner Enablement","Regional Support"],
+      credentials:["Affiliate -- Intelsense AI"],
+      pastProjects:[],
+      logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" }, status:"active", archivedAt:null }
+  ];
+
+  // Vendor marketing materials pending operator approval
+  var vendorMarketingMaterials = [
+    { id:"mkt1", vendorId:"intelsense", title:"Q4 2026 Partner Recruitment Campaign", description:"Email and social campaign promoting Intelsense Reseller program", submittedAt:"2026-09-15", status:"pending", submittedBy:"vendor", approvedAt:null, approvedBy:null, archivedAt:null }
   ];
 
   var conversations = [
@@ -3539,6 +3635,178 @@
       toast("Enrolled in "+p.name);
       render();
     }
+  }
+
+  // Profile Management Functions
+  function loadPartnerProfileForm(profileId){
+    var profile = profileId ? partnerProfiles.find(function(p){ return p.id === profileId; }) : null;
+    document.getElementById("profileEditorTitle").textContent = profile ? "Edit Partner Profile" : "Create Partner Profile";
+    document.getElementById("profileName").value = profile ? profile.name : "";
+    document.getElementById("profileCountry").value = profile ? profile.country : "";
+    document.getElementById("profileTagline").value = profile ? profile.tagline : "";
+    document.getElementById("profileSpecialties").value = profile ? profile.specialties.join(", ") : "";
+    document.getElementById("profileCredentials").value = profile ? profile.credentials.join(", ") : "";
+    document.getElementById("profileWebsite").value = profile ? profile.website : "";
+    document.getElementById("profileLinkedin").value = profile ? (profile.social && profile.social.linkedin) : "";
+    var deleteBtn = document.getElementById("deleteProfileBtn");
+    deleteBtn.style.display = profile ? "block" : "none";
+    if (profile) deleteBtn.setAttribute("data-profile-id", profileId);
+    state.editingProfileId = profileId;
+  }
+
+  function savePartnerProfile(e){
+    e.preventDefault();
+    var name = document.getElementById("profileName").value.trim();
+    var country = document.getElementById("profileCountry").value.trim();
+    var tagline = document.getElementById("profileTagline").value.trim();
+    var specialties = document.getElementById("profileSpecialties").value.split(",").map(function(s){ return s.trim(); });
+    var credentials = document.getElementById("profileCredentials").value.split(",").map(function(c){ return c.trim(); });
+    var website = document.getElementById("profileWebsite").value.trim();
+    var linkedin = document.getElementById("profileLinkedin").value.trim();
+
+    if (!name || !country || !tagline){ toast("Please fill in required fields"); return; }
+
+    if (state.editingProfileId){
+      var idx = partnerProfiles.findIndex(function(p){ return p.id === state.editingProfileId; });
+      if (idx >= 0){
+        partnerProfiles[idx] = Object.assign(partnerProfiles[idx], {
+          name: name, country: country, tagline: tagline, specialties: specialties,
+          credentials: credentials, website: website, social: Object.assign(partnerProfiles[idx].social, {linkedin: linkedin})
+        });
+        toast("Profile updated");
+      }
+    } else {
+      var newId = "partner-" + Date.now();
+      partnerProfiles.push({
+        id: newId, name: name, init: name.substring(0,2).toUpperCase(), country: country, tagline: tagline,
+        specialties: specialties, credentials: credentials, pastProjects: [], logo: "", website: website,
+        social: {linkedin: linkedin, twitter: "", facebook: ""}, status: "active", archivedAt: null
+      });
+      toast("Profile created");
+    }
+    state.editingProfileId = null;
+    state.screen = "partner-overview";
+    saveVendorData();
+    render();
+  }
+
+  function loadVendorProgramForm(programId){
+    var program = programId ? programs.find(function(p){ return p.id === programId; }) : null;
+    document.getElementById("programEditorTitle").textContent = program ? "Edit Vendor Program" : "Create Vendor Program";
+    document.getElementById("programName").value = program ? program.name : "";
+    document.getElementById("programVertical").value = program ? program.vertical : "";
+    document.getElementById("programOrigin").value = program ? program.origin : "";
+    document.getElementById("programDesc").value = program ? program.desc : "";
+    document.getElementById("programWebsite").value = program ? program.website : "";
+    document.getElementById("programLinkedin").value = program ? (program.social && program.social.linkedin) : "";
+    var deleteBtn = document.getElementById("deleteProgramBtn");
+    deleteBtn.style.display = program ? "block" : "none";
+    if (program) deleteBtn.setAttribute("data-program-id", programId);
+    state.editingProgramId = programId;
+  }
+
+  function saveVendorProgram(e){
+    e.preventDefault();
+    var name = document.getElementById("programName").value.trim();
+    var vertical = document.getElementById("programVertical").value.trim();
+    var origin = document.getElementById("programOrigin").value.trim();
+    var desc = document.getElementById("programDesc").value.trim();
+    var website = document.getElementById("programWebsite").value.trim();
+    var linkedin = document.getElementById("programLinkedin").value.trim();
+
+    if (!name || !vertical || !origin || !desc){ toast("Please fill in required fields"); return; }
+
+    if (state.editingProgramId){
+      var idx = programs.findIndex(function(p){ return p.id === state.editingProgramId; });
+      if (idx >= 0){
+        programs[idx] = Object.assign(programs[idx], {
+          name: name, vertical: vertical, origin: origin, desc: desc, website: website,
+          social: Object.assign(programs[idx].social, {linkedin: linkedin})
+        });
+        toast("Program updated - pending operator approval for marketing materials");
+      }
+    } else {
+      var newId = "vendor-" + Date.now();
+      programs.push({
+        id: newId, name: name, vertical: vertical, origin: origin, desc: desc, relationships: ["Vendor Program"],
+        tiers: [{tier: "Reseller", rate: "TBD", base: "TBD"}], agreement: {type: "Vendor Program Agreement", status: "pending"},
+        status: "onboarding", logo: "", website: website, social: {linkedin: linkedin, twitter: "", facebook: ""},
+        referralPartners: [], products: []
+      });
+      toast("Program created - pending operator approval");
+    }
+    state.editingProgramId = null;
+    state.screen = "vendor-overview";
+    saveVendorData();
+    render();
+  }
+
+  function loadAffiliateProfileForm(profileId){
+    var profile = profileId ? affiliateProfiles.find(function(p){ return p.id === profileId; }) : null;
+    document.getElementById("affiliateEditorTitle").textContent = profile ? "Edit Affiliate Profile" : "Create Affiliate Profile";
+    document.getElementById("affiliateName").value = profile ? profile.name : "";
+    document.getElementById("affiliateCountry").value = profile ? profile.country : "";
+    document.getElementById("affiliateTagline").value = profile ? profile.tagline : "";
+    document.getElementById("affiliateSpecialties").value = profile ? profile.specialties.join(", ") : "";
+    document.getElementById("affiliateCredentials").value = profile ? profile.credentials.join(", ") : "";
+    document.getElementById("affiliateWebsite").value = profile ? profile.website : "";
+    document.getElementById("affiliateLinkedin").value = profile ? (profile.social && profile.social.linkedin) : "";
+    var deleteBtn = document.getElementById("deleteAffiliateBtn");
+    deleteBtn.style.display = profile ? "block" : "none";
+    if (profile) deleteBtn.setAttribute("data-affiliate-id", profileId);
+    state.editingAffiliateId = profileId;
+  }
+
+  function saveAffiliateProfile(e){
+    e.preventDefault();
+    var name = document.getElementById("affiliateName").value.trim();
+    var country = document.getElementById("affiliateCountry").value.trim();
+    var tagline = document.getElementById("affiliateTagline").value.trim();
+    var specialties = document.getElementById("affiliateSpecialties").value.split(",").map(function(s){ return s.trim(); });
+    var credentials = document.getElementById("affiliateCredentials").value.split(",").map(function(c){ return c.trim(); });
+    var website = document.getElementById("affiliateWebsite").value.trim();
+    var linkedin = document.getElementById("affiliateLinkedin").value.trim();
+
+    if (!name || !country || !tagline){ toast("Please fill in required fields"); return; }
+
+    if (state.editingAffiliateId){
+      var idx = affiliateProfiles.findIndex(function(p){ return p.id === state.editingAffiliateId; });
+      if (idx >= 0){
+        affiliateProfiles[idx] = Object.assign(affiliateProfiles[idx], {
+          name: name, country: country, tagline: tagline, specialties: specialties,
+          credentials: credentials, website: website, social: Object.assign(affiliateProfiles[idx].social, {linkedin: linkedin})
+        });
+        toast("Affiliate profile updated");
+      }
+    } else {
+      var newId = "aff-" + Date.now();
+      affiliateProfiles.push({
+        id: newId, name: name, init: name.substring(0,2).toUpperCase(), country: country, tagline: tagline,
+        specialties: specialties, credentials: credentials, pastProjects: [], logo: "", website: website,
+        social: {linkedin: linkedin, twitter: "", facebook: ""}, status: "active", archivedAt: null
+      });
+      toast("Affiliate profile created");
+    }
+    state.editingAffiliateId = null;
+    state.screen = "affiliate-overview";
+    saveVendorData();
+    render();
+  }
+
+  function softDeleteProfile(type, profileId){
+    var timestamp = new Date().toISOString();
+    if (type === "partner"){
+      var idx = partnerProfiles.findIndex(function(p){ return p.id === profileId; });
+      if (idx >= 0){ partnerProfiles[idx].archivedAt = timestamp; toast("Profile archived"); }
+    } else if (type === "vendor"){
+      var idx = programs.findIndex(function(p){ return p.id === profileId; });
+      if (idx >= 0){ programs[idx].status = "archived"; toast("Program archived"); }
+    } else if (type === "affiliate"){
+      var idx = affiliateProfiles.findIndex(function(p){ return p.id === profileId; });
+      if (idx >= 0){ affiliateProfiles[idx].archivedAt = timestamp; toast("Profile archived"); }
+    }
+    saveVendorData();
+    render();
   }
 
   console.log("Attaching click handler to document");
