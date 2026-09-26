@@ -386,6 +386,7 @@
       <button class="navlink" data-screen="vendor-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="vendor-program-editor"><span class="ic">📝</span>My Program Listing</button>
       <button class="navlink" data-screen="vendor-hardware-offerings"><span class="ic">📦</span>Hardware Offerings</button>
+      <button class="navlink" data-screen="vendor-incentives"><span class="ic">🎁</span>Partner Incentives</button>
       <button class="navlink" data-screen="vendor-partners"><span class="ic">👨‍💼</span>Partners in My Program</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
@@ -1014,9 +1015,14 @@
 
       <!-- ===== OPERATOR: MARKETING APPROVALS ===== -->
       <section id="scr-operator-marketing-approvals" hidden>
-        <div class="section-head"><h2>Vendor Marketing Material Approvals</h2><span class="hint">Review and approve vendor marketing materials before they're published</span></div>
+        <div class="section-head"><h2>Marketing & Incentive Approvals</h2><span class="hint">Review and approve vendor marketing materials and partner incentives</span></div>
         <div style="height:12px"></div>
-        <div id="marketingApprovalsContent"></div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:12px;">
+          <button class="tab-btn" data-tab="marketing" style="padding:8px 16px;border:none;background:transparent;color:var(--ink-soft);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;" aria-selected="true">📚 Marketing Materials</button>
+          <button class="tab-btn" data-tab="incentives" style="padding:8px 16px;border:none;background:transparent;color:var(--ink-soft);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;" aria-selected="false">🎁 Partner Incentives</button>
+        </div>
+        <div id="marketingApprovalsContent" hidden></div>
+        <div id="incentiveApprovalsContent" hidden></div>
       </section>
 
       <!-- ===== TIER 2: PROJECTS/DEALS EDITOR (create/edit) ===== -->
@@ -1319,6 +1325,106 @@
               <button type="submit" class="btn primary">Save Offer</button>
               <button type="button" class="btn secondary" data-back-screen="affiliate-marketplace">Cancel</button>
               <button type="button" class="btn secondary" id="deleteAffiliateOfferBtn" style="margin-left:auto;display:none;">Delete Offer</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== VENDOR: INCENTIVE MANAGEMENT ===== -->
+      <section id="scr-vendor-incentives" hidden>
+        <div class="section-head"><h2>Partner Incentives</h2><span class="hint">Create and manage SPIF, MDF, trial credits, and giveaways to incentivize partner sales</span></div>
+        <div style="height:14px"></div>
+        <button class="btn primary" data-goto-screen="vendor-incentive-editor" style="margin-bottom:16px;">+ Create Incentive</button>
+        <div class="card">
+          <div id="vendorIncentivesContent">Loading...</div>
+        </div>
+      </section>
+
+      <!-- ===== VENDOR: INCENTIVE EDITOR ===== -->
+      <section id="scr-vendor-incentive-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="vendor-incentives">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="incentiveEditorTitle">Create Incentive</h2>
+          <div style="height:16px"></div>
+          <form id="vendorIncentiveForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label for="incTitle">Incentive Title *</label>
+              <input type="text" id="incTitle" placeholder="e.g., Q4 Sales Acceleration SPIF" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required />
+            </div>
+            <div>
+              <label for="incType">Type of Incentive *</label>
+              <select id="incType" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required onchange="updateInccentiveTypeFields()">
+                <option value="">Select type...</option>
+                <option value="spif">SPIF (Sales Performance Incentive Fund)</option>
+                <option value="mdf">MDF (Market Development Funds)</option>
+                <option value="trial-credits">Trial Credits with QR Code</option>
+                <option value="giveaway">Giveaway / Contest</option>
+              </select>
+            </div>
+            <div>
+              <label for="incDesc">Description *</label>
+              <textarea id="incDesc" placeholder="Describe the incentive, terms, and how partners can qualify" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-height:80px;" required></textarea>
+            </div>
+            <div id="spifFields" style="display:none;border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--surface-2);">
+              <h3 style="margin-top:0;margin-bottom:12px;font-size:.95rem;">SPIF Volume Tiers</h3>
+              <div id="spifTiersContainer" style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;background:white;border-radius:6px;border:1px solid var(--line);">
+                  <input type="text" class="spifThreshold" placeholder="e.g., $0-10k" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />
+                  <input type="text" class="spifBonus" placeholder="e.g., 5%" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />
+                </div>
+              </div>
+              <button type="button" class="btn secondary sm" style="margin-top:8px;" onclick="addSpifTier()">+ Add Tier</button>
+            </div>
+            <div id="mdfFields" style="display:none;border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--surface-2);">
+              <h3 style="margin-top:0;margin-bottom:12px;font-size:.95rem;">MDF Details</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label for="mdfAmount">Amount per Partner ($) *</label>
+                  <input type="number" id="mdfAmount" placeholder="5000" min="0" step="100" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" />
+                </div>
+                <div>
+                  <label for="mdfPeriod">Period *</label>
+                  <select id="mdfPeriod" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;">
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="annually">Annually</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div id="trialFields" style="display:none;border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--surface-2);">
+              <h3 style="margin-top:0;margin-bottom:12px;font-size:.95rem;">Trial Credits</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label for="trialValue">Credit Value ($) *</label>
+                  <input type="number" id="trialValue" placeholder="500" min="0" step="10" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" />
+                </div>
+                <div>
+                  <label for="trialDays">Trial Duration (days) *</label>
+                  <input type="number" id="trialDays" placeholder="30" min="1" max="365" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" />
+                </div>
+              </div>
+              <p style="margin-top:8px;color:var(--ink-faint);font-size:.85rem;">QR codes will be dynamically generated for each partner's unique trial link</p>
+            </div>
+            <div id="giveawayFields" style="display:none;border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--surface-2);">
+              <h3 style="margin-top:0;margin-bottom:12px;font-size:.95rem;">Giveaway Prizes</h3>
+              <div id="giveawayPrizesContainer" style="display:flex;flex-direction:column;gap:12px;">
+                <input type="text" class="giveawayPrize" placeholder="1st Place: 1 year Unisense license" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />
+              </div>
+              <button type="button" class="btn secondary sm" style="margin-top:8px;" onclick="addGiveawayPrize()">+ Add Prize</button>
+            </div>
+            <div>
+              <label for="incValidFrom">Valid From *</label>
+              <input type="date" id="incValidFrom" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required />
+            </div>
+            <div>
+              <label for="incValidUntil">Valid Until *</label>
+              <input type="date" id="incValidUntil" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required />
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Submit for Approval</button>
+              <button type="button" class="btn secondary" data-back-screen="vendor-incentives">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteIncentiveBtn" style="margin-left:auto;display:none;">Delete</button>
             </div>
           </form>
         </div>
@@ -2125,6 +2231,13 @@
 
   var hardwareOrders = [];
 
+  var vendorIncentiveOffers = [
+    { id:"inc-1", vendorId:"intelsense", title:"Q4 Sales Acceleration SPIF", type:"spif", description:"Earn extra commissions based on monthly sales volume", incentiveType:"volume-based", tiers:[{threshold:"$0-10k",bonus:"5%"},{threshold:"$10k-25k",bonus:"10%"},{threshold:"$25k+",bonus:"15%"}], validFrom:"2026-10-01", validUntil:"2026-12-31", status:"approved", approvedBy:"operator-1", approvalDate:"2026-09-20", archivedAt:null },
+    { id:"inc-2", vendorId:"intelsense", title:"MDF - Marketing Co-op Fund", type:"mdf", description:"Up to $5,000 in MDF per partner per quarter for joint marketing initiatives", incentiveType:"fixed-pool", amount:5000, period:"quarterly", status:"approved", approvedBy:"operator-1", approvalDate:"2026-09-15", archivedAt:null },
+    { id:"inc-3", vendorId:"intelsense", title:"Free Trial Credits with QR Code", type:"trial-credits", description:"Generate shareable QR codes for 30-day free trial access", incentiveType:"trial-access", creditValue:500, trialDays:30, status:"approved", approvedBy:"operator-1", approvalDate:"2026-09-10", qrCodeFormat:"dynamic", archivedAt:null },
+    { id:"inc-4", vendorId:"intelsense", title:"New Year Giveaway - Licenses", type:"giveaway", description:"Win annual licenses for top 3 partners by Q1 sales", incentiveType:"contest", prizes:["1 year Unisense license (1st place)","6 month Intelsense AI license (2nd place)","$2,000 credit (3rd place)"], winningCriteria:"Highest Q1 sales volume", status:"pending", submittedDate:"2026-09-22", submittedBy:"intelsense", archivedAt:null }
+  ];
+
   var partnerProjects = [
     { id:"pp1", partnerId:"siam-digital", title:"AI automation for retail expansion", program:"Intelsense AI", region:"Thailand", type:"Implementation",
       desc:"Rolling out conversational AI across 5 retail locations for customer support automation.",
@@ -2190,6 +2303,7 @@
     approvals: approvals.slice(),
     joinedGroups: ["th-msp"],
     communityTab: "threads",
+    marketingApprovalsTab: "marketing",
     viewingPartnerId: null,
     viewingVendorId: null,
     activeConversation: null,
@@ -2252,6 +2366,8 @@
     "vendor-listing":"My Program Listing",
     "vendor-hardware-offerings":"Hardware Offerings",
     "vendor-hardware-offering-editor":"Hardware Offering",
+    "vendor-incentives":"Partner Incentives",
+    "vendor-incentive-editor":"Create Incentive",
     "vendor-partners":"Partners in My Program",
     "vendor-network":"Vendor Network",
     "vendor-profile":"Vendor Profile",
@@ -2263,6 +2379,7 @@
     "operator-programs":"Manage Programs",
     "operator-partners":"Partners & Tiers",
     "operator-approvals":"Deal Approvals",
+    "operator-marketing-approvals":"Marketing Approvals",
     "operator-partner-map":"Partner Discovery Map",
     "public-partner-apply":"Apply to Partner"
   };
@@ -2554,6 +2671,7 @@
     renderVendorProfile();
     renderPublicPartnerApplication();
     renderHardwareOfferingsList();
+    renderVendorIncentives();
 
     // ---- partner projects ----
     renderPartnerProjectsList();
@@ -2601,6 +2719,27 @@
           + "<td class='mono-num' style='text-align:right'>"+esc(a.value)+"</td><td>"+esc(a.submitted)+"</td>"
           + "<td class='row-actions'><button class='btn primary sm' data-approve='"+i+"'>Approve</button></td></tr>";
       }).join("") : "<tr><td colspan='6'><div class='empty'>Nothing waiting on review.</div></td></tr>";
+    }
+
+    // ---- operator incentive approvals ----
+    renderOperatorIncentiveApprovals();
+
+    // ---- marketing approvals tab switching ----
+    var marketingTabsSection = document.getElementById("scr-operator-marketing-approvals");
+    if (marketingTabsSection && !marketingTabsSection.hidden){
+      document.querySelectorAll("#scr-operator-marketing-approvals .tab-btn").forEach(function(b){
+        var isSelected = b.getAttribute("data-tab") === state.marketingApprovalsTab;
+        b.setAttribute("aria-selected", isSelected ? "true" : "false");
+        if (isSelected && b.style.borderBottomColor !== "var(--accent)"){
+          b.style.borderBottomColor = "var(--accent)";
+          b.style.color = "var(--ink)";
+        } else if (!isSelected){
+          b.style.borderBottomColor = "transparent";
+          b.style.color = "var(--ink-soft)";
+        }
+      });
+      document.getElementById("marketingApprovalsContent").hidden = state.marketingApprovalsTab !== "marketing";
+      document.getElementById("incentiveApprovalsContent").hidden = state.marketingApprovalsTab !== "incentives";
     }
 
     // ---- operator partner discovery map ----
@@ -4419,6 +4558,240 @@
     render();
   }
 
+  // ===== VENDOR INCENTIVE MANAGEMENT =====
+  function updateInccentiveTypeFields(){
+    var type = document.getElementById("incType").value;
+    document.getElementById("spifFields").style.display = (type === "spif") ? "block" : "none";
+    document.getElementById("mdfFields").style.display = (type === "mdf") ? "block" : "none";
+    document.getElementById("trialFields").style.display = (type === "trial-credits") ? "block" : "none";
+    document.getElementById("giveawayFields").style.display = (type === "giveaway") ? "block" : "none";
+  }
+
+  function addSpifTier(){
+    var container = document.getElementById("spifTiersContainer");
+    var newTier = document.createElement("div");
+    newTier.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;background:white;border-radius:6px;border:1px solid var(--line);";
+    newTier.innerHTML = '<input type="text" class="spifThreshold" placeholder="e.g., $10k-25k" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />'
+      + '<input type="text" class="spifBonus" placeholder="e.g., 10%" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />';
+    container.appendChild(newTier);
+  }
+
+  function addGiveawayPrize(){
+    var container = document.getElementById("giveawayPrizesContainer");
+    var newPrize = document.createElement("input");
+    newPrize.type = "text";
+    newPrize.className = "giveawayPrize";
+    newPrize.placeholder = "e.g., 2nd Place: 6 month license";
+    newPrize.style.cssText = "padding:8px;border:1px solid var(--line);border-radius:6px;";
+    container.appendChild(newPrize);
+  }
+
+  function loadVendorIncentiveForm(offerId){
+    var offer = offerId ? vendorIncentiveOffers.find(function(o){ return o.id === offerId; }) : null;
+
+    // Clear all fields first
+    document.getElementById("incTitle").value = "";
+    document.getElementById("incType").value = "";
+    document.getElementById("incDesc").value = "";
+    document.getElementById("incValidFrom").value = "";
+    document.getElementById("incValidUntil").value = "";
+    document.getElementById("mdfAmount").value = "";
+    document.getElementById("mdfPeriod").value = "quarterly";
+    document.getElementById("trialValue").value = "";
+    document.getElementById("trialDays").value = "";
+    document.getElementById("spifTiersContainer").innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;background:white;border-radius:6px;border:1px solid var(--line);"><input type="text" class="spifThreshold" placeholder="e.g., $0-10k" style="padding:8px;border:1px solid var(--line);border-radius:6px;" /><input type="text" class="spifBonus" placeholder="e.g., 5%" style="padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>';
+    document.getElementById("giveawayPrizesContainer").innerHTML = '<input type="text" class="giveawayPrize" placeholder="1st Place: 1 year Unisense license" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />';
+
+    if (offer){
+      document.getElementById("incentiveEditorTitle").textContent = "Edit Incentive: " + offer.title;
+      document.getElementById("incTitle").value = offer.title;
+      document.getElementById("incType").value = offer.type;
+      document.getElementById("incDesc").value = offer.description || "";
+      document.getElementById("incValidFrom").value = offer.validFrom || "";
+      document.getElementById("incValidUntil").value = offer.validUntil || "";
+
+      if (offer.type === "spif" && offer.tiers){
+        document.getElementById("spifTiersContainer").innerHTML = "";
+        offer.tiers.forEach(function(tier){
+          var tierDiv = document.createElement("div");
+          tierDiv.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;background:white;border-radius:6px;border:1px solid var(--line);";
+          tierDiv.innerHTML = '<input type="text" class="spifThreshold" placeholder="e.g., $0-10k" value="'+esc(tier.threshold)+'" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />'
+            + '<input type="text" class="spifBonus" placeholder="e.g., 5%" value="'+esc(tier.bonus)+'" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />';
+          document.getElementById("spifTiersContainer").appendChild(tierDiv);
+        });
+      } else if (offer.type === "mdf"){
+        document.getElementById("mdfAmount").value = offer.amount || 0;
+        document.getElementById("mdfPeriod").value = offer.period || "quarterly";
+      } else if (offer.type === "trial-credits"){
+        document.getElementById("trialValue").value = offer.creditValue || 0;
+        document.getElementById("trialDays").value = offer.trialDays || 30;
+      } else if (offer.type === "giveaway" && offer.prizes){
+        document.getElementById("giveawayPrizesContainer").innerHTML = "";
+        offer.prizes.forEach(function(prize){
+          var prizeInput = document.createElement("input");
+          prizeInput.type = "text";
+          prizeInput.className = "giveawayPrize";
+          prizeInput.placeholder = "e.g., 2nd Place: 6 month license";
+          prizeInput.value = prize;
+          prizeInput.style.cssText = "padding:8px;border:1px solid var(--line);border-radius:6px;";
+          document.getElementById("giveawayPrizesContainer").appendChild(prizeInput);
+        });
+      }
+
+      document.getElementById("deleteIncentiveBtn").style.display = "block";
+      document.getElementById("deleteIncentiveBtn").setAttribute("data-incentive-id", offerId);
+      state.editingIncentiveId = offerId;
+    } else {
+      document.getElementById("incentiveEditorTitle").textContent = "Create New Incentive";
+      document.getElementById("deleteIncentiveBtn").style.display = "none";
+      state.editingIncentiveId = null;
+    }
+
+    updateInccentiveTypeFields();
+  }
+
+  function saveVendorIncentive(e){
+    e.preventDefault();
+    var title = document.getElementById("incTitle").value.trim();
+    var type = document.getElementById("incType").value.trim();
+    var description = document.getElementById("incDesc").value.trim();
+    var validFrom = document.getElementById("incValidFrom").value;
+    var validUntil = document.getElementById("incValidUntil").value;
+
+    if (!title || !type || !description || !validFrom || !validUntil){
+      toast("Please fill in all required fields");
+      return;
+    }
+
+    var vendorId = state.myVendorId;
+    if (!vendorId){
+      toast("You must be logged in as a vendor");
+      return;
+    }
+
+    var incentiveData = {
+      vendorId: vendorId, title: title, type: type, description: description,
+      validFrom: validFrom, validUntil: validUntil, status: "pending",
+      submittedDate: new Date().toISOString().split("T")[0], submittedBy: vendorId,
+      archivedAt: null
+    };
+
+    if (type === "spif"){
+      var tiers = [];
+      document.querySelectorAll("#spifTiersContainer .spifThreshold").forEach(function(el, idx){
+        var threshold = el.value.trim();
+        var bonus = document.querySelectorAll("#spifTiersContainer .spifBonus")[idx].value.trim();
+        if (threshold && bonus) tiers.push({threshold: threshold, bonus: bonus});
+      });
+      if (tiers.length === 0){
+        toast("Please add at least one SPIF tier");
+        return;
+      }
+      incentiveData.tiers = tiers;
+    } else if (type === "mdf"){
+      var mdfAmount = parseFloat(document.getElementById("mdfAmount").value);
+      var mdfPeriod = document.getElementById("mdfPeriod").value;
+      if (isNaN(mdfAmount) || !mdfPeriod){
+        toast("Please fill in MDF amount and period");
+        return;
+      }
+      incentiveData.amount = mdfAmount;
+      incentiveData.period = mdfPeriod;
+    } else if (type === "trial-credits"){
+      var trialValue = parseFloat(document.getElementById("trialValue").value);
+      var trialDays = parseInt(document.getElementById("trialDays").value);
+      if (isNaN(trialValue) || isNaN(trialDays)){
+        toast("Please fill in trial value and days");
+        return;
+      }
+      incentiveData.creditValue = trialValue;
+      incentiveData.trialDays = trialDays;
+      incentiveData.qrCodeFormat = "dynamic";
+    } else if (type === "giveaway"){
+      var prizes = [];
+      document.querySelectorAll(".giveawayPrize").forEach(function(el){
+        var prize = el.value.trim();
+        if (prize) prizes.push(prize);
+      });
+      if (prizes.length === 0){
+        toast("Please add at least one prize");
+        return;
+      }
+      incentiveData.prizes = prizes;
+    }
+
+    if (state.editingIncentiveId){
+      var idx = vendorIncentiveOffers.findIndex(function(o){ return o.id === state.editingIncentiveId; });
+      if (idx >= 0){
+        vendorIncentiveOffers[idx] = Object.assign(vendorIncentiveOffers[idx], incentiveData);
+        toast("Incentive updated");
+      }
+    } else {
+      var newId = "inc-" + Date.now();
+      incentiveData.id = newId;
+      vendorIncentiveOffers.push(incentiveData);
+      toast("Incentive created and submitted for approval");
+    }
+
+    state.editingIncentiveId = null;
+    state.screen = "vendor-incentives";
+    saveVendorData();
+    render();
+  }
+
+  function renderVendorIncentives(){
+    var content = document.getElementById("vendorIncentivesContent");
+    if (!content || state.screen !== "vendor-incentives") return;
+    var vendorId = state.myVendorId;
+    if (!vendorId){
+      content.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--ink-faint);">Not logged in as a vendor.</div>';
+      return;
+    }
+
+    var incentives = vendorIncentiveOffers.filter(function(o){ return o.vendorId === vendorId && !o.archivedAt; });
+    if (incentives.length === 0){
+      content.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--ink-faint);">No incentives yet. Click "Create Incentive" to get started.</div>';
+      return;
+    }
+
+    content.innerHTML = incentives.map(function(inc){
+      var statusBadge = inc.status === "approved" ? '<span style="display:inline-block;background:var(--good-soft);color:var(--good);padding:4px 8px;border-radius:4px;font-size:.8rem;font-weight:600;">Approved</span>'
+        : '<span style="display:inline-block;background:var(--warn-soft);color:var(--warn);padding:4px 8px;border-radius:4px;font-size:.8rem;font-weight:600;">Pending</span>';
+      return '<div style="padding:16px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">'
+        + '<div><strong>'+esc(inc.title)+'</strong><span style="display:inline-block;margin-left:8px;">'+statusBadge+'</span></div>'
+        + '<div style="text-align:right;"><button class="btn secondary sm" data-edit-vendor-incentive="'+esc(inc.id)+'">Edit</button> <button class="btn secondary sm" data-delete-vendor-incentive="'+esc(inc.id)+'">Delete</button></div>'
+        + '</div>'
+        + '<p style="margin:8px 0;color:var(--ink-soft);font-size:.9rem;">'+esc(inc.description.substring(0,100))+(inc.description.length > 100 ? "..." : "")+'</p>'
+        + '<p style="margin:8px 0;font-size:.85rem;color:var(--ink-faint);">Type: <strong>'+esc(inc.type.toUpperCase())+'</strong> | Valid: '+esc(inc.validFrom)+' to '+esc(inc.validUntil)+'</p>'
+        + '</div>';
+    }).join("");
+  }
+
+  function renderOperatorIncentiveApprovals(){
+    var content = document.getElementById("incentiveApprovalsContent");
+    if (!content || state.screen !== "operator-marketing-approvals") return;
+
+    var pendingIncentives = vendorIncentiveOffers.filter(function(o){ return o.status === "pending" && !o.archivedAt; });
+    if (pendingIncentives.length === 0){
+      content.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--ink-faint);">No pending incentive approvals.</div>';
+      return;
+    }
+
+    content.innerHTML = pendingIncentives.map(function(inc){
+      var vendorName = vendorPrograms.find(function(v){ return v.id === inc.vendorId; });
+      vendorName = vendorName ? vendorName.vendor : inc.vendorId;
+      return '<div style="padding:16px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px;background:var(--surface-2);">'
+        + '<div style="margin-bottom:12px;"><strong>'+esc(inc.title)+'</strong><span style="display:inline-block;margin-left:8px;font-size:.85rem;color:var(--ink-soft);">From: '+esc(vendorName)+'</span></div>'
+        + '<p style="margin:8px 0;color:var(--ink-soft);font-size:.9rem;">'+esc(inc.description)+'</p>'
+        + '<p style="margin:8px 0;font-size:.85rem;color:var(--ink-faint);">Type: <strong>'+esc(inc.type.toUpperCase())+'</strong> | Valid: '+esc(inc.validFrom)+' to '+esc(inc.validUntil)+'</p>'
+        + '<div style="margin-top:12px;display:flex;gap:8px;">'
+        + '<button class="btn primary sm" data-approve-incentive="'+esc(inc.id)+'">Approve</button>'
+        + '<button class="btn secondary sm" data-deny-incentive="'+esc(inc.id)+'">Deny</button>'
+        + '</div></div>';
+    }).join("");
+  }
+
   // ===== HARDWARE OFFERINGS =====
   function renderHardwareOfferingsList(){
     var content = document.getElementById("hardwareOfferingsContent");
@@ -5402,6 +5775,9 @@
 
     var affiliateOfferForm = document.getElementById("affiliateOfferForm");
     if (affiliateOfferForm) affiliateOfferForm.addEventListener("submit", saveAffiliateOffer);
+
+    var vendorIncentiveForm = document.getElementById("vendorIncentiveForm");
+    if (vendorIncentiveForm) vendorIncentiveForm.addEventListener("submit", saveVendorIncentive);
   }
 
   console.log("Attaching click handler to document");
@@ -5442,6 +5818,7 @@
         else if (screen === "scr-operator-program-editor") loadOperatorProgramForm(state.editingOperatorProgramId);
         else if (screen === "partner-project-editor") loadPartnerProjectForm(state.editingProjectId);
         else if (screen === "vendor-hardware-offering-editor") loadHardwareOfferingForm(state.editingHardwareOfferingId);
+        else if (screen === "vendor-incentive-editor") loadVendorIncentiveForm(state.editingIncentiveId);
         attachFormHandlers();
       }, 0);
       render();
@@ -5824,7 +6201,19 @@
     }
 
     var tabBtn = e.target.closest("[data-tab]");
-    if (tabBtn){ state.communityTab = tabBtn.getAttribute("data-tab"); renderCommunity(); return; }
+    if (tabBtn){
+      var tab = tabBtn.getAttribute("data-tab");
+      // Check which section this tab belongs to
+      var inMarketingApprovals = tabBtn.closest("#scr-operator-marketing-approvals");
+      if (inMarketingApprovals){
+        state.marketingApprovalsTab = tab;
+        render();
+      } else {
+        state.communityTab = tab;
+        renderCommunity();
+      }
+      return;
+    }
 
     var joinGroupBtn = e.target.closest("[data-join-group]");
     if (joinGroupBtn){
@@ -6018,6 +6407,78 @@
           state.screen = "affiliate-marketplace";
           render();
         }
+      }
+      return;
+    }
+
+    var editVendorIncentiveBtn = e.target.closest("[data-edit-vendor-incentive]");
+    if (editVendorIncentiveBtn){
+      var incId = editVendorIncentiveBtn.getAttribute("data-edit-vendor-incentive");
+      state.screen = "vendor-incentive-editor";
+      state.editingIncentiveId = incId;
+      setTimeout(function(){ loadVendorIncentiveForm(incId); attachFormHandlers(); }, 0);
+      render();
+      return;
+    }
+
+    var deleteVendorIncentiveBtn = e.target.closest("[data-delete-vendor-incentive]");
+    if (deleteVendorIncentiveBtn){
+      var incId = deleteVendorIncentiveBtn.getAttribute("data-delete-vendor-incentive");
+      if (confirm("Delete this incentive offer?")){
+        var idx = vendorIncentiveOffers.findIndex(function(o){ return o.id === incId; });
+        if (idx >= 0){
+          vendorIncentiveOffers.splice(idx, 1);
+          toast("Incentive offer deleted");
+          saveVendorData();
+          render();
+        }
+      }
+      return;
+    }
+
+    var deleteIncentiveFormBtn = e.target.closest("#deleteIncentiveBtn");
+    if (deleteIncentiveFormBtn){
+      var incId = deleteIncentiveFormBtn.getAttribute("data-incentive-id");
+      if (confirm("Delete this incentive offer?")){
+        var idx = vendorIncentiveOffers.findIndex(function(o){ return o.id === incId; });
+        if (idx >= 0){
+          vendorIncentiveOffers.splice(idx, 1);
+          toast("Incentive offer deleted");
+          saveVendorData();
+          state.screen = "vendor-incentives";
+          render();
+        }
+      }
+      return;
+    }
+
+    var approveIncentiveBtn = e.target.closest("[data-approve-incentive]");
+    if (approveIncentiveBtn){
+      var incId = approveIncentiveBtn.getAttribute("data-approve-incentive");
+      var idx = vendorIncentiveOffers.findIndex(function(o){ return o.id === incId; });
+      if (idx >= 0){
+        vendorIncentiveOffers[idx].status = "approved";
+        vendorIncentiveOffers[idx].approvedBy = "operator-1";
+        vendorIncentiveOffers[idx].approvalDate = new Date().toISOString().split("T")[0];
+        toast("Incentive approved");
+        saveVendorData();
+        render();
+      }
+      return;
+    }
+
+    var denyIncentiveBtn = e.target.closest("[data-deny-incentive]");
+    if (denyIncentiveBtn){
+      var incId = denyIncentiveBtn.getAttribute("data-deny-incentive");
+      var reason = prompt("Enter reason for denial (optional):");
+      var idx = vendorIncentiveOffers.findIndex(function(o){ return o.id === incId; });
+      if (idx >= 0){
+        vendorIncentiveOffers[idx].status = "denied";
+        vendorIncentiveOffers[idx].denialReason = reason || "";
+        vendorIncentiveOffers[idx].denialDate = new Date().toISOString().split("T")[0];
+        toast("Incentive denied");
+        saveVendorData();
+        render();
       }
       return;
     }
