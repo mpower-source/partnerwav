@@ -642,6 +642,10 @@
       <!-- ===== PARTNER: COMMUNITY ===== -->
       <section id="scr-partner-community" hidden>
         <div class="section-head"><h2>Community</h2><span class="hint">Where partners work through real deals together, not just talk shop</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <button class="btn primary sm" data-goto-screen="scr-threads-editor">+ Create Thread</button>
+          <button class="btn primary sm" data-goto-screen="scr-groups-editor">+ Create Group</button>
+        </div>
         <div class="tabs" role="tablist" aria-label="Community view">
           <button class="tab-btn" data-tab="threads" role="tab" aria-selected="true">Project threads</button>
           <button class="tab-btn" data-tab="groups" role="tab" aria-selected="false">Groups</button>
@@ -937,6 +941,111 @@
         </div>
       </section>
 
+      <!-- ===== TIER 3: SUPPORT GROUPS EDITOR (create/edit) ===== -->
+      <section id="scr-groups-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="partner-community">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="groupEditorTitle">Create Support Group</h2>
+          <div style="height:16px"></div>
+          <form id="groupForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Group Name</label><input type="text" id="groupName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Vertical/Category</label><select id="groupVertical" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select vertical --</option>
+              <option value="Regional">Regional</option>
+              <option value="Vertical">Vertical</option>
+              <option value="Cross-vertical">Cross-vertical</option>
+              <option value="Industry">Industry</option>
+            </select></div>
+            <div><label>Description</label><textarea id="groupDesc" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
+            <div><label>Initial Members (optional, used for display)</label><input type="number" id="groupMembers" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" min="0" placeholder="e.g., 25" /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Group</button>
+              <button type="button" class="btn secondary" data-back-screen="partner-community">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteGroupBtn" style="margin-left:auto;display:none;">Delete Group</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== TIER 3: PROJECT THREADS EDITOR (create/edit) ===== -->
+      <section id="scr-threads-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="partner-community">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="threadEditorTitle">Create Project Thread</h2>
+          <div style="height:16px"></div>
+          <form id="threadForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Deal/Project Name</label><input type="text" id="threadDeal" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Program</label><input type="text" id="threadProgram" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Status</label><select id="threadStatus" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select status --</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="paused">Paused</option>
+              <option value="archived">Archived</option>
+            </select></div>
+            <div><label>Initial Post/Message (optional)</label><textarea id="threadInitialPost" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" placeholder="Start the conversation here"></textarea></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Create Thread</button>
+              <button type="button" class="btn secondary" data-back-screen="partner-community">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteThreadBtn" style="margin-left:auto;display:none;">Delete Thread</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== TIER 3: RESOURCES/MATERIALS EDITOR (create/edit) ===== -->
+      <section id="scr-resources-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="resource-browse">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="resourceEditorTitle">Submit Resource/Material</h2>
+          <div style="height:16px"></div>
+          <form id="resourceForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Title</label><input type="text" id="resourceTitle" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Resource Type</label><select id="resourceType" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select type --</option>
+              <option value="pdf">PDF</option>
+              <option value="ppt">PowerPoint</option>
+              <option value="webinar">Webinar Recording</option>
+              <option value="document">Document</option>
+              <option value="guide">Guide/Handbook</option>
+            </select></div>
+            <div><label>Program</label><input type="text" id="resourceProgram" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Vendor/Organization</label><input type="text" id="resourceVendor" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Summary/Description</label><textarea id="resourceSummary" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
+            <div><label>File Size (e.g., 2.4MB)</label><input type="text" id="resourceFileSize" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div><label>Webinar Duration (if applicable, e.g., 1h 23m)</label><input type="text" id="resourceDuration" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Submit for Review</button>
+              <button type="button" class="btn secondary" data-back-screen="resource-browse">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteResourceBtn" style="margin-left:auto;display:none;">Delete Resource</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== TIER 3: RESOURCE APPROVALS EDITOR (Operator only) ===== -->
+      <section id="scr-resource-approvals-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="resource-approvals">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="approvalEditorTitle">Review Resource Submission</h2>
+          <div style="height:16px"></div>
+          <div id="approvalReviewContent" style="display:flex;flex-direction:column;gap:16px;"></div>
+          <form id="approvalForm" style="display:flex;flex-direction:column;gap:16px;margin-top:16px;">
+            <div><label>Approval Decision</label><select id="approvalDecision" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select decision --</option>
+              <option value="approve">Approve & Publish</option>
+              <option value="reject">Reject</option>
+              <option value="request-revision">Request Revision</option>
+            </select></div>
+            <div><label>Comments (optional)</label><textarea id="approvalComments" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:60px;" placeholder="Feedback for the submitter"></textarea></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Submit Decision</button>
+              <button type="button" class="btn secondary" data-back-screen="resource-approvals">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
       <!-- ===== AFFILIATE: OVERVIEW (own role, own nav) ===== -->
       <section id="scr-affiliate-overview" hidden>
         <div class="stat-row" id="affiliateStatRow"></div>
@@ -1015,12 +1124,14 @@
       <!-- ===== RESOURCE: BROWSE (shared: Partner + Vendor + Affiliate + Operator) ===== -->
       <section id="scr-resource-browse" hidden>
         <div class="section-head"><h2>Resource Library</h2><span class="hint">Marketing materials and training webinars from vendors and affiliates</span></div>
-        <div style="height:14px"></div>
-        <div class="filter-chip-row">
-          <button class="filter-chip" data-resource-filter="all" aria-pressed="true">All types</button>
-          <button class="filter-chip" data-resource-filter="pdf">PDF</button>
-          <button class="filter-chip" data-resource-filter="ppt">PowerPoint</button>
-          <button class="filter-chip" data-resource-filter="webinar">Webinars</button>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+          <button class="btn primary sm" data-goto-screen="scr-resources-editor">+ Submit Resource</button>
+          <div class="filter-chip-row" style="flex:1;min-width:300px;">
+            <button class="filter-chip" data-resource-filter="all" aria-pressed="true">All types</button>
+            <button class="filter-chip" data-resource-filter="pdf">PDF</button>
+            <button class="filter-chip" data-resource-filter="ppt">PowerPoint</button>
+            <button class="filter-chip" data-resource-filter="webinar">Webinars</button>
+          </div>
         </div>
         <div style="height:12px"></div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -4037,6 +4148,189 @@
     render();
   }
 
+  // ===== TIER 3: SUPPORT GROUPS =====
+  function loadGroupForm(groupId){
+    var group = groupId ? groups.find(function(g){ return g.id === groupId; }) : null;
+    document.getElementById("groupEditorTitle").textContent = group ? "Edit Support Group" : "Create Support Group";
+    document.getElementById("groupName").value = group ? group.name : "";
+    document.getElementById("groupVertical").value = group ? group.vertical : "";
+    document.getElementById("groupDesc").value = group ? group.desc : "";
+    document.getElementById("groupMembers").value = group ? group.members : "";
+    var deleteBtn = document.getElementById("deleteGroupBtn");
+    deleteBtn.style.display = group ? "block" : "none";
+    if (group) deleteBtn.setAttribute("data-group-id", groupId);
+    state.editingGroupId = groupId;
+  }
+
+  function saveGroup(e){
+    e.preventDefault();
+    var name = document.getElementById("groupName").value.trim();
+    var vertical = document.getElementById("groupVertical").value;
+    var desc = document.getElementById("groupDesc").value.trim();
+    var members = parseInt(document.getElementById("groupMembers").value) || 0;
+
+    if (!name || !vertical || !desc){ toast("Please fill in required fields"); return; }
+
+    if (state.editingGroupId){
+      var idx = groups.findIndex(function(g){ return g.id === state.editingGroupId; });
+      if (idx >= 0){
+        groups[idx] = Object.assign(groups[idx], { name: name, vertical: vertical, desc: desc, members: members });
+        toast("Group updated");
+      }
+    } else {
+      var newId = "group-" + Date.now();
+      groups.push({ id: newId, name: name, vertical: vertical, members: members, desc: desc, archivedAt: null });
+      toast("Group created");
+    }
+    state.editingGroupId = null;
+    state.screen = "partner-community";
+    saveVendorData();
+    render();
+  }
+
+  // ===== TIER 3: PROJECT THREADS =====
+  function loadThreadForm(threadId){
+    var thread = threadId ? projectThreads.find(function(t){ return t.id === threadId; }) : null;
+    document.getElementById("threadEditorTitle").textContent = thread ? "Edit Project Thread" : "Create Project Thread";
+    document.getElementById("threadDeal").value = thread ? thread.deal : "";
+    document.getElementById("threadProgram").value = thread ? thread.program : "";
+    document.getElementById("threadStatus").value = thread ? thread.status : "active";
+    document.getElementById("threadInitialPost").value = "";
+    var deleteBtn = document.getElementById("deleteThreadBtn");
+    deleteBtn.style.display = thread ? "block" : "none";
+    if (thread) deleteBtn.setAttribute("data-thread-id", threadId);
+    state.editingThreadId = threadId;
+  }
+
+  function saveThread(e){
+    e.preventDefault();
+    var deal = document.getElementById("threadDeal").value.trim();
+    var program = document.getElementById("threadProgram").value.trim();
+    var status = document.getElementById("threadStatus").value;
+    var initialPost = document.getElementById("threadInitialPost").value.trim();
+
+    if (!deal || !program || !status){ toast("Please fill in required fields"); return; }
+
+    if (state.editingThreadId){
+      var idx = projectThreads.findIndex(function(t){ return t.id === state.editingThreadId; });
+      if (idx >= 0){
+        projectThreads[idx] = Object.assign(projectThreads[idx], { deal: deal, program: program, status: status });
+        toast("Thread updated");
+      }
+    } else {
+      var newId = "thread-" + Date.now();
+      var newThread = { id: newId, deal: deal, program: program, status: status, participants: [], posts: [] };
+      if (initialPost){
+        newThread.posts.push({ author: "You", init: "YU", time: "now", text: initialPost });
+      }
+      projectThreads.push(newThread);
+      toast("Thread created");
+    }
+    state.editingThreadId = null;
+    state.screen = "partner-community";
+    saveVendorData();
+    render();
+  }
+
+  // ===== TIER 3: RESOURCES/MATERIALS =====
+  function loadResourceForm(resourceId){
+    var resource = resourceId ? (resources.concat(pendingResources)).find(function(r){ return r.id === resourceId; }) : null;
+    document.getElementById("resourceEditorTitle").textContent = resource ? "Edit Resource" : "Submit Resource/Material";
+    document.getElementById("resourceTitle").value = resource ? resource.title : "";
+    document.getElementById("resourceType").value = resource ? resource.type : "";
+    document.getElementById("resourceProgram").value = resource ? resource.program : "";
+    document.getElementById("resourceVendor").value = resource ? resource.vendor : "";
+    document.getElementById("resourceSummary").value = resource ? resource.summary : "";
+    document.getElementById("resourceFileSize").value = resource ? resource.fileSize : "";
+    document.getElementById("resourceDuration").value = resource ? (resource.duration || "") : "";
+    var deleteBtn = document.getElementById("deleteResourceBtn");
+    deleteBtn.style.display = resource ? "block" : "none";
+    if (resource) deleteBtn.setAttribute("data-resource-id", resourceId);
+    state.editingResourceId = resourceId;
+  }
+
+  function saveResource(e){
+    e.preventDefault();
+    var title = document.getElementById("resourceTitle").value.trim();
+    var type = document.getElementById("resourceType").value;
+    var program = document.getElementById("resourceProgram").value.trim();
+    var vendor = document.getElementById("resourceVendor").value.trim();
+    var summary = document.getElementById("resourceSummary").value.trim();
+    var fileSize = document.getElementById("resourceFileSize").value.trim();
+    var duration = document.getElementById("resourceDuration").value.trim();
+
+    if (!title || !type || !program || !vendor || !summary){ toast("Please fill in required fields"); return; }
+
+    if (state.editingResourceId){
+      var idx = resources.findIndex(function(r){ return r.id === state.editingResourceId; });
+      if (idx >= 0){
+        resources[idx] = Object.assign(resources[idx], {
+          title: title, type: type, program: program, vendor: vendor, summary: summary, fileSize: fileSize, duration: duration
+        });
+        toast("Resource updated");
+      }
+    } else {
+      var newId = "res-" + Date.now();
+      pendingResources.push({
+        id: newId, title: title, type: type, uploadedBy: vendor, program: program, vendor: vendor,
+        status: "pending", fileSize: fileSize, submittedDate: "just now", summary: summary,
+        transcription: "", previewText: summary.substring(0, 100), reason: "awaiting_review",
+        duration: duration || ""
+      });
+      toast("Resource submitted for operator review");
+    }
+    state.editingResourceId = null;
+    state.screen = "resource-browse";
+    saveVendorData();
+    render();
+  }
+
+  // ===== TIER 3: RESOURCE APPROVALS =====
+  function loadApprovalForm(resourceId){
+    var resource = pendingResources.find(function(r){ return r.id === resourceId; });
+    if (resource){
+      var content = document.getElementById("approvalReviewContent");
+      content.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface-2);border-radius:8px;">' +
+        '<div><strong>' + resource.title + '</strong></div>' +
+        '<div style="font-size:.85rem;color:var(--ink-soft);">Submitted by ' + resource.uploadedBy + ' for program: ' + resource.program + '</div>' +
+        '<div style="font-size:.85rem;color:var(--ink-soft);">Type: ' + resource.type.toUpperCase() + ' | Size: ' + resource.fileSize + '</div>' +
+        '<div style="margin-top:8px;font-size:.85rem;line-height:1.5;">' + resource.summary.substring(0, 200) + '...</div>' +
+        '</div>';
+    }
+    state.editingApprovalId = resourceId;
+  }
+
+  function saveApproval(e){
+    e.preventDefault();
+    var decision = document.getElementById("approvalDecision").value;
+    var comments = document.getElementById("approvalComments").value.trim();
+
+    if (!decision){ toast("Please select a decision"); return; }
+
+    var idx = pendingResources.findIndex(function(r){ return r.id === state.editingApprovalId; });
+    if (idx >= 0){
+      var resource = pendingResources[idx];
+      if (decision === "approve"){
+        resource.status = "published";
+        resources.push(Object.assign({}, resource, { uploadedDate: "just now", status: "published" }));
+        pendingResources.splice(idx, 1);
+        toast("Resource approved and published");
+      } else if (decision === "reject"){
+        resource.status = "rejected";
+        resource.rejectionComment = comments;
+        toast("Resource rejected");
+      } else if (decision === "request-revision"){
+        resource.reason = "revision_requested";
+        resource.revisionComments = comments;
+        toast("Revision request sent to submitter");
+      }
+    }
+    state.editingApprovalId = null;
+    state.screen = "resource-approvals";
+    saveVendorData();
+    render();
+  }
+
   // Form submission handlers - attach after DOM is ready
   function attachFormHandlers(){
     var partnerForm = document.getElementById("partnerProfileForm");
@@ -4056,6 +4350,18 @@
 
     var agreementForm = document.getElementById("agreementForm");
     if (agreementForm) agreementForm.addEventListener("submit", saveAgreement);
+
+    var groupForm = document.getElementById("groupForm");
+    if (groupForm) groupForm.addEventListener("submit", saveGroup);
+
+    var threadForm = document.getElementById("threadForm");
+    if (threadForm) threadForm.addEventListener("submit", saveThread);
+
+    var resourceForm = document.getElementById("resourceForm");
+    if (resourceForm) resourceForm.addEventListener("submit", saveResource);
+
+    var approvalForm = document.getElementById("approvalForm");
+    if (approvalForm) approvalForm.addEventListener("submit", saveApproval);
   }
 
   console.log("Attaching click handler to document");
@@ -4089,6 +4395,10 @@
         else if (screen === "scr-projects-editor") loadProjectForm(state.editingProjectId);
         else if (screen === "scr-leads-editor") loadLeadForm(state.editingLeadId);
         else if (screen === "scr-agreements-editor") loadAgreementForm(state.editingAgreementId);
+        else if (screen === "scr-groups-editor") loadGroupForm(state.editingGroupId);
+        else if (screen === "scr-threads-editor") loadThreadForm(state.editingThreadId);
+        else if (screen === "scr-resources-editor") loadResourceForm(state.editingResourceId);
+        else if (screen === "scr-resource-approvals-editor") loadApprovalForm(state.editingApprovalId);
         attachFormHandlers();
       }, 0);
       render();
@@ -4148,6 +4458,39 @@
         var idx = programs.findIndex(function(p){ return p.id === programId; });
         if (idx >= 0){ programs[idx].agreement = {type: "", status: ""}; toast("Agreement deleted"); saveVendorData(); render(); }
         state.screen = "partner-agreements";
+      }
+      return;
+    }
+
+    var deleteGroupBtn = e.target.closest("#deleteGroupBtn");
+    if (deleteGroupBtn){
+      var groupId = deleteGroupBtn.getAttribute("data-group-id");
+      if (confirm("Archive this group?")){
+        var idx = groups.findIndex(function(g){ return g.id === groupId; });
+        if (idx >= 0){ groups[idx].archivedAt = new Date().toISOString(); toast("Group archived"); saveVendorData(); render(); }
+        state.screen = "partner-community";
+      }
+      return;
+    }
+
+    var deleteThreadBtn = e.target.closest("#deleteThreadBtn");
+    if (deleteThreadBtn){
+      var threadId = deleteThreadBtn.getAttribute("data-thread-id");
+      if (confirm("Archive this thread?")){
+        var idx = projectThreads.findIndex(function(t){ return t.id === threadId; });
+        if (idx >= 0){ projectThreads[idx].status = "archived"; toast("Thread archived"); saveVendorData(); render(); }
+        state.screen = "partner-community";
+      }
+      return;
+    }
+
+    var deleteResourceBtn = e.target.closest("#deleteResourceBtn");
+    if (deleteResourceBtn){
+      var resourceId = deleteResourceBtn.getAttribute("data-resource-id");
+      if (confirm("Archive this resource?")){
+        var idx = resources.findIndex(function(r){ return r.id === resourceId; });
+        if (idx >= 0){ resources[idx].archivedAt = new Date().toISOString(); toast("Resource archived"); saveVendorData(); render(); }
+        state.screen = "resource-browse";
       }
       return;
     }
