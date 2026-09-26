@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <style>
   :root{
     --bg:#ffffff; --surface:#ffffff; --surface-2:#f5f4ff;
@@ -343,6 +343,13 @@
     .topbar{ padding:max(14px, env(safe-area-inset-top,0px)) 16px 12px; }
     .search{ display:none; }
   }
+
+  /* ===== LEAFLET MAP CUSTOMIZATION ===== */
+  .leaflet-container{ background:var(--surface); }
+  .leaflet-control-attribution{ background:var(--surface-2); color:var(--ink-soft); }
+  .leaflet-popup-content-wrapper{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow); border-radius:8px; }
+  .leaflet-popup-tip{ background:var(--surface); }
+  .leaflet-popup-content{ color:var(--ink); }
 </style>
 
 <div class="shell">
@@ -1898,6 +1905,17 @@
     { id:"mm2", title:"Cross Connect Product Demo Video", program:"Cross Connect", materialType:"Demo Asset", description:"Product demo walkthrough for partner training", format:"Video", status:"pending", submittedDate:"2 days ago", submittedBy:"Portonics", approvalNotes:"", archivedAt:null }
   ];
 
+  var partnerLocations = [
+    { id:"siam-digital", name:"Siam Digital MSP", region:"apac", lat:13.7563, lng:100.5018, city:"Bangkok, Thailand", status:"active", program:"Intelsense AI", tier:"Gold" },
+    { id:"gulf-coast-var", name:"Gulf Coast VAR", region:"americas", lat:27.9506, lng:-82.4647, city:"Tampa, USA", status:"active", program:"Cross Connect", tier:"Silver" },
+    { id:"portonics-eu", name:"Portonics Europe Ltd", region:"europe", lat:52.5200, lng:13.4050, city:"Berlin, Germany", status:"active", program:"Botnoi Voice", tier:"Gold" },
+    { id:"mena-tech", name:"MENA Tech Solutions", region:"meaf", lat:24.4539, lng:54.3773, city:"Abu Dhabi, UAE", status:"pending", program:"Intelsense AI", tier:"Bronze" },
+    { id:"aussie-partners", name:"Aussie Partners Group", region:"apac", lat:-33.8688, lng:151.2093, city:"Sydney, Australia", status:"active", program:"Cross Connect", tier:"Silver" },
+    { id:"nordic-resellers", name:"Nordic Resellers AS", region:"europe", lat:59.9139, lng:10.7522, city:"Oslo, Norway", status:"approved", program:"Unisense", tier:"Gold" },
+    { id:"latin-solutions", name:"Latin America Solutions", region:"americas", lat:-23.5505, lng:-46.6333, city:"São Paulo, Brazil", status:"active", program:"ZipEvent", tier:"Silver" },
+    { id:"africa-connect", name:"Africa Connect Ltd", region:"meaf", lat:-1.2921, lng:36.8219, city:"Nairobi, Kenya", status:"pending", program:"Intelsense AI", tier:"Bronze" }
+  ];
+
   // Load data from localStorage
   function loadSavedData(){
     try {
@@ -2196,6 +2214,97 @@
     document.getElementById("projectsList").innerHTML = html;
   }
 
+  // ===== PARTNER DISCOVERY MAP =====
+  var mapInstance = null;
+  var mapMarkers = [];
+
+  function getFilteredPartners(){
+    var statusFilter = document.getElementById("mapStatusFilter") ? document.getElementById("mapStatusFilter").value : "";
+    var regionFilter = document.getElementById("mapRegionFilter") ? document.getElementById("mapRegionFilter").value : "";
+
+    return partnerLocations.filter(function(p){
+      var statusMatch = !statusFilter || p.status === statusFilter;
+      var regionMatch = !regionFilter || p.region === regionFilter;
+      return statusMatch && regionMatch;
+    });
+  }
+
+  function initializeMap(){
+    var mapContainer = document.getElementById("partnerMapContainer");
+    if (!mapContainer) return;
+
+    // Clear existing map if it exists
+    if (mapInstance) {
+      mapInstance.remove();
+      mapInstance = null;
+      mapMarkers = [];
+    }
+
+    // Initialize map centered on world
+    mapInstance = L.map("partnerMapContainer").setView([20, 0], 2);
+
+    // Add tile layer from OpenStreetMap
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(mapInstance);
+
+    // Add partner markers
+    var filteredPartners = getFilteredPartners();
+    filteredPartners.forEach(function(partner){
+      var color = partner.status === "active" ? "#1a8f5a" : (partner.status === "approved" ? "#5b3df5" : "#a06a12");
+      var icon = L.circleMarker([partner.lat, partner.lng], {
+        radius: 8,
+        fillColor: color,
+        color: "#fff",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8
+      });
+
+      var popup = '<div style="font-weight:600;margin-bottom:4px;">'+esc(partner.name)+'</div>'
+        + '<div style="font-size:0.85rem;color:#666;">'+esc(partner.city)+'</div>'
+        + '<div style="font-size:0.85rem;color:#666;margin-top:4px;"><strong>Program:</strong> '+esc(partner.program)+'</div>'
+        + '<div style="font-size:0.85rem;color:#666;"><strong>Tier:</strong> '+esc(partner.tier)+'</div>'
+        + '<div style="font-size:0.85rem;margin-top:6px;"><span class="badge '+partner.status+'">'+esc(partner.status.charAt(0).toUpperCase()+partner.status.slice(1))+'</span></div>';
+
+      icon.bindPopup(popup);
+      icon.addTo(mapInstance);
+      mapMarkers.push({id: partner.id, marker: icon, data: partner});
+    });
+
+    // Update partner list
+    updateMapPartnerList(filteredPartners);
+  }
+
+  function updateMapPartnerList(filteredPartners){
+    var listElem = document.getElementById("partnerMapList");
+    if (!listElem) return;
+
+    if (filteredPartners.length === 0){
+      listElem.innerHTML = '<div style="padding:8px;background:var(--surface);border-radius:6px;text-align:center;color:var(--ink-faint);">No partners match filters</div>';
+      return;
+    }
+
+    listElem.innerHTML = filteredPartners.map(function(p){
+      var statusColor = p.status === "active" ? "good" : (p.status === "approved" ? "accent" : "warn");
+      return '<div style="padding:10px;background:var(--surface);border-radius:6px;cursor:pointer;" data-partner-id="'+p.id+'" onclick="event.stopPropagation();highlightMapMarker(\''+p.id+'\')">'
+        + '<div style="font-weight:600;font-size:0.9rem;margin-bottom:4px;">'+esc(p.name)+'</div>'
+        + '<div style="font-size:0.8rem;color:var(--ink-soft);">'+esc(p.city)+'</div>'
+        + '<div style="font-size:0.75rem;margin-top:4px;"><span class="badge '+statusColor+'">'+esc(p.status)+'</span> '+esc(p.tier)+'</div>'
+        + '</div>';
+    }).join("");
+  }
+
+  function highlightMapMarker(partnerId){
+    mapMarkers.forEach(function(m){
+      if (m.id === partnerId && m.marker){
+        m.marker.openPopup();
+        mapInstance.setView([m.data.lat, m.data.lng], 6);
+      }
+    });
+  }
+
   function render(){
     // Detect referral URL for public partner application
     if (window.location.search.includes("apply=vendor")) {
@@ -2338,7 +2447,16 @@
     }
 
     // ---- operator partner discovery map ----
-    renderPartnerMap();
+    if (state.screen === "operator-partner-map"){
+      setTimeout(function(){
+        initializeMap();
+        // Attach filter handlers
+        var statusFilter = document.getElementById("mapStatusFilter");
+        var regionFilter = document.getElementById("mapRegionFilter");
+        if (statusFilter) statusFilter.addEventListener("change", function(){ initializeMap(); });
+        if (regionFilter) regionFilter.addEventListener("change", function(){ initializeMap(); });
+      }, 100);
+    }
 
     // ---- resource library ----
     renderResourceBrowse();
