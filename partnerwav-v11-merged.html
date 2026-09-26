@@ -574,7 +574,10 @@
       <!-- ===== PARTNER: AGREEMENTS ===== -->
       <section id="scr-partner-agreements" hidden>
         <div class="section-head"><h2>My agreements</h2><span class="hint">One template shape per relationship type</span></div>
-        <div style="height:14px"></div>
+        <div style="height:8px"></div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <button class="btn primary sm" data-goto-screen="scr-agreements-editor">+ Create Agreement</button>
+        </div>
         <div class="card">
           <div class="table-scroll">
             <table>
@@ -613,7 +616,7 @@
         <div class="section-head"><h2>My Leads</h2><span class="hint">Private lead pipeline -- stays exclusive to you until converted to a deal</span></div>
         <p class="platform-note">Leads you capture here are 100% yours until you convert one to a registered deal. Once converted, it goes to the Operator for approval but stays on your account. This keeps your pipeline private and prevents deal poaching.</p>
         <div style="display:flex;gap:10px;margin-bottom:14px;">
-          <button class="btn primary sm" id="createLeadBtn" data-create-lead>+ Create a lead</button>
+          <button class="btn primary sm" data-goto-screen="scr-leads-editor">+ Create a lead</button>
           <select class="filter" id="leadsStatusFilter">
             <option value="all">All leads</option>
             <option value="prospect">Prospect</option>
@@ -630,6 +633,9 @@
       <section id="scr-partner-projects" hidden>
         <div class="section-head"><h2>Projects</h2><span class="hint">Open opportunities with scope division -- partners can claim individual line items</span></div>
         <p class="platform-note">Projects now include Statement of Work (SOW) line items -- see the full scope before claiming. Partners can claim specific line items they can cover rather than the whole project, enabling multi-partner collaboration on complex deals.</p>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <button class="btn primary sm" data-goto-screen="scr-projects-editor">+ Create Project</button>
+        </div>
         <div style="display:flex;flex-direction:column;gap:14px;" id="projectsList"></div>
       </section>
 
@@ -844,6 +850,91 @@
         <div class="section-head"><h2>Vendor Marketing Material Approvals</h2><span class="hint">Review and approve vendor marketing materials before they're published</span></div>
         <div style="height:12px"></div>
         <div id="marketingApprovalsContent"></div>
+      </section>
+
+      <!-- ===== TIER 2: PROJECTS/DEALS EDITOR (create/edit) ===== -->
+      <section id="scr-projects-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="partner-projects">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="projectEditorTitle">Create Project/Deal</h2>
+          <div style="height:16px"></div>
+          <form id="projectForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Title</label><input type="text" id="projectTitle" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Program</label><input type="text" id="projectProgram" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Region</label><input type="text" id="projectRegion" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Type (Reseller/Affiliate/Channel Manager opportunity)</label><input type="text" id="projectType" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Description</label><textarea id="projectDesc" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
+            <div><label>Reward</label><textarea id="projectReward" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:60px;" required></textarea></div>
+            <div><label>Claimed By (optional)</label><input type="text" id="projectClaimedBy" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="Partner name if claimed" /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Project</button>
+              <button type="button" class="btn secondary" data-back-screen="partner-projects">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteProjectBtn" style="margin-left:auto;display:none;">Delete Project</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== TIER 2: LEADS EDITOR (create/edit) ===== -->
+      <section id="scr-leads-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="partner-my-leads">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="leadEditorTitle">Create Lead</h2>
+          <div style="height:16px"></div>
+          <form id="leadForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Prospect Name</label><input type="text" id="leadProspectName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label>Value (estimated deal value)</label><input type="text" id="leadValue" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., $150,000" required /></div>
+            <div><label>Status</label><select id="leadStatus" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select status --</option>
+              <option value="prospect">Prospect</option>
+              <option value="qualified">Qualified</option>
+              <option value="proposal">Proposal</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+            </select></div>
+            <div><label>Notes</label><textarea id="leadNotes" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" placeholder="Detailed notes about this lead"></textarea></div>
+            <div><label>Created Date</label><input type="text" id="leadCreatedDate" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., 2 weeks ago" /></div>
+            <div><label>Converted Deal ID (optional)</label><input type="text" id="leadConvertedDeal" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="Leave blank if not yet converted" /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Lead</button>
+              <button type="button" class="btn secondary" data-back-screen="partner-my-leads">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteLeadBtn" style="margin-left:auto;display:none;">Delete Lead</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== TIER 2: AGREEMENTS EDITOR (create/edit) ===== -->
+      <section id="scr-agreements-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="partner-agreements">← Back</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="agreementEditorTitle">Create Agreement</h2>
+          <div style="height:16px"></div>
+          <form id="agreementForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div><label>Program</label><select id="agreementProgram" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select program --</option>
+              <option value="intelsense">Intelsense AI</option>
+              <option value="crossconnect">Cross Connect</option>
+              <option value="botnoi">Botnoi Voice</option>
+              <option value="zipevent">ZipEvent</option>
+              <option value="portonics-dev">Portonics Ltd.</option>
+              <option value="unisense">Unisense</option>
+            </select></div>
+            <div><label>Agreement Type</label><input type="text" id="agreementType" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., Vendor Program Agreement" required /></div>
+            <div><label>Status</label><select id="agreementStatus" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
+              <option value="">-- Select status --</option>
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
+            </select></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Agreement</button>
+              <button type="button" class="btn secondary" data-back-screen="partner-agreements">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteAgreementBtn" style="margin-left:auto;display:none;">Delete Agreement</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <!-- ===== AFFILIATE: OVERVIEW (own role, own nav) ===== -->
@@ -2060,6 +2151,9 @@
     document.querySelectorAll("[data-approval-view]").forEach(function(b){
       b.setAttribute("aria-pressed", b.getAttribute("data-approval-view") === state.resourceApprovalView ? "true" : "false");
     });
+
+    // Attach form handlers for profile editors
+    attachFormHandlers();
   }
 
   function renderCommunity(){
@@ -3809,6 +3903,161 @@
     render();
   }
 
+  // ===== TIER 2: PROJECTS/DEALS =====
+  function loadProjectForm(projectId){
+    var project = projectId ? projects.find(function(p){ return p.id === projectId; }) : null;
+    document.getElementById("projectEditorTitle").textContent = project ? "Edit Project" : "Create Project/Deal";
+    document.getElementById("projectTitle").value = project ? project.title : "";
+    document.getElementById("projectProgram").value = project ? project.program : "";
+    document.getElementById("projectRegion").value = project ? project.region : "";
+    document.getElementById("projectType").value = project ? project.type : "";
+    document.getElementById("projectDesc").value = project ? project.desc : "";
+    document.getElementById("projectReward").value = project ? project.reward : "";
+    document.getElementById("projectClaimedBy").value = project ? (project.claimedBy || "") : "";
+    var deleteBtn = document.getElementById("deleteProjectBtn");
+    deleteBtn.style.display = project ? "block" : "none";
+    if (project) deleteBtn.setAttribute("data-project-id", projectId);
+    state.editingProjectId = projectId;
+  }
+
+  function saveProject(e){
+    e.preventDefault();
+    var title = document.getElementById("projectTitle").value.trim();
+    var program = document.getElementById("projectProgram").value.trim();
+    var region = document.getElementById("projectRegion").value.trim();
+    var type = document.getElementById("projectType").value.trim();
+    var desc = document.getElementById("projectDesc").value.trim();
+    var reward = document.getElementById("projectReward").value.trim();
+    var claimedBy = document.getElementById("projectClaimedBy").value.trim() || null;
+
+    if (!title || !program || !region || !type || !desc || !reward){ toast("Please fill in required fields"); return; }
+
+    if (state.editingProjectId){
+      var idx = projects.findIndex(function(p){ return p.id === state.editingProjectId; });
+      if (idx >= 0){
+        projects[idx] = Object.assign(projects[idx], {
+          title: title, program: program, region: region, type: type, desc: desc, reward: reward, claimedBy: claimedBy
+        });
+        toast("Project updated");
+      }
+    } else {
+      var newId = "proj-" + Date.now();
+      projects.push({
+        id: newId, title: title, program: program, region: region, type: type, desc: desc,
+        reward: reward, claimedBy: claimedBy, scopeOfWork: [], archivedAt: null
+      });
+      toast("Project created");
+    }
+    state.editingProjectId = null;
+    state.screen = "partner-projects";
+    saveVendorData();
+    render();
+  }
+
+  // ===== TIER 2: LEADS =====
+  function loadLeadForm(leadId){
+    var lead = leadId ? leads.find(function(l){ return l.id === leadId; }) : null;
+    document.getElementById("leadEditorTitle").textContent = lead ? "Edit Lead" : "Create Lead";
+    document.getElementById("leadProspectName").value = lead ? lead.prospectName : "";
+    document.getElementById("leadValue").value = lead ? lead.value : "";
+    document.getElementById("leadStatus").value = lead ? lead.status : "";
+    document.getElementById("leadNotes").value = lead ? lead.notes : "";
+    document.getElementById("leadCreatedDate").value = lead ? lead.createdDate : "";
+    document.getElementById("leadConvertedDeal").value = lead ? (lead.convertedDeal || "") : "";
+    var deleteBtn = document.getElementById("deleteLeadBtn");
+    deleteBtn.style.display = lead ? "block" : "none";
+    if (lead) deleteBtn.setAttribute("data-lead-id", leadId);
+    state.editingLeadId = leadId;
+  }
+
+  function saveLead(e){
+    e.preventDefault();
+    var prospectName = document.getElementById("leadProspectName").value.trim();
+    var value = document.getElementById("leadValue").value.trim();
+    var status = document.getElementById("leadStatus").value;
+    var notes = document.getElementById("leadNotes").value.trim();
+    var createdDate = document.getElementById("leadCreatedDate").value.trim();
+    var convertedDeal = document.getElementById("leadConvertedDeal").value.trim() || null;
+
+    if (!prospectName || !value || !status){ toast("Please fill in required fields"); return; }
+
+    if (state.editingLeadId){
+      var idx = leads.findIndex(function(l){ return l.id === state.editingLeadId; });
+      if (idx >= 0){
+        leads[idx] = Object.assign(leads[idx], {
+          prospectName: prospectName, value: value, status: status, notes: notes,
+          createdDate: createdDate, convertedDeal: convertedDeal
+        });
+        toast("Lead updated");
+      }
+    } else {
+      var newId = "lead-" + Date.now();
+      var currentPartnerId = state.role === "partner" ? "siam-digital" : ""; // Get from actual user
+      leads.push({
+        id: newId, partnerId: currentPartnerId, prospectName: prospectName, value: value,
+        status: status, notes: notes, createdDate: createdDate, convertedDeal: convertedDeal
+      });
+      toast("Lead created");
+    }
+    state.editingLeadId = null;
+    state.screen = "partner-my-leads";
+    saveVendorData();
+    render();
+  }
+
+  // ===== TIER 2: AGREEMENTS =====
+  function loadAgreementForm(programId){
+    var program = programId ? programs.find(function(p){ return p.id === programId; }) : null;
+    document.getElementById("agreementEditorTitle").textContent = program ? "Edit Agreement" : "Create Agreement";
+    document.getElementById("agreementProgram").value = program ? program.id : "";
+    document.getElementById("agreementType").value = program ? (program.agreement && program.agreement.type) : "";
+    document.getElementById("agreementStatus").value = program ? (program.agreement && program.agreement.status) : "";
+    var deleteBtn = document.getElementById("deleteAgreementBtn");
+    deleteBtn.style.display = program ? "block" : "none";
+    if (program) deleteBtn.setAttribute("data-agreement-program-id", programId);
+    state.editingAgreementId = programId;
+  }
+
+  function saveAgreement(e){
+    e.preventDefault();
+    var programId = document.getElementById("agreementProgram").value;
+    var type = document.getElementById("agreementType").value.trim();
+    var status = document.getElementById("agreementStatus").value;
+
+    if (!programId || !type || !status){ toast("Please fill in required fields"); return; }
+
+    var idx = programs.findIndex(function(p){ return p.id === programId; });
+    if (idx >= 0){
+      programs[idx].agreement = { type: type, status: status };
+      toast(state.editingAgreementId ? "Agreement updated" : "Agreement created");
+    }
+    state.editingAgreementId = null;
+    state.screen = "partner-agreements";
+    saveVendorData();
+    render();
+  }
+
+  // Form submission handlers - attach after DOM is ready
+  function attachFormHandlers(){
+    var partnerForm = document.getElementById("partnerProfileForm");
+    if (partnerForm) partnerForm.addEventListener("submit", savePartnerProfile);
+
+    var vendorForm = document.getElementById("vendorProgramForm");
+    if (vendorForm) vendorForm.addEventListener("submit", saveVendorProgram);
+
+    var affiliateForm = document.getElementById("affiliateProfileForm");
+    if (affiliateForm) affiliateForm.addEventListener("submit", saveAffiliateProfile);
+
+    var projectForm = document.getElementById("projectForm");
+    if (projectForm) projectForm.addEventListener("submit", saveProject);
+
+    var leadForm = document.getElementById("leadForm");
+    if (leadForm) leadForm.addEventListener("submit", saveLead);
+
+    var agreementForm = document.getElementById("agreementForm");
+    if (agreementForm) agreementForm.addEventListener("submit", saveAgreement);
+  }
+
   console.log("Attaching click handler to document");
   document.addEventListener("click", function(e){
     console.log("Click detected on:", e.target.tagName, e.target.className);
@@ -3829,7 +4078,79 @@
     }
 
     var gotoBtn = e.target.closest("[data-goto-screen]");
-    if (gotoBtn){ state.screen = gotoBtn.getAttribute("data-goto-screen"); render(); return; }
+    if (gotoBtn){
+      var screen = gotoBtn.getAttribute("data-goto-screen");
+      state.screen = screen;
+      // Load form data if navigating to editor screens
+      setTimeout(function(){
+        if (screen === "partner-profile-editor") loadPartnerProfileForm(state.editingProfileId);
+        else if (screen === "vendor-program-editor") loadVendorProgramForm(state.editingProgramId);
+        else if (screen === "affiliate-profile-editor") loadAffiliateProfileForm(state.editingAffiliateId);
+        else if (screen === "scr-projects-editor") loadProjectForm(state.editingProjectId);
+        else if (screen === "scr-leads-editor") loadLeadForm(state.editingLeadId);
+        else if (screen === "scr-agreements-editor") loadAgreementForm(state.editingAgreementId);
+        attachFormHandlers();
+      }, 0);
+      render();
+      return;
+    }
+
+    var backScreenBtn = e.target.closest("[data-back-screen]");
+    if (backScreenBtn){ state.screen = backScreenBtn.getAttribute("data-back-screen"); render(); return; }
+
+    var deleteProfileBtn = e.target.closest("#deleteProfileBtn");
+    if (deleteProfileBtn){
+      var profileId = deleteProfileBtn.getAttribute("data-profile-id");
+      if (confirm("Archive this profile? It can be restored later.")) softDeleteProfile("partner", profileId);
+      return;
+    }
+
+    var deleteProgramBtn = e.target.closest("#deleteProgramBtn");
+    if (deleteProgramBtn){
+      var programId = deleteProgramBtn.getAttribute("data-program-id");
+      if (confirm("Archive this program? It can be restored later.")) softDeleteProfile("vendor", programId);
+      return;
+    }
+
+    var deleteAffiliateBtn = e.target.closest("#deleteAffiliateBtn");
+    if (deleteAffiliateBtn){
+      var affiliateId = deleteAffiliateBtn.getAttribute("data-affiliate-id");
+      if (confirm("Archive this profile? It can be restored later.")) softDeleteProfile("affiliate", affiliateId);
+      return;
+    }
+
+    var deleteProjectBtn = e.target.closest("#deleteProjectBtn");
+    if (deleteProjectBtn){
+      var projectId = deleteProjectBtn.getAttribute("data-project-id");
+      if (confirm("Archive this project? It can be restored later.")){
+        var idx = projects.findIndex(function(p){ return p.id === projectId; });
+        if (idx >= 0){ projects[idx].archivedAt = new Date().toISOString(); toast("Project archived"); saveVendorData(); render(); }
+        state.screen = "partner-projects";
+      }
+      return;
+    }
+
+    var deleteLeadBtn = e.target.closest("#deleteLeadBtn");
+    if (deleteLeadBtn){
+      var leadId = deleteLeadBtn.getAttribute("data-lead-id");
+      if (confirm("Archive this lead? It can be restored later.")){
+        var idx = leads.findIndex(function(l){ return l.id === leadId; });
+        if (idx >= 0){ leads[idx].archivedAt = new Date().toISOString(); toast("Lead archived"); saveVendorData(); render(); }
+        state.screen = "partner-my-leads";
+      }
+      return;
+    }
+
+    var deleteAgreementBtn = e.target.closest("#deleteAgreementBtn");
+    if (deleteAgreementBtn){
+      var programId = deleteAgreementBtn.getAttribute("data-agreement-program-id");
+      if (confirm("Delete this agreement? It can be recreated later.")){
+        var idx = programs.findIndex(function(p){ return p.id === programId; });
+        if (idx >= 0){ programs[idx].agreement = {type: "", status: ""}; toast("Agreement deleted"); saveVendorData(); render(); }
+        state.screen = "partner-agreements";
+      }
+      return;
+    }
 
     var relFilterBtn = e.target.closest("[data-rel-filter]");
     if (relFilterBtn){ state.relFilter = relFilterBtn.getAttribute("data-rel-filter"); render(); return; }
