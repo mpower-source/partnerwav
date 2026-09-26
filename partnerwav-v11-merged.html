@@ -399,6 +399,7 @@
       <button class="navlink" data-screen="affiliate-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="affiliate-profile-editor"><span class="ic">👤</span>My Profile</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
+      <button class="navlink" data-screen="affiliate-projects"><span class="ic">📋</span>Partner Projects</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
     </nav>
 
@@ -1298,6 +1299,29 @@
         <div class="section-head"><h2>Affiliate Marketplace</h2><span class="hint">Back-office tools CloudWAV resells to Partners and Vendors -- for running your own business, not for resale to your customers</span></div>
         <div style="height:14px"></div>
         <div class="directory-grid" id="affiliateMarketplaceGrid"></div>
+      </section>
+
+      <!-- ===== AFFILIATE: PARTNER PROJECTS ===== -->
+      <section id="scr-affiliate-projects" hidden>
+        <div class="section-head"><h2>Partner Projects</h2><span class="hint">View partner-created projects and their Statements of Work</span></div>
+        <p class="platform-note">Browse all partner projects to see upcoming work and opportunities. Click on a project to view its detailed scope of work.</p>
+        <div style="display:flex;flex-direction:column;gap:14px;" id="affiliateProjectsList"></div>
+      </section>
+
+      <!-- ===== AFFILIATE: PROJECT VIEW ===== -->
+      <section id="scr-affiliate-project-view" hidden>
+        <button class="btn ghost sm" data-back-screen="affiliate-projects">← Back to Projects</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="affiliateProjectViewTitle">Project Details</h2>
+          <div style="height:16px"></div>
+          <div id="affiliateProjectViewContent">
+            <!-- Project details populated here -->
+          </div>
+          <div style="display:flex;gap:8px;margin-top:20px;">
+            <button class="btn primary" data-goto-screen="affiliate-project-messages">💬 Discuss This Project</button>
+            <button class="btn secondary" data-back-screen="affiliate-projects">Close</button>
+          </div>
+        </div>
       </section>
 
       <!-- ===== OPERATOR: OVERVIEW ===== -->
@@ -2210,6 +2234,8 @@
     "vendor-profile":"Vendor Profile",
     "affiliate-overview":"Overview",
     "affiliate-marketplace":"Affiliate Marketplace",
+    "affiliate-projects":"Partner Projects",
+    "affiliate-project-view":"Project Details",
     "operator-overview":"Overview",
     "operator-programs":"Manage Programs",
     "operator-partners":"Partners & Tiers",
@@ -2504,6 +2530,9 @@
 
     // ---- partner projects ----
     renderPartnerProjectsList();
+
+    // ---- affiliate projects view ----
+    renderAffiliateProjectsList();
 
     // ---- affiliate screens (shared: Partner + Vendor + Affiliate) ----
     renderAffiliate();
@@ -4496,6 +4525,37 @@
     }).join('');
   }
 
+  function renderAffiliateProjectsList(){
+    var content = document.getElementById("affiliateProjectsList");
+    if (!content) return;
+    var allProjects = partnerProjects.filter(function(p){ return !p.archivedAt; });
+
+    if (allProjects.length === 0){
+      content.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--ink-faint);">No partner projects available yet.</div>';
+      return;
+    }
+
+    content.innerHTML = allProjects.map(function(project){
+      var sowCount = project.scopeOfWork ? project.scopeOfWork.length : 0;
+      var completedSOW = project.scopeOfWork ? project.scopeOfWork.filter(function(s){ return s.status === 'completed'; }).length : 0;
+      return '<div class="card" style="padding:16px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">'
+        + '<div><h3 style="margin:0;margin-bottom:4px;">'+esc(project.title)+'</h3>'
+        + '<span style="font-size:.85rem;color:var(--ink-faint);">'+esc(project.createdBy)+' · '+esc(project.program)+' · '+esc(project.region)+'</span></div>'
+        + '<span class="badge">'+statusPill(project.status)+'</span>'
+        + '</div>'
+        + '<p style="margin:8px 0;color:var(--ink-soft);font-size:.9rem;">'+esc(project.desc)+'</p>'
+        + '<div style="display:flex;gap:12px;margin:12px 0;font-size:.9rem;">'
+        + '<span>📋 '+sowCount+' deliverables</span>'
+        + '<span>✓ '+completedSOW+' completed</span>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;margin-top:12px;">'
+        + '<button class="btn primary xs" data-view-affiliate-project="'+esc(project.id)+'">View Details</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
   function loadPartnerProjectForm(projectId){
     var project = projectId ? partnerProjects.find(function(p){ return p.id === projectId; }) : null;
     document.getElementById("projectEditorTitle").textContent = project ? "Edit Project" : "Create Project";
@@ -4506,13 +4566,22 @@
     programSelect.innerHTML = '<option value="">Select program...</option>' + allPrograms.map(function(p){
       return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>';
     }).join('');
-    programSelect.value = project ? project.program : "";
 
-    // Set form fields
-    document.getElementById("projTitle").value = project ? project.title : "";
-    document.getElementById("projRegion").value = project ? project.region : "";
-    document.getElementById("projDesc").value = project ? project.desc : "";
-    document.getElementById("projReward").value = project ? project.reward : "";
+    // ALWAYS clear form fields first to prevent stale data
+    document.getElementById("projTitle").value = "";
+    document.getElementById("projRegion").value = "";
+    document.getElementById("projDesc").value = "";
+    document.getElementById("projReward").value = "";
+    programSelect.value = "";
+
+    // Then populate with project data if editing
+    if (project){
+      document.getElementById("projTitle").value = project.title;
+      document.getElementById("projRegion").value = project.region;
+      document.getElementById("projDesc").value = project.desc;
+      document.getElementById("projReward").value = project.reward;
+      programSelect.value = project.program;
+    }
 
     // Initialize SOW items - if editing, copy existing SOW to pendingSOWItems, otherwise start fresh
     if (project && project.scopeOfWork){
@@ -4668,6 +4737,56 @@
     state.screen = "partner-projects";
     savePartnerData();
     render();
+  }
+
+  function viewAffiliateProjectDetails(projectId){
+    var project = partnerProjects.find(function(p){ return p.id === projectId; });
+    if (!project) return;
+
+    var sowHtml = (project.scopeOfWork || []).map(function(sow){
+      return '<div class="card" style="padding:12px;background:var(--surface-2);margin-bottom:8px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+        + '<strong>'+esc(sow.deliverable)+'</strong>'
+        + '<span style="font-size:.85rem;color:var(--ink-faint);">'+esc(sow.status)+'</span>'
+        + '</div>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:.9rem;margin-bottom:8px;">'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Timeline</label><div>'+esc(sow.timeline)+'</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Effort</label><div>'+sow.effort+'h</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Assigned</label><div>'+(sow.assignedPartner || 'Unassigned')+'</div></div>'
+        + '</div>'
+        + '<div style="font-size:.9rem;color:var(--ink-soft);">'+esc(sow.notes)+'</div>'
+        + '</div>';
+    }).join('');
+
+    var content = document.getElementById("affiliateProjectViewContent");
+    if (content){
+      document.getElementById("affiliateProjectViewTitle").textContent = project.title;
+      content.innerHTML =
+        '<div style="margin-bottom:16px;">'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'
+        + '<div><label style="color:var(--ink-faint);font-weight:500;margin-bottom:4px;display:block;">Program</label><div>'+esc(project.program)+'</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-weight:500;margin-bottom:4px;display:block;">Region</label><div>'+esc(project.region)+'</div></div>'
+        + '</div>'
+        + '<div style="margin-bottom:12px;">'
+        + '<label style="color:var(--ink-faint);font-weight:500;margin-bottom:4px;display:block;">Created By</label><div>'+esc(project.createdBy)+'</div>'
+        + '</div>'
+        + '<div style="margin-bottom:12px;">'
+        + '<label style="color:var(--ink-faint);font-weight:500;margin-bottom:4px;display:block;">Description</label>'
+        + '<p style="margin:0;color:var(--ink-soft);">'+esc(project.desc)+'</p>'
+        + '</div>'
+        + '<div style="margin-bottom:12px;">'
+        + '<label style="color:var(--ink-faint);font-weight:500;margin-bottom:4px;display:block;">Reward/Compensation</label>'
+        + '<p style="margin:0;color:var(--ink-soft);">'+esc(project.reward)+'</p>'
+        + '</div>'
+        + '<div style="border-top:1px solid var(--line);padding-top:16px;margin-top:16px;">'
+        + '<h3 style="margin:0 0 12px 0;font-size:1rem;">Statement of Work</h3>'
+        + sowHtml
+        + '</div>'
+        + '</div>';
+    }
+
+    state.screen = "affiliate-project-view";
+    state.viewingProjectId = projectId;
   }
 
   function savePartnerData(){
@@ -5725,6 +5844,14 @@
     var addSOWBtn = e.target.closest("#addSOWBtn");
     if (addSOWBtn){
       addSOWItem();
+      return;
+    }
+
+    var viewAffiliateProjectBtn = e.target.closest("[data-view-affiliate-project]");
+    if (viewAffiliateProjectBtn){
+      var projId = viewAffiliateProjectBtn.getAttribute("data-view-affiliate-project");
+      viewAffiliateProjectDetails(projId);
+      render();
       return;
     }
   });
