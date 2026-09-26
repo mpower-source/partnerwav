@@ -30,3 +30,8 @@ npm-debug.log
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local setup and configuration files
+.env.txt
+SUPABASE_SETUP_GUIDE.md
+partnerwav_supabase_schema.sql
