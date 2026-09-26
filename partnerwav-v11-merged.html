@@ -926,14 +926,27 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxuYXdneWFhcGNweXJ2ZHRrYXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNTk3ODMsImV4cCI6MjEwNTgzNTc4M30.o5csIk7DanXKJQLesAa1lLRrRIu6M4raZAuV8RIQzns';
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // Vendor UUID mapping
+  var vendorUUIDs = {
+    'botnoi': '5c7f346e-30e8-475f-b4ac-a9cf124c048f',
+    'unisense': 'a8bc748b-4877-47e9-a6ce-9ad48ca6c988',
+    'intelsense': 'b8e4ed3e-05b5-4aa6-a34b-d70d4e73de6f'
+  };
+
   // ===== SUPABASE HELPER FUNCTIONS =====
   async function submitPartnerApplicationSB(formData) {
     try {
       console.log('Submitting partner application with vendorId:', formData.vendorId);
+      // Use vendor UUID mapping
+      var vendorUUID = vendorUUIDs[formData.vendorId];
+      if (!vendorUUID) {
+        console.error('Vendor not found in mapping:', formData.vendorId);
+        throw new Error('Vendor not found: ' + formData.vendorId);
+      }
       const { data, error } = await supabase
         .from('partner_applications')
         .insert([{
-          vendor_id: formData.vendorId,
+          vendor_id: vendorUUID,
           first_name: formData.firstName,
           last_name: formData.lastName,
           company_name: formData.companyName,
