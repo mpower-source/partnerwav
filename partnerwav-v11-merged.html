@@ -365,6 +365,8 @@
       <button class="navlink" data-screen="partner-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="partner-my-profile"><span class="ic">👤</span>My Profile</button>
       <button class="navlink" data-screen="partner-directory"><span class="ic">🎯</span>Program Directory</button>
+      <button class="navlink" data-screen="training"><span class="ic">📚</span>Training</button>
+
       <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
       <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
       <button class="navlink" data-screen="partner-my-leads"><span class="ic">💼</span>My Leads</button>
@@ -548,6 +550,10 @@
       </section>
 
       <!-- ===== PARTNER: DIRECTORY ===== -->
+      <section id="scr-training" hidden>
+        <div id="trainingContent" style="padding:20px;"></div>
+      </section>
+
       <section id="scr-partner-directory" hidden>
         <div class="section-head"><h2>Browse programs</h2><span class="hint">One account, every vendor's program</span></div>
         <div style="height:12px"></div>
@@ -933,19 +939,89 @@
     'intelsense': 'b8e4ed3e-05b5-4aa6-a34b-d70d4e73de6f'
   };
 
+  // Product definitions for vendors with multiple products
+  var vendorProducts = {
+    'intelsense': [
+      { id: 'unisense-ai', name: 'Unisense AI', commission: '15% + 5%' },
+      { id: 'finsense-ai', name: 'Finsense AI', commission: '15% + 5%' },
+      { id: 'ai-hubspot', name: 'AI Hubspot', commission: '15% + 5%' },
+      { id: 'altercrew', name: 'AlterCrew', commission: '15% + 5%' }
+    ],
+    'botnoi': [
+      { id: 'botnoi-default', name: 'Botnoi (Single Product)', commission: 'TBD' }
+    ],
+    'unisense': [
+      { id: 'unisense-default', name: 'Unisense (Single Product)', commission: 'TBD' }
+    ]
+  };
+
+  function updateProductOptions() {
+    var vendor = document.getElementById('appProductVendor');
+    var productDiv = document.getElementById('productSelectionDiv');
+    var productSelect = document.getElementById('appProduct');
+
+    if (!vendor || !vendor.value || !vendorProducts[vendor.value]) {
+      if (productDiv) productDiv.style.display = 'none';
+      return;
+    }
+
+    var vendorVal = vendor.value;
+    if (vendorProducts[vendorVal].length > 1) {
+      if (productDiv) productDiv.style.display = 'block';
+      if (productSelect) {
+        productSelect.innerHTML = '<option value="">Select a product...</option>';
+        vendorProducts[vendorVal].forEach(function(product) {
+          var option = document.createElement('option');
+          option.value = product.id;
+          option.text = product.name + ' (' + product.commission + ')';
+          productSelect.appendChild(option);
+        });
+      }
+    } else {
+      if (productDiv) productDiv.style.display = 'none';
+      if (productSelect && vendorProducts[vendorVal].length === 1) {
+        productSelect.value = vendorProducts[vendorVal][0].id;
+      }
+    }
+  }
+
   // ===== SUPABASE HELPER FUNCTIONS =====
   async function submitPartnerApplicationSB(formData) {
     try {
+      console.log('Submitting partner application with vendorId:', formData.vendorId, 'productId:', formData.productId);
       // Use vendor UUID mapping
       var vendorUUID = vendorUUIDs[formData.vendorId];
       if (!vendorUUID) {
         console.error('Vendor not found in mapping:', formData.vendorId);
         throw new Error('Vendor not found: ' + formData.vendorId);
       }
+
+      // Lookup product UUID if product selected
+      var vendorProductUUID = null;
+      if (formData.productId) {
+        try {
+          const { data: productData, error: productError } = await supabase
+            .from('vendor_products')
+            .select('id')
+            .eq('product_id', formData.productId)
+            .single();
+
+          if (productError || !productData) {
+            console.error('Product not found:', formData.productId, productError);
+            throw new Error('Product not found: ' + formData.productId);
+          }
+          vendorProductUUID = productData.id;
+        } catch(err) {
+          console.error('Error looking up product:', err);
+          throw new Error('Error loading product information');
+        }
+      }
+
       const { data, error } = await supabase
         .from('partner_applications')
         .insert([{
           vendor_id: vendorUUID,
+          vendor_product_id: vendorProductUUID,
           first_name: formData.firstName,
           last_name: formData.lastName,
           company_name: formData.companyName,
@@ -962,12 +1038,16 @@
           geographic_markets: formData.geographicMarkets,
           status: 'pending'
         }]);
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error details:', error.message, error.details, error.code);
+        throw new Error(error.message || JSON.stringify(error));
+      }
       showToast('Application submitted successfully!', 'good');
       return data;
     } catch(e) {
-      console.error('Error submitting application:', e);
-      showToast('Error submitting application: ' + e.message, 'bad');
+      var errorMsg = e.message || (typeof e === 'object' ? JSON.stringify(e) : String(e));
+      console.error('Error submitting application:', errorMsg);
+      showToast('Error submitting application: ' + errorMsg, 'bad');
       throw e;
     }
   }
@@ -1248,29 +1328,11 @@
 
   var programs = [
     { id:"intelsense", name:"Intelsense AI", vertical:"Technology", origin:"Bangladesh", desc:"Conversational-AI platform for enterprise support automation.", relationships:["Vendor Program"], tiers:[
-        { tier:"Reseller", rate:"15% first-year + 5% renewal", base:"Net revenue (itemized deductions)", note:"Standard tier. CloudWAV Consulting: 20% first-year + 5% renewal" },
-        { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team", base:"On sub-reseller collected revenue" }
+        { tier:"Reseller", rate:"20% first-year + 5% renewal", base:"Net revenue (itemized deductions)" },
+        { tier:"Channel Manager", rate:"+8% override on sub-reseller team", base:"On sub-reseller collected revenue" }
       ], agreement:{ type:"Vendor Program Agreement", status:"active" }, status:"active",
       logo:dataLogo("I","#5b3df5"), website:"https://intelsense.ai",
       social:{ linkedin:"https://linkedin.com/company/intelsense-ai", twitter:"https://x.com/intelsenseai", facebook:"" },
-      products:[
-        { product_id:"unisense-ai", name:"Unisense AI", desc:"Conversational AI platform for customer support automation", tiers:[
-          { tier:"Reseller", rate:"15% first-year + 5% renewal" },
-          { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team" }
-        ] },
-        { product_id:"finsense-ai", name:"Finsense AI", desc:"Financial services AI and automation platform", tiers:[
-          { tier:"Reseller", rate:"15% first-year + 5% renewal" },
-          { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team" }
-        ] },
-        { product_id:"ai-hubspot", name:"AI Hubspot", desc:"AI-powered HubSpot integration and automation", tiers:[
-          { tier:"Reseller", rate:"15% first-year + 5% renewal" },
-          { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team" }
-        ] },
-        { product_id:"altercrew", name:"AlterCrew", desc:"AI-powered workforce and team collaboration platform", tiers:[
-          { tier:"Reseller", rate:"15% first-year + 5% renewal" },
-          { tier:"Channel Manager", rate:"15% first-year + 5% renewal + 5% override on sub-reseller team" }
-        ] }
-      ],
       referralPartners:[
         { name:"TechBridge Solutions", country:"USA", status:"pending" },
         { name:"Asian Connect Services", country:"Singapore", status:"pending" }
@@ -1301,6 +1363,37 @@
       ], agreement:{ type:"SaaS Reseller Agreement", status:"draft" }, status:"onboarding",
       logo:"", website:"https://intelsense.ai/unisense",
       social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] }
+  ];
+
+  var trainingPrograms = [
+    // Cloud Architecture - AWS
+    { id: 'aws-cloud-essentials', title: 'AWS Cloud Essentials', category: 'Cloud Architecture', provider: 'AWS', level: 'Beginner', description: 'Learn AWS fundamentals including EC2, S3, and VPC. Free tier eligible for hands-on learning.', url: 'https://aws.amazon.com/training/digital/', logo: '☁️' },
+    { id: 'aws-builder-basics', title: 'AWS Builder Labs', category: 'Cloud Architecture', provider: 'AWS', level: 'Intermediate', description: 'Free hands-on labs to build real AWS solutions with guided instructions and temporary AWS credits.', url: 'https://aws.amazon.com/training/awsbuilderlab/', logo: '☁️' },
+    { id: 'aws-skill-builder', title: 'AWS Skill Builder', category: 'Cloud Architecture', provider: 'AWS', level: 'All Levels', description: 'Comprehensive AWS training platform with 500+ digital courses, labs, and certifications.', url: 'https://skillbuilder.aws.com/', logo: '☁️' },
+    
+    // Cloud Architecture - Google Cloud
+    { id: 'gcp-fundamentals', title: 'Google Cloud Fundamentals', category: 'Cloud Architecture', provider: 'Google Cloud', level: 'Beginner', description: 'Introduction to Google Cloud with labs on Compute, Storage, and Networking.', url: 'https://cloud.google.com/training', logo: '☁️' },
+    { id: 'gcp-skill-badges', title: 'Google Cloud Skill Badges', category: 'Cloud Architecture', provider: 'Google Cloud', level: 'Intermediate', description: 'Earn digital badges by completing hands-on labs and practical quests on Google Cloud.', url: 'https://www.cloudskillsboost.google/paths', logo: '☁️' },
+    
+    // Cloud Architecture - Microsoft Azure
+    { id: 'azure-fundamentals', title: 'Azure Fundamentals (AZ-900)', category: 'Cloud Architecture', provider: 'Microsoft Azure', level: 'Beginner', description: 'Free Microsoft Learn modules covering Azure core concepts, services, and best practices.', url: 'https://learn.microsoft.com/en-us/training/paths/azure-fundamentals/', logo: '☁️' },
+    { id: 'azure-administrator', title: 'Azure Administrator Associate (AZ-104)', category: 'Cloud Architecture', provider: 'Microsoft Azure', level: 'Intermediate', description: 'Learn to manage Azure subscriptions, resources, and infrastructure at scale.', url: 'https://learn.microsoft.com/en-us/training/paths/az-104-administrator-prerequisites/', logo: '☁️' },
+    
+    // AI Training - Claude
+    { id: 'claude-prompt-engineering', title: 'Claude Prompt Engineering Guide', category: 'AI Training', provider: 'Anthropic', level: 'Beginner', description: 'Learn effective prompting techniques to get the most out of Claude AI models.', url: 'https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview', logo: '🤖' },
+    { id: 'claude-api-docs', title: 'Claude API Documentation', category: 'AI Training', provider: 'Anthropic', level: 'Intermediate', description: 'Complete API reference and integration guides for building applications with Claude.', url: 'https://docs.anthropic.com/', logo: '🤖' },
+    
+    // AI Training - ChatGPT
+    { id: 'openai-prompt-engineering', title: 'OpenAI Prompt Engineering Guide', category: 'AI Training', provider: 'OpenAI', level: 'Beginner', description: 'Best practices for writing effective prompts with ChatGPT and GPT models.', url: 'https://platform.openai.com/docs/guides/prompt-engineering', logo: '🤖' },
+    { id: 'openai-api-docs', title: 'OpenAI API Documentation', category: 'AI Training', provider: 'OpenAI', level: 'Intermediate', description: 'Complete guide to integrating GPT models into your applications.', url: 'https://platform.openai.com/docs/guides/gpt', logo: '🤖' },
+    
+    // AI Training - Google Gemini
+    { id: 'gemini-api-guide', title: 'Google Gemini API Guide', category: 'AI Training', provider: 'Google AI', level: 'Beginner', description: 'Get started with the Gemini API for multimodal AI capabilities including text, image, and video.', url: 'https://ai.google.dev/tutorials/quickstart', logo: '🤖' },
+    { id: 'gemini-advanced', title: 'Advanced Gemini Techniques', category: 'AI Training', provider: 'Google AI', level: 'Intermediate', description: 'Advanced prompting and system instructions for Gemini model optimization.', url: 'https://ai.google.dev/docs/guides', logo: '🤖' },
+    
+    // Additional AI Training
+    { id: 'ai-fundamentals', title: 'Generative AI Fundamentals', category: 'AI Training', provider: 'Coursera', level: 'Beginner', description: 'Free course covering AI basics, machine learning, and introduction to large language models.', url: 'https://www.coursera.org/learn/introduction-to-generative-ai', logo: '🤖' },
+    { id: 'prompt-engineering-101', title: 'Prompt Engineering 101', category: 'AI Training', provider: 'DeepLearning.AI', level: 'Beginner', description: 'Free short course on mastering the art of prompt engineering for AI models.', url: 'https://www.deeplearning.ai/short-courses/prompt-engineering-for-business/', logo: '🤖' }
   ];
 
   var affiliatePrograms = [
@@ -1553,6 +1646,7 @@
   var titles = {
     "partner-overview":"Overview",
     "partner-my-profile":"My Profile",
+    "training":"Training & Certifications",
     "partner-directory":"Program Directory",
     "partner-agreements":"Agreements",
     "partner-commissions":"Commissions",
@@ -1842,6 +1936,9 @@
 
     // ---- partner community ----
     renderCommunity();
+
+    // ---- training ----
+    if (state.screen === "training") { renderTraining(); }
 
     // ---- partner network / profile / messages / my profile ----
     renderNetwork();
@@ -2293,6 +2390,45 @@
     }).join("") : '<div class="empty">No vendors match that relationship type yet.</div>';
   }
 
+  function renderTraining(){
+    var content = document.getElementById("trainingContent");
+    if (!content) return;
+    
+    // Group by category
+    var grouped = {};
+    trainingPrograms.forEach(function(prog){
+      if (!grouped[prog.category]) grouped[prog.category] = [];
+      grouped[prog.category].push(prog);
+    });
+    
+    var html = '<div style="max-width:1200px;margin:0 auto;">';
+    
+    Object.keys(grouped).sort().forEach(function(category){
+      html += '<div style="margin-bottom:40px;">'
+        + '<h2 style="font-size:1.3rem;margin-bottom:16px;color:var(--accent);">'+esc(category)+'</h2>'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">';
+      
+      grouped[category].forEach(function(prog){
+        html += '<div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;transition:all 0.2s ease;">'
+          + '<div style="display:flex;align-items:center;gap:8px;">'
+            + '<span style="font-size:1.5rem;">'+prog.logo+'</span>'
+            + '<div>'
+              + '<h3 style="margin:0;font-size:1rem;color:var(--accent);">'+esc(prog.title)+'</h3>'
+              + '<div style="font-size:.8rem;color:var(--ink-faint);">'+esc(prog.provider)+' · '+esc(prog.level)+'</div>'
+            + '</div>'
+          + '</div>'
+          + '<p style="margin:0;font-size:.9rem;color:var(--ink-soft);line-height:1.5;">'+esc(prog.description)+'</p>'
+          + '<a href="'+esc(prog.url)+'" target="_blank" rel="noopener" style="margin-top:auto;padding:8px 12px;background:var(--accent);color:white;border-radius:6px;text-decoration:none;text-align:center;font-weight:600;font-size:.85rem;cursor:pointer;">Access Training →</a>'
+          + '</div>';
+      });
+      
+      html += '</div></div>';
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
+  }
+
   function renderVendorProfile(){
     var body = document.getElementById("vendorProfileContent");
     if (!body) return;
@@ -2309,11 +2445,11 @@
     var referralUrl;
     if (window.location.hostname.includes('github.io')) {
       // GitHub Pages - always use full path
-      referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(p.id);
+      referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(p.vendor_id);
     } else {
       // Local or other hosting - use current URL
       var baseUrl = window.location.href.split('?')[0];
-      referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id);
+      referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.vendor_id);
     }
     var referralPartners = p.referralPartners || [];
     var pendingPartnersHtml = referralPartners.length > 0
@@ -2327,8 +2463,8 @@
         + '<tbody>'
         + referralPartners.map(function(partner){
           return '<tr style="border-bottom:1px solid var(--line);">'
-            + '<td style="padding:10px 8px;">'+esc(partner.name)+'</td>'
-            + '<td style="padding:10px 8px;">'+esc(partner.country)+'</td>'
+            + '<td style="padding:10px 8px;"><a href="javascript:void(0)" data-review-application="'+esc(partner.name)+'" style="color:var(--accent);cursor:pointer;text-decoration:none;">'+esc(partner.name)+'</a></td>'
+            + '<td style="padding:10px 8px;">'+esc(partner.countryCode || partner.country || 'N/A')+'</td>'
             + '<td style="padding:10px 8px;"><span class="badge neutral">'+esc(partner.status)+'</span></td>'
             + (mine ? '<td style="padding:10px 8px;text-align:right;">'
               + '<button class="btn primary xs" data-approve-referral="'+p.id+'" data-partner="'+esc(partner.name)+'">Approve</button> '
@@ -2364,15 +2500,6 @@
             + '<button class="btn secondary sm" style="margin-left:auto;" data-view-profile="'+esc(p.partnerProfileId)+'">View Partner profile →</button>'
           + '</div>' : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Relationship &amp; tiers</h2></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">'+relBadges(p.relationships)+tiersHtml+'</div></div>'
-        + (p.products && p.products.length > 0 ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Products</h2></div><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">'+p.products.map(function(prod){
-          var prodTiersHtml = prod.tiers.map(function(t){ return '<div style="font-size:.8rem;color:var(--ink-soft);margin:4px 0;"><strong>'+esc(t.tier)+':</strong> '+esc(t.rate)+'</div>'; }).join('');
-          return '<div style="padding:12px;background:var(--surface);border-radius:8px;border-left:3px solid var(--accent);">'
-            + '<div style="font-weight:600;margin-bottom:4px;">'+esc(prod.name)+'</div>'
-            + '<div style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">'+esc(prod.desc)+'</div>'
-            + prodTiersHtml
-            + '<button class="btn ghost xs" data-product-referral="'+p.id+'" data-product-id="'+esc(prod.product_id)+'" style="margin-top:6px;">Get referral link →</button>'
-            + '</div>';
-        }).join('')+'</div></div>' : '')
         + (social ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Elsewhere</h2></div><div style="margin-top:8px;">'+social+'</div></div>' : '')
         + referralHtml
       + '</div>';
@@ -2537,6 +2664,12 @@
       + '</optgroup>'
       + '</select>'
       + '</div>'
+      + '<div id="productSelectionDiv" style="display:none;">'
+      + '<label for="appProduct" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Which product would you like to resell? *</label>'
+      + '<select id="appProduct" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;">'
+      + '<option value="">Select a product...</option>'
+      + '</select>'
+      + '</div>'
       + '<div>'
       + '<label for="appWorkEmail" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Work Email *</label>'
       + '<input type="email" id="appWorkEmail" placeholder="contact@company.com" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required />'
@@ -2583,6 +2716,9 @@
       + '<p style="font-size:.85rem;color:var(--ink-faint);margin-top:12px;">* Required fields</p>'
       + '</form>';
 
+    // Create a hidden field to store vendor for product selection
+    var vendorHtml = '<input type="hidden" id="appProductVendor" value="' + vendorId + '" />';
+
     body.innerHTML =
       '<div style="max-width:600px;margin:0 auto;">'
       + '<button class="btn ghost sm" data-goto-screen="partner-directory" style="margin-bottom:16px;">← Back to Programs</button>'
@@ -2592,6 +2728,11 @@
       + formHtml
       + '</div>'
       + '</div>';
+
+    // Show product selection if vendor has multiple products
+    setTimeout(function() {
+      updateProductOptions();
+    }, 100);
 
     // Add form submission handler
     var form = document.getElementById("partnerApplicationForm");
@@ -2613,16 +2754,24 @@
         var numSalesPeople = document.getElementById("appNumSalesPeople").value.trim();
         var verticalMarkets = document.getElementById("appVerticalMarkets").value.trim();
         var geographicMarkets = document.getElementById("appGeographicMarkets").value.trim();
+        var productId = document.getElementById("appProduct") ? document.getElementById("appProduct").value.trim() : '';
+
+        // Check if product is required
+        var productDiv = document.getElementById("productSelectionDiv");
+        if (productDiv && productDiv.style.display !== 'none' && !productId) {
+          showToast('Please select a product', 'bad');
+          return;
+        }
 
         // Validation
         if (!firstName || !lastName || !companyName || !countryCode || !phone || !region || !workEmail || !website || !yearsInBusiness || !numEmployees || !numSalesPeople || !verticalMarkets || !geographicMarkets){
-          toast("Please fill in all required fields");
+          showToast('Please fill in all required fields', 'bad');
           return;
         }
 
         // Basic email validation
         if (!workEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)){
-          toast("Please enter a valid email address");
+          showToast('Please enter a valid email address', 'bad');
           return;
         }
 
@@ -2651,6 +2800,7 @@
         // Submit to Supabase
         submitPartnerApplicationSB({
           vendorId: vendorId,
+          productId: productId,
           firstName: firstName,
           lastName: lastName,
           companyName: companyName,
@@ -3103,6 +3253,36 @@
     if (closeBtn) closeBtn.addEventListener("click", closeModal);
     return back;
   }
+  function reviewApplicationModal(vendorId, partnerName){
+    var vendor = programById(vendorId);
+    if (!vendor || !vendor.referralPartners) return;
+    var partner = vendor.referralPartners.find(function(p){ return p.name === partnerName; });
+    if (!partner) return;
+    
+    var html = '<div style="padding:20px;">'
+      + '<h2 style="margin-top:0;">Review Application</h2>'
+      + '<table style="width:100%;border-collapse:collapse;margin:16px 0;">'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Company:</td><td style="padding:8px;">'+esc(partner.name)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Contact Name:</td><td style="padding:8px;">'+esc(partner.firstName)+' '+esc(partner.lastName)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Email:</td><td style="padding:8px;">'+esc(partner.workEmail)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Phone:</td><td style="padding:8px;">'+esc(partner.phone)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Country:</td><td style="padding:8px;">'+esc(partner.countryCode)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Region:</td><td style="padding:8px;">'+esc(partner.region)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Website:</td><td style="padding:8px;"><a href="'+esc(partner.website)+'" target="_blank">'+esc(partner.website)+'</a></td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Years in Business:</td><td style="padding:8px;">'+esc(partner.yearsInBusiness)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Employees:</td><td style="padding:8px;">'+esc(partner.numEmployees)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Vertical Markets:</td><td style="padding:8px;">'+esc(partner.verticalMarkets)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Geographic Markets:</td><td style="padding:8px;">'+esc(partner.geographicMarkets)+'</td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Status:</td><td style="padding:8px;"><span class="badge '+partner.status+'">'+esc(partner.status)+'</span></td></tr>'
+      + '</table>'
+      + '<div style="display:flex;gap:10px;margin-top:20px;">'
+      + '<button class="btn primary" data-approve-referral="'+vendorId+'" data-partner="'+esc(partner.name)+'" onclick="closeModal();">Approve</button>'
+      + '<button class="btn secondary" data-deny-referral="'+vendorId+'" data-partner="'+esc(partner.name)+'" onclick="closeModal();">Reject</button>'
+      + '</div>'
+      + '</div>';
+    openModal(html);
+  }
+
   function closeModal(){
     var b = document.getElementById("modalBackdrop");
     if (b) b.remove();
@@ -3346,19 +3526,28 @@
     var msgVendorBtn = e.target.closest("[data-message-vendor]");
     if (msgVendorBtn){ openConversationWith(msgVendorBtn.getAttribute("data-message-vendor"), "vendor"); return; }
 
+    var reviewAppBtn = e.target.closest("[data-review-application]");
+    if (reviewAppBtn){
+      var partnerName = reviewAppBtn.getAttribute("data-review-application");
+      var vendorId = state.viewingVendorId;  // Will be set when viewing vendor profile
+      if (vendorId && partnerName) reviewApplicationModal(vendorId, partnerName);
+      return;
+    }
+
     var copyReferralBtn = e.target.closest("[data-copy-referral-link]");
     if (copyReferralBtn){
       var vendorId = copyReferralBtn.getAttribute("data-copy-referral-link");
       var vendor = programById(vendorId);
       if (vendor){
         var referralUrl;
+        var vendorNameId = vendor.vendor_id || vendorId;  // Use vendor_id (name) instead of UUID
         if (window.location.hostname.includes('github.io')) {
           // GitHub Pages - always use full path
-          referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(vendorId);
+          referralUrl = 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html?apply=vendor&vendorId=' + encodeURIComponent(vendorNameId);
         } else {
           // Local or other hosting - use current URL
           var baseUrl = window.location.href.split('?')[0];
-          referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(vendorId);
+          referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(vendorNameId);
         }
         if (navigator.clipboard && navigator.clipboard.writeText){
           navigator.clipboard.writeText(referralUrl).then(function(){
