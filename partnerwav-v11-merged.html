@@ -630,14 +630,63 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;" id="leadsList"></div>
       </section>
 
-      <!-- ===== PROJECTS (shared: Partner + Vendor) ===== -->
+      <!-- ===== PARTNER: MY PROJECTS ===== -->
       <section id="scr-partner-projects" hidden>
-        <div class="section-head"><h2>Projects</h2><span class="hint">Open opportunities with scope division -- partners can claim individual line items</span></div>
-        <p class="platform-note">Projects now include Statement of Work (SOW) line items -- see the full scope before claiming. Partners can claim specific line items they can cover rather than the whole project, enabling multi-partner collaboration on complex deals.</p>
+        <div class="section-head"><h2>My Projects</h2><span class="hint">Projects you've created with defined scope of work deliverables</span></div>
+        <p class="platform-note">Create custom projects with detailed Statements of Work. Define deliverables, timelines, effort estimates, and status tracking. Projects are viewable by CloudWAV operators for oversight and tracking.</p>
         <div style="display:flex;gap:10px;margin-bottom:14px;">
-          <button class="btn primary sm" data-goto-screen="scr-projects-editor">+ Create Project</button>
+          <button class="btn primary sm" data-goto-screen="partner-project-editor">+ Create Project</button>
         </div>
-        <div style="display:flex;flex-direction:column;gap:14px;" id="projectsList"></div>
+        <div style="display:flex;flex-direction:column;gap:14px;" id="partnerProjectsList"></div>
+      </section>
+
+      <!-- ===== PARTNER: PROJECT EDITOR ===== -->
+      <section id="scr-partner-project-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="partner-projects">← Back to Projects</button>
+        <div class="card card-pad" style="margin-top:16px;">
+          <h2 id="projectEditorTitle">Create Project</h2>
+          <div style="height:16px"></div>
+          <form id="partnerProjectForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label for="projTitle" style="display:block;font-weight:500;margin-bottom:6px;">Project Title *</label>
+              <input type="text" id="projTitle" placeholder="e.g. AI Rollout for Regional Bank" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label for="projProgram" style="display:block;font-weight:500;margin-bottom:6px;">Program *</label>
+                <select id="projProgram" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;" required>
+                  <option value="">Select program...</option>
+                </select>
+              </div>
+              <div>
+                <label for="projRegion" style="display:block;font-weight:500;margin-bottom:6px;">Region *</label>
+                <input type="text" id="projRegion" placeholder="e.g. Thailand" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required />
+              </div>
+            </div>
+            <div>
+              <label for="projDesc" style="display:block;font-weight:500;margin-bottom:6px;">Description *</label>
+              <textarea id="projDesc" placeholder="Project overview and objectives..." style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-height:80px;" required></textarea>
+            </div>
+            <div>
+              <label for="projReward" style="display:block;font-weight:500;margin-bottom:6px;">Reward/Compensation *</label>
+              <input type="text" id="projReward" placeholder="e.g. $15,000 project fee + 5% annual attach rate" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required />
+            </div>
+            <div style="border-top:1px solid var(--line);padding-top:16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0;font-size:1rem;">Statement of Work (SOW)</h3>
+                <button type="button" class="btn secondary xs" id="addSOWBtn">+ Add Deliverable</button>
+              </div>
+              <div id="sowList" style="display:flex;flex-direction:column;gap:10px;">
+                <!-- SOW items populated here -->
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn primary">Save Project</button>
+              <button type="button" class="btn secondary" data-back-screen="partner-projects">Cancel</button>
+              <button type="button" class="btn secondary" id="deleteProjectBtn" style="margin-left:auto;display:none;">Delete Project</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <!-- ===== PARTNER: COMMUNITY ===== -->
@@ -2029,6 +2078,18 @@
 
   var hardwareOrders = [];
 
+  var partnerProjects = [
+    { id:"pp1", partnerId:"siam-digital", title:"AI automation for retail expansion", program:"Intelsense AI", region:"Thailand", type:"Implementation",
+      desc:"Rolling out conversational AI across 5 retail locations for customer support automation.",
+      reward:"$15,000 project fee + 5% attach rate on annual subscriptions", rewardType:"project-fee", status:"active",
+      scopeOfWork:[
+        { id:"sow-pp1-1", deliverable:"Initial consultation and architecture design", timeline:"Week 1-2", effort:"40h", status:"completed", assignedPartner:null, notes:"Design reviewed and approved" },
+        { id:"sow-pp1-2", deliverable:"System deployment and testing", timeline:"Week 3-4", effort:"60h", status:"in-progress", assignedPartner:null, notes:"Currently in UAT phase" },
+        { id:"sow-pp1-3", deliverable:"Staff training and go-live support", timeline:"Week 5", effort:"30h", status:"open", assignedPartner:null, notes:"Scheduled for end of month" }
+      ],
+      createdDate:"3 weeks ago", createdBy:"Siam Digital MSP", archivedAt:null }
+  ];
+
   var partnerLocations = [
     { id:"siam-digital", name:"Siam Digital MSP", region:"apac", lat:13.7563, lng:100.5018, city:"Bangkok, Thailand", status:"active", program:"Intelsense AI", tier:"Gold" },
     { id:"gulf-coast-var", name:"Gulf Coast VAR", region:"americas", lat:27.9506, lng:-82.4647, city:"Tampa, USA", status:"active", program:"Cross Connect", tier:"Silver" },
@@ -2131,7 +2192,8 @@
     "partner-agreements":"Agreements",
     "partner-commissions":"Commissions",
     "partner-my-leads":"My Leads",
-    "partner-projects":"Projects",
+    "partner-projects":"My Projects",
+    "partner-project-editor":"Project Details",
     "partner-community":"Community",
     "partner-network":"Partner Network",
     "partner-profile":"Partner Profile",
@@ -2439,6 +2501,9 @@
     renderVendorProfile();
     renderPublicPartnerApplication();
     renderHardwareOfferingsList();
+
+    // ---- partner projects ----
+    renderPartnerProjectsList();
 
     // ---- affiliate screens (shared: Partner + Vendor + Affiliate) ----
     renderAffiliate();
@@ -4396,6 +4461,228 @@
     render();
   }
 
+  // ===== PARTNER PROJECTS =====
+  function renderPartnerProjectsList(){
+    var content = document.getElementById("partnerProjectsList");
+    if (!content) return;
+    var partnerId = state.myProfileId;
+    var myProjects = partnerProjects.filter(function(p){ return p.partnerId === partnerId && !p.archivedAt; });
+
+    if (myProjects.length === 0){
+      content.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--ink-faint);">No projects yet. Click "Create Project" to start.</div>';
+      return;
+    }
+
+    content.innerHTML = myProjects.map(function(project){
+      var sowCount = project.scopeOfWork ? project.scopeOfWork.length : 0;
+      var completedSOW = project.scopeOfWork ? project.scopeOfWork.filter(function(s){ return s.status === 'completed'; }).length : 0;
+      return '<div class="card" style="padding:16px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">'
+        + '<div><h3 style="margin:0;margin-bottom:4px;">'+esc(project.title)+'</h3>'
+        + '<span style="font-size:.85rem;color:var(--ink-faint);">'+esc(project.program)+' · '+esc(project.region)+'</span></div>'
+        + '<span class="badge">'+statusPill(project.status)+'</span>'
+        + '</div>'
+        + '<p style="margin:8px 0;color:var(--ink-soft);font-size:.9rem;">'+esc(project.desc)+'</p>'
+        + '<div style="display:flex;gap:12px;margin:12px 0;font-size:.9rem;">'
+        + '<span>📋 '+sowCount+' deliverables</span>'
+        + '<span>✓ '+completedSOW+' completed</span>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;margin-top:12px;">'
+        + '<button class="btn primary xs" data-edit-project="'+esc(project.id)+'">Edit</button>'
+        + '<button class="btn secondary xs" data-view-project="'+esc(project.id)+'">View SOW</button>'
+        + '<button class="btn secondary xs" data-delete-project="'+esc(project.id)+'">Delete</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function loadPartnerProjectForm(projectId){
+    var project = projectId ? partnerProjects.find(function(p){ return p.id === projectId; }) : null;
+    document.getElementById("projectEditorTitle").textContent = project ? "Edit Project" : "Create Project";
+
+    // Populate program dropdown
+    var programSelect = document.getElementById("projProgram");
+    var allPrograms = programs.filter(function(p){ return !p.archivedAt; });
+    programSelect.innerHTML = '<option value="">Select program...</option>' + allPrograms.map(function(p){
+      return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>';
+    }).join('');
+    programSelect.value = project ? project.program : "";
+
+    // Set form fields
+    document.getElementById("projTitle").value = project ? project.title : "";
+    document.getElementById("projRegion").value = project ? project.region : "";
+    document.getElementById("projDesc").value = project ? project.desc : "";
+    document.getElementById("projReward").value = project ? project.reward : "";
+
+    // Initialize SOW items - if editing, copy existing SOW to pendingSOWItems, otherwise start fresh
+    if (project && project.scopeOfWork){
+      window.pendingSOWItems = JSON.parse(JSON.stringify(project.scopeOfWork));
+    } else {
+      window.pendingSOWItems = [];
+    }
+
+    // Populate SOW items
+    renderSOWList({ scopeOfWork: window.pendingSOWItems });
+
+    // Show/hide delete button
+    var deleteBtn = document.getElementById("deleteProjectBtn");
+    deleteBtn.style.display = project ? "block" : "none";
+    if (project) deleteBtn.setAttribute("data-project-id", projectId);
+
+    state.editingProjectId = projectId;
+  }
+
+  function renderSOWList(project){
+    var sowList = document.getElementById("sowList");
+    var sowItems = project && project.scopeOfWork ? project.scopeOfWork : [];
+
+    sowList.innerHTML = sowItems.map(function(sow){
+      return '<div class="card" style="padding:12px;background:var(--surface-2);">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+        + '<strong>'+esc(sow.deliverable)+'</strong>'
+        + '<button type="button" class="btn secondary xs" data-remove-sow="'+esc(sow.id)+'">Remove</button>'
+        + '</div>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:.9rem;margin-bottom:8px;">'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Timeline</label><div>'+esc(sow.timeline)+'</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Effort</label><div>'+sow.effort+'h</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Status</label><div>'+esc(sow.status)+'</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Assigned</label><div>'+(sow.assignedPartner || 'Unassigned')+'</div></div>'
+        + '</div>'
+        + '<div style="font-size:.9rem;color:var(--ink-soft);margin:8px 0;">'+esc(sow.notes)+'</div>'
+        + '</div>';
+    }).join('');
+
+    if (sowItems.length === 0){
+      sowList.innerHTML = '<div style="padding:12px;text-align:center;color:var(--ink-faint);font-size:.9rem;">No deliverables added yet. Click "Add Deliverable" to start.</div>';
+    }
+  }
+
+  function addSOWItem(){
+    if (state.screen === "partner-project-editor"){
+      // Adding new SOW item
+      var newSOW = {
+        id: "sow-"+Date.now(),
+        deliverable: "",
+        timeline: "",
+        effort: "",
+        status: "open",
+        assignedPartner: null,
+        notes: ""
+      };
+      if (!window.pendingSOWItems) window.pendingSOWItems = [];
+      window.pendingSOWItems.push(newSOW);
+
+      // Re-render with inline editing capability for new item
+      var sowList = document.getElementById("sowList");
+      if (sowList){
+        var editingId = "sow-edit-"+Date.now();
+        var html = sowList.innerHTML +
+          '<div class="card" style="padding:12px;background:var(--accent-soft);border:1px solid var(--accent);">'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+          + '<strong>New Deliverable</strong>'
+          + '<button type="button" class="btn secondary xs" data-remove-sow="'+esc(newSOW.id)+'">Remove</button>'
+          + '</div>'
+          + '<div style="display:flex;flex-direction:column;gap:8px;font-size:.9rem;">'
+          + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Deliverable Title</label><input type="text" id="'+editingId+'-deliverable" placeholder="e.g. System Architecture Design" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;font-size:.9rem;" /></div>'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'
+          + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Timeline</label><input type="text" id="'+editingId+'-timeline" placeholder="Week 1-2" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;font-size:.9rem;" /></div>'
+          + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Effort (hours)</label><input type="number" id="'+editingId+'-effort" placeholder="40" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;font-size:.9rem;" /></div>'
+          + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Status</label><select id="'+editingId+'-status" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;font-size:.9rem;"><option value="open">Open</option><option value="in-progress">In Progress</option><option value="completed">Completed</option></select></div>'
+          + '</div>'
+          + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Notes</label><textarea id="'+editingId+'-notes" placeholder="Additional notes..." style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;font-size:.9rem;min-height:50px;"></textarea></div>'
+          + '<button type="button" class="btn primary xs" onclick="updateSOWItem(\''+esc(newSOW.id)+'\')">Save</button>'
+          + '</div>'
+          + '</div>';
+        sowList.innerHTML = html;
+      }
+    }
+  }
+
+  function updateSOWItem(sowId){
+    // Find all edit fields and get the last one (most recently added)
+    var sowList = document.getElementById("sowList");
+    var editInputs = sowList.querySelectorAll("input[id^='sow-edit-'][id$='-deliverable']");
+    if (editInputs.length === 0) return;
+
+    var lastInput = editInputs[editInputs.length - 1];
+    var editingId = lastInput.id.replace("-deliverable", "");
+
+    var deliverable = document.getElementById(editingId+"-deliverable").value.trim();
+    var timeline = document.getElementById(editingId+"-timeline").value.trim();
+    var effort = document.getElementById(editingId+"-effort").value.trim();
+    var status = document.getElementById(editingId+"-status").value.trim();
+    var notes = document.getElementById(editingId+"-notes").value.trim();
+
+    if (!deliverable || !timeline || !effort){
+      toast("Please fill in deliverable, timeline, and effort");
+      return;
+    }
+
+    var idx = window.pendingSOWItems.findIndex(function(s){ return s.id === sowId; });
+    if (idx >= 0){
+      window.pendingSOWItems[idx] = { id: sowId, deliverable: deliverable, timeline: timeline, effort: effort, status: status, assignedPartner: null, notes: notes };
+    }
+    renderSOWList({ scopeOfWork: window.pendingSOWItems });
+  }
+
+  function savePartnerProject(e){
+    e.preventDefault();
+    var title = document.getElementById("projTitle").value.trim();
+    var program = document.getElementById("projProgram").value.trim();
+    var region = document.getElementById("projRegion").value.trim();
+    var desc = document.getElementById("projDesc").value.trim();
+    var reward = document.getElementById("projReward").value.trim();
+
+    if (!title || !program || !region || !desc || !reward){
+      toast("Please fill in all required fields");
+      return;
+    }
+
+    var sowItems = window.pendingSOWItems || [];
+    if (sowItems.length === 0){
+      toast("Please add at least one deliverable to the Statement of Work");
+      return;
+    }
+
+    if (state.editingProjectId){
+      var idx = partnerProjects.findIndex(function(p){ return p.id === state.editingProjectId; });
+      if (idx >= 0){
+        partnerProjects[idx] = Object.assign(partnerProjects[idx], {
+          title: title, program: program, region: region, desc: desc, reward: reward, scopeOfWork: sowItems
+        });
+        toast("Project updated");
+      }
+    } else {
+      var newId = "pp-"+Date.now();
+      partnerProjects.push({
+        id: newId, partnerId: state.myProfileId, title: title, program: program, region: region,
+        desc: desc, reward: reward, rewardType: "project-fee", status: "active",
+        scopeOfWork: sowItems,
+        createdDate: "just now", createdBy: state.myName || "Partner", archivedAt: null
+      });
+      toast("Project created");
+    }
+
+    window.pendingSOWItems = null;
+    state.editingProjectId = null;
+    state.screen = "partner-projects";
+    savePartnerData();
+    render();
+  }
+
+  function savePartnerData(){
+    try {
+      localStorage.setItem("partnerProjects", JSON.stringify(partnerProjects));
+    } catch(e){}
+  }
+
+  function loadPartnerData(){
+    try {
+      var saved = localStorage.getItem("partnerProjects");
+      if (saved) partnerProjects = JSON.parse(saved);
+    } catch(e){}
+  }
+
   // ===== PRODUCT PROFILES (individual vendor products) =====
   function loadProductProfileForm(productId){
     var product = productId ? vendorProducts.find(function(p){ return p.id === productId; }) : null;
@@ -4910,6 +5197,9 @@
 
     var productProfileForm = document.getElementById("productProfileForm");
     if (productProfileForm) productProfileForm.addEventListener("submit", saveProductProfile);
+
+    var partnerProjectForm = document.getElementById("partnerProjectForm");
+    if (partnerProjectForm) partnerProjectForm.addEventListener("submit", savePartnerProject);
   }
 
   console.log("Attaching click handler to document");
@@ -4948,6 +5238,7 @@
         else if (screen === "scr-resources-editor") loadResourceForm(state.editingResourceId);
         else if (screen === "scr-resource-approvals-editor") loadApprovalForm(state.editingApprovalId);
         else if (screen === "scr-operator-program-editor") loadOperatorProgramForm(state.editingOperatorProgramId);
+        else if (screen === "partner-project-editor") loadPartnerProjectForm(state.editingProjectId);
         attachFormHandlers();
       }, 0);
       render();
@@ -4982,9 +5273,21 @@
     if (deleteProjectBtn){
       var projectId = deleteProjectBtn.getAttribute("data-project-id");
       if (confirm("Archive this project? It can be restored later.")){
-        var idx = projects.findIndex(function(p){ return p.id === projectId; });
-        if (idx >= 0){ projects[idx].archivedAt = new Date().toISOString(); toast("Project archived"); saveVendorData(); render(); }
+        // Check if it's a partner project or a regular project
+        var partnerIdx = partnerProjects.findIndex(function(p){ return p.id === projectId; });
+        var regularIdx = projects.findIndex(function(p){ return p.id === projectId; });
+
+        if (partnerIdx >= 0){
+          partnerProjects[partnerIdx].archivedAt = new Date().toISOString();
+          toast("Project archived");
+          savePartnerData();
+        } else if (regularIdx >= 0){
+          projects[regularIdx].archivedAt = new Date().toISOString();
+          toast("Project archived");
+          saveVendorData();
+        }
         state.screen = "partner-projects";
+        render();
       }
       return;
     }
@@ -5370,6 +5673,58 @@
         toast("Resource rejected");
         render();
       }
+      return;
+    }
+
+    var editProjectBtn = e.target.closest("[data-edit-project]");
+    if (editProjectBtn){
+      var projectId = editProjectBtn.getAttribute("data-edit-project");
+      state.screen = "partner-project-editor";
+      state.editingProjectId = projectId;
+      setTimeout(function(){ loadPartnerProjectForm(projectId); attachFormHandlers(); }, 0);
+      render();
+      return;
+    }
+
+    var deleteProjectBtn = e.target.closest("[data-delete-project]");
+    if (deleteProjectBtn){
+      var projId = deleteProjectBtn.getAttribute("data-delete-project");
+      if (confirm("Archive this project? It can be restored later.")){
+        var idx = partnerProjects.findIndex(function(p){ return p.id === projId; });
+        if (idx >= 0){
+          partnerProjects[idx].archivedAt = new Date().toISOString();
+          toast("Project archived");
+          savePartnerData();
+          state.screen = "partner-projects";
+          render();
+        }
+      }
+      return;
+    }
+
+    var viewProjectBtn = e.target.closest("[data-view-project]");
+    if (viewProjectBtn){
+      var viewProjId = viewProjectBtn.getAttribute("data-view-project");
+      state.screen = "partner-project-editor";
+      state.editingProjectId = viewProjId;
+      setTimeout(function(){ loadPartnerProjectForm(viewProjId); attachFormHandlers(); }, 0);
+      render();
+      return;
+    }
+
+    var removeSOWBtn = e.target.closest("[data-remove-sow]");
+    if (removeSOWBtn){
+      var sowId = removeSOWBtn.getAttribute("data-remove-sow");
+      if (window.pendingSOWItems){
+        window.pendingSOWItems = window.pendingSOWItems.filter(function(s){ return s.id !== sowId; });
+        renderSOWList({ scopeOfWork: window.pendingSOWItems });
+      }
+      return;
+    }
+
+    var addSOWBtn = e.target.closest("#addSOWBtn");
+    if (addSOWBtn){
+      addSOWItem();
       return;
     }
   });
