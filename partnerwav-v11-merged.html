@@ -161,7 +161,7 @@
   .badge.accent{ background:var(--accent-soft); color:var(--accent-strong); }
   .badge.accent2{ background:var(--accent2-soft); color:var(--accent2); }
   .badge.neutral{ background:var(--surface-2); color:var(--ink-faint); border:1px solid var(--line); }
-  .badge.warn{ background:var(--warn-soft); color:var(--warn); }
+  .badge.warn{ background:var(--warn-soft); color:var(--warn); } .badge.good{ background:var(--good-soft); color:var(--good); } .badge.bad{ background:var(--bad-soft); color:var(--bad); }
 
   .pill{ font-family:"IBM Plex Mono"; font-size:.7rem; font-weight:600; padding:4px 9px; border-radius:999px; display:inline-block; white-space:nowrap; }
   .pill.active{ background:var(--good-soft); color:var(--good); }
@@ -1331,6 +1331,12 @@
         <div class="directory-grid" id="affiliateMarketplaceGrid"></div>
       </section>
 
+      <!-- ===== AFFILIATE: MANAGE AN ENROLLED TOOL (link, services, link activity) ===== -->
+      <section id="scr-affiliate-manage" hidden>
+        <button class="btn ghost sm" data-affiliate-manage-back>← Back</button>
+        <div id="affiliateManageContent" style="margin-top:16px;"></div>
+      </section>
+
       <!-- ===== AFFILIATE: OFFER EDITOR ===== -->
       <section id="scr-affiliate-offer-editor" hidden>
         <button class="btn ghost sm" data-back-screen="affiliate-marketplace">← Back</button>
@@ -2427,6 +2433,7 @@
     "vendor-profile":"Vendor Profile",
     "affiliate-overview":"Overview",
     "affiliate-marketplace":"Affiliate Marketplace",
+    "affiliate-manage":"My Affiliate Tool",
     "affiliate-projects":"Partner Projects",
     "affiliate-project-view":"Project Details",
     "operator-overview":"Overview",
@@ -2659,7 +2666,7 @@
     var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
     var isOperator = state.role === "operator";
     var actionBtn = enrolled
-      ? '<button class="btn secondary sm" disabled>Enrolled ✓</button>'
+      ? '<button class="btn secondary sm" data-manage-affiliate="'+esc(a.id)+'" title="View your link, services and link activity">Enrolled ✓ · Manage →</button>'
       : '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>';
     var opsButtons = (isOperator && showOps)
       ? '<button class="btn secondary sm" data-edit-affiliate-offer="'+a.id+'">Edit</button> <button class="btn secondary sm" data-delete-affiliate-offer="'+a.id+'">Delete</button>'
@@ -2670,8 +2677,32 @@
       + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
       + '<div class="program-actions">'+(opsButtons || actionBtn)+'</div>'
-      + ((enrolled && !isOperator) ? affiliateManagePanel(a) : '')
     + '</div>';
+  }
+
+  function renderAffiliateManage(){
+    var box = document.getElementById("affiliateManageContent");
+    if (!box || state.screen !== "affiliate-manage") return;
+    var a = affiliateById(state.managingAffiliateId);
+    if (!a || state.affiliateEnrolled.indexOf(a.id) === -1){
+      box.innerHTML = '<div class="empty">You\'re not enrolled in this affiliate tool. Enroll from the Affiliate Marketplace to get your link.</div>';
+      return;
+    }
+    box.innerHTML = '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;max-width:760px;">'
+      + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(a)+'<span class="program-name" style="font-size:1.15rem;">'+esc(a.name)+'</span></div><span class="badge neutral">'+esc(a.category)+'</span></div>'
+      + '<p class="program-desc">'+esc(a.desc)+'</p>'
+      + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
+      + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
+      + affiliateManagePanel(a)
+    + '</div>';
+  }
+
+  function openAffiliateManage(affiliateId){
+    state.affiliateManageReturn = state.screen === "affiliate-manage" ? (state.affiliateManageReturn || "affiliate-marketplace") : state.screen;
+    state.managingAffiliateId = affiliateId;
+    state.screen = "affiliate-manage";
+    render();
+    window.scrollTo(0, 0);
   }
 
   function renderAffiliate(){
@@ -2874,6 +2905,7 @@
 
     // ---- affiliate screens (shared: Partner + Vendor + Affiliate) ----
     renderAffiliate();
+    renderAffiliateManage();
 
     // ---- operator overview ----
     var opSummary = document.getElementById("operatorProgramSummary");
@@ -6486,11 +6518,17 @@
       if (state.affiliateEnrolled.indexOf(affId) === -1){
         enrollInAffiliate(affId);
         var aff = affiliateById(affId);
-        toast("Enrolled -- your "+(aff?aff.name:"affiliate")+" link is ready below");
-        render();
+        toast("Enrolled -- your "+(aff?aff.name:"affiliate")+" link is ready");
+        openAffiliateManage(affId);
       }
       return;
     }
+
+    var manageAffiliateBtn = e.target.closest("[data-manage-affiliate]");
+    if (manageAffiliateBtn){ openAffiliateManage(manageAffiliateBtn.getAttribute("data-manage-affiliate")); return; }
+
+    var affManageBackBtn = e.target.closest("[data-affiliate-manage-back]");
+    if (affManageBackBtn){ state.screen = state.affiliateManageReturn || "affiliate-marketplace"; render(); return; }
 
     var affAddServiceBtn = e.target.closest("[data-aff-add-service]");
     if (affAddServiceBtn){ addAffiliateService(affAddServiceBtn.getAttribute("data-aff-add-service"), affAddServiceBtn.closest(".aff-panel")); return; }
