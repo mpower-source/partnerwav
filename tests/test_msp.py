@@ -7,9 +7,10 @@ with sync_playwright() as p:
     nav(pg, "operator-msp-prospects")
     ok(visible_screen(pg) == ["scr-operator-msp-prospects"], "MSP Prospecting screen opens")
     cards = pg.locator("#mspProspectsList .msp-card")
-    ok(cards.count() == 31, "5 original records + 26 Apollo.io companies: " + str(cards.count()))
-    ok(pg.locator("#mspProspectsList .badge.warn").count() == 5, "Placeholder records are labelled Sample data")
-    ok(pg.locator("#mspProspectsList [data-msp-apollo]").count() == 26, "Apollo companies labelled Apollo.io")
+    ok(cards.count() == 23, "23 researched companies (samples + poor fits removed): " + str(cards.count()))
+    ok(pg.locator("#mspProspectsList .badge.warn").count() == 0, "No sample data left")
+    ok(pg.locator("#mspProspectsList [data-msp-fit=poor]").count() == 0, "No poor-fit companies left")
+    ok(pg.locator("#mspProspectsList [data-msp-apollo]").count() == 23, "Apollo companies labelled Apollo.io")
 
     # Apollo records: real companies, researched from public sources
     sky = pg.locator('[data-msp-card="apl-skyict"]')
@@ -19,14 +20,14 @@ with sync_playwright() as p:
     ok(sky.locator("details.msp-sources a").count() >= 1, "Sources listed on the card")
     ok("CITY NOT VERIFIED" in pg.locator('[data-msp-card="apl-infostarbiz"]').inner_text().upper(), "Missing city still flagged")
     pg.select_option("#mspSourceFilter", "apollo"); pg.wait_for_timeout(150)
-    ok(cards.count() == 26, "Source filter: Apollo.io")
-    pg.select_option("#mspSourceFilter", "sample"); pg.wait_for_timeout(150)
-    ok(cards.count() == 5, "Source filter: Sample data")
+    ok(cards.count() == 23, "Source filter: Apollo.io")
+    pg.select_option("#mspSourceFilter", "manual"); pg.wait_for_timeout(150)
+    ok(pg.locator("#mspProspectsList .msp-card").count() == 0, "Source filter: none added by you yet")
     pg.select_option("#mspSourceFilter", ""); pg.select_option("#mspTypeFilter", "MSP"); pg.wait_for_timeout(150)
     names = cards.all_inner_texts()
     ok(any("BMSP" in n for n in names) and any("Clarity IT" in n for n in names), "Type filter: researched MSPs (" + str(cards.count()) + ")")
     pg.select_option("#mspTypeFilter", ""); pg.select_option("#mspFitFilter", "good"); pg.wait_for_timeout(150)
-    ok(0 < cards.count() < 26 and pg.locator("#mspProspectsList [data-msp-fit=poor]").count() == 0, "Fit filter: good only (" + str(cards.count()) + ")")
+    ok(0 < cards.count() < 23 and pg.locator("#mspProspectsList [data-msp-fit=poor]").count() == 0, "Fit filter: good only (" + str(cards.count()) + ")")
     pg.select_option("#mspFitFilter", ""); pg.wait_for_timeout(100)
     pg.fill("#mspSearchInput", "fortinet"); pg.wait_for_timeout(150)
     ok(cards.count() >= 1, "Search matches vendor partners")
@@ -44,13 +45,13 @@ with sync_playwright() as p:
     pg.click(".modal-close"); pg.wait_for_timeout(100)
 
     # filters
-    pg.fill("#mspSearchInput", "hospitality it"); pg.wait_for_timeout(150)
-    ok(cards.count() == 1 and "Phuket Tech Partners" in cards.first.inner_text(), "Search by specialty")
+    pg.fill("#mspSearchInput", "pax8"); pg.wait_for_timeout(150)
+    ok(cards.count() >= 1 and any("BMSP" in n for n in cards.all_inner_texts()), "Search by partner/specialty")
     pg.fill("#mspSearchInput", ""); pg.wait_for_timeout(100)
-    pg.select_option("#mspCountryFilter", "Chiang Mai"); pg.wait_for_timeout(150)
-    ok(cards.count() == 1 and "Chiang Mai Digital Solutions" in cards.first.inner_text(), "Location filter")
+    pg.select_option("#mspCountryFilter", "Pathum Thani"); pg.wait_for_timeout(150)
+    ok(cards.count() == 1 and "Soft Square" in cards.first.inner_text(), "Location filter")
     pg.click("#mspResetFilter"); pg.wait_for_timeout(150)
-    ok(cards.count() == 31, "Reset filters")
+    ok(cards.count() == 23, "Reset filters")
 
     # add a real VAR
     pg.click("[data-msp-add]"); pg.wait_for_timeout(200)
@@ -61,31 +62,31 @@ with sync_playwright() as p:
     ok("valid email" in pg.inner_text("#mspFError"), "Email validated")
     pg.fill("#mspF_email", "partners@krungthep-si.example"); pg.fill("#mspF_specialties", "Network Engineering, Cybersecurity")
     pg.click("#mspFSave"); pg.wait_for_timeout(200)
-    ok(cards.count() == 32 and "Krungthep Systems Integration" in cards.first.inner_text() and "VAR" in cards.first.inner_text(), "New VAR added at the top")
+    ok(cards.count() == 24 and "Krungthep Systems Integration" in cards.first.inner_text() and "VAR" in cards.first.inner_text(), "New VAR added at the top")
     pg.select_option("#mspTypeFilter", "VAR"); pg.wait_for_timeout(150)
     ok(cards.count() == 4, "Type filter: VARs (new + SKY ICT + Fusion + Noventiq): " + str(cards.count()))
     pg.select_option("#mspTypeFilter", ""); pg.wait_for_timeout(100)
 
     # stage + notes
-    pg.select_option("#mspStage-msp-th-2", "contacted"); pg.wait_for_timeout(150)
-    pg.fill("#mspNotes-msp-th-2", "Spoke to Khun Nok, wants a Unisense demo"); pg.locator("#mspNotes-msp-th-2").blur(); pg.wait_for_timeout(150)
+    pg.select_option("#mspStage-apl-clarityit", "contacted"); pg.wait_for_timeout(150)
+    pg.fill("#mspNotes-apl-clarityit", "Spoke to Khun Nok, wants a Unisense demo"); pg.locator("#mspNotes-apl-clarityit").blur(); pg.wait_for_timeout(150)
     ok("1" in pg.locator("#mspStats .map-stat").nth(1).inner_text(), "Stage change counted in stats")
     pg.select_option("#mspStageFilter", "contacted"); pg.wait_for_timeout(150)
-    ok(cards.count() == 1 and "Chiang Mai" in cards.first.inner_text(), "Stage filter")
+    ok(cards.count() == 1 and "Clarity IT" in cards.first.inner_text(), "Stage filter")
     pg.select_option("#mspStageFilter", ""); pg.wait_for_timeout(100)
 
-    # invite a sample record: can't send without a real email; copy works
-    pg.click('[data-msp-invite="msp-th-1"]'); pg.wait_for_timeout(200)
-    ok("sample" in pg.inner_text(".modal").lower() and pg.input_value("#mspInvEmail") == "", "Sample record: warns and leaves recipient empty")
+    # invite a company with no published email: can't send until one is entered; copy works
+    pg.click('[data-msp-invite="apl-cloudhm"]'); pg.wait_for_timeout(200)
+    ok(pg.input_value("#mspInvEmail") == "", "No published email: recipient empty")
     pg.select_option("#mspInvProgram", "intelsense"); pg.wait_for_timeout(100)
     body = pg.input_value("#mspInvBody")
-    ok("Intelsense AI" in body and "?apply=vendor&vendorId=intelsense" in body and "Bangkok IT Services Co." in body, "Invitation includes the vendor's partner-application link")
+    ok("Intelsense AI" in body and "?apply=vendor&vendorId=intelsense" in body and "Cloud HM" in body, "Invitation includes the vendor's partner-application link")
     pg.click("#mspInvSend"); pg.wait_for_timeout(100)
-    ok("valid email" in pg.inner_text("#mspInvError"), "Won't send to an empty/sample address")
+    ok("valid email" in pg.inner_text("#mspInvError"), "Won't send without an address")
     pg.click("#mspInvCopy"); pg.wait_for_timeout(200)
     pg.click(".modal-close"); pg.wait_for_timeout(150)
-    card1 = pg.locator('[data-msp-card="msp-th-1"]')
-    ok("Invited to Intelsense AI" in card1.inner_text() and pg.input_value("#mspStage-msp-th-1") == "invited", "Copying the invite marks the prospect Invited")
+    card1 = pg.locator('[data-msp-card="apl-cloudhm"]')
+    ok("Invited to Intelsense AI" in card1.inner_text() and pg.input_value("#mspStage-apl-cloudhm") == "invited", "Copying the invite marks the prospect Invited")
 
     # invite the real VAR via email app
     first_id = pg.locator("#mspProspectsList .msp-card").first.get_attribute("data-msp-card")
@@ -98,7 +99,15 @@ with sync_playwright() as p:
 
     # persistence
     pg.reload(); pg.wait_for_timeout(700); role(pg, "operator"); nav(pg, "operator-msp-prospects")
-    ok(pg.locator("#mspProspectsList .msp-card").count() == 32 and pg.input_value("#mspNotes-msp-th-2") == "Spoke to Khun Nok, wants a Unisense demo", "Prospects, stages and notes persist")
+    ok(pg.locator("#mspProspectsList .msp-card").count() == 24 and pg.input_value("#mspNotes-apl-clarityit") == "Spoke to Khun Nok, wants a Unisense demo", "Prospects, stages and notes persist")
+
+    # browsers that saved the old list lose the samples and poor fits
+    pg.evaluate("""() => { const a = JSON.parse(localStorage.getItem('partnerWAV_mspProspects'));
+      a.push({id:'msp-th-1', sample:true, name:'Bangkok IT Services Co.', stage:'new'}); a.push({id:'apl-tnds', source:'apollo', name:'T.N. Digital Solutions', fit:'poor', stage:'new'});
+      localStorage.setItem('partnerWAV_mspProspects', JSON.stringify(a)); }""")
+    pg.reload(); pg.wait_for_timeout(700); role(pg, "operator"); nav(pg, "operator-msp-prospects")
+    txt = pg.inner_text("#mspProspectsList")
+    ok("Bangkok IT Services" not in txt and "T.N. Digital" not in txt and pg.locator("#mspProspectsList .msp-card").count() == 24, "Old saved samples/poor fits are dropped")
 
     # partner collaborations
     role(pg, "partner")

@@ -12,14 +12,14 @@ with sync_playwright() as p:
 
     # --- log activity from MSP Prospecting
     nav(pg, "operator-msp-prospects")
-    pg.click('[data-msp-log="msp-th-3"]'); pg.wait_for_timeout(200)
+    pg.click('[data-msp-log="apl-gopomelo"]'); pg.wait_for_timeout(200)
     pg.select_option("#engMethod", "Botnoi voice call"); pg.select_option("#engVendor", "botnoi")
     pg.select_option("#engOutcome", "meeting"); pg.fill("#engNotes", "Owner keen on Thai voice AI for hotel front desks; demo on Friday")
     pg.click("#engSave"); pg.wait_for_timeout(200)
-    ok(pg.input_value("#mspStage-msp-th-3") == "interested", "Meeting booked moves the prospect to Interested")
+    ok(pg.input_value("#mspStage-apl-gopomelo") == "interested", "Meeting booked moves the prospect to Interested")
 
     # --- invite also logs an engagement
-    pg.click('[data-msp-invite="msp-th-2"]'); pg.wait_for_timeout(200)
+    pg.click('[data-msp-invite="apl-clarityit"]'); pg.wait_for_timeout(200)
     pg.select_option("#mspInvProgram", "intelsense"); pg.click("#mspInvCopy"); pg.wait_for_timeout(200)
     pg.click(".modal-close"); pg.wait_for_timeout(150)
 
@@ -27,8 +27,8 @@ with sync_playwright() as p:
     rows = pg.locator("#engagementRows tr")
     ok(rows.count() == 2, "Tracker lists both touches: " + str(rows.count()))
     txt = pg.inner_text("#engagementRows")
-    ok("Botnoi voice call" in txt and "Phuket Tech Partners" in txt and "hotel front desks" in txt, "Logged call shows method, MSP and notes")
-    ok("Email invitation" in txt and "Chiang Mai Digital Solutions" in txt, "Invite was logged automatically")
+    ok("Botnoi voice call" in txt and "GoPomelo" in txt and "hotel front desks" in txt, "Logged call shows method, MSP and notes")
+    ok("Email invitation" in txt and "Clarity IT" in txt, "Invite was logged automatically")
     stats = pg.inner_text("#engStats")
     ok("2" in stats and "contacted" in stats and "meetings" in stats, "Funnel stats: " + stats.replace("\n", " "))
     # update outcome inline -> onboarded
@@ -69,7 +69,7 @@ with sync_playwright() as p:
 
     # invite can use the landing page
     nav(pg, "operator-msp-prospects")
-    pg.click('[data-msp-invite="msp-th-4"]'); pg.wait_for_timeout(200)
+    pg.click('[data-msp-invite="apl-beryl8"]'); pg.wait_for_timeout(200)
     pg.select_option("#mspInvProgram", "intelsense"); pg.wait_for_timeout(100)
     opts = pg.locator("#mspInvLink option").all_inner_texts()
     ok(any("Landing page: Intelsense AI - Partner Program" in o for o in opts), "Invite offers the published landing page")
