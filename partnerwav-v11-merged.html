@@ -212,6 +212,8 @@
   .program-card{ border:1px solid var(--line); border-radius:14px; padding:17px; background:var(--surface); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:10px; }
   .program-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; flex-wrap:wrap; }
   .program-name{ font-weight:700; font-size:.98rem; }
+  .op-rel-top{ display:block; }
+  .op-rel-top .badge{ white-space:nowrap; font-size:.56rem; letter-spacing:.02em; padding:1px 6px; margin-left:4px; vertical-align:2px; }
   .program-meta{ font-size:.74rem; color:var(--ink-faint); }
   .program-desc{ font-size:.84rem; color:var(--ink-soft); line-height:1.45; margin:0; flex:1; }
   .program-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
@@ -1125,6 +1127,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             <div><label>Credentials (comma-separated)</label><input type="text" id="profileCredentials" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., Reseller -- Intelsense AI" /></div>
             <div><label>Website</label><input type="url" id="profileWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div><label>LinkedIn URL</label><input type="url" id="profileLinkedin" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div class="field-row">
+              <label>Logo</label>
+              <div class="logo-upload-row">
+                <div class="logo-preview" id="peLogoPreview"><span class="logo-preview-empty">No logo</span></div>
+                <div class="logo-upload-actions">
+                  <button type="button" class="btn secondary sm" data-browse-logo="pe">Browse…</button>
+                  <button type="button" class="btn ghost sm" id="peLogoRemoveBtn" data-remove-logo="pe" hidden>Remove</button>
+                </div>
+              </div>
+              <input type="file" id="peLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+              <input type="hidden" id="peLogo">
+              <span class="field-note">Square PNG, JPG, WEBP or SVG, ideally 400×400px. A wide image is center-cropped.</span>
+            </div>
             <div>
               <label>Services & Solutions</label>
               <div id="partnerServicesContainer" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
@@ -1251,6 +1266,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             <div><label>Credentials (comma-separated)</label><input type="text" id="affiliateCredentials" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div><label>Website</label><input type="url" id="affiliateWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div><label>LinkedIn URL</label><input type="url" id="affiliateLinkedin" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div class="field-row">
+              <label>Logo</label>
+              <div class="logo-upload-row">
+                <div class="logo-preview" id="afLogoPreview"><span class="logo-preview-empty">No logo</span></div>
+                <div class="logo-upload-actions">
+                  <button type="button" class="btn secondary sm" data-browse-logo="af">Browse…</button>
+                  <button type="button" class="btn ghost sm" id="afLogoRemoveBtn" data-remove-logo="af" hidden>Remove</button>
+                </div>
+              </div>
+              <input type="file" id="afLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+              <input type="hidden" id="afLogo">
+              <span class="field-note">Square PNG, JPG, WEBP or SVG, ideally 400×400px. A wide image is center-cropped.</span>
+            </div>
+
             <div style="display:flex;gap:8px;">
               <button type="submit" class="btn primary">Save Profile</button>
               <button type="button" class="btn secondary" data-back-screen="affiliate-overview">Cancel</button>
@@ -2776,6 +2805,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     } catch (e) {
       console.log("Could not load saved partner profiles:", e);
     }
+    try {
+      var savedAff = JSON.parse(localStorage.getItem("partnerWAV_affiliateProfiles") || "null");
+      if (Array.isArray(savedAff) && savedAff.length){ affiliateProfiles.length = 0; savedAff.forEach(function(a){ affiliateProfiles.push(a); }); }
+    } catch (e) {
+      console.log("Could not load saved affiliate profiles:", e);
+    }
   }
 
   // Save vendor referral data to localStorage
@@ -2789,6 +2824,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       });
       localStorage.setItem("partnerWAV_vendorReferralData", JSON.stringify({ referralPartners: referralPartners }));
       localStorage.setItem("partnerWAV_partnerProfiles", JSON.stringify(partnerProfiles));
+      localStorage.setItem("partnerWAV_affiliateProfiles", JSON.stringify(affiliateProfiles));
     } catch (e) {
       console.log("Could not save data:", e);
     }
@@ -3367,7 +3403,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var byRel = {};
       programs.forEach(function(p){ p.relationships.forEach(function(rel){ byRel[rel] = (byRel[rel]||0)+1; }); });
       opSummary.innerHTML = Object.keys(byRel).map(function(rel){
-        return '<div class="program-card"><div class="program-top"><span class="program-name">'+esc(rel)+'</span>'+relBadge(rel)+'</div>'
+        return '<div class="program-card"><div class="program-top op-rel-top"><span class="program-name">'+esc(rel)+'</span>'+relBadge(rel)+'</div>'
           + '<p class="program-desc">'+byRel[rel]+' program'+(byRel[rel]>1?"s":"")+' on this relationship shape.</p></div>';
       }).join("");
     }
@@ -3613,6 +3649,24 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     reader.readAsDataURL(file);
   }
 
+  // Logo picker for forms drawn by JS (vendor profile, products): same look as the static ones
+  function logoFieldHtml(prefix, val, label){
+    var a = function(x){ return esc(x || "").replace(/"/g, "&quot;"); };
+    return '<div class="field-row"><label>'+esc(label || "Logo")+'</label><div class="logo-upload-row">'
+      + '<div class="logo-preview" id="'+prefix+'LogoPreview">'+(val ? '<img src="'+a(val)+'" alt="Logo preview">' : '<span class="logo-preview-empty">No logo</span>')+'</div>'
+      + '<div class="logo-upload-actions"><button type="button" class="btn secondary sm" data-browse-logo="'+prefix+'">'+(val ? "Change…" : "Upload…")+'</button>'
+      + '<button type="button" class="btn ghost sm" id="'+prefix+'LogoRemoveBtn" data-remove-logo="'+prefix+'"'+(val ? '' : ' hidden')+'>Remove</button></div></div>'
+      + '<input type="file" id="'+prefix+'LogoFile" data-logo-prefix="'+prefix+'" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>'
+      + '<input type="hidden" id="'+prefix+'Logo" value="'+a(val)+'"></div>';
+  }
+  document.addEventListener("change", function(e){
+    var fi = e.target; if (!fi || !fi.getAttribute || !fi.getAttribute("data-logo-prefix")) return;
+    var file = fi.files && fi.files[0]; if (!file) return;
+    var prefix = fi.getAttribute("data-logo-prefix");
+    processLogoFile(file, function(dataUrl){ setLogoValue(prefix, dataUrl); });
+    fi.value = "";
+  });
+
   function wireLogoUpload(prefix){
     var fileInput = document.getElementById(prefix+"LogoFile");
     if (!fileInput) return;
@@ -3816,6 +3870,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     v.logo = fieldVal("vlLogo");
     v.website = fieldVal("vlWebsite");
     v.social = { linkedin: fieldVal("vlLinkedIn"), twitter: fieldVal("vlTwitter"), facebook: fieldVal("vlFacebook") };
+    v._edited = true; saveVendorEdits();
     toast("Listing saved -- visible in the Program Directory and Vendor Network");
     render();
   }
@@ -3897,7 +3952,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // ===== VENDOR PROFILE: inline edit / save (own profile only) =====
   var VENDOR_EDITS_KEY = "partnerWAV_vendorProfileEdits";
-  var VENDOR_EDITABLE = ["name","vertical","origin","desc","website","social","products"];
+  var VENDOR_EDITABLE = ["name","vertical","origin","desc","logo","website","social","products"];
   function saveVendorEdits(){
     try {
       var out = {};
@@ -3928,6 +3983,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     var productsHtml = (p.products || []).map(function(prod, i){
       return '<div class="vp-product">'
+        + logoFieldHtml("vpProd"+i, prod.logo, "Product logo")
         + '<div><label for="vpProdName'+i+'">Product name</label><input id="vpProdName'+i+'" data-vp-prod-name="'+i+'" type="text" value="'+esc(prod.name||"").replace(/"/g,"&quot;")+'"></div>'
         + '<div><label for="vpProdDesc'+i+'">Description</label><textarea id="vpProdDesc'+i+'" data-vp-prod-desc="'+i+'">'+esc(prod.desc||"")+'</textarea></div>'
       + '</div>';
@@ -3940,6 +3996,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<div><h2 style="font-size:1.2rem;">Edit profile</h2><div class="thread-meta">Changes show on your Vendor Network profile once saved.</div></div>'
           + '<div style="margin-left:auto;">'+actions+'</div></div>'
         + '<div id="vpError" class="login-msg bad" role="alert" hidden></div>'
+        + logoFieldHtml("vp", p.logo, "Company logo")
         + '<div class="vp-grid">'
           + field("vpName","Company name *",p.name) + field("vpVertical","Vertical",p.vertical) + field("vpOrigin","Origin / based in",p.origin)
         + '</div>'
@@ -3970,10 +4027,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var pd = (document.querySelector('[data-vp-prod-desc="'+i+'"]') || {}).value;
       pn = (pn || "").trim(); pd = (pd || "").trim();
       if (!pn) problems.push("Product "+(i+1)+" needs a name.");
-      return Object.assign({}, prod, { name: pn, desc: pd });
+      var pl = document.getElementById("vpProd"+i+"Logo");
+      return Object.assign({}, prod, { name: pn, desc: pd, logo: pl ? pl.value : (prod.logo || "") });
     });
     if (problems.length){ err.innerHTML = problems.map(esc).join("<br>"); err.hidden = false; err.scrollIntoView({block:"nearest"}); return; }
     p.name = name; p.vertical = v("vpVertical"); p.origin = v("vpOrigin"); p.desc = desc;
+    var vpLogo = document.getElementById("vpLogo"); if (vpLogo) p.logo = vpLogo.value;
     p.website = urls.website;
     p.social = Object.assign({}, p.social || {}, { linkedin:urls.linkedin, twitter:urls.twitter, facebook:urls.facebook });
     p.products = products;
@@ -4012,8 +4071,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           productReferralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id) + '&productId=' + encodeURIComponent(prod.product_id);
         }
 
-        var tileHtml = '<div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);min-height:200px;">'
-          + '<h3 style="margin:0;font-size:.95rem;font-weight:600;color:var(--ink);">'+esc(prod.name)+'</h3>'
+        var tileHtml = '<div class="product-tile" data-product-tile="'+esc(prod.product_id)+'" style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);min-height:200px;">'
+          + '<div style="display:flex;align-items:center;gap:10px;">'+logoOrFallback({ name: prod.name, logo: prod.logo || "" }, 44)
+          + '<h3 style="margin:0;font-size:.95rem;font-weight:600;color:var(--ink);">'+esc(prod.name)+'</h3></div>'
           + '<p style="margin:0;font-size:.85rem;color:var(--ink-soft);line-height:1.5;flex:1;">'+esc(prod.desc)+'</p>'
           + '<div style="display:flex;gap:8px;flex-wrap:wrap;flex-direction:column;">';
 
@@ -5731,6 +5791,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("profileCredentials").value = profile ? profile.credentials.join(", ") : "";
     document.getElementById("profileWebsite").value = profile ? profile.website : "";
     document.getElementById("profileLinkedin").value = profile ? (profile.social && profile.social.linkedin) : "";
+    setLogoValue("pe", profile && profile.logo ? profile.logo : "");
     var servicesContainer = document.getElementById("partnerServicesContainer");
     if (servicesContainer){
       servicesContainer.innerHTML = profile && profile.services
@@ -5758,6 +5819,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var credentials = document.getElementById("profileCredentials").value.split(",").map(function(c){ return c.trim(); }).filter(Boolean);
     var website = document.getElementById("profileWebsite").value.trim();
     var linkedin = document.getElementById("profileLinkedin").value.trim();
+    var logo = document.getElementById("peLogo").value;
 
     var servicesContainer = document.getElementById("partnerServicesContainer");
     var services = [];
@@ -5776,7 +5838,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (idx >= 0){
         partnerProfiles[idx] = Object.assign(partnerProfiles[idx], {
           name: name, country: country, tagline: tagline, specialties: specialties,
-          credentials: credentials, website: website, services: services, social: Object.assign({}, partnerProfiles[idx].social || {}, {linkedin: linkedin})
+          credentials: credentials, website: website, services: services, logo: logo, social: Object.assign({}, partnerProfiles[idx].social || {}, {linkedin: linkedin})
         });
         saveVendorData();
         toast("Profile updated");
@@ -5785,7 +5847,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var newId = "partner-" + Date.now();
       partnerProfiles.push({
         id: newId, name: name, init: name.substring(0,2).toUpperCase(), country: country, tagline: tagline,
-        specialties: specialties, credentials: credentials, pastProjects: [], logo: "", website: website,
+        specialties: specialties, credentials: credentials, pastProjects: [], logo: logo, website: website,
         services: services, social: {linkedin: linkedin, twitter: "", facebook: ""}, status: "active", archivedAt: null
       });
       toast("Profile created");
@@ -5847,6 +5909,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     render();
   }
 
+  // The signed-in affiliate's own profile (demo mode: the first affiliate)
+  function myAffiliateProfileId(){
+    if (state.role !== "affiliate") return null;
+    if (state.myAffiliateId) return state.myAffiliateId;
+    return state.account ? null : ((affiliateProfiles.filter(function(a){ return !a.archivedAt; })[0] || {}).id || null);
+  }
   function loadAffiliateProfileForm(profileId){
     var profile = profileId ? affiliateProfiles.find(function(p){ return p.id === profileId; }) : null;
     document.getElementById("affiliateEditorTitle").textContent = profile ? "Edit Affiliate Profile" : "Create Affiliate Profile";
@@ -5857,6 +5925,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("affiliateCredentials").value = profile ? profile.credentials.join(", ") : "";
     document.getElementById("affiliateWebsite").value = profile ? profile.website : "";
     document.getElementById("affiliateLinkedin").value = profile ? (profile.social && profile.social.linkedin) : "";
+    setLogoValue("af", profile && profile.logo ? profile.logo : "");
     var deleteBtn = document.getElementById("deleteAffiliateBtn");
     deleteBtn.style.display = profile ? "block" : "none";
     if (profile) deleteBtn.setAttribute("data-affiliate-id", profileId);
@@ -5872,6 +5941,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var credentials = document.getElementById("affiliateCredentials").value.split(",").map(function(c){ return c.trim(); });
     var website = document.getElementById("affiliateWebsite").value.trim();
     var linkedin = document.getElementById("affiliateLinkedin").value.trim();
+    var logo = document.getElementById("afLogo").value;
 
     if (!name || !country || !tagline){ toast("Please fill in required fields"); return; }
 
@@ -5879,7 +5949,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var idx = affiliateProfiles.findIndex(function(p){ return p.id === state.editingAffiliateId; });
       if (idx >= 0){
         affiliateProfiles[idx] = Object.assign(affiliateProfiles[idx], {
-          name: name, country: country, tagline: tagline, specialties: specialties,
+          name: name, country: country, tagline: tagline, specialties: specialties, logo: logo,
           credentials: credentials, website: website, social: Object.assign(affiliateProfiles[idx].social, {linkedin: linkedin})
         });
         toast("Affiliate profile updated");
@@ -5888,7 +5958,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var newId = "aff-" + Date.now();
       affiliateProfiles.push({
         id: newId, name: name, init: name.substring(0,2).toUpperCase(), country: country, tagline: tagline,
-        specialties: specialties, credentials: credentials, pastProjects: [], logo: "", website: website,
+        specialties: specialties, credentials: credentials, pastProjects: [], logo: logo, website: website,
         social: {linkedin: linkedin, twitter: "", facebook: ""}, status: "active", archivedAt: null
       });
       toast("Affiliate profile created");
@@ -7999,6 +8069,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (state.screen === "operator-approvals") state.dealTab = "pending";
       if (state.screen === "resource-approvals") state.resourceApprovalView = "pending";
       if (state.screen === "operator-marketing-approvals") state.incTab = "pending";
+      // "My Profile" always opens the signed-in partner's / affiliate's own profile
+      if (state.screen === "partner-profile-editor" && state.role === "partner"){
+        if (!state.myProfileId || !partnerById(state.myProfileId)) state.screen = "partner-my-profile";
+        else { state.editingProfileId = state.myProfileId; setTimeout(function(){ loadPartnerProfileForm(state.myProfileId); }, 0); }
+      }
+      if (state.screen === "affiliate-profile-editor" && state.role === "affiliate"){
+        state.editingAffiliateId = myAffiliateProfileId();
+        setTimeout(function(){ loadAffiliateProfileForm(state.editingAffiliateId); }, 0);
+      }
       render();
       return;
     }
@@ -8014,9 +8093,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       state.screen = screen;
       // Load form data if navigating to editor screens
       setTimeout(function(){
-        if (screen === "partner-profile-editor") loadPartnerProfileForm(state.editingProfileId);
+        if (screen === "partner-profile-editor") loadPartnerProfileForm(state.editingProfileId || (state.role === "partner" ? state.myProfileId : null));
         else if (screen === "vendor-program-editor") loadVendorProgramForm(state.editingProgramId);
-        else if (screen === "affiliate-profile-editor") loadAffiliateProfileForm(state.editingAffiliateId);
+        else if (screen === "affiliate-profile-editor") loadAffiliateProfileForm(state.editingAffiliateId || myAffiliateProfileId());
         else if (screen === "projects-editor") loadProjectForm(state.editingProjectId);
         else if (screen === "leads-editor") loadLeadForm(state.editingLeadId);
         else if (screen === "agreements-editor") loadAgreementForm(state.editingAgreementId);
@@ -9557,6 +9636,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   wireLogoUpload("mp");
   wireLogoUpload("vl");
+  wireLogoUpload("pe");
+  wireLogoUpload("af");
 
   document.getElementById("themeToggle").addEventListener("click", function(){
     state.theme = state.theme === "dark" ? "light" : "dark";
