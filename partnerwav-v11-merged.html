@@ -1,4 +1,42 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<script>
+  // Sign-in required unless ?demo=1 (walk-through mode) or a public ?apply= referral link
+  (function(){ var q = location.search;
+    if (/[?&]demo=1(&|$)/.test(q)) document.documentElement.classList.add("demo-mode");
+    else if (/[?&]apply=/.test(q)) document.documentElement.classList.add("public-apply");
+    else document.documentElement.classList.add("auth-locked");
+  })();
+</script>
+<div id="loginScreen" class="login-wrap">
+  <form id="loginForm" class="login-card" novalidate>
+    <div class="login-brand"><svg width="24" height="24" viewBox="0 0 26 26" fill="none"><rect x="1" y="1" width="24" height="24" rx="7" fill="var(--accent)"/><path d="M8 18V8h5.2c2.3 0 3.9 1.4 3.9 3.5S15.5 15 13.2 15H10v3H8Zm2-5h3c1.1 0 1.9-.6 1.9-1.5S14.1 10 13 10h-3v3Z" fill="#fff"/></svg><span>PartnerWAV</span></div>
+    <div id="loginPanelSignIn">
+      <h1 class="login-title">Sign in</h1>
+      <p class="login-sub">For partners, vendors, affiliates and program operators.</p>
+      <label for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" autocomplete="username" required>
+      <label for="loginPassword">Password</label>
+      <input id="loginPassword" type="password" autocomplete="current-password" required>
+      <div id="loginError" class="login-msg bad" role="alert" hidden></div>
+      <div id="loginInfo" class="login-msg good" role="status" hidden></div>
+      <button type="submit" class="btn primary login-submit" id="loginSubmit">Sign in</button>
+      <button type="button" class="login-link" id="forgotPasswordBtn">Forgot password?</button>
+    </div>
+    <div id="loginPanelNewPassword" hidden>
+      <h1 class="login-title">Set a new password</h1>
+      <p class="login-sub">Choose a password with at least 8 characters.</p>
+      <label for="newPassword">New password</label>
+      <input id="newPassword" type="password" autocomplete="new-password" minlength="8">
+      <div id="newPasswordError" class="login-msg bad" role="alert" hidden></div>
+      <button type="button" class="btn primary login-submit" id="newPasswordSubmit">Save password</button>
+    </div>
+    <div id="loginPanelNoAccount" hidden>
+      <h1 class="login-title">Account not set up yet</h1>
+      <p class="login-sub" id="noAccountText"></p>
+      <button type="button" class="btn secondary login-submit" id="noAccountSignOut">Sign out</button>
+    </div>
+  </form>
+</div>
 <style>
   :root{
     --bg:#ffffff; --surface:#ffffff; --surface-2:#f5f4ff;
@@ -143,6 +181,39 @@
   .program-meta{ font-size:.74rem; color:var(--ink-faint); }
   .program-desc{ font-size:.84rem; color:var(--ink-soft); line-height:1.45; margin:0; flex:1; }
   .program-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+#loginScreen{ display:none; }
+html.auth-locked .shell{ display:none; }
+html.auth-locked #loginScreen{ display:flex; }
+html.public-apply .sidebar, html.public-apply .topbar-right{ display:none; }
+html:not(.demo-mode) .role-switch{ display:none; }
+.login-wrap{ min-height:100vh; align-items:center; justify-content:center; padding:24px 16px; background:var(--bg); box-sizing:border-box; }
+.login-card{ width:100%; max-width:380px; background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:28px 26px; box-sizing:border-box; }
+.login-card label{ display:block; font-size:.8rem; font-weight:600; color:var(--ink-soft); margin:14px 0 6px; }
+.login-card input{ width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink); font:inherit; font-size:.95rem; }
+.login-card input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+.login-brand{ display:flex; align-items:center; gap:9px; font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:1.05rem; color:var(--ink); margin-bottom:20px; }
+.login-title{ font-family:"Space Grotesk",sans-serif; font-size:1.35rem; margin:0 0 4px; color:var(--ink); }
+.login-sub{ margin:0; font-size:.86rem; color:var(--ink-soft); line-height:1.45; }
+.login-submit{ width:100%; margin-top:18px; justify-content:center; padding:10px 14px; }
+.login-link{ display:block; margin:12px auto 0; background:none; border:0; color:var(--accent); font:inherit; font-size:.84rem; cursor:pointer; }
+.login-link:hover{ text-decoration:underline; }
+.login-msg{ margin-top:14px; padding:9px 12px; border-radius:8px; font-size:.84rem; line-height:1.4; }
+.login-msg.bad{ background:var(--bad-soft); color:var(--bad); }
+.login-msg.good{ background:var(--good-soft); color:var(--good); }
+.account-menu{ position:relative; }
+button.avatar{ border:0; cursor:pointer; font-family:inherit; }
+.account-pop{ position:absolute; right:0; top:calc(100% + 8px); z-index:50; min-width:220px; max-width:280px; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:14px; display:flex; flex-direction:column; gap:6px; }
+.account-pop[hidden]{ display:none; }
+.account-name{ font-weight:700; font-size:.92rem; color:var(--ink); overflow-wrap:anywhere; }
+.account-meta{ font-size:.78rem; color:var(--ink-soft); overflow-wrap:anywhere; margin-bottom:6px; }
+.vp-form{ display:flex; flex-direction:column; gap:14px; }
+.vp-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+.vp-form label{ display:block; font-size:.78rem; font-weight:600; color:var(--ink-soft); margin-bottom:5px; }
+.vp-form input,.vp-form textarea{ width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink); font:inherit; font-size:.88rem; }
+.vp-form textarea{ min-height:72px; resize:vertical; }
+.vp-product{ padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); display:flex; flex-direction:column; gap:8px; }
+.vp-product input,.vp-product textarea{ background:var(--surface); }
+.vp-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .aff-panel{ border-top:1px solid var(--line); margin-top:4px; padding-top:12px; display:flex; flex-direction:column; gap:14px; }
 .aff-section{ display:flex; flex-direction:column; gap:7px; min-width:0; }
 .aff-section-title{ font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); }
@@ -446,7 +517,14 @@
         <h1 class="page-title" id="topTitle">Overview</h1>
         <div class="topbar-right">
           <input class="search" placeholder="Search…" disabled>
-          <div class="avatar">PP</div>
+          <div class="account-menu">
+            <button type="button" class="avatar" id="accountBtn" aria-haspopup="true" aria-expanded="false" aria-label="Account">PP</button>
+            <div class="account-pop" id="accountPop" hidden>
+              <div class="account-name" id="accountName"></div>
+              <div class="account-meta" id="accountMeta"></div>
+              <button type="button" class="btn secondary sm" id="signOutBtn">Sign out</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -3375,7 +3453,7 @@
     grid.innerHTML = netFiltered.length ? netFiltered.map(function(p){
       var mine = state.role === "vendor" && p.id === state.myVendorId;
       var actionBtn = mine
-        ? '<button class="btn secondary sm" data-goto-screen="vendor-listing">Edit listing</button>'
+        ? '<button class="btn secondary sm" data-edit-vendor-profile="'+esc(p.id)+'">Edit profile</button>'
         : isLoggedInPartner
           ? '<button class="btn secondary sm" data-apply-vendor-reseller="'+p.id+'">Apply as Reseller →</button>'
           : '<button class="btn secondary sm" data-message-vendor="'+esc(p.name)+'">Message</button>';
@@ -3429,12 +3507,103 @@
     content.innerHTML = html;
   }
 
+  // ===== VENDOR PROFILE: inline edit / save (own profile only) =====
+  var VENDOR_EDITS_KEY = "partnerWAV_vendorProfileEdits";
+  var VENDOR_EDITABLE = ["name","vertical","origin","desc","website","social","products"];
+  function saveVendorEdits(){
+    try {
+      var out = {};
+      programs.forEach(function(pg){
+        if (!pg._edited) return;
+        var o = {}; VENDOR_EDITABLE.forEach(function(k){ if (pg[k] !== undefined) o[k] = pg[k]; });
+        out[pg.id] = o;
+      });
+      localStorage.setItem(VENDOR_EDITS_KEY, JSON.stringify(out));
+    } catch(e){ console.log("Could not save vendor profile edits:", e); }
+  }
+  function loadVendorEdits(){
+    try {
+      var saved = JSON.parse(localStorage.getItem(VENDOR_EDITS_KEY) || "null");
+      if (!saved) return;
+      Object.keys(saved).forEach(function(id){
+        var pg = programById(id); if (!pg) return;
+        VENDOR_EDITABLE.forEach(function(k){ if (saved[id][k] !== undefined) pg[k] = saved[id][k]; });
+        pg._edited = true;
+      });
+    } catch(e){ console.log("Could not load vendor profile edits:", e); }
+  }
+
+  function vendorEditFormHtml(p){
+    var soc = p.social || {};
+    function field(id, label, val, type){
+      return '<div><label for="'+id+'">'+label+'</label><input id="'+id+'" type="'+(type||"text")+'" value="'+esc(val||"").replace(/"/g,"&quot;")+'"></div>';
+    }
+    var productsHtml = (p.products || []).map(function(prod, i){
+      return '<div class="vp-product">'
+        + '<div><label for="vpProdName'+i+'">Product name</label><input id="vpProdName'+i+'" data-vp-prod-name="'+i+'" type="text" value="'+esc(prod.name||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div><label for="vpProdDesc'+i+'">Description</label><textarea id="vpProdDesc'+i+'" data-vp-prod-desc="'+i+'">'+esc(prod.desc||"")+'</textarea></div>'
+      + '</div>';
+    }).join("");
+    var actions = '<div class="vp-actions"><button type="button" class="btn primary sm" data-vendor-edit-save="'+esc(p.id)+'">Save</button>'
+      + '<button type="button" class="btn secondary sm" data-vendor-edit-cancel>Cancel</button></div>';
+    return '<button class="btn ghost sm" data-back-vendor-network>← Back to Vendor Network</button>'
+      + '<div class="card card-pad vp-form" style="margin-top:14px;">'
+        + '<div class="profile-header">'+logoOrFallback(p, 72)
+          + '<div><h2 style="font-size:1.2rem;">Edit profile</h2><div class="thread-meta">Changes show on your Vendor Network profile once saved.</div></div>'
+          + '<div style="margin-left:auto;">'+actions+'</div></div>'
+        + '<div id="vpError" class="login-msg bad" role="alert" hidden></div>'
+        + '<div class="vp-grid">'
+          + field("vpName","Company name *",p.name) + field("vpVertical","Vertical",p.vertical) + field("vpOrigin","Origin / based in",p.origin)
+        + '</div>'
+        + '<div><label for="vpDesc">Description *</label><textarea id="vpDesc">'+esc(p.desc||"")+'</textarea></div>'
+        + '<div class="vp-grid">'
+          + field("vpWebsite","Website",p.website,"url") + field("vpLinkedin","LinkedIn URL",soc.linkedin,"url")
+          + field("vpTwitter","X / Twitter URL",soc.twitter,"url") + field("vpFacebook","Facebook URL",soc.facebook,"url")
+        + '</div>'
+        + (productsHtml ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Products</h2></div><div class="vp-grid" style="margin-top:8px;">'+productsHtml+'</div></div>' : '')
+        + '<p class="field-note" style="margin:0;">Commission tiers and relationship terms come from your agreement and are changed with your program operator.</p>'
+        + actions
+      + '</div>';
+  }
+
+  function saveVendorProfileEdit(vendorId){
+    var p = programById(vendorId);
+    if (!p || state.role !== "vendor" || state.myVendorId !== vendorId) return;
+    var v = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var err = document.getElementById("vpError");
+    var name = v("vpName"), desc = v("vpDesc");
+    var urls = { website:v("vpWebsite"), linkedin:v("vpLinkedin"), twitter:v("vpTwitter"), facebook:v("vpFacebook") };
+    var problems = [];
+    if (!name) problems.push("Company name is required.");
+    if (!desc) problems.push("Description is required.");
+    Object.keys(urls).forEach(function(k){ if (urls[k] && !/^https?:\/\/\S+\.\S+/i.test(urls[k])) problems.push("Enter a full web address for "+(k==="website"?"Website":k.charAt(0).toUpperCase()+k.slice(1))+" (starting with https://)."); });
+    var products = (p.products || []).map(function(prod, i){
+      var pn = (document.querySelector('[data-vp-prod-name="'+i+'"]') || {}).value;
+      var pd = (document.querySelector('[data-vp-prod-desc="'+i+'"]') || {}).value;
+      pn = (pn || "").trim(); pd = (pd || "").trim();
+      if (!pn) problems.push("Product "+(i+1)+" needs a name.");
+      return Object.assign({}, prod, { name: pn, desc: pd });
+    });
+    if (problems.length){ err.innerHTML = problems.map(esc).join("<br>"); err.hidden = false; err.scrollIntoView({block:"nearest"}); return; }
+    p.name = name; p.vertical = v("vpVertical"); p.origin = v("vpOrigin"); p.desc = desc;
+    p.website = urls.website;
+    p.social = Object.assign({}, p.social || {}, { linkedin:urls.linkedin, twitter:urls.twitter, facebook:urls.facebook });
+    p.products = products;
+    p._edited = true;
+    saveVendorEdits();
+    state.vendorEditId = null;
+    toast("Profile saved");
+    render();
+  }
+
   function renderVendorProfile(){
     var body = document.getElementById("vendorProfileContent");
     if (!body) return;
     var p = programById(state.viewingVendorId);
     if (!p){ body.innerHTML = '<div class="empty">Pick a vendor from the Vendor Network to see their profile.</div>'; return; }
     var mine = state.role === "vendor" && p.id === state.myVendorId;
+    if (mine && state.vendorEditId === p.id){ body.innerHTML = vendorEditFormHtml(p); return; }
+    if (state.vendorEditId && state.vendorEditId !== p.id) state.vendorEditId = null;
     var isOperator = state.role === "operator";
     var isLoggedInPartner = state.role === "partner" && state.myProfileId;
     var tiersHtml = p.tiers.map(function(t){
@@ -3544,7 +3713,7 @@
         + '<div class="profile-header">'+logoOrFallback(p, 104)
           + '<div><h2 style="font-size:1.3rem;">'+esc(p.name)+'</h2><div class="thread-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div></div>'
           + (mine
-              ? '<button class="btn primary sm" style="margin-left:auto;" data-goto-screen="vendor-listing">Edit listing</button>'
+              ? '<button class="btn primary sm" style="margin-left:auto;" data-edit-vendor-profile="'+esc(p.id)+'">Edit profile</button>'
               : '<button class="btn primary sm" style="margin-left:auto;" data-message-vendor="'+esc(p.name)+'">Message</button>')
             + '</div>'
         + '<p class="program-desc" style="font-size:.92rem;">'+esc(p.desc)+'</p>'
@@ -3579,7 +3748,7 @@
         + '<h2 style="color:#5b3df5;margin-bottom:16px;">✓ Application Submitted</h2>'
         + '<p style="color:var(--ink-muted);margin-bottom:24px;line-height:1.6;">Thank you for your interest in partnering with ' + esc(vendor.name) + '. We\'ve received your application and will review it shortly.</p>'
         + '<p style="color:var(--ink-faint);font-size:.9rem;margin-bottom:24px;">The vendor will contact you at the email address provided to discuss next steps.</p>'
-        + '<button class="btn primary" data-goto-screen="partner-directory" style="margin-top:16px;">← Back to Program Directory</button>'
+        + (document.documentElement.classList.contains("public-apply") ? '' : '<button class="btn primary" data-goto-screen="partner-directory" style="margin-top:16px;">← Back to Program Directory</button>')
         + '</div>';
       return;
     }
@@ -6147,6 +6316,7 @@
   document.addEventListener("click", function(e){
     console.log("Click detected on:", e.target.tagName, e.target.className);
     var roleBtn = e.target.closest(".role-btn");
+    if (roleBtn && !DEMO_MODE) return; // roles come from your account when signed in
     if (roleBtn){
       console.log("Role button clicked");
       state.role = roleBtn.getAttribute("data-role");
@@ -6378,7 +6548,7 @@
     if (viewVendorBtn){ state.viewingVendorId = viewVendorBtn.getAttribute("data-view-vendor"); state.screen = "vendor-profile"; render(); return; }
 
     var backVendorNetworkBtn = e.target.closest("[data-back-vendor-network]");
-    if (backVendorNetworkBtn){ state.screen = "vendor-network"; render(); return; }
+    if (backVendorNetworkBtn){ state.vendorEditId = null; state.screen = "vendor-network"; render(); return; }
 
     var msgVendorBtn = e.target.closest("[data-message-vendor]");
     if (msgVendorBtn){ openConversationWith(msgVendorBtn.getAttribute("data-message-vendor"), "vendor"); return; }
@@ -6617,6 +6787,20 @@
       }
       return;
     }
+
+    var editVendorProfileBtn = e.target.closest("[data-edit-vendor-profile]");
+    if (editVendorProfileBtn){
+      var evId = editVendorProfileBtn.getAttribute("data-edit-vendor-profile");
+      if (state.role === "vendor" && state.myVendorId === evId){
+        state.viewingVendorId = evId; state.vendorEditId = evId; state.screen = "vendor-profile";
+        render(); window.scrollTo(0, 0);
+      }
+      return;
+    }
+    var vendorEditSaveBtn = e.target.closest("[data-vendor-edit-save]");
+    if (vendorEditSaveBtn){ saveVendorProfileEdit(vendorEditSaveBtn.getAttribute("data-vendor-edit-save")); return; }
+    var vendorEditCancelBtn = e.target.closest("[data-vendor-edit-cancel]");
+    if (vendorEditCancelBtn){ state.vendorEditId = null; renderVendorProfile(); return; }
 
     var editThreadBtn = e.target.closest("[data-edit-thread]");
     if (editThreadBtn){
@@ -7100,19 +7284,187 @@
   loadAffiliateData();
   loadCommunityData();
   loadResourceData();
+  loadVendorEdits();
 
-  // ===== SUPABASE AUTH STATE MONITORING =====
-  if (supabase) supabase.auth.onAuthStateChange(function(event, session) {
-    console.log('Auth state changed:', event, session ? 'User logged in' : 'User logged out');
-    if (session) {
-      console.log('Current user:', session.user.email);
-      // User is authenticated
-      state.currentUser = session.user;
-    } else {
-      // User is not authenticated
-      state.currentUser = null;
+  // ===== SIGN-IN (Supabase Auth + portal_users role mapping) =====
+  // Each login maps to a role and the company it belongs to via the portal_users table
+  // (see supabase/portal_users.sql). Roles are NOT read from user metadata, which users
+  // can edit themselves.
+  var AUTH_QS = new URLSearchParams(window.location.search);
+  var DEMO_MODE = AUTH_QS.get("demo") === "1";
+  var PUBLIC_APPLY = !DEMO_MODE && AUTH_QS.has("apply");
+  var AUTH_REQUIRED = !DEMO_MODE && !PUBLIC_APPLY;
+  var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", operator:"operator-overview" };
+  var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", operator:"Program Operator" };
+  state.account = null;
+
+  function setAuthLocked(locked){ document.documentElement.classList.toggle("auth-locked", !!locked); }
+  function showLoginPanel(which){
+    ["SignIn","NewPassword","NoAccount"].forEach(function(n){
+      var el = document.getElementById("loginPanel"+n); if (el) el.hidden = (n !== which);
+    });
+  }
+  function loginMsg(kind, text){
+    var err = document.getElementById("loginError"), info = document.getElementById("loginInfo");
+    err.hidden = !(kind === "error" && text); info.hidden = !(kind === "info" && text);
+    if (kind === "error") err.textContent = text || "";
+    if (kind === "info") info.textContent = text || "";
+  }
+  function friendlyAuthError(e){
+    var m = (e && e.message) || String(e);
+    if (/invalid login credentials/i.test(m)) return "That email and password don't match an account.";
+    if (/email not confirmed/i.test(m)) return "Please confirm your email address first -- check your inbox for the confirmation link.";
+    if (/failed to fetch|network/i.test(m)) return "Can't reach the sign-in service. Check your connection and try again.";
+    return m;
+  }
+  function accountInitials(name){ var i = initials(name || ""); return i || "?"; }
+
+  function updateAccountMenu(){
+    var btn = document.getElementById("accountBtn");
+    var nameEl = document.getElementById("accountName"), metaEl = document.getElementById("accountMeta");
+    var outBtn = document.getElementById("signOutBtn");
+    if (!btn) return;
+    if (state.account){
+      btn.textContent = accountInitials(state.account.name);
+      nameEl.textContent = state.account.name;
+      var org = state.account.entityName ? " · " + state.account.entityName : "";
+      metaEl.textContent = (ROLE_NAMES[state.account.role] || state.account.role) + org + " · " + state.account.email;
+      outBtn.textContent = "Sign out";
+    } else if (DEMO_MODE){
+      btn.textContent = "PP";
+      nameEl.textContent = "Demo mode";
+      metaEl.textContent = "Not signed in -- use the role switcher to walk through each workspace.";
+      outBtn.textContent = "Exit demo & sign in";
     }
-  });
+  }
+
+  function entityNameFor(role, id){
+    var e = role === "vendor" ? programById(id) : role === "partner" ? partnerById(id)
+      : role === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : null;
+    return e ? e.name : (role === "operator" ? "CloudWAV" : "");
+  }
+
+  function applyAccount(user, acct){
+    state.account = { id:user.id, email:user.email, role:acct.role, entityId:acct.entity_id || null,
+      name: acct.display_name || user.email, entityName: entityNameFor(acct.role, acct.entity_id) };
+    state.role = acct.role;
+    if (acct.role === "vendor" && acct.entity_id) state.myVendorId = acct.entity_id;
+    if (acct.role === "partner") state.myProfileId = acct.entity_id || null;
+    if (acct.role === "affiliate") state.myAffiliateId = acct.entity_id || null;
+    state.screen = HOME_SCREEN[acct.role];
+    setAuthLocked(false);
+    updateAccountMenu();
+    render();
+  }
+
+  var sessionUserId = null;
+  async function handleSession(session){
+    if (!session){
+      sessionUserId = null; state.account = null;
+      showLoginPanel("SignIn"); setAuthLocked(true); return;
+    }
+    if (sessionUserId === session.user.id && state.account) return; // token refresh / tab refocus
+    sessionUserId = session.user.id;
+    try {
+      var res = await supabase.from("portal_users").select("role, entity_id, display_name").eq("id", session.user.id).maybeSingle();
+      if (res.error) throw res.error;
+      if (!res.data || !HOME_SCREEN[res.data.role]){
+        document.getElementById("noAccountText").textContent = "You're signed in as " + session.user.email
+          + ", but this account hasn't been given a PartnerWAV role yet. Ask your CloudWAV program operator to set it up, then sign in again.";
+        showLoginPanel("NoAccount"); setAuthLocked(true); return;
+      }
+      applyAccount(session.user, res.data);
+    } catch(e){
+      sessionUserId = null;
+      console.error("Could not load portal account:", e);
+      showLoginPanel("SignIn"); setAuthLocked(true);
+      loginMsg("error", "Signed in, but couldn't load your PartnerWAV account: " + friendlyAuthError(e));
+    }
+  }
+
+  function initAuth(){
+    updateAccountMenu();
+    var form = document.getElementById("loginForm");
+    var submitBtn = document.getElementById("loginSubmit");
+
+    form.addEventListener("submit", async function(e){
+      e.preventDefault();
+      var email = document.getElementById("loginEmail").value.trim();
+      var password = document.getElementById("loginPassword").value;
+      if (!email || !password){ loginMsg("error", "Enter your email and password."); return; }
+      if (!supabase){ loginMsg("error", "Can't reach the sign-in service. Check your connection and reload the page."); return; }
+      loginMsg(null); submitBtn.disabled = true; submitBtn.textContent = "Signing in…";
+      try {
+        var r = await supabase.auth.signInWithPassword({ email: email, password: password });
+        if (r.error) throw r.error;
+        document.getElementById("loginPassword").value = "";
+        // onAuthStateChange(SIGNED_IN) loads the account and opens the workspace
+      } catch(err){
+        loginMsg("error", friendlyAuthError(err));
+      } finally {
+        submitBtn.disabled = false; submitBtn.textContent = "Sign in";
+      }
+    });
+
+    document.getElementById("forgotPasswordBtn").addEventListener("click", async function(){
+      var email = document.getElementById("loginEmail").value.trim();
+      if (!email){ loginMsg("error", "Enter your email above, then click \"Forgot password?\" again."); document.getElementById("loginEmail").focus(); return; }
+      if (!supabase){ loginMsg("error", "Can't reach the sign-in service. Check your connection and reload the page."); return; }
+      try {
+        var r = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+        if (r.error) throw r.error;
+        loginMsg("info", "If an account exists for " + email + ", a password reset link is on its way.");
+      } catch(err){ loginMsg("error", friendlyAuthError(err)); }
+    });
+
+    document.getElementById("newPasswordSubmit").addEventListener("click", async function(){
+      var pw = document.getElementById("newPassword").value;
+      var errEl = document.getElementById("newPasswordError");
+      if (!pw || pw.length < 8){ errEl.textContent = "Use at least 8 characters."; errEl.hidden = false; return; }
+      try {
+        var r = await supabase.auth.updateUser({ password: pw });
+        if (r.error) throw r.error;
+        errEl.hidden = true; document.getElementById("newPassword").value = "";
+        toast("Password updated");
+        var sess = await supabase.auth.getSession();
+        sessionUserId = null;
+        handleSession(sess.data && sess.data.session);
+      } catch(err){ errEl.textContent = friendlyAuthError(err); errEl.hidden = false; }
+    });
+
+    async function signOut(){
+      if (DEMO_MODE && !state.account){ window.location.href = window.location.pathname; return; }
+      try { if (supabase) await supabase.auth.signOut(); } catch(e){ console.warn("Sign out:", e); }
+      // Reload so no previous user's in-memory state lingers
+      window.location.replace(window.location.pathname);
+    }
+    document.getElementById("signOutBtn").addEventListener("click", signOut);
+    document.getElementById("noAccountSignOut").addEventListener("click", signOut);
+
+    var accountBtn = document.getElementById("accountBtn"), accountPop = document.getElementById("accountPop");
+    accountBtn.addEventListener("click", function(e){
+      e.stopPropagation();
+      accountPop.hidden = !accountPop.hidden;
+      accountBtn.setAttribute("aria-expanded", accountPop.hidden ? "false" : "true");
+    });
+    document.addEventListener("click", function(e){
+      if (!accountPop.hidden && !e.target.closest(".account-menu")){ accountPop.hidden = true; accountBtn.setAttribute("aria-expanded", "false"); }
+    });
+
+    if (!AUTH_REQUIRED) return;
+    setAuthLocked(true);
+    if (!supabase){
+      loginMsg("error", "Can't reach the sign-in service right now. Check your connection and reload the page.");
+      submitBtn.disabled = true;
+      return;
+    }
+    supabase.auth.onAuthStateChange(function(event, session){
+      if (event === "TOKEN_REFRESHED") return;
+      if (event === "PASSWORD_RECOVERY"){ setAuthLocked(true); showLoginPanel("NewPassword"); return; }
+      // Defer: Supabase recommends not awaiting other supabase calls inside this callback
+      setTimeout(function(){ handleSession(session); }, 0);
+    });
+  }
 
   // ===== SET UP REAL-TIME SUBSCRIPTIONS =====
   // Subscribe to partner applications changes (for operators)
@@ -7126,6 +7478,8 @@
     console.log('Deal approvals updated:', payload);
     render();
   });
+
+  initAuth(); // after the sign-in settings above are defined
 
   try {
     console.log("About to call render()");

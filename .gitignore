@@ -36,3 +36,5 @@ Thumbs.db
 SUPABASE_SETUP_GUIDE.md
 partnerwav_supabase_schema.sql
 __pycache__/
+tests/vendor/
+tests/*.png

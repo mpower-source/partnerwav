@@ -15,12 +15,12 @@ with sync_playwright() as p:
     vp.locator("[data-copy-product-link]").click(); pg.wait_for_timeout(300)
     ok(pg.evaluate("navigator.clipboard.readText()")==link,"Copy puts product link on clipboard")
     # Partner role: tiles show Apply / Demo, no referral link
-    role(pg,"partner"); nav(pg,"partner-directory") if pg.locator('[data-screen="partner-directory"]:visible').count() else None
-    pg.evaluate("void 0")
     b.close()
     # Visit the link
-    b,pg=open_page(p, "?"+link.split("?")[1])
+    b,pg=open_page(p, "?"+link.split("?")[1], demo=False)
     ok(visible_screen(pg)==["scr-public-partner-apply"],"Link opens application form")
+    ok(not pg.locator("#loginScreen").is_visible(),"Public applicants don't hit the sign-in wall")
+    ok(not pg.locator(".sidebar").is_visible() and not pg.locator("#accountBtn").is_visible(),"Portal navigation hidden from public applicants")
     ok(pg.locator("#appProduct").input_value()=="finsense-ai","Finsense AI pre-selected")
     ok("You're applying to resell: Finsense AI" in pg.locator("#scr-public-partner-apply").inner_text(),"Shows which product they're applying for")
     b.close()
