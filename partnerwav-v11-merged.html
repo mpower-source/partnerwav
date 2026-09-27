@@ -215,6 +215,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 .vp-product input,.vp-product textarea{ background:var(--surface); }
 .vp-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .cfg{ display:flex; flex-direction:column; gap:16px; max-width:1100px; }
+.msp-card{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+.msp-main{ flex:1 1 320px; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.msp-name{ font-weight:700; font-size:1rem; color:var(--ink); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.msp-meta{ font-size:.84rem; color:var(--ink-soft); overflow-wrap:anywhere; }
+.msp-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+.msp-side{ flex:0 1 230px; display:flex; flex-direction:column; gap:8px; min-width:200px; }
+.msp-side select, .msp-side textarea{ width:100%; box-sizing:border-box; padding:7px 9px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink); font:inherit; font-size:.84rem; }
+.msp-side textarea{ min-height:56px; resize:vertical; }
+.msp-side label{ font-size:.72rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); }
 .map-stats{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
 .map-stat{ padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); font-size:.82rem; color:var(--ink-soft); }
 .map-stat b{ font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:1rem; color:var(--ink); margin-right:4px; }
@@ -541,6 +550,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
       <button class="navlink" data-screen="partner-community"><span class="ic">👥</span>Community</button>
       <button class="navlink" data-screen="partner-network"><span class="ic">🤝</span>Partner Network</button>
+      <button class="navlink" data-screen="partner-collaboration-finder"><span class="ic">🎯</span>Partner Collaborations</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
@@ -581,6 +591,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="resource-approvals"><span class="ic">📚</span>Resource Approvals</button>
       <button class="navlink" data-screen="operator-marketing-approvals"><span class="ic">📢</span>Marketing Approvals</button>
       <button class="navlink" data-screen="operator-partner-map"><span class="ic">🗺️</span>Partner Discovery Map</button>
+      <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
     </nav>
 
     <div class="sidebar-foot">
@@ -1676,6 +1687,40 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="programConfigContent" style="margin-top:14px;"></div>
       </section>
 
+      <!-- ===== OPERATOR: MSP PROSPECTING (restored from 92ad796, extended) ===== -->
+      <section id="scr-operator-msp-prospects" hidden>
+        <div class="section-head"><h2>MSP Prospecting</h2><span class="hint">Thailand MSPs and VARs to approach about vendor partner programs</span></div>
+        <div style="height:12px"></div>
+        <div class="map-stats" id="mspStats"></div>
+        <div class="filter-row" style="flex-wrap:wrap;gap:10px;">
+          <input type="text" class="list-search" id="mspSearchInput" placeholder="Search by company, city or specialty…" style="flex:1;min-width:200px;">
+          <select class="filter" id="mspCountryFilter" aria-label="Location"><option value="">All locations</option></select>
+          <select class="filter" id="mspTypeFilter" aria-label="Type"><option value="">MSPs &amp; VARs</option><option value="MSP">MSPs</option><option value="VAR">VARs</option></select>
+          <select class="filter" id="mspStageFilter" aria-label="Outreach stage"><option value="">All stages</option></select>
+          <button class="btn secondary sm" id="mspResetFilter">Reset filters</button>
+          <button class="btn primary sm" data-msp-add>+ Add prospect</button>
+        </div>
+        <div style="height:12px"></div>
+        <div id="mspProspectsList" style="display:flex;flex-direction:column;gap:12px;"></div>
+      </section>
+
+      <!-- ===== PARTNER: COLLABORATION FINDER (restored from 92ad796) ===== -->
+      <section id="scr-partner-collaboration-finder" hidden>
+        <div class="section-head"><h2>Partner Collaborations</h2><span class="hint">Find partners for joint projects, meetups, and marketing</span></div>
+        <div class="filter-row" style="flex-wrap:wrap;gap:10px;">
+          <input type="text" class="list-search" id="collabSearchInput" placeholder="Search by title, description or region…" style="flex:1;min-width:200px;">
+          <select class="filter" id="collabTypeFilter" aria-label="Type">
+            <option value="">All types</option><option value="project">Projects</option><option value="meetup">Meetups</option><option value="joint-marketing">Joint marketing</option>
+          </select>
+          <select class="filter" id="collabRegionFilter" aria-label="Region">
+            <option value="">All regions</option><option value="apac">Asia Pacific</option><option value="europe">Europe</option><option value="americas">Americas</option><option value="meaf">Middle East &amp; Africa</option>
+          </select>
+          <button class="btn secondary sm" id="collabResetFilter">Reset filters</button>
+        </div>
+        <div style="height:12px"></div>
+        <div id="partnerCollaborationList" style="display:flex;flex-direction:column;gap:12px;"></div>
+      </section>
+
       <!-- ===== OPERATOR: MANAGE PROGRAMS ===== -->
       <section id="scr-operator-programs" hidden>
         <div class="section-head"><h2>Manage programs</h2><span class="hint">Every vendor program CloudWAV operates</span></div>
@@ -2496,6 +2541,26 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       createdDate:"3 weeks ago", createdBy:"Siam Digital MSP", archivedAt:null }
   ];
 
+  // MSP / VAR prospects for Thailand (Operator prospecting tool). The five records restored
+  // from commit 92ad796 are placeholder samples -- replace or add real companies with "+ Add prospect".
+  var MSP_STAGES = [["new","New"],["contacted","Contacted"],["interested","Interested"],["invited","Invited to program"],["onboarded","Onboarded"],["not-a-fit","Not a fit"]];
+  var mspProspects = [
+    { id:"msp-th-1", sample:true, type:"MSP", name:"Bangkok IT Services Co.", city:"Bangkok", country:"Thailand", address:"123 Rama IV Rd, Bangkok 10110", phone:"+66-2-XXX-XXXX", email:"sales@bangkokit.co.th", website:"www.bangkokit.co.th", employees:"50-100", specialties:"Enterprise IT, Cloud Services", stage:"new", notes:"" },
+    { id:"msp-th-2", sample:true, type:"MSP", name:"Chiang Mai Digital Solutions", city:"Chiang Mai", country:"Thailand", address:"456 Nimmanhaemin Rd, Chiang Mai 50100", phone:"+66-53-XXX-XXX", email:"info@cmdigi.co.th", website:"www.cmdigi.co.th", employees:"20-50", specialties:"SMB IT Support, Networking", stage:"new", notes:"" },
+    { id:"msp-th-3", sample:true, type:"MSP", name:"Phuket Tech Partners", city:"Phuket", country:"Thailand", address:"789 Patong Beach Rd, Phuket 83150", phone:"+66-76-XXX-XXX", email:"contact@phukettechpartners.th", website:"www.phukettechpartners.th", employees:"30-60", specialties:"Hospitality IT, POS Systems", stage:"new", notes:"" },
+    { id:"msp-th-4", sample:true, type:"MSP", name:"Rayong IT Consulting", city:"Rayong", country:"Thailand", address:"321 Sukhumvit Rd, Rayong 21000", phone:"+66-38-XXX-XXX", email:"sales@rayongit.co.th", website:"www.rayongit.co.th", employees:"15-40", specialties:"Manufacturing IT, Industrial IoT", stage:"new", notes:"" },
+    { id:"msp-th-5", sample:true, type:"MSP", name:"Ubon Ratchathani Tech Hub", city:"Ubon Ratchathani", country:"Thailand", address:"654 Chayangkul Rd, Ubon Ratchathani 34000", phone:"+66-45-XXX-XXX", email:"team@ubontech.co.th", website:"www.ubontech.co.th", employees:"10-30", specialties:"Retail IT, CCTV Systems", stage:"new", notes:"" }
+  ];
+
+  // Partner collaboration opportunities (restored from 92ad796; region codes added so the filter works)
+  var partnerCollaborations = [
+    { id:"collab-1", partnerId:"siam-digital", partnerName:"Siam Digital MSP", title:"Joint Healthcare Digitization Initiative", description:"Seeking partners for comprehensive healthcare provider IT modernization project in Thailand", type:"project", region:"Thailand", regionCode:"apac", compensation:"Revenue share 70/30", status:"open", postedDate:"2026-09-20", endDate:"2026-12-31" },
+    { id:"collab-2", partnerId:"gulf-coast", partnerName:"Gulf Coast VAR", title:"SMB Cloud Migration Meetup - Tampa Bay Area", description:"Monthly meetups for partners to discuss cloud migration strategies and best practices", type:"meetup", region:"USA", regionCode:"americas", compensation:"Networking opportunity", status:"open", postedDate:"2026-09-15", endDate:"2026-12-31" },
+    { id:"collab-3", partnerId:"portonics-eu", partnerName:"Portonics Europe Ltd", title:"Joint Go-to-Market Campaign - Enterprise AI", description:"Co-marketing campaign targeting enterprise segment in EU market", type:"joint-marketing", region:"Europe", regionCode:"europe", compensation:"Cost share 50/50", status:"open", postedDate:"2026-09-22", endDate:"2026-11-30" },
+    { id:"collab-4", partnerId:"aussie-partners", partnerName:"Aussie Partners Group", title:"Retail Transformation Project - Sydney", description:"Large retail chain modernization project seeking qualified implementation partners", type:"project", region:"Australia", regionCode:"apac", compensation:"Fixed project fees + bonus", status:"open", postedDate:"2026-09-18", endDate:"2026-10-31" },
+    { id:"collab-5", partnerId:"nordic-resellers", partnerName:"Nordic Resellers AS", title:"Nordics Partnership Summit 2026", description:"Annual conference for Nordic partners to collaborate and share success stories", type:"meetup", region:"Europe", regionCode:"europe", compensation:"Networking + potential deals", status:"open", postedDate:"2026-09-25", endDate:"2026-11-15" }
+  ];
+
   var partnerLocations = [
     { id:"siam-digital", name:"Siam Digital MSP", region:"apac", lat:13.7563, lng:100.5018, city:"Bangkok, Thailand", status:"active", program:"Intelsense AI", tier:"Gold" },
     { id:"gulf-coast-var", name:"Gulf Coast VAR", region:"americas", lat:27.9506, lng:-82.4647, city:"Tampa, USA", status:"active", program:"Cross Connect", tier:"Silver" },
@@ -2633,6 +2698,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "affiliate-manage":"My Affiliate Tool",
     "operator-program-config":"Configure Program",
     "operator-deal-review":"Review Deal",
+    "operator-msp-prospects":"MSP Prospecting",
+    "partner-collaboration-finder":"Partner Collaborations",
     "partner-deal-view":"Registered Deal",
     "affiliate-projects":"Partner Projects",
     "affiliate-project-view":"Project Details",
@@ -3139,6 +3206,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
 
     // ---- operator approvals + deal review; partner deals ----
+    renderMSPProspects();
+    renderPartnerCollaborations();
     renderOperatorApprovals();
     renderDealReview();
     renderPartnerDeals();
@@ -7573,6 +7642,33 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
 
+    if (e.target.closest("[data-msp-add]")){ showMspEditor(null); return; }
+    var mspEditBtn = e.target.closest("[data-msp-edit]");
+    if (mspEditBtn){ showMspEditor(mspEditBtn.getAttribute("data-msp-edit")); return; }
+    var mspInviteBtn = e.target.closest("[data-msp-invite]");
+    if (mspInviteBtn){ showMspInvite(mspInviteBtn.getAttribute("data-msp-invite")); return; }
+    if (e.target.id === "mspResetFilter"){
+      state.mspSearchQuery = ""; state.mspCountryFilter = ""; state.mspTypeFilter = ""; state.mspStageFilter = "";
+      renderMSPProspects(); return;
+    }
+    var expressInterestBtn = e.target.closest("[data-express-interest]");
+    if (expressInterestBtn){
+      var collabId = expressInterestBtn.getAttribute("data-collab-id");
+      if (!state.collabInterests) state.collabInterests = [];
+      if (state.collabInterests.indexOf(collabId) === -1){
+        state.collabInterests.push(collabId);
+        try { localStorage.setItem(COLLAB_KEY, JSON.stringify(state.collabInterests)); } catch(err){}
+        toast("Interest sent -- the posting partner will be notified");
+        renderPartnerCollaborations();
+      }
+      return;
+    }
+    if (e.target.id === "collabResetFilter"){
+      state.collabSearchQuery = ""; state.collabTypeFilter = ""; state.collabRegionFilter = "";
+      ["collabSearchInput","collabTypeFilter","collabRegionFilter"].forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ""; });
+      renderPartnerCollaborations(); return;
+    }
+
     var mapFocusBtn = e.target.closest("[data-map-focus]");
     if (mapFocusBtn){ focusMapPartner(mapFocusBtn.getAttribute("data-map-focus")); return; }
 
@@ -7958,6 +8054,191 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   var partnerMapCache = [];
 
+  // ===== MSP PROSPECTING (Operator) =====
+  var MSP_KEY = "partnerWAV_mspProspects", COLLAB_KEY = "partnerWAV_collabInterests";
+  function saveMspProspects(){ try { localStorage.setItem(MSP_KEY, JSON.stringify(mspProspects)); } catch(e){ console.log("Could not save prospects:", e); } }
+  function loadMspProspects(){
+    try {
+      var saved = JSON.parse(localStorage.getItem(MSP_KEY) || "null");
+      if (Array.isArray(saved)){ mspProspects.length = 0; saved.forEach(function(x){ mspProspects.push(x); }); }
+      var ci = JSON.parse(localStorage.getItem(COLLAB_KEY) || "null");
+      if (Array.isArray(ci)) state.collabInterests = ci;
+    } catch(e){ console.log("Could not load prospects:", e); }
+  }
+  function mspStageLabel(k){ for (var i=0;i<MSP_STAGES.length;i++) if (MSP_STAGES[i][0]===k) return MSP_STAGES[i][1]; return k; }
+  function mspById(id){ return mspProspects.filter(function(x){ return x.id === id; })[0] || null; }
+  function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e || ""); }
+  function webUrl(w){ return !w ? "" : (/^https?:\/\//i.test(w) ? w : "https://" + w); }
+
+  function renderMSPProspects(){
+    var container = document.getElementById("mspProspectsList");
+    if (!container) return;
+    var q = (state.mspSearchQuery || "").toLowerCase(), loc = state.mspCountryFilter || "", typ = state.mspTypeFilter || "", stg = state.mspStageFilter || "";
+
+    var locSel = document.getElementById("mspCountryFilter");
+    if (locSel){
+      var cities = mspProspects.map(function(x){ return x.city; }).filter(function(v,i,a){ return v && a.indexOf(v) === i; }).sort();
+      locSel.innerHTML = '<option value="">All locations</option>' + cities.map(function(c){ return '<option value="'+esc(c)+'"'+(c===loc?" selected":"")+'>'+esc(c)+'</option>'; }).join("");
+    }
+    var stSel = document.getElementById("mspStageFilter");
+    if (stSel && stSel.options.length <= 1){ stSel.innerHTML = '<option value="">All stages</option>' + MSP_STAGES.map(function(s2){ return '<option value="'+s2[0]+'">'+esc(s2[1])+'</option>'; }).join(""); }
+    if (stSel) stSel.value = stg;
+    var tySel = document.getElementById("mspTypeFilter"); if (tySel) tySel.value = typ;
+    var srch = document.getElementById("mspSearchInput"); if (srch && srch.value !== (state.mspSearchQuery || "")) srch.value = state.mspSearchQuery || "";
+
+    var stats = document.getElementById("mspStats");
+    if (stats){
+      var c = function(k){ return mspProspects.filter(function(x){ return x.stage === k; }).length; };
+      stats.innerHTML = '<div class="map-stat"><b>'+mspProspects.length+'</b>prospects</div>'
+        + '<div class="map-stat"><b>'+c("contacted")+'</b>contacted</div><div class="map-stat"><b>'+c("interested")+'</b>interested</div>'
+        + '<div class="map-stat"><b>'+c("invited")+'</b>invited</div><div class="map-stat"><b>'+c("onboarded")+'</b>onboarded</div>';
+    }
+
+    var filtered = mspProspects.filter(function(x){
+      var hay = (x.name + " " + x.city + " " + (x.specialties || "")).toLowerCase();
+      return (!q || hay.indexOf(q) > -1) && (!loc || x.city === loc) && (!typ || x.type === typ) && (!stg || x.stage === stg);
+    });
+    if (!filtered.length){ container.innerHTML = '<div class="empty">No MSPs or VARs match your search.</div>'; return; }
+
+    container.innerHTML = filtered.map(function(x){
+      var tags = (x.specialties || "").split(",").map(function(t){ return t.trim(); }).filter(Boolean).slice(0,4)
+        .map(function(t){ return '<span class="chip">'+esc(t)+'</span>'; }).join("");
+      var stageOpts = MSP_STAGES.map(function(s2){ return '<option value="'+s2[0]+'"'+(x.stage===s2[0]?" selected":"")+'>'+esc(s2[1])+'</option>'; }).join("");
+      var site = webUrl(x.website);
+      return '<div class="msp-card" data-msp-card="'+esc(x.id)+'">'
+        + '<div class="msp-main">'
+          + '<div class="msp-name">'+esc(x.name)+' <span class="badge neutral">'+esc(x.type || "MSP")+'</span>'
+            + (x.sample ? ' <span class="badge warn" title="Placeholder record -- not a verified company">Sample data</span>' : '') + '</div>'
+          + '<div class="msp-meta">'+esc([x.city, x.country].filter(Boolean).join(", "))+(x.employees ? ' · 👥 '+esc(x.employees)+' employees' : '')+'</div>'
+          + (x.address ? '<div class="msp-meta">📍 '+esc(x.address)+'</div>' : '')
+          + '<div class="msp-meta">'+(x.email ? '📧 '+esc(x.email) : '📧 <span style="color:var(--ink-faint)">no email yet</span>')+(x.phone ? ' · 📞 '+esc(x.phone) : '')+'</div>'
+          + (tags ? '<div class="msp-tags">'+tags+'</div>' : '')
+          + (x.lastInvite ? '<div class="field-note" style="margin-top:4px;">Invited to '+esc(x.lastInvite.program)+' · '+esc(x.lastInvite.date)+'</div>' : '')
+        + '</div>'
+        + '<div class="msp-side">'
+          + '<label for="mspStage-'+esc(x.id)+'">Outreach stage</label><select id="mspStage-'+esc(x.id)+'" data-msp-stage="'+esc(x.id)+'">'+stageOpts+'</select>'
+          + '<label for="mspNotes-'+esc(x.id)+'">Notes</label><textarea id="mspNotes-'+esc(x.id)+'" data-msp-notes="'+esc(x.id)+'" placeholder="Who you spoke to, next step…">'+esc(x.notes || "")+'</textarea>'
+          + '<button type="button" class="btn primary sm" data-msp-invite="'+esc(x.id)+'">Invite to a program</button>'
+          + (site ? '<a class="btn secondary sm" href="'+esc(site)+'" target="_blank" rel="noopener noreferrer" style="text-align:center;text-decoration:none;">Visit website</a>' : '')
+          + (x.sample ? '' : '<button type="button" class="btn ghost sm" data-msp-edit="'+esc(x.id)+'">Edit details</button>')
+        + '</div>'
+      + '</div>';
+    }).join("");
+  }
+
+  function showMspInvite(id){
+    var x = mspById(id); if (!x) return;
+    var progs = programs.filter(function(pg){ return pg.status !== "archived"; });
+    var opts = progs.map(function(pg){ return '<option value="'+esc(pg.id)+'">'+esc(pg.name)+'</option>'; }).join("");
+    var back = openModal(
+      '<div class="modal-head"><h2>Invite '+esc(x.name)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + (x.sample ? '<div class="login-msg bad" style="margin-top:0;">This is a <b>sample</b> record, not a verified company. Enter a real contact email before sending.</div>' : '')
+      + '<div class="field-row"><label for="mspInvProgram">Vendor program</label><select id="mspInvProgram">'+opts+'</select></div>'
+      + '<div class="field-row"><label for="mspInvEmail">Send to</label><input type="email" id="mspInvEmail" value="'+(x.sample ? '' : esc(x.email || "").replace(/"/g,"&quot;"))+'" placeholder="name@company.co.th"></div>'
+      + '<div class="field-row"><label for="mspInvSubject">Subject</label><input type="text" id="mspInvSubject"></div>'
+      + '<div class="field-row"><label for="mspInvBody">Message</label><textarea id="mspInvBody" rows="9"></textarea></div>'
+      + '<div id="mspInvError" class="login-msg bad" hidden></div>'
+      + '<div class="modal-actions"><button class="btn secondary" id="mspInvCopy">Copy message</button><button class="btn primary" id="mspInvSend">Open in email app</button></div>'
+    );
+    function fill(){
+      var pg = programById(back.querySelector("#mspInvProgram").value);
+      var base = window.location.hostname.indexOf("github.io") > -1 ? "https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html" : window.location.href.split("?")[0];
+      var link = base + "?apply=vendor&vendorId=" + encodeURIComponent(pg.id);
+      var tier = pg.tiers && pg.tiers[0] ? pg.tiers[0].tier + " commission: " + pg.tiers[0].rate : "";
+      back.querySelector("#mspInvSubject").value = pg.name + " partner program -- invitation for " + x.name;
+      back.querySelector("#mspInvBody").value = "Hi " + x.name + " team,\n\n"
+        + "I'm with CloudWAV, the program operator for " + pg.name + " in Thailand. " + (pg.desc || "") + "\n\n"
+        + "Given your work in " + (x.specialties || "IT services") + ", we think " + pg.name + " could be a good fit for your customers."
+        + (tier ? " " + tier + "." : "") + "\n\n"
+        + "You can apply here -- it takes a few minutes:\n" + link + "\n\n"
+        + "Happy to set up a short call to walk you through it.\n\n"
+        + (state.account ? state.account.name : "The CloudWAV team");
+      back.dataset.link = link; back.dataset.program = pg.name;
+    }
+    fill();
+    back.querySelector("#mspInvProgram").addEventListener("change", fill);
+    function markInvited(){
+      x.lastInvite = { program: back.dataset.program, date: nowStamp() };
+      if (["new","contacted","interested"].indexOf(x.stage) > -1) x.stage = "invited";
+      saveMspProspects(); renderMSPProspects();
+    }
+    back.querySelector("#mspInvCopy").addEventListener("click", function(){
+      copyText(back.querySelector("#mspInvSubject").value + "\n\n" + back.querySelector("#mspInvBody").value, "Invitation copied -- paste it into your email");
+      markInvited();
+    });
+    back.querySelector("#mspInvSend").addEventListener("click", function(){
+      var to = back.querySelector("#mspInvEmail").value.trim(), err = back.querySelector("#mspInvError");
+      if (!validEmail(to)){ err.textContent = "Enter a valid email address to send to."; err.hidden = false; return; }
+      var href = "mailto:" + encodeURIComponent(to) + "?subject=" + encodeURIComponent(back.querySelector("#mspInvSubject").value) + "&body=" + encodeURIComponent(back.querySelector("#mspInvBody").value);
+      if (x.sample === false || !x.sample){ if (!x.email) x.email = to; }
+      markInvited(); closeModal();
+      window.location.href = href;
+    });
+  }
+
+  function showMspEditor(id){
+    var x = id ? mspById(id) : null;
+    var v = function(k){ return x && x[k] ? esc(x[k]).replace(/"/g,"&quot;") : ""; };
+    var f = function(key, label, ph, type){ return '<div class="field-row"><label for="mspF_'+key+'">'+label+'</label><input type="'+(type||"text")+'" id="mspF_'+key+'" value="'+v(key)+'" placeholder="'+(ph||"")+'"></div>'; };
+    var back = openModal(
+      '<div class="modal-head"><h2>'+(x ? "Edit prospect" : "Add an MSP or VAR")+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + f("name","Company name *","e.g. Siam Cloud Services")
+      + '<div class="field-row"><label for="mspF_type">Type</label><select id="mspF_type"><option value="MSP"'+(x&&x.type==="VAR"?"":" selected")+'>MSP</option><option value="VAR"'+(x&&x.type==="VAR"?" selected":"")+'>VAR</option></select></div>'
+      + f("city","City *","e.g. Bangkok") + f("country","Country","Thailand")
+      + f("website","Website","https://…","url") + f("email","Contact email","sales@…","email") + f("phone","Phone","+66 …")
+      + f("employees","Employees","e.g. 20-50") + f("specialties","Specialties (comma-separated)","e.g. Cloud, Cybersecurity")
+      + f("address","Address","")
+      + '<div id="mspFError" class="login-msg bad" hidden></div>'
+      + '<div class="modal-actions"><button class="btn secondary" id="mspFCancel">Cancel</button><button class="btn primary" id="mspFSave">Save prospect</button></div>'
+    );
+    back.querySelector("#mspFCancel").addEventListener("click", closeModal);
+    back.querySelector("#mspFSave").addEventListener("click", function(){
+      var g = function(k){ return back.querySelector("#mspF_"+k).value.trim(); };
+      var err = back.querySelector("#mspFError"), problems = [];
+      if (!g("name")) problems.push("Company name is required.");
+      if (!g("city")) problems.push("City is required.");
+      if (g("email") && !validEmail(g("email"))) problems.push("Enter a valid email address.");
+      if (problems.length){ err.innerHTML = problems.map(esc).join("<br>"); err.hidden = false; return; }
+      var data = { name:g("name"), type:g("type"), city:g("city"), country:g("country") || "Thailand", website:g("website"), email:g("email"),
+        phone:g("phone"), employees:g("employees"), specialties:g("specialties"), address:g("address") };
+      if (x){ Object.assign(x, data); toast("Prospect updated"); }
+      else { mspProspects.unshift(Object.assign({ id:"msp-" + Date.now().toString(36), sample:false, stage:"new", notes:"" }, data)); toast("Added " + data.name); }
+      saveMspProspects(); closeModal(); renderMSPProspects();
+    });
+  }
+
+  // ===== PARTNER COLLABORATIONS (Partner) =====
+  function renderPartnerCollaborations(){
+    var container = document.getElementById("partnerCollaborationList");
+    if (!container) return;
+    var q = (state.collabSearchQuery || "").toLowerCase(), typ = state.collabTypeFilter || "", rg = state.collabRegionFilter || "";
+    var filtered = partnerCollaborations.filter(function(c){
+      var hay = (c.title + " " + c.description + " " + c.region).toLowerCase();
+      return (!q || hay.indexOf(q) > -1) && (!typ || c.type === typ) && (!rg || c.regionCode === rg);
+    });
+    if (!filtered.length){ container.innerHTML = '<div class="empty">No collaborations match your criteria.</div>'; return; }
+    var interests = state.collabInterests || [];
+    container.innerHTML = filtered.map(function(c){
+      var icon = c.type === "project" ? "🚀" : (c.type === "meetup" ? "👥" : "📢");
+      var label = c.type === "project" ? "Project" : (c.type === "meetup" ? "Meetup" : "Joint marketing");
+      var mine = c.partnerId === state.myProfileId, shown = interests.indexOf(c.id) > -1;
+      var who = c.partnerName || (partnerById(c.partnerId) || {}).name || c.partnerId;
+      return '<div class="msp-card">'
+        + '<div class="msp-main">'
+          + '<div class="msp-name"><span>'+icon+'</span>'+esc(c.title)+' <span class="badge accent">'+esc(label)+'</span></div>'
+          + '<div class="msp-meta">'+esc(c.description)+'</div>'
+          + '<div class="msp-meta">🌍 '+esc(c.region)+' · Posted by '+esc(who)+' · Open until '+esc(c.endDate)+'</div>'
+          + (c.compensation ? '<div class="msp-meta" style="color:var(--good);font-weight:600;">💰 '+esc(c.compensation)+'</div>' : '')
+        + '</div>'
+        + '<div class="msp-side" style="flex-basis:180px;min-width:160px;">'
+          + (mine ? '<span class="badge neutral" style="align-self:flex-start;">Your post</span>'
+            : shown ? '<button class="btn secondary sm" disabled>Interest sent ✓</button><button class="btn ghost sm" data-message-partner="'+esc(who)+'">Message '+esc(who.split(" ")[0])+'</button>'
+            : '<button class="btn primary sm" data-collab-id="'+esc(c.id)+'" data-express-interest="true">Express interest</button>')
+        + '</div>'
+      + '</div>';
+    }).join("");
+  }
+
   // ===== PARTNER DISCOVERY MAP (Leaflet, loaded on demand) =====
   var LEAFLET = {
     js:  { url:"https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js",  sri:"sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" },
@@ -8150,6 +8431,29 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeModal(); });
 
+  // MSP Prospecting + Partner Collaborations: search/filter inputs, stage + notes
+  document.addEventListener("input", function(e){
+    var id = e.target.id;
+    if (id === "mspSearchInput"){ state.mspSearchQuery = e.target.value; renderMSPProspects(); var el = document.getElementById("mspSearchInput"); if (el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
+    else if (id === "collabSearchInput"){ state.collabSearchQuery = e.target.value; renderPartnerCollaborations(); }
+  });
+  document.addEventListener("change", function(e){
+    var id = e.target.id;
+    if (id === "mspCountryFilter"){ state.mspCountryFilter = e.target.value; renderMSPProspects(); }
+    else if (id === "mspTypeFilter"){ state.mspTypeFilter = e.target.value; renderMSPProspects(); }
+    else if (id === "mspStageFilter"){ state.mspStageFilter = e.target.value; renderMSPProspects(); }
+    else if (id === "collabTypeFilter"){ state.collabTypeFilter = e.target.value; renderPartnerCollaborations(); }
+    else if (id === "collabRegionFilter"){ state.collabRegionFilter = e.target.value; renderPartnerCollaborations(); }
+    else if (e.target.hasAttribute && e.target.hasAttribute("data-msp-stage")){
+      var x = mspById(e.target.getAttribute("data-msp-stage"));
+      if (x){ x.stage = e.target.value; saveMspProspects(); toast(x.name + " → " + mspStageLabel(x.stage)); renderMSPProspects(); }
+    }
+    else if (e.target.hasAttribute && e.target.hasAttribute("data-msp-notes")){
+      var y = mspById(e.target.getAttribute("data-msp-notes"));
+      if (y){ y.notes = e.target.value; saveMspProspects(); toast("Notes saved"); }
+    }
+  });
+
   // Resource upload: read the chosen file so the operator can preview it
   document.addEventListener("change", function(e){
     if (e.target.id !== "resourceFileInput") return;
@@ -8207,6 +8511,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadVendorEdits();
   loadProgramTerms();
   loadDeals();
+  loadMspProspects();
 
   // ===== SIGN-IN (Supabase Auth + portal_users role mapping) =====
   // Each login maps to a role and the company it belongs to via the portal_users table
