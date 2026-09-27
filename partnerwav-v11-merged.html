@@ -2770,14 +2770,8 @@
   }
 
   function render(){
-    // Detect referral URL for public partner application
-    if (window.location.search.includes("apply=vendor")) {
-      var vendorId = new URLSearchParams(window.location.search).get("vendorId");
-      if (vendorId) {
-        state.screen = "public-partner-apply";
-        state.applyingForVendorId = vendorId;
-      }
-    }
+    // (Referral URLs are handled once at startup -- see "HANDLE URL PARAMETERS".
+    // Re-checking here on every render trapped visitors on the application form.)
 
     // nav visibility
     document.getElementById("navPartner").hidden = state.role !== "partner";
@@ -3343,7 +3337,7 @@
     var grid = document.getElementById("vendorNetworkGrid");
     if (!grid) return;
     var netFiltered = filteredPrograms();
-    var isLoggedInPartner = state.role === "partner" && state.myPartnerId;
+    var isLoggedInPartner = state.role === "partner" && state.myProfileId;
     grid.innerHTML = netFiltered.length ? netFiltered.map(function(p){
       var mine = state.role === "vendor" && p.id === state.myVendorId;
       var actionBtn = mine
@@ -3408,7 +3402,7 @@
     if (!p){ body.innerHTML = '<div class="empty">Pick a vendor from the Vendor Network to see their profile.</div>'; return; }
     var mine = state.role === "vendor" && p.id === state.myVendorId;
     var isOperator = state.role === "operator";
-    var isLoggedInPartner = state.role === "partner" && state.myPartnerId;
+    var isLoggedInPartner = state.role === "partner" && state.myProfileId;
     var tiersHtml = p.tiers.map(function(t){
       return '<div class="tier-line"><span>'+esc(t.tier)+' <span style="color:var(--ink-faint)">· '+esc(t.base)+'</span></span><b>'+esc(t.rate)+'</b></div>';
     }).join("");
@@ -3434,7 +3428,15 @@
 
         // Show referral link only to vendor viewing own profile or operators
         if (mine || isOperator) {
-          tileHtml += '<button class="btn primary xs" data-product-referral="'+esc(p.id)+'" data-product-id="'+esc(prod.product_id)+'" data-product-url="'+esc(productReferralUrl)+'">Get referral link →</button>';
+          var linkKey = p.id + "|" + prod.product_id;
+          if (state.revealedProductLinks && state.revealedProductLinks[linkKey]) {
+            tileHtml += '<div class="aff-section"><div class="aff-section-title">'+esc(prod.name)+' referral link</div>'
+              + '<div class="aff-link-row"><input type="text" class="aff-link-input" readonly value="'+esc(productReferralUrl)+'" aria-label="Referral link for '+esc(prod.name)+'">'
+              + '<button class="btn primary xs" data-copy-product-link="'+esc(productReferralUrl)+'">Copy</button></div>'
+              + '<span class="field-note">Opens the application form with '+esc(prod.name)+' pre-selected.</span></div>';
+          } else {
+            tileHtml += '<button class="btn primary xs" data-product-referral="'+esc(p.id)+'" data-product-id="'+esc(prod.product_id)+'" data-product-url="'+esc(productReferralUrl)+'">Get referral link →</button>';
+          }
         }
 
         // Show Apply and Demo buttons to logged-in partners
@@ -3561,12 +3563,18 @@
     // Product selection (if vendor has products)
     var productSelectionHtml = '';
     if (vendor.products && vendor.products.length > 0) {
+      var preselected = null;
+      vendor.products.forEach(function(prod){ if (prod.product_id === state.selectedProductId) preselected = prod; });
+      if (!preselected) state.selectedProductId = null;
       var productOptions = vendor.products.map(function(prod){
         var selected = state.selectedProductId && state.selectedProductId === prod.product_id ? ' selected' : '';
         return '<option value="'+esc(prod.product_id)+'"'+selected+'>'+esc(prod.name)+'</option>';
       }).join('');
 
-      productSelectionHtml = '<div>'
+      productSelectionHtml = (preselected
+          ? '<div style="padding:10px 14px;border-radius:10px;background:var(--accent-soft);font-size:.9rem;">You\'re applying to resell: <b>'+esc(preselected.name)+'</b></div>'
+          : '')
+        + '<div>'
         + '<label for="appProduct" style="display:block;font-weight:500;margin-bottom:6px;font-size:.9rem;">Product *</label>'
         + '<select id="appProduct" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;box-sizing:border-box;" required>'
         + '<option value="">Select a product...</option>'
@@ -6314,15 +6322,7 @@
           var baseUrl = window.location.href.split('?')[0];
           referralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(vendorNameId);
         }
-        if (navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(referralUrl).then(function(){
-            toast("Referral link copied to clipboard");
-          }).catch(function(){
-            toast("Could not copy to clipboard");
-          });
-        } else {
-          toast("Clipboard copy not supported in your browser");
-        }
+        copyText(referralUrl, "Referral link copied to clipboard");
       }
       return;
     }
@@ -6365,16 +6365,15 @@
 
     var productReferralBtn = e.target.closest("[data-product-referral]");
     if (productReferralBtn){
-      var productUrl = productReferralBtn.getAttribute("data-product-url");
-      if (navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(productUrl).then(function(){
-          toast("Product referral link copied to clipboard");
-        }).catch(function(){
-          toast("Could not copy to clipboard");
-        });
-      } else {
-        toast("Clipboard copy not supported in your browser");
-      }
+      state.revealedProductLinks = state.revealedProductLinks || {};
+      state.revealedProductLinks[productReferralBtn.getAttribute("data-product-referral") + "|" + productReferralBtn.getAttribute("data-product-id")] = true;
+      renderVendorProfile();
+      return;
+    }
+
+    var copyProductLinkBtn = e.target.closest("[data-copy-product-link]");
+    if (copyProductLinkBtn){
+      copyText(copyProductLinkBtn.getAttribute("data-copy-product-link"), "Product referral link copied to clipboard");
       return;
     }
 
