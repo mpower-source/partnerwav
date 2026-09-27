@@ -3,7 +3,7 @@
   // Sign-in required unless ?demo=1 (walk-through mode) or a public ?apply= referral link
   (function(){ var q = location.search;
     if (/[?&]demo=1(&|$)/.test(q)) document.documentElement.classList.add("demo-mode");
-    else if (/[?&]apply=/.test(q)) document.documentElement.classList.add("public-apply");
+    else if (/[?&](apply|lp)=/.test(q)) document.documentElement.classList.add("public-apply");
     else document.documentElement.classList.add("auth-locked");
   })();
 </script>
@@ -184,7 +184,7 @@
 #loginScreen{ display:none; }
 html.auth-locked .shell{ display:none; }
 html.auth-locked #loginScreen{ display:flex; }
-html.public-apply .sidebar, html.public-apply .topbar-right{ display:none; }
+html.public-apply .sidebar, html.public-apply .topbar-right, html.public-apply #topEyebrow{ display:none; }
 html:not(.demo-mode) .role-switch{ display:none; }
 .login-wrap{ min-height:100vh; align-items:center; justify-content:center; padding:24px 16px; background:var(--bg); box-sizing:border-box; }
 .login-card{ width:100%; max-width:380px; background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:28px 26px; box-sizing:border-box; }
@@ -215,6 +215,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 .vp-product input,.vp-product textarea{ background:var(--surface); }
 .vp-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .cfg{ display:flex; flex-direction:column; gap:16px; max-width:1100px; }
+.lp-editor{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:start; }
+@media (max-width:1000px){ .lp-editor{ grid-template-columns:1fr; } }
+.lp-page{ border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--surface); }
+.lp-hero{ padding:36px 28px; background:linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%); color:#fff; }
+.lp-hero .lp-eyebrow{ font-size:.76rem; letter-spacing:.08em; text-transform:uppercase; opacity:.85; }
+.lp-hero h1{ font-family:"Space Grotesk",sans-serif; font-size:1.7rem; line-height:1.2; margin:8px 0 10px; }
+.lp-hero p{ margin:0; font-size:1rem; line-height:1.55; opacity:.95; max-width:640px; }
+.lp-cta{ display:inline-block; margin-top:18px; padding:11px 20px; border-radius:10px; background:#fff; color:var(--accent-strong); font-weight:700; text-decoration:none; }
+.lp-body{ padding:24px 28px; display:flex; flex-direction:column; gap:14px; }
+.lp-body h2{ font-size:1rem; margin:0; font-family:"Space Grotesk",sans-serif; }
+.lp-features{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; list-style:none; padding:0; margin:0; }
+.lp-features li{ padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); font-size:.9rem; }
+.lp-foot{ padding:16px 28px; border-top:1px solid var(--line); font-size:.8rem; color:var(--ink-faint); }
+.lp-public-wrap{ max-width:880px; margin:24px auto; padding:0 16px; }
 .msp-card{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
 .msp-main{ flex:1 1 320px; min-width:0; display:flex; flex-direction:column; gap:4px; }
 .msp-name{ font-weight:700; font-size:1rem; color:var(--ink); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
@@ -592,6 +606,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="operator-marketing-approvals"><span class="ic">📢</span>Marketing Approvals</button>
       <button class="navlink" data-screen="operator-partner-map"><span class="ic">🗺️</span>Partner Discovery Map</button>
       <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
+      <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
+      <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
     </nav>
 
     <div class="sidebar-foot">
@@ -1737,6 +1753,46 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="mspProspectsList" style="display:flex;flex-direction:column;gap:12px;"></div>
       </section>
 
+      <!-- ===== OPERATOR: MSP ENGAGEMENT TRACKER (restored from cb26390, rebuilt) ===== -->
+      <section id="scr-operator-msp-engagements" hidden>
+        <div class="section-head"><h2>MSP Engagement Tracker</h2><span class="hint">Every outreach touch to MSPs and VARs, and where it led</span></div>
+        <div style="height:12px"></div>
+        <div class="map-stats" id="engStats"></div>
+        <div class="filter-row" style="flex-wrap:wrap;gap:10px;">
+          <select class="filter" id="engVendorFilter" aria-label="Vendor"><option value="">All vendors</option></select>
+          <select class="filter" id="engMethodFilter" aria-label="Contact method"><option value="">All methods</option></select>
+          <select class="filter" id="engOutcomeFilter" aria-label="Outcome"><option value="">All outcomes</option></select>
+          <button class="btn secondary sm" data-goto-screen="operator-msp-prospects" style="margin-left:auto;">Go to MSP Prospecting</button>
+        </div>
+        <div class="card">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>MSP / VAR</th><th>Vendor</th><th>Contact method</th><th>Date</th><th>Outcome</th><th>Notes</th></tr></thead>
+              <tbody id="engagementRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== OPERATOR: LANDING PAGES (restored from cb26390, rebuilt) ===== -->
+      <section id="scr-operator-landing-pages" hidden>
+        <div class="section-head"><h2>Landing Pages</h2><span class="hint">Public pages that introduce a vendor's program to MSPs and VARs</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <button class="btn primary sm" data-lp-new>+ Create landing page</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;" id="landingPagesList"></div>
+      </section>
+
+      <section id="scr-landing-page-editor" hidden>
+        <button class="btn ghost sm" data-goto-screen="operator-landing-pages">← Back to Landing Pages</button>
+        <div id="lpEditorContent" style="margin-top:14px;"></div>
+      </section>
+
+      <!-- ===== PUBLIC: LANDING PAGE (?lp=id, no sign-in) ===== -->
+      <section id="scr-public-landing" hidden>
+        <div id="publicLandingContent"></div>
+      </section>
+
       <!-- ===== PARTNER: COLLABORATION FINDER (restored from 92ad796) ===== -->
       <section id="scr-partner-collaboration-finder" hidden>
         <div class="section-head"><h2>Partner Collaborations</h2><span class="hint">Find partners for joint projects, meetups, and marketing</span></div>
@@ -2591,6 +2647,18 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"msp-th-5", sample:true, type:"MSP", name:"Ubon Ratchathani Tech Hub", city:"Ubon Ratchathani", country:"Thailand", address:"654 Chayangkul Rd, Ubon Ratchathani 34000", phone:"+66-45-XXX-XXX", email:"team@ubontech.co.th", website:"www.ubontech.co.th", employees:"10-30", specialties:"Retail IT, CCTV Systems", stage:"new", notes:"" }
   ];
 
+  // Outreach log (MSP Engagement Tracker). Filled from MSP Prospecting invites and "Log activity".
+  var ENG_METHODS = ["Email invitation","Phone call","Botnoi voice call","LINE message","Meeting","Event"];
+  var ENG_OUTCOMES = [["no-response","No response yet"],["responded","Responded"],["meeting","Meeting booked"],["applied","Applied to program"],["onboarded","Onboarded"],["not-interested","Not interested"]];
+  var mspEngagements = [];
+
+  // Vendor landing pages (restored from cb26390). Seeds start as drafts: their copy needs the vendor's sign-off.
+  var landingPages = [
+    { id:"lp-botnoi-enterprise", vendorId:"botnoi", title:"Botnoi Enterprise Voice AI - Partner Program", targetAudience:"MSPs and VARs serving contact centers", cta:"Apply to become a partner", ctaUrl:"", features:["Multi-language support","Real-time transcription","Custom voice training"], headline:"", body:"", status:"draft", vendorApproved:false, createdDate:"2026-09-27", publishedDate:null },
+    { id:"lp-unisense-reseller", vendorId:"unisense", title:"Unisense - Reseller Program", targetAudience:"Resellers, MSPs", cta:"Become a reseller", ctaUrl:"", features:["Competitive margins","Training support","Co-marketing"], headline:"", body:"", status:"draft", vendorApproved:false, createdDate:"2026-09-27", publishedDate:null },
+    { id:"lp-intelsense-demo", vendorId:"intelsense", title:"Intelsense AI - Partner Program", targetAudience:"MSPs and VARs in Thailand", cta:"Apply to become a partner", ctaUrl:"", features:["Conversational AI for support automation","Four products to resell","Partner training and co-marketing"], headline:"", body:"", status:"draft", vendorApproved:false, createdDate:"2026-09-20", publishedDate:null }
+  ];
+
   // Partner collaboration opportunities (restored from 92ad796; region codes added so the filter works)
   var partnerCollaborations = [
     { id:"collab-1", partnerId:"siam-digital", partnerName:"Siam Digital MSP", title:"Joint Healthcare Digitization Initiative", description:"Seeking partners for comprehensive healthcare provider IT modernization project in Thailand", type:"project", region:"Thailand", regionCode:"apac", compensation:"Revenue share 70/30", status:"open", postedDate:"2026-09-20", endDate:"2026-12-31" },
@@ -2689,6 +2757,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // ===== HANDLE URL PARAMETERS FOR DIRECT NAVIGATION =====
   var urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('lp')) { state.screen = "public-landing"; state.publicLpId = urlParams.get('lp'); }
   if (urlParams.has('apply') && urlParams.get('apply') === 'vendor') {
     var vendorId = urlParams.get('vendorId');
     var productId = urlParams.get('productId');
@@ -2739,6 +2808,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-deal-review":"Review Deal",
     "operator-incentive-review":"Review Incentive",
     "operator-msp-prospects":"MSP Prospecting",
+    "operator-msp-engagements":"MSP Engagement Tracker",
+    "operator-landing-pages":"Landing Pages",
+    "landing-page-editor":"Landing Page",
+    "public-landing":"",
     "partner-collaboration-finder":"Partner Collaborations",
     "partner-deal-view":"Registered Deal",
     "affiliate-projects":"Partner Projects",
@@ -3130,6 +3203,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     });
     document.getElementById("topEyebrow").textContent = roleLabel(state.role);
     document.getElementById("topTitle").textContent = titles[state.screen] || "";
+    var topbarEl = document.querySelector(".topbar"); if (topbarEl) topbarEl.hidden = state.screen === "public-landing";
 
     // ---- partner overview ----
     var banner = document.getElementById("profileBanner");
@@ -3248,6 +3322,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     // ---- operator approvals + deal review; partner deals ----
     renderMSPProspects();
+    renderEngagementTracker();
+    renderLandingPagesList();
+    renderLandingPageEditor();
+    renderPublicLanding();
     renderPartnerCollaborations();
     // Only Vendors and Partners submit resources; Operators review, Affiliates browse
     var canSubmitRes = state.role === "vendor" || state.role === "partner";
@@ -7852,6 +7930,33 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
 
     if (e.target.closest("[data-msp-add]")){ showMspEditor(null); return; }
+    var mspLogBtn = e.target.closest("[data-msp-log]");
+    if (mspLogBtn){ showLogActivity(mspLogBtn.getAttribute("data-msp-log")); return; }
+    if (e.target.closest("[data-lp-new]")){
+      state.lpDraft = { id:"lp-" + Date.now().toString(36), vendorId: (programs[0] || {}).id, title:"", targetAudience:"MSPs and VARs in Thailand", cta:"Apply to become a partner", ctaUrl:"", features:[], headline:"", body:"", status:"draft", vendorApproved:false, createdDate: nowStamp().slice(0,10), publishedDate:null };
+      state.screen = "landing-page-editor"; render(); return;
+    }
+    var lpEditBtn = e.target.closest("[data-lp-edit]");
+    if (lpEditBtn){ state.lpDraft = JSON.parse(JSON.stringify(lpById(lpEditBtn.getAttribute("data-lp-edit")))); state.screen = "landing-page-editor"; render(); return; }
+    if (e.target.closest("[data-lp-draft]")){
+      readLpForm(); var dc = lpDraftCopy(state.lpDraft); state.lpDraft.headline = dc.headline; state.lpDraft.body = dc.body;
+      renderLandingPageEditor(); toast("Draft copy added -- review and edit it"); return;
+    }
+    var lpSaveBtn = e.target.closest("[data-lp-save]");
+    if (lpSaveBtn){ saveLandingPage(lpSaveBtn.getAttribute("data-lp-save")); return; }
+    var lpCopyBtn = e.target.closest("[data-lp-copy]");
+    if (lpCopyBtn){ copyText(lpPublicUrl(lpById(lpCopyBtn.getAttribute("data-lp-copy"))), "Public link copied"); return; }
+    var lpUnpub = e.target.closest("[data-lp-unpublish]");
+    if (lpUnpub){ var lu = lpById(lpUnpub.getAttribute("data-lp-unpublish")); if (lu){ lu.status = "draft"; saveLandingPages(); toast("Unpublished -- the public link no longer works"); renderLandingPagesList(); } return; }
+    var lpDel = e.target.closest("[data-lp-delete]");
+    if (lpDel){
+      var ldId = lpDel.getAttribute("data-lp-delete");
+      if (confirm("Delete this landing page? Its public link will stop working.")){
+        var li = landingPages.findIndex(function(l){ return l.id === ldId; }); if (li >= 0) landingPages.splice(li, 1);
+        saveLandingPages(); toast("Landing page deleted"); renderLandingPagesList();
+      }
+      return;
+    }
     var mspEditBtn = e.target.closest("[data-msp-edit]");
     if (mspEditBtn){ showMspEditor(mspEditBtn.getAttribute("data-msp-edit")); return; }
     var mspInviteBtn = e.target.closest("[data-msp-invite]");
@@ -8325,6 +8430,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<label for="mspStage-'+esc(x.id)+'">Outreach stage</label><select id="mspStage-'+esc(x.id)+'" data-msp-stage="'+esc(x.id)+'">'+stageOpts+'</select>'
           + '<label for="mspNotes-'+esc(x.id)+'">Notes</label><textarea id="mspNotes-'+esc(x.id)+'" data-msp-notes="'+esc(x.id)+'" placeholder="Who you spoke to, next step…">'+esc(x.notes || "")+'</textarea>'
           + '<button type="button" class="btn primary sm" data-msp-invite="'+esc(x.id)+'">Invite to a program</button>'
+          + '<button type="button" class="btn secondary sm" data-msp-log="'+esc(x.id)+'">Log activity</button>'
           + (site ? '<a class="btn secondary sm" href="'+esc(site)+'" target="_blank" rel="noopener noreferrer" style="text-align:center;text-decoration:none;">Visit website</a>' : '')
           + (x.sample ? '' : '<button type="button" class="btn ghost sm" data-msp-edit="'+esc(x.id)+'">Edit details</button>')
         + '</div>'
@@ -8340,16 +8446,22 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       '<div class="modal-head"><h2>Invite '+esc(x.name)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
       + (x.sample ? '<div class="login-msg bad" style="margin-top:0;">This is a <b>sample</b> record, not a verified company. Enter a real contact email before sending.</div>' : '')
       + '<div class="field-row"><label for="mspInvProgram">Vendor program</label><select id="mspInvProgram">'+opts+'</select></div>'
+      + '<div class="field-row"><label for="mspInvLink">Link to include</label><select id="mspInvLink"></select></div>'
       + '<div class="field-row"><label for="mspInvEmail">Send to</label><input type="email" id="mspInvEmail" value="'+(x.sample ? '' : esc(x.email || "").replace(/"/g,"&quot;"))+'" placeholder="name@company.co.th"></div>'
       + '<div class="field-row"><label for="mspInvSubject">Subject</label><input type="text" id="mspInvSubject"></div>'
       + '<div class="field-row"><label for="mspInvBody">Message</label><textarea id="mspInvBody" rows="9"></textarea></div>'
       + '<div id="mspInvError" class="login-msg bad" hidden></div>'
       + '<div class="modal-actions"><button class="btn secondary" id="mspInvCopy">Copy message</button><button class="btn primary" id="mspInvSend">Open in email app</button></div>'
     );
+    function fillLinks(){
+      var pgId = back.querySelector("#mspInvProgram").value, sel = back.querySelector("#mspInvLink");
+      var pages = landingPages.filter(function(l){ return l.vendorId === pgId && l.status === "published"; });
+      sel.innerHTML = '<option value="">Partner application form</option>' + pages.map(function(l){ return '<option value="'+esc(l.id)+'">Landing page: '+esc(l.title)+'</option>'; }).join("");
+    }
     function fill(){
       var pg = programById(back.querySelector("#mspInvProgram").value);
-      var base = window.location.hostname.indexOf("github.io") > -1 ? "https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html" : window.location.href.split("?")[0];
-      var link = base + "?apply=vendor&vendorId=" + encodeURIComponent(pg.id);
+      var lpSel = back.querySelector("#mspInvLink").value, lpObj = lpSel ? lpById(lpSel) : null;
+      var link = lpObj ? lpPublicUrl(lpObj) : appBaseUrl() + "?apply=vendor&vendorId=" + encodeURIComponent(pg.id);
       var tier = pg.tiers && pg.tiers[0] ? pg.tiers[0].tier + " commission: " + pg.tiers[0].rate : "";
       back.querySelector("#mspInvSubject").value = pg.name + " partner program -- invitation for " + x.name;
       back.querySelector("#mspInvBody").value = "Hi " + x.name + " team,\n\n"
@@ -8361,10 +8473,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + (state.account ? state.account.name : "The CloudWAV team");
       back.dataset.link = link; back.dataset.program = pg.name;
     }
-    fill();
-    back.querySelector("#mspInvProgram").addEventListener("change", fill);
+    fillLinks(); fill();
+    back.querySelector("#mspInvProgram").addEventListener("change", function(){ fillLinks(); fill(); });
+    back.querySelector("#mspInvLink").addEventListener("change", fill);
     function markInvited(){
       x.lastInvite = { program: back.dataset.program, date: nowStamp() };
+      logEngagement(x, "Email invitation", back.querySelector("#mspInvProgram").value, "no-response", "Invitation to " + back.dataset.program + (back.querySelector("#mspInvLink").value ? " (landing page)" : ""));
       if (["new","contacted","interested"].indexOf(x.stage) > -1) x.stage = "invited";
       saveMspProspects(); renderMSPProspects();
     }
@@ -8411,6 +8525,201 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       else { mspProspects.unshift(Object.assign({ id:"msp-" + Date.now().toString(36), sample:false, stage:"new", notes:"" }, data)); toast("Added " + data.name); }
       saveMspProspects(); closeModal(); renderMSPProspects();
     });
+  }
+
+  // ===== MSP ENGAGEMENT TRACKER =====
+  var ENG_KEY = "partnerWAV_mspEngagements", LP_KEY = "partnerWAV_landingPages";
+  function saveEngagements(){ try { localStorage.setItem(ENG_KEY, JSON.stringify(mspEngagements)); } catch(e){ console.log("Could not save engagements:", e); } }
+  function saveLandingPages(){ try { localStorage.setItem(LP_KEY, JSON.stringify(landingPages)); } catch(e){ console.log("Could not save landing pages:", e); } }
+  function loadEngagementsAndPages(){
+    try {
+      var e1 = JSON.parse(localStorage.getItem(ENG_KEY) || "null"); if (Array.isArray(e1)){ mspEngagements.length = 0; e1.forEach(function(x){ mspEngagements.push(x); }); }
+      var l1 = JSON.parse(localStorage.getItem(LP_KEY) || "null"); if (Array.isArray(l1)){ landingPages.length = 0; l1.forEach(function(x){ landingPages.push(x); }); }
+    } catch(e){ console.log("Could not load engagements/pages:", e); }
+  }
+  function outcomeLabel(k){ for (var i=0;i<ENG_OUTCOMES.length;i++) if (ENG_OUTCOMES[i][0]===k) return ENG_OUTCOMES[i][1]; return k; }
+  var OUTCOME_TO_STAGE = { "responded":"interested", "meeting":"interested", "applied":"invited", "onboarded":"onboarded", "not-interested":"not-a-fit" };
+  var STAGE_ORDER = ["new","contacted","interested","invited","onboarded"];
+  function advanceStage(x, stage){
+    if (!stage) return;
+    if (stage === "not-a-fit" || stage === "onboarded"){ x.stage = stage; return; }
+    if (STAGE_ORDER.indexOf(stage) > STAGE_ORDER.indexOf(x.stage)) x.stage = stage;
+  }
+  function logEngagement(x, method, vendorId, outcome, notes, date){
+    var v = programById(vendorId);
+    mspEngagements.unshift({ id:"eng-" + Date.now().toString(36) + Math.random().toString(36).slice(2,5), mspId:x.id, mspName:x.name,
+      vendorId:vendorId || "", vendorName: v ? v.name : "", contactMethod:method, contactDate: date || nowStamp().slice(0,10),
+      outcome: outcome || "no-response", notes: notes || "", loggedBy: state.account ? state.account.name : "Program Operator" });
+    if (x.stage === "new") x.stage = "contacted";
+    advanceStage(x, OUTCOME_TO_STAGE[outcome]);
+    saveEngagements(); saveMspProspects();
+  }
+
+  function renderEngagementTracker(){
+    var rows = document.getElementById("engagementRows"); if (!rows) return;
+    var vf = state.engVendorFilter || "", mf = state.engMethodFilter || "", of = state.engOutcomeFilter || "";
+    var vSel = document.getElementById("engVendorFilter");
+    if (vSel){
+      var vendors = mspEngagements.map(function(e){ return e.vendorName; }).filter(function(v,i,a){ return v && a.indexOf(v) === i; }).sort();
+      vSel.innerHTML = '<option value="">All vendors</option>' + vendors.map(function(v){ return '<option'+(v===vf?" selected":"")+'>'+esc(v)+'</option>'; }).join("");
+    }
+    var mSel = document.getElementById("engMethodFilter");
+    if (mSel && mSel.options.length <= 1) mSel.innerHTML = '<option value="">All methods</option>' + ENG_METHODS.map(function(m){ return '<option>'+esc(m)+'</option>'; }).join("");
+    if (mSel) mSel.value = mf;
+    var oSel = document.getElementById("engOutcomeFilter");
+    if (oSel && oSel.options.length <= 1) oSel.innerHTML = '<option value="">All outcomes</option>' + ENG_OUTCOMES.map(function(o){ return '<option value="'+o[0]+'">'+esc(o[1])+'</option>'; }).join("");
+    if (oSel) oSel.value = of;
+
+    // funnel by MSP (best outcome reached)
+    var rank = { "no-response":0, "not-interested":0, "responded":1, "meeting":2, "applied":3, "onboarded":4 };
+    var best = {};
+    mspEngagements.forEach(function(e){ best[e.mspId] = Math.max(best[e.mspId] || 0, rank[e.outcome] || 0); });
+    var ids = Object.keys(best), reached = function(n){ return ids.filter(function(k){ return best[k] >= n; }).length; };
+    var contacted = ids.length, pct = function(n){ return contacted ? Math.round(n * 100 / contacted) + "%" : "--"; };
+    var stats = document.getElementById("engStats");
+    if (stats) stats.innerHTML = '<div class="map-stat"><b>'+mspEngagements.length+'</b>touches</div>'
+      + '<div class="map-stat"><b>'+contacted+'</b>MSPs/VARs contacted</div>'
+      + '<div class="map-stat"><b>'+reached(1)+'</b>responded ('+pct(reached(1))+')</div>'
+      + '<div class="map-stat"><b>'+reached(2)+'</b>meetings</div>'
+      + '<div class="map-stat"><b>'+reached(3)+'</b>applied</div>'
+      + '<div class="map-stat"><b>'+reached(4)+'</b>onboarded ('+pct(reached(4))+')</div>';
+
+    var list = mspEngagements.filter(function(e){ return (!vf || e.vendorName === vf) && (!mf || e.contactMethod === mf) && (!of || e.outcome === of); });
+    rows.innerHTML = list.length ? list.map(function(e){
+      var opts = ENG_OUTCOMES.map(function(o){ return '<option value="'+o[0]+'"'+(e.outcome===o[0]?" selected":"")+'>'+esc(o[1])+'</option>'; }).join("");
+      return '<tr><td>'+esc(e.mspName)+'</td><td>'+esc(e.vendorName || "--")+'</td><td>'+esc(e.contactMethod)+'</td><td class="mono-num">'+esc(e.contactDate)+'</td>'
+        + '<td><select class="filter" data-eng-outcome="'+esc(e.id)+'" aria-label="Outcome for '+esc(e.mspName)+'">'+opts+'</select></td>'
+        + '<td style="font-size:.84rem;max-width:280px;">'+esc(e.notes || "")+'</td></tr>';
+    }).join("") : '<tr><td colspan="6"><div class="empty">'+(mspEngagements.length ? "No activity matches these filters." : "No outreach logged yet -- invite or log activity from MSP Prospecting.")+'</div></td></tr>';
+  }
+
+  function showLogActivity(mspId){
+    var x = mspById(mspId); if (!x) return;
+    var progs = programs.filter(function(pg){ return pg.status !== "archived"; });
+    var back = openModal(
+      '<div class="modal-head"><h2>Log activity -- '+esc(x.name)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="field-row"><label for="engMethod">Contact method</label><select id="engMethod">'+ENG_METHODS.map(function(m){ return '<option>'+esc(m)+'</option>'; }).join("")+'</select></div>'
+      + '<div class="field-row"><label for="engVendor">About which vendor program</label><select id="engVendor"><option value="">General / not program-specific</option>'+progs.map(function(pg){ return '<option value="'+esc(pg.id)+'">'+esc(pg.name)+'</option>'; }).join("")+'</select></div>'
+      + '<div class="field-row"><label for="engDate">Date</label><input type="date" id="engDate" value="'+nowStamp().slice(0,10)+'"></div>'
+      + '<div class="field-row"><label for="engOutcome">Outcome</label><select id="engOutcome">'+ENG_OUTCOMES.map(function(o){ return '<option value="'+o[0]+'">'+esc(o[1])+'</option>'; }).join("")+'</select></div>'
+      + '<div class="field-row"><label for="engNotes">Notes</label><textarea id="engNotes" rows="3" placeholder="Who you spoke to, what they said, next step"></textarea></div>'
+      + '<div class="modal-actions"><button class="btn secondary" id="engCancel">Cancel</button><button class="btn primary" id="engSave">Save activity</button></div>'
+    );
+    back.querySelector("#engCancel").addEventListener("click", closeModal);
+    back.querySelector("#engSave").addEventListener("click", function(){
+      logEngagement(x, back.querySelector("#engMethod").value, back.querySelector("#engVendor").value, back.querySelector("#engOutcome").value,
+        back.querySelector("#engNotes").value.trim(), back.querySelector("#engDate").value);
+      toast("Activity logged for " + x.name); closeModal(); renderMSPProspects(); renderEngagementTracker();
+    });
+  }
+
+  // ===== LANDING PAGES =====
+  function lpById(id){ return landingPages.filter(function(l){ return l.id === id; })[0] || null; }
+  function appBaseUrl(){ return window.location.hostname.indexOf("github.io") > -1 ? "https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html" : window.location.href.split("?")[0]; }
+  function lpPublicUrl(lp){ return appBaseUrl() + "?lp=" + encodeURIComponent(lp.id); }
+  function lpCtaUrl(lp){ return lp.ctaUrl && /^https?:\/\//i.test(lp.ctaUrl) ? lp.ctaUrl : appBaseUrl() + "?apply=vendor&vendorId=" + encodeURIComponent(lp.vendorId); }
+  function lpDraftCopy(lp){
+    var v = programById(lp.vendorId) || { name: lp.vendorId, desc: "" };
+    var tier = v.tiers && v.tiers[0] ? v.tiers[0] : null;
+    return {
+      headline: lp.targetAudience ? v.name + " for " + lp.targetAudience : "Add " + v.name + " to what you sell",
+      body: (v.desc ? v.desc + " " : "") + "CloudWAV runs the " + v.name + " partner program: we handle onboarding, training and deal registration so you can start selling quickly."
+        + (tier ? " " + tier.tier + " partners earn " + tier.rate + " (" + (tier.base || "net revenue").toLowerCase() + ")." : "")
+    };
+  }
+  function lpPageHtml(lp, preview){
+    var v = programById(lp.vendorId) || { name: lp.vendorId };
+    var d = (!lp.headline || !lp.body) ? lpDraftCopy(lp) : {};
+    var headline = lp.headline || d.headline, body = lp.body || d.body;
+    var feats = (lp.features || []).filter(Boolean);
+    return '<div class="lp-page">'
+      + '<div class="lp-hero"><div class="lp-eyebrow">'+esc(v.name)+' partner program · operated by CloudWAV</div>'
+        + '<h1>'+esc(headline)+'</h1><p>'+esc(body)+'</p>'
+        + '<a class="lp-cta" href="'+esc(preview ? "#" : lpCtaUrl(lp))+'"'+(preview ? ' onclick="return false;" aria-disabled="true"' : '')+'>'+esc(lp.cta || "Apply to become a partner")+'</a></div>'
+      + (feats.length ? '<div class="lp-body"><h2>Why partners choose '+esc(v.name)+'</h2><ul class="lp-features">'+feats.map(function(f){ return '<li>'+esc(f)+'</li>'; }).join("")+'</ul></div>' : '')
+      + '<div class="lp-foot">PartnerWAV · CloudWAV Consulting'+(lp.targetAudience ? ' · For '+esc(lp.targetAudience) : '')+'</div>'
+    + '</div>';
+  }
+
+  function renderLandingPagesList(){
+    var box = document.getElementById("landingPagesList"); if (!box) return;
+    box.innerHTML = landingPages.length ? landingPages.map(function(lp){
+      var v = programById(lp.vendorId);
+      var badge = lp.status === "published" ? '<span class="badge good">Published</span>' : '<span class="badge warn">Draft</span>';
+      return '<div class="msp-card">'
+        + '<div class="msp-main"><div class="msp-name">'+esc(lp.title)+' '+badge+'</div>'
+          + '<div class="msp-meta">'+esc(v ? v.name : lp.vendorId)+' · For '+esc(lp.targetAudience || "--")+'</div>'
+          + (lp.status === "published" ? '<div class="msp-meta" style="overflow-wrap:anywhere;">🔗 '+esc(lpPublicUrl(lp))+'</div>' : '<div class="msp-meta">'+(lp.vendorApproved ? "Vendor has approved the copy" : "Waiting on the vendor's sign-off on the copy")+'</div>')
+        + '</div>'
+        + '<div class="msp-side" style="flex-basis:180px;min-width:160px;">'
+          + '<button type="button" class="btn primary sm" data-lp-edit="'+esc(lp.id)+'">Edit</button>'
+          + (lp.status === "published"
+              ? '<button type="button" class="btn secondary sm" data-lp-copy="'+esc(lp.id)+'">Copy public link</button><a class="btn secondary sm" style="text-align:center;text-decoration:none;" href="'+esc(lpPublicUrl(lp))+'" target="_blank" rel="noopener">Open page</a>'
+                + '<button type="button" class="btn ghost sm" data-lp-unpublish="'+esc(lp.id)+'">Unpublish</button>'
+              : '')
+          + '<button type="button" class="btn ghost sm" data-lp-delete="'+esc(lp.id)+'">Delete</button>'
+        + '</div></div>';
+    }).join("") : '<div class="empty">No landing pages yet.</div>';
+  }
+
+  function renderLandingPageEditor(){
+    var box = document.getElementById("lpEditorContent");
+    if (!box || state.screen !== "landing-page-editor") return;
+    var d = state.lpDraft; if (!d){ box.innerHTML = '<div class="empty">Pick a landing page.</div>'; return; }
+    var progs = programs.filter(function(pg){ return pg.status !== "archived"; });
+    var f = function(id, label, val, ph){ return '<div><label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" value="'+esc(val || "").replace(/"/g,"&quot;")+'" placeholder="'+(ph||"")+'"></div>'; };
+    box.innerHTML = '<div class="lp-editor">'
+      + '<form class="card card-pad vp-form" id="lpForm" novalidate>'
+        + '<h2 style="font-size:1.1rem;margin:0;">'+(landingPages.some(function(l){ return l.id === d.id; }) ? "Edit landing page" : "Create landing page")+'</h2>'
+        + '<div><label for="lpVendor">Vendor program *</label><select id="lpVendor">'+progs.map(function(pg){ return '<option value="'+esc(pg.id)+'"'+(pg.id===d.vendorId?" selected":"")+'>'+esc(pg.name)+'</option>'; }).join("")+'</select></div>'
+        + f("lpTitle","Page title (internal) *",d.title,"e.g. Botnoi Voice -- Thailand MSP program")
+        + f("lpAudience","Who it's for",d.targetAudience,"e.g. MSPs and VARs in Thailand")
+        + f("lpFeatures","Key points (comma-separated)",(d.features || []).join(", "),"e.g. 20% first-year commission, Thai-language support")
+        + '<div><button type="button" class="btn secondary sm" data-lp-draft>Draft copy from vendor details</button> <span class="field-note">Fills the headline and text below from the vendor\'s profile and commission terms. Edit before publishing.</span></div>'
+        + f("lpHeadline","Headline",d.headline,"")
+        + '<div><label for="lpBody">Main text</label><textarea id="lpBody" rows="5">'+esc(d.body || "")+'</textarea></div>'
+        + f("lpCta","Button text",d.cta,"Apply to become a partner")
+        + f("lpCtaUrl","Button link (leave blank for the vendor's partner application)",d.ctaUrl,"https://…")
+        + '<label class="cfg-check"><input type="checkbox" id="lpVendorApproved"'+(d.vendorApproved?" checked":"")+'> The vendor has reviewed and approved this copy</label>'
+        + '<div id="lpError" class="login-msg bad" role="alert" hidden></div>'
+        + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-lp-save="draft">Save draft</button><button type="button" class="btn primary sm" data-lp-save="publish">'+(d.status === "published" ? "Save & keep published" : "Publish")+'</button></div>'
+      + '</form>'
+      + '<div><div class="aff-section-title" style="margin-bottom:8px;">Preview</div><div id="lpPreview">'+lpPageHtml(d, true)+'</div></div>'
+    + '</div>';
+  }
+  function readLpForm(){
+    var d = state.lpDraft; if (!d || !document.getElementById("lpForm")) return;
+    var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    d.vendorId = g("lpVendor"); d.title = g("lpTitle"); d.targetAudience = g("lpAudience");
+    d.features = g("lpFeatures").split(",").map(function(x){ return x.trim(); }).filter(Boolean);
+    d.headline = g("lpHeadline"); d.body = g("lpBody"); d.cta = g("lpCta"); d.ctaUrl = g("lpCtaUrl");
+    d.vendorApproved = !!(document.getElementById("lpVendorApproved") || {}).checked;
+  }
+  function saveLandingPage(mode){
+    readLpForm();
+    var d = state.lpDraft, err = document.getElementById("lpError"), problems = [];
+    if (!d.title) problems.push("Give the page a title.");
+    if (d.ctaUrl && !/^https?:\/\/\S+\.\S+/i.test(d.ctaUrl)) problems.push("Button link must be a full web address (https://…), or leave it blank.");
+    if (mode === "publish"){
+      if (!d.headline || !d.body) problems.push("Add a headline and main text before publishing (use Draft copy, then edit).");
+      if (!d.vendorApproved) problems.push("Tick that the vendor has approved the copy -- published pages speak for the vendor publicly.");
+    }
+    if (problems.length){ err.innerHTML = problems.map(esc).join("<br>"); err.hidden = false; return; }
+    if (mode === "publish"){ d.status = "published"; d.publishedDate = d.publishedDate || nowStamp().slice(0,10); }
+    var i = landingPages.findIndex(function(l){ return l.id === d.id; });
+    if (i >= 0) landingPages[i] = JSON.parse(JSON.stringify(d)); else landingPages.unshift(JSON.parse(JSON.stringify(d)));
+    saveLandingPages();
+    toast(mode === "publish" ? "Published -- copy the public link from Landing Pages" : "Draft saved");
+    state.lpDraft = null; state.screen = "operator-landing-pages"; render();
+  }
+
+  function renderPublicLanding(){
+    var box = document.getElementById("publicLandingContent");
+    if (!box || state.screen !== "public-landing") return;
+    var lp = lpById(state.publicLpId);
+    box.innerHTML = '<div class="lp-public-wrap">' + (lp && lp.status === "published" ? lpPageHtml(lp, false)
+      : '<div class="empty" style="padding:40px;text-align:center;">This page isn\'t available. It may have been unpublished.</div>') + '</div>';
+    if (lp) document.title = lp.title + " · PartnerWAV";
   }
 
   // ===== PARTNER COLLABORATIONS (Partner) =====
@@ -8637,6 +8946,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeModal(); });
 
+  // Landing page editor: live preview
+  document.addEventListener("input", function(e){
+    if (e.target.closest && e.target.closest("#lpForm")){ readLpForm(); var pv = document.getElementById("lpPreview"); if (pv) pv.innerHTML = lpPageHtml(state.lpDraft, true); }
+  });
+  document.addEventListener("change", function(e){
+    if (e.target.closest && e.target.closest("#lpForm")){ readLpForm(); var pv = document.getElementById("lpPreview"); if (pv) pv.innerHTML = lpPageHtml(state.lpDraft, true); }
+  });
+
   // MSP Prospecting + Partner Collaborations: search/filter inputs, stage + notes
   document.addEventListener("input", function(e){
     var id = e.target.id;
@@ -8648,6 +8965,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (id === "mspCountryFilter"){ state.mspCountryFilter = e.target.value; renderMSPProspects(); }
     else if (id === "mspTypeFilter"){ state.mspTypeFilter = e.target.value; renderMSPProspects(); }
     else if (id === "mspStageFilter"){ state.mspStageFilter = e.target.value; renderMSPProspects(); }
+    else if (id === "engVendorFilter"){ state.engVendorFilter = e.target.value; renderEngagementTracker(); }
+    else if (id === "engMethodFilter"){ state.engMethodFilter = e.target.value; renderEngagementTracker(); }
+    else if (id === "engOutcomeFilter"){ state.engOutcomeFilter = e.target.value; renderEngagementTracker(); }
+    else if (e.target.hasAttribute && e.target.hasAttribute("data-eng-outcome")){
+      var en = mspEngagements.filter(function(q){ return q.id === e.target.getAttribute("data-eng-outcome"); })[0];
+      if (en){ en.outcome = e.target.value; var mx = mspById(en.mspId); if (mx) advanceStage(mx, OUTCOME_TO_STAGE[en.outcome]); saveEngagements(); saveMspProspects(); toast(en.mspName + ": " + outcomeLabel(en.outcome)); renderEngagementTracker(); }
+    }
     else if (id === "collabTypeFilter"){ state.collabTypeFilter = e.target.value; renderPartnerCollaborations(); }
     else if (id === "collabRegionFilter"){ state.collabRegionFilter = e.target.value; renderPartnerCollaborations(); }
     else if (e.target.hasAttribute && e.target.hasAttribute("data-msp-stage")){
@@ -8721,6 +9045,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadDeals();
   loadMspProspects();
   loadIncentives();
+  loadEngagementsAndPages();
 
   // ===== SIGN-IN (Supabase Auth + portal_users role mapping) =====
   // Each login maps to a role and the company it belongs to via the portal_users table
@@ -8728,7 +9053,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // can edit themselves.
   var AUTH_QS = new URLSearchParams(window.location.search);
   var DEMO_MODE = AUTH_QS.get("demo") === "1";
-  var PUBLIC_APPLY = !DEMO_MODE && AUTH_QS.has("apply");
+  var PUBLIC_APPLY = !DEMO_MODE && (AUTH_QS.has("apply") || AUTH_QS.has("lp"));
   var AUTH_REQUIRED = !DEMO_MODE && !PUBLIC_APPLY;
   var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", operator:"operator-overview" };
   var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", operator:"Program Operator" };
