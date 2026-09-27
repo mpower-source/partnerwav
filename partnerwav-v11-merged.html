@@ -215,6 +215,38 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 .vp-product input,.vp-product textarea{ background:var(--surface); }
 .vp-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .cfg{ display:flex; flex-direction:column; gap:16px; max-width:1100px; }
+.map-stats{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.map-stat{ padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); font-size:.82rem; color:var(--ink-soft); }
+.map-stat b{ font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:1rem; color:var(--ink); margin-right:4px; }
+.map-layout{ display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:16px; }
+.map-wrap{ position:relative; min-width:0; }
+#partnerMapContainer{ height:calc(100vh - 250px); min-height:420px; border-radius:12px; border:1px solid var(--line); overflow:hidden; background:var(--surface-2); z-index:0; }
+.map-legend{ position:absolute; left:10px; bottom:10px; z-index:500; display:flex; gap:12px; padding:6px 10px; border-radius:8px; background:var(--surface); border:1px solid var(--line); font-size:.76rem; color:var(--ink-soft); }
+.map-legend span{ display:flex; align-items:center; gap:5px; }
+.dot{ display:inline-block; width:10px; height:10px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.2); }
+.dot.active{ background:#1f9d55; } .dot.approved{ background:#5b3df5; } .dot.pending{ background:#d98c00; }
+.map-side{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+.map-filter{ display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.map-filter label{ font-size:.72rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); margin-top:4px; }
+.map-filter select{ width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink); font:inherit; font-size:.86rem; }
+.map-list-card{ padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--surface); display:flex; flex-direction:column; gap:8px; min-height:0; }
+#partnerMapList{ display:flex; flex-direction:column; gap:6px; max-height:calc(100vh - 520px); min-height:160px; overflow-y:auto; }
+.map-item{ display:flex; gap:10px; align-items:flex-start; width:100%; text-align:left; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink); font:inherit; cursor:pointer; }
+.map-item:hover, .map-item.active{ border-color:var(--accent); }
+.map-item .dot{ margin-top:4px; flex-shrink:0; }
+.map-item-name{ font-weight:600; font-size:.86rem; }
+.map-item-meta{ font-size:.76rem; color:var(--ink-soft); }
+.map-popup{ font-family:Inter,sans-serif; min-width:190px; }
+.map-popup b{ font-size:.95rem; }
+.map-popup .pm{ font-size:.8rem; color:#555; margin-top:2px; }
+.map-popup .pa{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.map-popup .pa button{ font:600 .76rem Inter,sans-serif; padding:5px 9px; border-radius:6px; border:1px solid #d7d3ee; background:#fff; color:#3f22d6; cursor:pointer; }
+.map-fallback{ height:100%; display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; color:var(--ink-soft); font-size:.9rem; line-height:1.5; }
+@media (max-width:900px){
+  .map-layout{ grid-template-columns:1fr; }
+  #partnerMapContainer{ height:58vh; min-height:320px; }
+  #partnerMapList{ max-height:none; }
+}
 .res-attach{ display:flex; flex-direction:column; gap:6px; padding:12px; border:1px dashed var(--line); border-radius:10px; }
 .res-attach-or{ font-size:.76rem; color:var(--ink-faint); text-align:center; }
 .res-preview{ border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--surface-2); }
@@ -1737,41 +1769,37 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
       <!-- ===== OPERATOR: PARTNER DISCOVERY MAP ===== -->
       <section id="scr-operator-partner-map" hidden>
-        <div class="section-head"><h2>Partner Discovery Map</h2><span class="hint">Global view of active resellers and installation partners</span></div>
-        <div style="height:14px"></div>
-        <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;height:calc(100vh - 200px);padding:0 16px;">
-          <div id="partnerMapContainer" style="background:var(--surface);border-radius:12px;border:1px solid var(--line);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);">
-            <div style="text-align:center;padding:40px;">
-              <div style="font-size:3rem;margin-bottom:16px;">🗺️</div>
-              <div style="font-weight:600;margin-bottom:8px;">Interactive Map Coming Soon</div>
-              <div style="font-size:0.9rem;color:var(--ink-faint);">Phase 2: Real-time partner locations with Mapbox integration</div>
-            </div>
+        <div class="section-head"><h2>Partner Discovery Map</h2><span class="hint">Where active resellers and installation partners are -- click a partner for details</span></div>
+        <div style="height:12px"></div>
+        <div class="map-stats" id="mapStats"></div>
+        <div class="map-layout">
+          <div class="map-wrap">
+            <div id="partnerMapContainer" role="region" aria-label="World map of partners"></div>
+            <div class="map-legend" aria-hidden="true"><span><i class="dot active"></i>Active</span><span><i class="dot approved"></i>Approved</span><span><i class="dot pending"></i>Pending</span></div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:12px;overflow-y:auto;">
-            <div style="padding:12px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">
-              <div style="font-weight:600;font-size:0.9rem;margin-bottom:8px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.05em;">Filter by Status</div>
-              <select id="mapStatusFilter" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
-                <option value="">All Partners</option>
+          <div class="map-side">
+            <div class="map-filter">
+              <label for="mapStatusFilter">Status</label>
+              <select id="mapStatusFilter">
+                <option value="">All statuses</option>
                 <option value="active">Active</option>
-                <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
+                <option value="pending">Pending</option>
               </select>
-            </div>
-            <div style="padding:12px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">
-              <div style="font-weight:600;font-size:0.9rem;margin-bottom:8px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.05em;">Filter by Region</div>
-              <select id="mapRegionFilter" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
-                <option value="">All Regions</option>
+              <label for="mapRegionFilter">Region</label>
+              <select id="mapRegionFilter">
+                <option value="">All regions</option>
                 <option value="apac">Asia Pacific</option>
                 <option value="europe">Europe</option>
                 <option value="americas">Americas</option>
-                <option value="meaf">Middle East & Africa</option>
+                <option value="meaf">Middle East &amp; Africa</option>
               </select>
+              <label for="mapProgramFilter">Program</label>
+              <select id="mapProgramFilter"><option value="">All programs</option></select>
             </div>
-            <div style="padding:12px;background:var(--accent-soft);border-radius:10px;border:1px solid var(--accent);color:var(--accent-strong);">
-              <div style="font-weight:600;font-size:0.85rem;margin-bottom:12px;">Active Partners</div>
-              <div id="partnerMapList" style="display:flex;flex-direction:column;gap:8px;font-size:0.85rem;max-height:300px;overflow-y:auto;">
-                <div style="padding:8px;background:var(--surface);border-radius:6px;text-align:center;color:var(--ink-faint);">No partners to display</div>
-              </div>
+            <div class="map-list-card">
+              <div class="aff-section-title" id="mapListTitle">Partners</div>
+              <div id="partnerMapList"></div>
             </div>
           </div>
         </div>
@@ -2476,7 +2504,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"aussie-partners", name:"Aussie Partners Group", region:"apac", lat:-33.8688, lng:151.2093, city:"Sydney, Australia", status:"active", program:"Cross Connect", tier:"Silver" },
     { id:"nordic-resellers", name:"Nordic Resellers AS", region:"europe", lat:59.9139, lng:10.7522, city:"Oslo, Norway", status:"approved", program:"Unisense", tier:"Gold" },
     { id:"latin-solutions", name:"Latin America Solutions", region:"americas", lat:-23.5505, lng:-46.6333, city:"São Paulo, Brazil", status:"active", program:"ZipEvent", tier:"Silver" },
-    { id:"africa-connect", name:"Africa Connect Ltd", region:"meaf", lat:-1.2921, lng:36.8219, city:"Nairobi, Kenya", status:"pending", program:"Intelsense AI", tier:"Bronze" }
+    { id:"africa-connect", name:"Africa Connect Ltd", region:"meaf", lat:-1.2921, lng:36.8219, city:"Nairobi, Kenya", status:"pending", program:"Intelsense AI", tier:"Bronze" },
+    { id:"portonics", name:"Portonics Ltd.", region:"apac", lat:23.8103, lng:90.4125, city:"Dhaka, Bangladesh", status:"active", program:"Intelsense AI", tier:"Silver" }
   ];
 
   // Load data from localStorage
@@ -7544,6 +7573,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
 
+    var mapFocusBtn = e.target.closest("[data-map-focus]");
+    if (mapFocusBtn){ focusMapPartner(mapFocusBtn.getAttribute("data-map-focus")); return; }
+
     var dealTabBtn = e.target.closest("[data-deal-tab]");
     if (dealTabBtn){ state.dealTab = dealTabBtn.getAttribute("data-deal-tab"); renderOperatorApprovals(); return; }
 
@@ -7914,6 +7946,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderPartnerMap();
   });
 
+  document.getElementById("mapProgramFilter") && document.getElementById("mapProgramFilter").addEventListener("change", function(e){
+    state.mapProgramFilter = e.target.value;
+    renderPartnerMap();
+  });
+
   document.getElementById("mapRegionFilter") && document.getElementById("mapRegionFilter").addEventListener("change", function(e){
     state.mapRegionFilter = e.target.value;
     renderPartnerMap();
@@ -7921,59 +7958,146 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   var partnerMapCache = [];
 
+  // ===== PARTNER DISCOVERY MAP (Leaflet, loaded on demand) =====
+  var LEAFLET = {
+    js:  { url:"https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js",  sri:"sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" },
+    css: { url:"https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css", sri:"sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" }
+  };
+  var MAP_STATUS_COLOR = { active:"#1f9d55", approved:"#5b3df5", pending:"#d98c00" };
+  var mapState = { map:null, tiles:null, tilesDark:null, markers:{}, loading:false, failed:false };
+
+  function loadLeaflet(cb){
+    if (window.L && window.L.map) return cb(true);
+    if (mapState.loading){ mapState.pending = (mapState.pending || []).concat(cb); return; }
+    mapState.loading = true; mapState.pending = [cb];
+    var css = document.createElement("link");
+    css.rel = "stylesheet"; css.href = LEAFLET.css.url; css.integrity = LEAFLET.css.sri; css.crossOrigin = "anonymous";
+    document.head.appendChild(css);
+    var js = document.createElement("script");
+    js.src = LEAFLET.js.url; js.integrity = LEAFLET.js.sri; js.crossOrigin = "anonymous";
+    var done = function(ok){ mapState.loading = false; if (!ok) mapState.failed = true; var q = mapState.pending || []; mapState.pending = []; q.forEach(function(f){ f(ok); }); };
+    js.onload = function(){ done(!!(window.L && window.L.map)); };
+    js.onerror = function(){ done(false); };
+    document.head.appendChild(js);
+  }
+
+  // Local partner locations, plus any Supabase map rows that carry coordinates
+  function mapPartners(){
+    var list = partnerLocations.map(function(x){ return Object.assign({ source:"local" }, x); });
+    (partnerMapCache || []).forEach(function(r){
+      var lat = parseFloat(r.lat != null ? r.lat : r.latitude), lng = parseFloat(r.lng != null ? r.lng : r.longitude);
+      list.push({ id: r.id || r.partner_id || r.company_name, name: r.company_name || r.name, city: [r.city, r.country].filter(Boolean).join(", "),
+        region: r.region || "", status: r.status || "active", program: r.vendor_name || r.program || "", tier: r.tier || "",
+        lat: isNaN(lat) ? null : lat, lng: isNaN(lng) ? null : lng, source:"supabase" });
+    });
+    return list;
+  }
+  function filteredMapPartners(){
+    var st = state.mapStatusFilter || "", rg = state.mapRegionFilter || "", pr = state.mapProgramFilter || "";
+    return mapPartners().filter(function(p){
+      return (!st || p.status === st) && (!rg || p.region === rg) && (!pr || p.program === pr);
+    });
+  }
+
+  function mapPopupHtml(p){
+    var profile = partnerById(p.id);
+    return '<div class="map-popup"><b>'+esc(p.name)+'</b>'
+      + '<div class="pm">'+esc(p.city || "")+'</div>'
+      + '<div class="pm">'+esc(p.program || "")+(p.tier ? ' · '+esc(p.tier)+' tier' : '')+' · '+esc(cap(p.status))+'</div>'
+      + '<div class="pa">'+(profile ? '<button type="button" data-view-profile="'+esc(profile.id)+'">View profile</button>' : '')
+      + '<button type="button" data-message-partner="'+esc(p.name)+'">Message</button></div></div>';
+  }
+
   function renderPartnerMap(){
-    var statusList = document.getElementById("partnerMapList");
-    if (!statusList) return;
-    var statusFilter = state.mapStatusFilter || "";
-    var regionFilter = state.mapRegionFilter || "";
+    var listBox = document.getElementById("partnerMapList");
+    if (!listBox) return;
+    var all = mapPartners(), shown = filteredMapPartners();
 
-    // Try to use Supabase data first, fall back to local data
-    var allPartners = [];
+    // program filter options
+    var progSel = document.getElementById("mapProgramFilter");
+    if (progSel){
+      var progs = all.map(function(p){ return p.program; }).filter(function(v, i, a){ return v && a.indexOf(v) === i; }).sort();
+      var cur = state.mapProgramFilter || "";
+      progSel.innerHTML = '<option value="">All programs</option>' + progs.map(function(pn){ return '<option value="'+esc(pn)+'"'+(pn===cur?" selected":"")+'>'+esc(pn)+'</option>'; }).join("");
+    }
+    var stSel = document.getElementById("mapStatusFilter"); if (stSel) stSel.value = state.mapStatusFilter || "";
+    var rgSel = document.getElementById("mapRegionFilter"); if (rgSel) rgSel.value = state.mapRegionFilter || "";
 
-    // Use cached Supabase data if available
-    if (partnerMapCache && partnerMapCache.length > 0){
-      allPartners = partnerMapCache.map(function(partner){
-        return {
-          name: partner.company_name,
-          country: partner.country,
-          program: partner.vendor_name,
-          status: partner.status
-        };
-      });
-    } else {
-      // Fall back to local programs data
-      programs.forEach(function(prog){
-        if (prog.referralPartners && prog.referralPartners.length > 0){
-          prog.referralPartners.forEach(function(partner){
-            allPartners.push({ name: partner.name, country: partner.country, program: prog.name, status: partner.status });
-          });
-        }
-      });
+    // stats
+    var stats = document.getElementById("mapStats");
+    if (stats){
+      var count = function(st){ return all.filter(function(p){ return p.status === st; }).length; };
+      var countries = all.map(function(p){ return (p.city || "").split(",").pop().trim(); }).filter(function(v, i, a){ return v && a.indexOf(v) === i; }).length;
+      stats.innerHTML = '<div class="map-stat"><b>'+all.length+'</b>partners</div>'
+        + '<div class="map-stat"><b>'+count("active")+'</b>active</div>'
+        + '<div class="map-stat"><b>'+count("approved")+'</b>approved</div>'
+        + '<div class="map-stat"><b>'+count("pending")+'</b>pending</div>'
+        + '<div class="map-stat"><b>'+countries+'</b>countries</div>';
     }
 
-    var filtered = allPartners.filter(function(p){
-      var statusMatch = !statusFilter || p.status === statusFilter;
-      var regionMatch = !regionFilter || (
-        (regionFilter === "apac" && ["Thailand", "Vietnam", "Hong Kong", "Indonesia", "Malaysia"].indexOf(p.country) > -1) ||
-        (regionFilter === "europe" && ["UK", "France", "Germany"].indexOf(p.country) > -1) ||
-        (regionFilter === "americas" && ["USA", "Canada", "Mexico"].indexOf(p.country) > -1) ||
-        (regionFilter === "meaf" && ["UAE", "Saudi Arabia"].indexOf(p.country) > -1)
-      );
-      return statusMatch && regionMatch;
-    });
-    if (filtered.length === 0){
-      statusList.innerHTML = '<div style="padding:8px;color:var(--ink-faint);text-align:center;font-size:0.85rem;">No partners match filters</div>';
+    // list
+    var title = document.getElementById("mapListTitle");
+    if (title) title.textContent = "Partners (" + shown.length + (shown.length !== all.length ? " of " + all.length : "") + ")";
+    listBox.innerHTML = shown.length ? shown.map(function(p){
+      return '<button type="button" class="map-item'+(state.mapSelectedId === p.id ? " active" : "")+'" data-map-focus="'+esc(p.id)+'">'
+        + '<i class="dot '+esc(p.status)+'"></i><span><span class="map-item-name">'+esc(p.name)+'</span>'
+        + '<span class="map-item-meta" style="display:block;">'+esc(p.city || "Location not set")+' · '+esc(p.program || "")+'</span></span></button>';
+    }).join("") : '<div class="empty" style="padding:12px;">No partners match these filters.</div>';
+
+    if (state.screen !== "operator-partner-map") return;
+    var container = document.getElementById("partnerMapContainer");
+    if (mapState.failed && !(window.L && window.L.map)){
+      container.innerHTML = '<div class="map-fallback">The map couldn\'t load (no connection to the map service). The partner list on the right still works.</div>';
       return;
     }
-    statusList.innerHTML = filtered.map(function(p){
-      var statusBadge = p.status === "active" ? '<span style="display:inline-block;background:var(--good-soft);color:var(--good);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Active</span>'
-        : '<span style="display:inline-block;background:var(--warn-soft);color:var(--warn);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Pending</span>';
-      return '<div style="padding:8px;background:var(--surface);border-radius:6px;cursor:pointer;border:1px solid var(--line);transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
-        + '<div style="font-weight:600;font-size:0.9rem;color:var(--ink);">'+esc(p.name)+'</div>'
-        + '<div style="font-size:0.8rem;color:var(--ink-faint);margin-top:2px;">'+esc(p.country)+' • '+esc(p.program)+'</div>'
-        + '<div style="margin-top:4px;">'+statusBadge+'</div>'
-        + '</div>';
-    }).join("");
+    loadLeaflet(function(ok){
+      if (!ok){ container.innerHTML = '<div class="map-fallback">The map couldn\'t load (no connection to the map service). The partner list on the right still works.</div>'; return; }
+      drawPartnerMap(shown);
+    });
+  }
+
+  function drawPartnerMap(shown){
+    var container = document.getElementById("partnerMapContainer");
+    if (!container || container.offsetParent === null) return;
+    var L = window.L;
+    if (!mapState.map){
+      container.innerHTML = "";
+      mapState.map = L.map(container, { worldCopyJump:true, minZoom:2, zoomControl:true }).setView([20, 20], 2);
+      var attr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+      mapState.tiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { attribution: attr, subdomains:"abcd", maxZoom:18 });
+      mapState.tilesDark = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution: attr, subdomains:"abcd", maxZoom:18 });
+    } else {
+      mapState.map.invalidateSize();
+    }
+    var dark = document.documentElement.getAttribute("data-theme") === "dark";
+    var want = dark ? mapState.tilesDark : mapState.tiles, other = dark ? mapState.tiles : mapState.tilesDark;
+    if (mapState.map.hasLayer(other)) mapState.map.removeLayer(other);
+    if (!mapState.map.hasLayer(want)) want.addTo(mapState.map);
+
+    Object.keys(mapState.markers).forEach(function(k){ mapState.markers[k].remove(); });
+    mapState.markers = {};
+    var pts = [];
+    shown.forEach(function(p){
+      if (p.lat == null || p.lng == null) return;
+      var mk = L.circleMarker([p.lat, p.lng], { radius:9, weight:2, color:"#ffffff", fillColor: MAP_STATUS_COLOR[p.status] || "#888", fillOpacity:.95 })
+        .bindPopup(mapPopupHtml(p)).bindTooltip(p.name, { direction:"top", offset:[0,-8] });
+      mk.on("click", function(){ state.mapSelectedId = p.id; highlightMapItem(p.id); });
+      mk.addTo(mapState.map);
+      mk.getElement && mk.getElement() && mk.getElement().setAttribute("data-marker-id", p.id);
+      mapState.markers[p.id] = mk; pts.push([p.lat, p.lng]);
+    });
+    if (pts.length === 1) mapState.map.setView(pts[0], 5);
+    else if (pts.length > 1) mapState.map.fitBounds(pts, { padding:[40, 40], maxZoom:5 });
+  }
+
+  function highlightMapItem(id){
+    document.querySelectorAll("#partnerMapList .map-item").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-map-focus") === id); });
+  }
+
+  function focusMapPartner(id){
+    state.mapSelectedId = id; highlightMapItem(id);
+    var mk = mapState.markers[id];
+    if (mk && mapState.map){ mapState.map.flyTo(mk.getLatLng(), 6, { duration:.6 }); mk.openPopup(); }
   }
 
   // Load partner map data from Supabase on initialization
@@ -8020,6 +8144,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.getElementById("themeToggle").addEventListener("click", function(){
     state.theme = state.theme === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", state.theme);
+    if (mapState.map) renderPartnerMap(); // swap light/dark basemap
   });
   document.documentElement.setAttribute("data-theme", state.theme);
 
