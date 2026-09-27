@@ -1,0 +1,46 @@
+from harness import *
+with sync_playwright() as p:
+    b,pg=open_page(p)
+    role(pg,"vendor"); nav(pg,"vendor-network")
+    pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(250)
+    vp=pg.locator("#vendorProfileContent")
+    btns=vp.locator("[data-product-referral]")
+    ok(btns.count()==4,"4 products each have Get referral link: "+str(btns.count()))
+    vp.locator('[data-product-id="finsense-ai"][data-product-referral]').click(); pg.wait_for_timeout(200)
+    inp=vp.locator(".aff-link-input")
+    ok(inp.count()==1,"Link revealed for the clicked product only")
+    link=inp.input_value()
+    ok("apply=vendor" in link and "vendorId=intelsense" in link and "productId=finsense-ai" in link,"Link format: "+link)
+    ok(vp.locator("[data-product-referral]").count()==3,"Other products still show the button")
+    vp.locator("[data-copy-product-link]").click(); pg.wait_for_timeout(300)
+    ok(pg.evaluate("navigator.clipboard.readText()")==link,"Copy puts product link on clipboard")
+    # Partner role: tiles show Apply / Demo, no referral link
+    role(pg,"partner"); nav(pg,"partner-directory") if pg.locator('[data-screen="partner-directory"]:visible').count() else None
+    pg.evaluate("void 0")
+    b.close()
+    # Visit the link
+    b,pg=open_page(p, "?"+link.split("?")[1])
+    ok(visible_screen(pg)==["scr-public-partner-apply"],"Link opens application form")
+    ok(pg.locator("#appProduct").input_value()=="finsense-ai","Finsense AI pre-selected")
+    ok("You're applying to resell: Finsense AI" in pg.locator("#scr-public-partner-apply").inner_text(),"Shows which product they're applying for")
+    b.close()
+    b,pg=open_page(p, "?apply=vendor&vendorId=intelsense&productId=bogus")
+    ok(pg.locator("#appProduct").input_value()=="" and "applying to resell" not in pg.locator("#scr-public-partner-apply").inner_text(),"Invalid productId ignored")
+    # not trapped: navigate away
+    pg.locator('[data-role="partner"]').first.click(); pg.wait_for_timeout(200)
+    nav(pg,"partner-network")
+    ok(visible_screen(pg)==["scr-partner-network"],"Can leave the application form (no longer trapped): "+str(visible_screen(pg)))
+    b.close()
+    # Partner sees Apply/Demo on product tiles
+    b,pg=open_page(p)
+    nav(pg,"vendor-network")
+    v=pg.locator('[data-view-vendor="intelsense"]:visible')
+    ok(v.count()>0,"Partner can open Intelsense from Vendor Network")
+    if v.count():
+        v.first.click(); pg.wait_for_timeout(250)
+        vp=pg.locator("#vendorProfileContent")
+        ok(vp.locator("[data-apply-reseller]").count()==4 and vp.locator("[data-product-referral]").count()==0,"Partner sees Apply as Reseller on each product, no vendor link buttons")
+        vp.locator('[data-apply-reseller][data-product-id="altercrew"]').click(); pg.wait_for_timeout(250)
+        ok(pg.locator("#appProduct").input_value()=="altercrew","Apply as Reseller pre-selects that product")
+    b.close()
+report()

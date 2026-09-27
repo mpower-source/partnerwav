@@ -2230,6 +2230,8 @@
   var pendingResources = [
     { id:"pend-1", title:"Unisense SaaS Reseller Pitch Deck", type:"ppt", uploadedBy:"Intelsense", program:"Unisense", vendor:"Intelsense AI", status:"pending", fileSize:"5.1MB", submittedDate:"2 hours ago",
       summary:"[Pending operator review -- summary will be auto-generated upon approval]", transcription:"", previewText:"Unisense Sales & Marketing Platform -- SaaS resale opportunity", reason:"awaiting_review" },
+    { id:"pend-3", title:"Botnoi Voice -- Thai Market Battlecard", type:"pdf", uploadedBy:"Botnoi Voice", program:"Botnoi Voice", vendor:"Botnoi Voice", status:"pending", fileSize:"1.2MB", submittedDate:"5 hours ago",
+      summary:"[Pending operator review -- summary will be auto-generated upon approval]", transcription:"", previewText:"Two-page competitive battlecard for partners selling Botnoi's Thai voice AI against local call-center vendors.", reason:"awaiting_review" },
     { id:"pend-2", title:"Generic Company Training Video", type:"webinar", uploadedBy:"SomeonesVendor", program:"Unknown", vendor:"Unknown", webinarPlatform:"googlemeet", status:"rejected", fileSize:"220MB", submittedDate:"yesterday",
       summary:"[Rejected -- not marketing/training related]", transcription:"", previewText:"", reason:"off_topic", rejectionComment:"This appears to be general company training, not sales/partner training related to a specific product." }
   ];
@@ -4219,20 +4221,27 @@
       var statusBadgeClass = r.status === "pending" ? "warn" : (r.status === "published" ? "good" : "bad");
       var statusText = r.status === "pending" ? "Pending review" : (r.status === "published" ? "Published" : "Rejected");
       var actions = r.status === "pending"
-        ? '<button class="btn primary sm" data-approve-resource="'+idx+'">Approve</button><button class="btn secondary sm" data-reject-resource="'+idx+'">Reject</button>'
+        ? '<button class="btn primary sm" data-review-resource="'+esc(r.id)+'" data-review-decision="approve">Approve…</button>'
+          + '<button class="btn secondary sm" data-review-resource="'+esc(r.id)+'" data-review-decision="reject">Reject…</button>'
+          + '<button class="btn ghost sm" data-review-resource="'+esc(r.id)+'" data-review-decision="request-revision">Request revision…</button>'
         : '';
+      if (r.status === "pending" && r.reason === "revision_requested"){
+        statusText = "Revision requested";
+      }
       var rejectionNote = r.status === "rejected" ? '<div style="margin-top:10px;padding:10px;background:var(--bad-soft);border-radius:8px;border-left:3px solid var(--bad);"><div style="font-size:.76rem;font-weight:600;color:var(--bad);">Rejection reason</div><div style="font-size:.85rem;color:var(--ink);margin-top:4px;">'+esc(r.rejectionComment || "")+'</div></div>' : '';
       return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
         + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">'
           + '<div><div style="font-size:.78rem;color:var(--ink-faint);">'+typeIcon+' '+typeLabel+' • '+esc(r.uploadedBy)+'</div>'
             + '<div style="font-weight:700;font-size:1rem;margin-top:2px;">'+esc(r.title)+'</div>'
-            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program || "Unknown")+' • Submitted '+r.submittedDate+'</div></div>'
+            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program || "Unknown")+' • '+(r.submittedDate ? 'Submitted '+esc(r.submittedDate) : (r.uploadedDate ? 'Published '+esc(r.uploadedDate) : ''))+'</div></div>'
           + '<span class="badge '+statusBadgeClass+'">'+statusText+'</span>'
         + '</div>'
-        + '<p style="margin:0;font-size:.88rem;color:var(--ink);line-height:1.45;">'+esc(r.summary || r.previewText)+'</p>'
+        + '<p style="margin:0;font-size:.88rem;color:var(--ink);line-height:1.45;">'+esc((r.status === "pending" && r.previewText) ? r.previewText : (r.summary || r.previewText || ""))+'</p>'
         + (r.status === "pending" ? '<div style="padding:10px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line);"><div style="font-size:.76rem;font-weight:600;color:var(--ink-soft);">AI-Generated Summary</div><div style="font-size:.84rem;color:var(--ink);margin-top:6px;font-style:italic;">'+esc(r.summary)+'</div></div>' : '')
         + rejectionNote
-        + (actions ? '<div style="display:flex;gap:8px;">'+actions+'</div>' : '')
+        + ((r.status === "published" && r.approvalComment) ? '<div style="margin-top:4px;padding:10px;background:var(--good-soft);border-radius:8px;border-left:3px solid var(--good);"><div style="font-size:.76rem;font-weight:600;color:var(--good);">Approval note</div><div style="font-size:.85rem;margin-top:4px;">'+esc(r.approvalComment)+'</div></div>' : '')
+        + ((r.status === "pending" && r.revisionComments) ? '<div style="margin-top:4px;padding:10px;background:var(--warn-soft);border-radius:8px;border-left:3px solid var(--warn);"><div style="font-size:.76rem;font-weight:600;color:var(--warn);">Revision requested</div><div style="font-size:.85rem;margin-top:4px;">'+esc(r.revisionComments)+'</div></div>' : '')
+        + (actions ? '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+actions+'</div>' : '')
       + '</div>';
     }).join("");
   }
@@ -5724,6 +5733,21 @@
     } catch(e){ console.log("Could not load community data:", e); }
   }
 
+  // ===== RESOURCE PERSISTENCE (published library + review queue) =====
+  var RESOURCE_STORAGE_KEY = "partnerWAV_resourceData";
+  function saveResourceData(){
+    try { localStorage.setItem(RESOURCE_STORAGE_KEY, JSON.stringify({ resources: resources, pending: pendingResources })); }
+    catch(e){ console.log("Could not save resource data:", e); }
+  }
+  function loadResourceData(){
+    try {
+      var data = JSON.parse(localStorage.getItem(RESOURCE_STORAGE_KEY) || "null");
+      if (!data) return;
+      if (Array.isArray(data.resources)){ resources.length = 0; data.resources.forEach(function(r){ resources.push(r); }); }
+      if (Array.isArray(data.pending)){ pendingResources.length = 0; data.pending.forEach(function(r){ pendingResources.push(r); }); }
+    } catch(e){ console.log("Could not load resource data:", e); }
+  }
+
   // ===== TIER 3: SUPPORT GROUPS =====
   function loadGroupForm(groupId){
     var group = groupId ? groups.find(function(g){ return g.id === groupId; }) : null;
@@ -5862,22 +5886,41 @@
     }
     state.editingResourceId = null;
     state.screen = "resource-browse";
-    saveVendorData();
+    saveResourceData();
     render();
   }
 
   // ===== TIER 3: RESOURCE APPROVALS =====
-  function loadApprovalForm(resourceId){
+  function updateApprovalCommentHint(){
+    var decision = document.getElementById("approvalDecision").value;
+    var box = document.getElementById("approvalComments");
+    var needs = decision === "reject" || decision === "request-revision";
+    box.required = needs;
+    box.placeholder = decision === "reject" ? "Required -- tell the submitter why this was rejected"
+      : decision === "request-revision" ? "Required -- what should the submitter change?"
+      : "Optional note for the submitter";
+    var lbl = box.previousElementSibling;
+    if (lbl) lbl.textContent = needs ? "Comments (required)" : "Comments (optional)";
+  }
+
+  function loadApprovalForm(resourceId, decision){
     var resource = pendingResources.find(function(r){ return r.id === resourceId; });
+    var content = document.getElementById("approvalReviewContent");
     if (resource){
-      var content = document.getElementById("approvalReviewContent");
+      var detail = resource.previewText || resource.summary || "";
       content.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface-2);border-radius:8px;">' +
-        '<div><strong>' + resource.title + '</strong></div>' +
-        '<div style="font-size:.85rem;color:var(--ink-soft);">Submitted by ' + resource.uploadedBy + ' for program: ' + resource.program + '</div>' +
-        '<div style="font-size:.85rem;color:var(--ink-soft);">Type: ' + resource.type.toUpperCase() + ' | Size: ' + resource.fileSize + '</div>' +
-        '<div style="margin-top:8px;font-size:.85rem;line-height:1.5;">' + resource.summary.substring(0, 200) + '...</div>' +
+        '<div><strong>' + esc(resource.title) + '</strong></div>' +
+        '<div style="font-size:.85rem;color:var(--ink-soft);">Submitted by ' + esc(resource.uploadedBy) + ' for program: ' + esc(resource.program) + ' · ' + esc(resource.submittedDate || "") + '</div>' +
+        '<div style="font-size:.85rem;color:var(--ink-soft);">Type: ' + esc(String(resource.type).toUpperCase()) + ' | Size: ' + esc(resource.fileSize) + '</div>' +
+        (detail ? '<div style="margin-top:8px;font-size:.85rem;line-height:1.5;">' + esc(detail) + '</div>' : '') +
+        (resource.revisionComments ? '<div style="font-size:.82rem;color:var(--warn);">Previously requested: ' + esc(resource.revisionComments) + '</div>' : '') +
         '</div>';
+    } else {
+      content.innerHTML = '<div class="empty">This submission is no longer pending.</div>';
     }
+    document.getElementById("approvalDecision").value = decision || "";
+    document.getElementById("approvalComments").value = "";
+    updateApprovalCommentHint();
     state.editingApprovalId = resourceId;
   }
 
@@ -5887,13 +5930,19 @@
     var comments = document.getElementById("approvalComments").value.trim();
 
     if (!decision){ toast("Please select a decision"); return; }
+    if ((decision === "reject" || decision === "request-revision") && !comments){
+      toast(decision === "reject" ? "Add a comment explaining the rejection" : "Add a comment describing the revision needed");
+      document.getElementById("approvalComments").focus();
+      return;
+    }
 
     var idx = pendingResources.findIndex(function(r){ return r.id === state.editingApprovalId; });
     if (idx >= 0){
       var resource = pendingResources[idx];
       if (decision === "approve"){
         resource.status = "published";
-        resources.push(Object.assign({}, resource, { uploadedDate: "just now", status: "published" }));
+        resources.unshift(Object.assign({}, resource, { submittedDate: null, uploadedDate: "just now", status: "published", approvalComment: comments || "",
+          summary: (resource.summary && resource.summary.indexOf("[Pending") !== 0) ? resource.summary : (resource.previewText || resource.title) }));
         pendingResources.splice(idx, 1);
         toast("Resource approved and published");
       } else if (decision === "reject"){
@@ -5907,8 +5956,9 @@
       }
     }
     state.editingApprovalId = null;
+    state.resourceApprovalView = decision === "approve" ? "published" : (decision === "reject" ? "rejected" : "pending");
     state.screen = "resource-approvals";
-    saveVendorData();
+    saveResourceData();
     render();
   }
 
@@ -6036,6 +6086,8 @@
 
     var approvalForm = document.getElementById("approvalForm");
     if (approvalForm) approvalForm.addEventListener("submit", saveApproval);
+    var approvalDecisionSel = document.getElementById("approvalDecision");
+    if (approvalDecisionSel) approvalDecisionSel.addEventListener("change", updateApprovalCommentHint);
 
     var operatorProgramForm = document.getElementById("operatorProgramForm");
     if (operatorProgramForm) operatorProgramForm.addEventListener("submit", saveOperatorProgram);
@@ -6579,30 +6631,14 @@
     var approvalViewBtn = e.target.closest("[data-approval-view]");
     if (approvalViewBtn){ state.resourceApprovalView = approvalViewBtn.getAttribute("data-approval-view"); render(); return; }
 
-    var approveResourceBtn = e.target.closest("[data-approve-resource]");
-    if (approveResourceBtn){
-      var ridx = parseInt(approveResourceBtn.getAttribute("data-approve-resource"), 10);
-      var pending = pendingResources.filter(function(r){ return r.status === "pending"; });
-      if (pending[ridx]){
-        pending[ridx].status = "published";
-        resources.push(pending[ridx]);
-        pendingResources.splice(pendingResources.indexOf(pending[ridx]), 1);
-        toast("Resource approved and published");
-        render();
-      }
-      return;
-    }
-
-    var rejectResourceBtn = e.target.closest("[data-reject-resource]");
-    if (rejectResourceBtn){
-      var ridx2 = parseInt(rejectResourceBtn.getAttribute("data-reject-resource"), 10);
-      var pending2 = pendingResources.filter(function(r){ return r.status === "pending"; });
-      if (pending2[ridx2]){
-        pending2[ridx2].status = "rejected";
-        pending2[ridx2].rejectionComment = "Marketing content validation failed -- content must be directly related to sales, partner training, or vendor product promotion.";
-        toast("Resource rejected");
-        render();
-      }
+    var reviewResourceBtn = e.target.closest("[data-review-resource]");
+    if (reviewResourceBtn){
+      var reviewId = reviewResourceBtn.getAttribute("data-review-resource");
+      var reviewDecision = reviewResourceBtn.getAttribute("data-review-decision");
+      state.editingApprovalId = reviewId;
+      state.screen = "resource-approvals-editor";
+      render();
+      setTimeout(function(){ loadApprovalForm(reviewId, reviewDecision); attachFormHandlers(); }, 0);
       return;
     }
 
@@ -7025,6 +7061,7 @@
   loadSavedData();
   loadAffiliateData();
   loadCommunityData();
+  loadResourceData();
 
   // ===== SUPABASE AUTH STATE MONITORING =====
   if (supabase) supabase.auth.onAuthStateChange(function(event, session) {

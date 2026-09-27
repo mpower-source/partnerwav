@@ -35,3 +35,4 @@ Thumbs.db
 .env.txt
 SUPABASE_SETUP_GUIDE.md
 partnerwav_supabase_schema.sql
+__pycache__/
