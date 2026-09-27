@@ -708,8 +708,8 @@
       <section id="scr-partner-community" hidden>
         <div class="section-head"><h2>Community</h2><span class="hint">Where partners work through real deals together, not just talk shop</span></div>
         <div style="display:flex;gap:10px;margin-bottom:14px;">
-          <button class="btn primary sm" data-goto-screen="threads-editor">+ Create Thread</button>
-          <button class="btn primary sm" data-goto-screen="groups-editor">+ Create Group</button>
+          <button class="btn primary sm" data-goto-screen="threads-editor" data-create-new>+ Create Thread</button>
+          <button class="btn primary sm" data-goto-screen="groups-editor" data-create-new>+ Create Group</button>
         </div>
         <div class="tabs" role="tablist" aria-label="Community view">
           <button class="tab-btn" data-tab="threads" role="tab" aria-selected="true">Project threads</button>
@@ -2962,7 +2962,10 @@
     groupsBox.hidden = state.communityTab !== "groups";
 
     if (state.communityTab === "threads"){
-      threadsBox.innerHTML = projectThreads.map(function(t){
+      var myInit = initials(currentPartnerName());
+      var visibleThreads = projectThreads.filter(function(t){ return t.status !== "archived"; });
+      threadsBox.innerHTML = visibleThreads.length ? visibleThreads.map(function(t){
+        var canEdit = t.createdBy === state.myProfileId || state.role === "operator";
         var participantsHtml = t.participants.map(function(p){ return '<span class="p-avatar" title="'+esc(p.name)+'">'+esc(p.init)+'</span>'; }).join("");
         var postsHtml = t.posts.map(function(p){
           return '<div class="post"><span class="p-avatar">'+esc(p.init)+'</span><div class="post-body">'
@@ -2972,23 +2975,26 @@
         return '<div class="thread-card">'
           + '<div class="thread-head"><div><div class="thread-title">'+esc(t.deal)+'</div>'
             + '<div class="thread-meta">'+esc(t.program)+' · '+statusPill(t.status)+'</div></div>'
-            + '<div class="participants">'+participantsHtml+'</div></div>'
-          + '<div style="display:flex;flex-direction:column;gap:10px;">'+postsHtml+'</div>'
-          + '<div class="compose"><span class="p-avatar">PP</span>'
+            + '<div class="participants">'+participantsHtml
+            + (canEdit ? '<button class="btn ghost sm" data-edit-thread="'+esc(t.id)+'">Edit</button>' : '')+'</div></div>'
+          + '<div style="display:flex;flex-direction:column;gap:10px;">'+(postsHtml || '<p class="field-note" style="margin:0;">No posts yet -- start the conversation below.</p>')+'</div>'
+          + '<div class="compose"><span class="p-avatar">'+esc(myInit)+'</span>'
             + '<textarea placeholder="Post an update to this project…" data-compose="'+t.id+'"></textarea>'
             + '<button class="btn primary sm" data-post="'+t.id+'">Post</button></div>'
         + '</div>';
-      }).join("");
+      }).join("") : '<div class="empty">No project threads yet -- create one to start collaborating.</div>';
     } else {
       var gg = document.getElementById("groupsGrid");
-      gg.innerHTML = groups.map(function(g){
+      var visibleGroups = groups.filter(function(g){ return !g.archivedAt; });
+      gg.innerHTML = visibleGroups.length ? visibleGroups.map(function(g){
         var joined = state.joinedGroups.indexOf(g.id) > -1;
         var btn = joined ? '<button class="btn secondary sm" disabled>Joined ✓</button>' : '<button class="btn primary sm" data-join-group="'+g.id+'">Join</button>';
+        if (g.createdBy === state.myProfileId || state.role === "operator") btn += ' <button class="btn ghost sm" data-edit-group="'+esc(g.id)+'">Edit</button>';
         return '<div class="group-card"><div class="group-top"><span class="group-name">'+esc(g.name)+'</span><span class="badge neutral">'+esc(g.vertical)+'</span></div>'
           + '<span class="group-members">'+g.members+' members</span>'
           + '<p class="program-desc">'+esc(g.desc)+'</p>'
           + '<div class="program-actions">'+btn+'</div></div>';
-      }).join("");
+      }).join("") : '<div class="empty">No groups yet -- create one to bring partners together.</div>';
     }
   }
 
@@ -5660,6 +5666,26 @@
     render();
   }
 
+  // ===== COMMUNITY PERSISTENCE (threads, groups, memberships) =====
+  var COMMUNITY_STORAGE_KEY = "partnerWAV_communityData";
+  function saveCommunityData(){
+    try {
+      localStorage.setItem(COMMUNITY_STORAGE_KEY, JSON.stringify({
+        threads: projectThreads, groups: groups, joinedGroups: state.joinedGroups
+      }));
+    } catch(e){ console.log("Could not save community data:", e); }
+  }
+  function loadCommunityData(){
+    try {
+      var saved = localStorage.getItem(COMMUNITY_STORAGE_KEY);
+      if (!saved) return;
+      var data = JSON.parse(saved);
+      if (Array.isArray(data.threads)){ projectThreads.length = 0; data.threads.forEach(function(t){ projectThreads.push(t); }); }
+      if (Array.isArray(data.groups)){ groups.length = 0; data.groups.forEach(function(g){ groups.push(g); }); }
+      if (Array.isArray(data.joinedGroups)) state.joinedGroups = data.joinedGroups;
+    } catch(e){ console.log("Could not load community data:", e); }
+  }
+
   // ===== TIER 3: SUPPORT GROUPS =====
   function loadGroupForm(groupId){
     var group = groupId ? groups.find(function(g){ return g.id === groupId; }) : null;
@@ -5691,12 +5717,14 @@
       }
     } else {
       var newId = "group-" + Date.now();
-      groups.push({ id: newId, name: name, vertical: vertical, members: members, desc: desc, archivedAt: null });
-      toast("Group created");
+      groups.push({ id: newId, name: name, vertical: vertical, members: Math.max(members, 1), desc: desc, archivedAt: null, createdBy: state.myProfileId });
+      if (state.joinedGroups.indexOf(newId) === -1) state.joinedGroups.push(newId);
+      toast("Group created -- you're its first member");
     }
     state.editingGroupId = null;
+    state.communityTab = "groups";
     state.screen = "partner-community";
-    saveVendorData();
+    saveCommunityData();
     render();
   }
 
@@ -5731,16 +5759,19 @@
       }
     } else {
       var newId = "thread-" + Date.now();
-      var newThread = { id: newId, deal: deal, program: program, status: status, participants: [], posts: [] };
+      var me = currentPartnerName();
+      var newThread = { id: newId, deal: deal, program: program, status: status, createdBy: state.myProfileId,
+        participants: [{ name: me, init: initials(me) }], posts: [] };
       if (initialPost){
-        newThread.posts.push({ author: "You", init: "YU", time: "now", text: initialPost });
+        newThread.posts.push({ author: me, init: initials(me), time: "just now", text: initialPost });
       }
       projectThreads.push(newThread);
       toast("Thread created");
     }
     state.editingThreadId = null;
+    state.communityTab = "threads";
     state.screen = "partner-community";
-    saveVendorData();
+    saveCommunityData();
     render();
   }
 
@@ -6011,21 +6042,26 @@
 
     var gotoBtn = e.target.closest("[data-goto-screen]");
     if (gotoBtn){
-      var screen = gotoBtn.getAttribute("data-goto-screen");
+      // Accept both "groups-editor" and legacy "scr-groups-editor" forms of the screen name
+      var screen = gotoBtn.getAttribute("data-goto-screen").replace(/^scr-/, "");
+      if (gotoBtn.hasAttribute("data-create-new")){
+        // "+ Create" buttons always open a blank form, never a stale edit
+        Object.keys(state).forEach(function(k){ if (/^editing[A-Z]/.test(k)) state[k] = null; });
+      }
       state.screen = screen;
       // Load form data if navigating to editor screens
       setTimeout(function(){
         if (screen === "partner-profile-editor") loadPartnerProfileForm(state.editingProfileId);
         else if (screen === "vendor-program-editor") loadVendorProgramForm(state.editingProgramId);
         else if (screen === "affiliate-profile-editor") loadAffiliateProfileForm(state.editingAffiliateId);
-        else if (screen === "scr-projects-editor") loadProjectForm(state.editingProjectId);
-        else if (screen === "scr-leads-editor") loadLeadForm(state.editingLeadId);
-        else if (screen === "scr-agreements-editor") loadAgreementForm(state.editingAgreementId);
-        else if (screen === "scr-groups-editor") loadGroupForm(state.editingGroupId);
-        else if (screen === "scr-threads-editor") loadThreadForm(state.editingThreadId);
-        else if (screen === "scr-resources-editor") loadResourceForm(state.editingResourceId);
-        else if (screen === "scr-resource-approvals-editor") loadApprovalForm(state.editingApprovalId);
-        else if (screen === "scr-operator-program-editor") loadOperatorProgramForm(state.editingOperatorProgramId);
+        else if (screen === "projects-editor") loadProjectForm(state.editingProjectId);
+        else if (screen === "leads-editor") loadLeadForm(state.editingLeadId);
+        else if (screen === "agreements-editor") loadAgreementForm(state.editingAgreementId);
+        else if (screen === "groups-editor") loadGroupForm(state.editingGroupId);
+        else if (screen === "threads-editor") loadThreadForm(state.editingThreadId);
+        else if (screen === "resources-editor") loadResourceForm(state.editingResourceId);
+        else if (screen === "resource-approvals-editor") loadApprovalForm(state.editingApprovalId);
+        else if (screen === "operator-program-editor") loadOperatorProgramForm(state.editingOperatorProgramId);
         else if (screen === "partner-project-editor") loadPartnerProjectForm(state.editingProjectId);
         else if (screen === "vendor-hardware-offering-editor") loadHardwareOfferingForm(state.editingHardwareOfferingId);
         else if (screen === "vendor-incentive-editor") loadVendorIncentiveForm(state.editingIncentiveId);
@@ -6125,8 +6161,10 @@
       var groupId = deleteGroupBtn.getAttribute("data-group-id");
       if (confirm("Archive this group?")){
         var idx = groups.findIndex(function(g){ return g.id === groupId; });
-        if (idx >= 0){ groups[idx].archivedAt = new Date().toISOString(); toast("Group archived"); saveVendorData(); render(); }
         state.screen = "partner-community";
+        state.editingGroupId = null;
+        if (idx >= 0){ groups[idx].archivedAt = new Date().toISOString(); toast("Group archived"); saveCommunityData(); }
+        render();
       }
       return;
     }
@@ -6136,8 +6174,10 @@
       var threadId = deleteThreadBtn.getAttribute("data-thread-id");
       if (confirm("Archive this thread?")){
         var idx = projectThreads.findIndex(function(t){ return t.id === threadId; });
-        if (idx >= 0){ projectThreads[idx].status = "archived"; toast("Thread archived"); saveVendorData(); render(); }
         state.screen = "partner-community";
+        state.editingThreadId = null;
+        if (idx >= 0){ projectThreads[idx].status = "archived"; toast("Thread archived"); saveCommunityData(); }
+        render();
       }
       return;
     }
@@ -6447,9 +6487,29 @@
       if (state.joinedGroups.indexOf(gid) === -1){
         state.joinedGroups.push(gid);
         var g = groups.filter(function(x){ return x.id===gid; })[0];
+        g.members = (g.members || 0) + 1;
+        saveCommunityData();
         toast("Joined "+g.name);
         renderCommunity();
       }
+      return;
+    }
+
+    var editThreadBtn = e.target.closest("[data-edit-thread]");
+    if (editThreadBtn){
+      state.editingThreadId = editThreadBtn.getAttribute("data-edit-thread");
+      state.screen = "threads-editor";
+      render();
+      setTimeout(function(){ loadThreadForm(state.editingThreadId); attachFormHandlers(); }, 0);
+      return;
+    }
+
+    var editGroupBtn = e.target.closest("[data-edit-group]");
+    if (editGroupBtn){
+      state.editingGroupId = editGroupBtn.getAttribute("data-edit-group");
+      state.screen = "groups-editor";
+      render();
+      setTimeout(function(){ loadGroupForm(state.editingGroupId); attachFormHandlers(); }, 0);
       return;
     }
 
@@ -6460,7 +6520,10 @@
       var text = ta && ta.value.trim();
       if (text){
         var thread = projectThreads.filter(function(x){ return x.id===tid; })[0];
-        thread.posts.push({ author:"Peter Phelan", init:"PP", time:"just now", text:text });
+        var poster = currentPartnerName();
+        thread.posts.push({ author:poster, init:initials(poster), time:"just now", text:text });
+        if (!thread.participants.some(function(p){ return p.name === poster; })) thread.participants.push({ name:poster, init:initials(poster) });
+        saveCommunityData();
         toast("Posted to "+thread.deal);
         renderCommunity();
       }
@@ -6915,6 +6978,7 @@
   // Load saved data on page initialization
   loadSavedData();
   loadAffiliateData();
+  loadCommunityData();
 
   // ===== SUPABASE AUTH STATE MONITORING =====
   if (supabase) supabase.auth.onAuthStateChange(function(event, session) {
