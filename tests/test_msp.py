@@ -7,10 +7,10 @@ with sync_playwright() as p:
     nav(pg, "operator-msp-prospects")
     ok(visible_screen(pg) == ["scr-operator-msp-prospects"], "MSP Prospecting screen opens")
     cards = pg.locator("#mspProspectsList .msp-card")
-    ok(cards.count() == 23, "23 researched companies (samples + poor fits removed): " + str(cards.count()))
+    ok(cards.count() == 61, "61 researched companies (23 Apollo + 38 web research): " + str(cards.count()))
     ok(pg.locator("#mspProspectsList .badge.warn").count() == 0, "No sample data left")
     ok(pg.locator("#mspProspectsList [data-msp-fit=poor]").count() == 0, "No poor-fit companies left")
-    ok(pg.locator("#mspProspectsList [data-msp-apollo]").count() == 23, "Apollo companies labelled Apollo.io")
+    ok(pg.locator("#mspProspectsList [data-msp-apollo]").count() == 23 and pg.locator("#mspProspectsList [data-msp-research]").count() == 38, "Apollo + web research labels")
 
     # Apollo records: real companies, researched from public sources
     sky = pg.locator('[data-msp-card="apl-skyict"]')
@@ -21,13 +21,18 @@ with sync_playwright() as p:
     ok("CITY NOT VERIFIED" in pg.locator('[data-msp-card="apl-infostarbiz"]').inner_text().upper(), "Missing city still flagged")
     pg.select_option("#mspSourceFilter", "apollo"); pg.wait_for_timeout(150)
     ok(cards.count() == 23, "Source filter: Apollo.io")
+    pg.select_option("#mspSourceFilter", "research"); pg.wait_for_timeout(150)
+    ok(cards.count() == 38, "Source filter: web research")
+    pg.select_option("#mspSourceFilter", ""); pg.select_option("#mspTypeFilter", "Software house"); pg.wait_for_timeout(150)
+    ok(cards.count() == 29 and any("Seven Peaks" in n for n in cards.all_inner_texts()), "Software houses incl. Seven Peaks: " + str(cards.count()))
+    pg.select_option("#mspTypeFilter", ""); pg.select_option("#mspSourceFilter", "apollo"); pg.wait_for_timeout(100)
     pg.select_option("#mspSourceFilter", "manual"); pg.wait_for_timeout(150)
     ok(pg.locator("#mspProspectsList .msp-card").count() == 0, "Source filter: none added by you yet")
     pg.select_option("#mspSourceFilter", ""); pg.select_option("#mspTypeFilter", "MSP"); pg.wait_for_timeout(150)
     names = cards.all_inner_texts()
     ok(any("BMSP" in n for n in names) and any("Clarity IT" in n for n in names), "Type filter: researched MSPs (" + str(cards.count()) + ")")
     pg.select_option("#mspTypeFilter", ""); pg.select_option("#mspFitFilter", "good"); pg.wait_for_timeout(150)
-    ok(0 < cards.count() < 23 and pg.locator("#mspProspectsList [data-msp-fit=poor]").count() == 0, "Fit filter: good only (" + str(cards.count()) + ")")
+    ok(0 < cards.count() < 61 and pg.locator("#mspProspectsList [data-msp-fit=poor]").count() == 0, "Fit filter: good only (" + str(cards.count()) + ")")
     pg.select_option("#mspFitFilter", ""); pg.wait_for_timeout(100)
     pg.fill("#mspSearchInput", "fortinet"); pg.wait_for_timeout(150)
     ok(cards.count() >= 1, "Search matches vendor partners")
@@ -51,7 +56,7 @@ with sync_playwright() as p:
     pg.select_option("#mspCountryFilter", "Pathum Thani"); pg.wait_for_timeout(150)
     ok(cards.count() == 1 and "Soft Square" in cards.first.inner_text(), "Location filter")
     pg.click("#mspResetFilter"); pg.wait_for_timeout(150)
-    ok(cards.count() == 23, "Reset filters")
+    ok(cards.count() == 61, "Reset filters")
 
     # add a real VAR
     pg.click("[data-msp-add]"); pg.wait_for_timeout(200)
@@ -62,9 +67,9 @@ with sync_playwright() as p:
     ok("valid email" in pg.inner_text("#mspFError"), "Email validated")
     pg.fill("#mspF_email", "partners@krungthep-si.example"); pg.fill("#mspF_specialties", "Network Engineering, Cybersecurity")
     pg.click("#mspFSave"); pg.wait_for_timeout(200)
-    ok(cards.count() == 24 and "Krungthep Systems Integration" in cards.first.inner_text() and "VAR" in cards.first.inner_text(), "New VAR added at the top")
+    ok(cards.count() == 62 and "Krungthep Systems Integration" in cards.first.inner_text() and "VAR" in cards.first.inner_text(), "New VAR added at the top")
     pg.select_option("#mspTypeFilter", "VAR"); pg.wait_for_timeout(150)
-    ok(cards.count() == 4, "Type filter: VARs (new + SKY ICT + Fusion + Noventiq): " + str(cards.count()))
+    ok(cards.count() == 5, "Type filter: VARs (new + SKY ICT + Fusion + Noventiq + Blicktech): " + str(cards.count()))
     pg.select_option("#mspTypeFilter", ""); pg.wait_for_timeout(100)
 
     # stage + notes
@@ -99,7 +104,7 @@ with sync_playwright() as p:
 
     # persistence
     pg.reload(); pg.wait_for_timeout(700); role(pg, "operator"); nav(pg, "operator-msp-prospects")
-    ok(pg.locator("#mspProspectsList .msp-card").count() == 24 and pg.input_value("#mspNotes-apl-clarityit") == "Spoke to Khun Nok, wants a Unisense demo", "Prospects, stages and notes persist")
+    ok(pg.locator("#mspProspectsList .msp-card").count() == 62 and pg.input_value("#mspNotes-apl-clarityit") == "Spoke to Khun Nok, wants a Unisense demo", "Prospects, stages and notes persist")
 
     # browsers that saved the old list lose the samples and poor fits
     pg.evaluate("""() => { const a = JSON.parse(localStorage.getItem('partnerWAV_mspProspects'));
@@ -107,7 +112,7 @@ with sync_playwright() as p:
       localStorage.setItem('partnerWAV_mspProspects', JSON.stringify(a)); }""")
     pg.reload(); pg.wait_for_timeout(700); role(pg, "operator"); nav(pg, "operator-msp-prospects")
     txt = pg.inner_text("#mspProspectsList")
-    ok("Bangkok IT Services" not in txt and "T.N. Digital" not in txt and pg.locator("#mspProspectsList .msp-card").count() == 24, "Old saved samples/poor fits are dropped")
+    ok("Bangkok IT Services" not in txt and "T.N. Digital" not in txt and pg.locator("#mspProspectsList .msp-card").count() == 62, "Old saved samples/poor fits are dropped")
 
     # partner collaborations
     role(pg, "partner")
