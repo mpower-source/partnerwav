@@ -215,6 +215,21 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 .vp-product input,.vp-product textarea{ background:var(--surface); }
 .vp-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .cfg{ display:flex; flex-direction:column; gap:16px; max-width:1100px; }
+.deal-layout{ display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:16px; align-items:start; }
+@media (max-width:900px){ .deal-layout{ grid-template-columns:1fr; } }
+.deal-facts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+.deal-fact{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.deal-fact span:first-child{ font-size:.72rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); }
+.deal-fact span:last-child{ font-size:.92rem; color:var(--ink); overflow-wrap:anywhere; }
+.deal-fact .mono{ font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:600; }
+.deal-thread{ display:flex; flex-direction:column; gap:8px; max-height:420px; overflow-y:auto; padding:4px 2px; }
+.deal-sys{ align-self:center; font-size:.76rem; color:var(--ink-faint); background:var(--surface-2); border-radius:999px; padding:3px 10px; text-align:center; }
+.deal-compose textarea{ width:100%; box-sizing:border-box; min-height:90px; padding:9px 11px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--ink); font:inherit; font-size:.88rem; resize:vertical; }
+.deal-templates{ display:flex; gap:6px; flex-wrap:wrap; }
+.deal-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); }
+.deal-row .deal-row-name{ font-weight:700; margin-right:auto; min-width:0; overflow-wrap:anywhere; }
+.pricing-opts{ display:flex; flex-direction:column; gap:6px; }
+.pricing-opts label{ display:flex; gap:8px; align-items:center; font-size:.88rem; cursor:pointer; }
 .cfg-head{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
 .cfg-head h2{ font-size:1.2rem; margin:0; }
 .cfg-section{ display:flex; flex-direction:column; gap:12px; }
@@ -721,6 +736,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             <option value="draft">Draft</option>
           </select>
           <button class="btn secondary sm" style="margin-left:auto;">Export statement</button>
+        </div>
+        <div class="card card-pad" style="margin-bottom:16px;">
+          <div class="section-head"><h2 style="font-size:.95rem;">My registered deals</h2><span class="hint">Status, and messages from CloudWAV about pricing or closing</span></div>
+          <div id="myDealsList" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
         </div>
         <div class="card">
           <div class="table-scroll">
@@ -1639,16 +1658,30 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
       <!-- ===== OPERATOR: DEAL APPROVALS ===== -->
       <section id="scr-operator-approvals" hidden>
-        <div class="section-head"><h2>Deal approvals</h2><span class="hint">Registrations waiting on review</span></div>
+        <div class="section-head"><h2>Deal approvals</h2><span class="hint">Check pricing against the market, message the partner, help them close</span></div>
         <div style="height:14px"></div>
+        <div class="filter-chip-row" id="dealTabs"></div>
+        <div style="height:12px"></div>
         <div class="card" id="approvalsCard">
           <div class="table-scroll">
             <table>
-              <thead><tr><th>Partner</th><th>Program</th><th>Deal</th><th style="text-align:right">Value</th><th>Submitted</th><th></th></tr></thead>
+              <thead><tr><th>Partner</th><th>Program</th><th>Deal</th><th style="text-align:right">Value</th><th>Status</th><th>Pricing check</th><th>Submitted</th><th></th></tr></thead>
               <tbody id="approvalRows"></tbody>
             </table>
           </div>
         </div>
+      </section>
+
+      <!-- ===== OPERATOR: DEAL REVIEW ===== -->
+      <section id="scr-operator-deal-review" hidden>
+        <button class="btn ghost sm" data-goto-screen="operator-approvals">← Back to Deal approvals</button>
+        <div id="dealReviewContent" style="margin-top:14px;"></div>
+      </section>
+
+      <!-- ===== PARTNER: ONE REGISTERED DEAL ===== -->
+      <section id="scr-partner-deal-view" hidden>
+        <button class="btn ghost sm" data-goto-screen="partner-commissions">← Back to Commissions</button>
+        <div id="partnerDealContent" style="margin-top:14px;"></div>
       </section>
 
       <!-- ===== RESOURCE: BROWSE (shared: Partner + Vendor + Affiliate + Operator) ===== -->
@@ -2354,8 +2387,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   ];
 
   var approvals = [
-    { partner:"Siam Digital MSP", program:"Intelsense AI", deal:"Bangkok Bank branch rollout", value:"$42,000", submitted:"2 days ago" },
-    { partner:"Gulf Coast VAR", program:"Cross Connect", deal:"Regional clinic wearable pilot (60 units)", value:"$7,140", submitted:"5 hours ago" }
+    { id:"deal-bkk-bank", partnerId:"siam-digital", partner:"Siam Digital MSP", programId:"intelsense", program:"Intelsense AI", productId:"unisense-ai", product:"Unisense AI",
+      deal:"Bangkok Bank branch rollout", customer:"Bangkok Bank", value:"$42,000", termMonths:12, submitted:"2 days ago", status:"pending", pricingCheck:"",
+      notes:"Phase 1: 6 branches, 120 agent seats. Priced at list with a 10% first-year discount to win against a local call-center vendor.",
+      thread:[], unreadOperator:false, unreadPartner:false },
+    { id:"deal-clinic-pilot", partnerId:"gulf-coast", partner:"Gulf Coast VAR", programId:"crossconnect", program:"Cross Connect", productId:"", product:"",
+      deal:"Regional clinic wearable pilot (60 units)", customer:"Gulf Regional Clinics", value:"$7,140", termMonths:12, submitted:"5 hours ago", status:"pending", pricingCheck:"",
+      notes:"60 pendants at $119 each, direct-to-patient fulfillment (Model B). No installation.",
+      thread:[], unreadOperator:false, unreadPartner:false }
   ];
 
   var pendingPartnerApplications = [];
@@ -2546,6 +2585,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "affiliate-marketplace":"Affiliate Marketplace",
     "affiliate-manage":"My Affiliate Tool",
     "operator-program-config":"Configure Program",
+    "operator-deal-review":"Review Deal",
+    "partner-deal-view":"Registered Deal",
     "affiliate-projects":"Partner Projects",
     "affiliate-project-view":"Project Details",
     "operator-overview":"Overview",
@@ -3050,16 +3091,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       }).join("");
     }
 
-    // ---- operator approvals ----
-    document.getElementById("statPending").textContent = state.approvals.length;
-    var apRows = document.getElementById("approvalRows");
-    if (apRows){
-      apRows.innerHTML = state.approvals.length ? state.approvals.map(function(a, i){
-        return "<tr><td>"+esc(a.partner)+"</td><td>"+esc(a.program)+"</td><td>"+esc(a.deal)+"</td>"
-          + "<td class='mono-num' style='text-align:right'>"+esc(a.value)+"</td><td>"+esc(a.submitted)+"</td>"
-          + "<td class='row-actions'><button class='btn primary sm' data-approve='"+i+"'>Approve</button></td></tr>";
-      }).join("") : "<tr><td colspan='6'><div class='empty'>Nothing waiting on review.</div></td></tr>";
-    }
+    // ---- operator approvals + deal review; partner deals ----
+    renderOperatorApprovals();
+    renderDealReview();
+    renderPartnerDeals();
+    renderPartnerDealView();
 
     // ---- operator incentive approvals ----
     renderOperatorIncentiveApprovals();
@@ -3430,7 +3466,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var v = programById(state.myVendorId);
     if (!v){ row.innerHTML = ""; return; }
     var myPartners = partnerRows.filter(function(r){ return r.program === v.name; });
-    var pendingForMe = state.approvals.filter(function(a){ return a.program === v.name; });
+    var pendingForMe = state.approvals.filter(function(a){ return a.program === v.name && (a.status || "pending") === "pending"; });
     row.innerHTML =
       '<div class="stat-tile"><span class="stat-label">Partners reselling you</span><span class="stat-value">'+myPartners.length+'</span><span class="stat-trend">Across all tiers</span></div>'
       + '<div class="stat-tile"><span class="stat-label">Program status</span><span class="stat-value" style="font-size:1rem;">'+statusPill(v.status)+'</span><span class="stat-trend">'+esc(v.relationships.join(" + "))+'</span></div>'
@@ -4128,6 +4164,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var lead = leads.filter(function(l){ return l.id === leadId; })[0];
     if (!lead) return;
     lead.status = "deal";
+    var dealId = "deal-" + lead.id + "-" + Date.now().toString(36);
+    lead.convertedDeal = dealId;
+    var pgmId = state.enrolled[0] || "", pgmObj = programById(pgmId);
+    state.approvals.push(normalizeDeal({ id: dealId, partnerId: lead.partnerId || state.myProfileId, partner: currentPartnerName(),
+      programId: pgmId, program: pgmObj ? pgmObj.name : "", productId:"", product:"", deal: lead.prospectName, customer: lead.prospectName,
+      value: lead.value, termMonths: 12, notes: lead.notes || "", submitted: nowStamp(), status:"pending", pricingCheck:"", thread:[] }));
+    saveDeals();
     toast("✓ Lead converted to deal - " + lead.prospectName + " is now registered in Deals");
     state.screen = "partner-commissions";
     render();
@@ -4757,6 +4800,257 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (upgradeBtn) upgradeBtn.addEventListener("click", function(){ requestTierUpgrade(p.id); closeModal(); });
   }
 
+  // ===== DEAL REVIEW: operator pricing check + deal conversation with the partner =====
+  var DEALS_KEY = "partnerWAV_deals";
+  var DEAL_STATUS = {
+    pending:  { label:"Needs review",      cls:"warn" },
+    changes:  { label:"Changes requested", cls:"accent" },
+    approved: { label:"Approved",          cls:"good" },
+    declined: { label:"Declined",          cls:"bad" }
+  };
+  var PRICING_CHECKS = {
+    fair: "Looks right for the market",
+    high: "May be priced too high",
+    low:  "May be priced too low",
+    info: "Need more information"
+  };
+  function nowStamp(){ // local time, "YYYY-MM-DD HH:MM"
+    var d = new Date(), z = function(n){ return (n < 10 ? "0" : "") + n; };
+    return d.getFullYear() + "-" + z(d.getMonth()+1) + "-" + z(d.getDate()) + " " + z(d.getHours()) + ":" + z(d.getMinutes());
+  }
+  function saveDeals(){ try { localStorage.setItem(DEALS_KEY, JSON.stringify(state.approvals)); } catch(e){ console.log("Could not save deals:", e); } }
+  function loadDeals(){
+    try {
+      var saved = JSON.parse(localStorage.getItem(DEALS_KEY) || "null");
+      if (Array.isArray(saved)) state.approvals = saved;
+    } catch(e){ console.log("Could not load deals:", e); }
+    state.approvals.forEach(normalizeDeal);
+  }
+  function normalizeDeal(d){
+    if (!d.id) d.id = "deal-" + Math.random().toString(36).slice(2, 9);
+    if (!d.status) d.status = "pending";
+    if (!Array.isArray(d.thread)) d.thread = [];
+    if (d.pricingCheck === undefined) d.pricingCheck = "";
+    if (!d.programId){ var pg = programs.filter(function(x){ return x.name === d.program; })[0]; d.programId = pg ? pg.id : ""; }
+    if (!d.partnerId){ var pp = partnerProfiles.filter(function(x){ return x.name === d.partner; })[0]; d.partnerId = pp ? pp.id : ""; }
+    return d;
+  }
+  function dealById(id){ return state.approvals.filter(function(d){ return d.id === id; })[0] || null; }
+  function dealAmount(value){
+    var m = String(value || "").replace(/,/g, "").match(/(\d+(?:\.\d+)?)\s*([kKmM])?/);
+    if (!m) return null;
+    var n = parseFloat(m[1]);
+    if (m[2]) n *= (m[2].toLowerCase() === "k" ? 1e3 : 1e6);
+    return n;
+  }
+  function dealCurrencySymbol(value){ var m = String(value || "").match(/^[^\d\s.,]+/); return m ? m[0] : ""; }
+  function fmtAmount(sym, n){ return sym + Math.round(n).toLocaleString("en-US"); }
+  function dealStatusBadge(d){ var st = DEAL_STATUS[d.status] || DEAL_STATUS.pending; return '<span class="badge '+st.cls+'">'+esc(st.label)+'</span>'; }
+
+  // Partner's first-year commission on this deal, from the configured program terms (or the listed rate)
+  function dealCommissionEstimate(d){
+    var p = programById(d.programId); var amt = dealAmount(d.value);
+    if (!p || amt === null) return null;
+    var terms = p.terms, tier, rate = "", renewal = "", tierName = "";
+    tier = terms && terms.tiers && terms.tiers[0] ? terms.tiers[0] : (p.tiers && p.tiers[0] ? parseTierRate(p.tiers[0]) : null);
+    if (!tier || tier.firstYear === "") return null;
+    rate = tier.firstYear; renewal = tier.renewal; tierName = tier.tier;
+    if (terms && d.productId && terms.productOverrides && terms.productOverrides[d.productId]){
+      var o = terms.productOverrides[d.productId];
+      if (o.firstYear !== "") rate = o.firstYear;
+      if (o.renewal !== "") renewal = o.renewal;
+    }
+    var sym = dealCurrencySymbol(d.value);
+    return { tierName: tierName, rate: rate, renewal: renewal, amount: fmtAmount(sym, amt * rate / 100),
+      renewalAmount: (renewal !== "" && renewal > 0) ? fmtAmount(sym, amt * renewal / 100) : "",
+      base: (terms && terms.revenueBase === "gross") ? "gross revenue" : "net revenue" };
+  }
+
+  function dealTemplates(d){
+    var p = programById(d.programId);
+    var first = d.partner ? d.partner + " team" : "there";
+    return {
+      high: "Hi " + first + " -- thanks for registering " + d.deal + ". At " + d.value + " this looks on the high side for what similar customers in this market usually pay. Could we walk through the scope together before it goes to " + (d.customer || "the customer") + "? A sharper number may close faster.",
+      low: "Hi " + first + " -- thanks for registering " + d.deal + ". At " + d.value + " this looks on the low side for the scope you've described. Let's make sure you're not leaving margin on the table -- happy to help you position a higher tier or longer term.",
+      help: "Hi " + first + " -- want a hand closing " + d.deal + "? We can join a call with " + (d.customer || "the customer") + ", share case studies" + (p ? ", or loop in " + p.name + "'s team" : "") + ". Just tell us what would help most."
+    };
+  }
+
+  function threadHtml(d, viewer){
+    if (!d.thread.length) return '<div class="empty" style="padding:14px;">No messages yet.' + (viewer === "operator" ? " Use the box below to ask about pricing or offer help closing." : " CloudWAV will message you here if anything needs adjusting.") + '</div>';
+    return d.thread.map(function(m){
+      if (m.from === "system") return '<div class="deal-sys">'+esc(m.text)+' · '+esc(m.time)+'</div>';
+      var mine = m.from === viewer;
+      return '<div class="msg-bubble-row'+(mine?" mine":"")+'"><div class="msg-bubble">'
+        + (mine ? "" : '<span class="post-author" style="display:block;font-size:.72rem;">'+esc(m.name)+'</span>')
+        + '<p class="post-text" style="margin-top:2px;white-space:pre-wrap;">'+esc(m.text)+'</p><span class="post-time">'+esc(m.time)+'</span></div></div>';
+    }).join("");
+  }
+
+  function dealFactsHtml(d){
+    var fact = function(label, val, mono){ return '<div class="deal-fact"><span>'+label+'</span><span'+(mono?' class="mono"':'')+'>'+(val ? esc(val) : '<span style="color:var(--ink-faint)">--</span>')+'</span></div>'; };
+    return '<div class="deal-facts">'
+      + fact("Partner", d.partner) + fact("Program", d.program) + fact("Product", d.product)
+      + fact("Customer", d.customer) + fact("Deal value", d.value, true) + fact("Term", d.termMonths ? d.termMonths + " months" : "")
+      + fact("Submitted", d.submitted)
+    + '</div>';
+  }
+
+  function renderOperatorApprovals(){
+    var tabs = document.getElementById("dealTabs"), rows = document.getElementById("approvalRows");
+    var pendingCount = state.approvals.filter(function(d){ return d.status === "pending"; }).length;
+    var stat = document.getElementById("statPending"); if (stat) stat.textContent = pendingCount;
+    if (!rows) return;
+    var tab = state.dealTab || "pending";
+    if (tabs){
+      tabs.innerHTML = Object.keys(DEAL_STATUS).map(function(k){
+        var n = state.approvals.filter(function(d){ return d.status === k; }).length;
+        var unread = state.approvals.filter(function(d){ return d.status === k && d.unreadOperator; }).length;
+        return '<button type="button" class="filter-chip" data-deal-tab="'+k+'" aria-pressed="'+(tab===k?"true":"false")+'">'+esc(DEAL_STATUS[k].label)+' ('+n+')'+(unread ? ' · '+unread+' new' : '')+'</button>';
+      }).join("");
+    }
+    var list = state.approvals.filter(function(d){ return d.status === tab; });
+    rows.innerHTML = list.length ? list.map(function(d){
+      var newReply = d.unreadOperator ? ' <span class="badge accent">New reply</span>' : '';
+      return "<tr><td>"+esc(d.partner)+"</td><td>"+esc(d.program)+"</td><td>"+esc(d.deal)+newReply+"</td>"
+        + "<td class='mono-num' style='text-align:right'>"+esc(d.value)+"</td><td>"+dealStatusBadge(d)+"</td>"
+        + "<td style='font-size:.82rem;'>"+(d.pricingCheck ? esc(PRICING_CHECKS[d.pricingCheck]) : "<span style='color:var(--ink-faint)'>Not checked</span>")+"</td>"
+        + "<td>"+esc(d.submitted)+"</td>"
+        + "<td class='row-actions'><button class='btn primary sm' data-review-deal='"+esc(d.id)+"'>Review</button></td></tr>";
+    }).join("") : "<tr><td colspan='8'><div class='empty'>No deals in \""+esc(DEAL_STATUS[tab].label)+"\".</div></td></tr>";
+  }
+
+  function renderDealReview(){
+    var box = document.getElementById("dealReviewContent");
+    if (!box || state.screen !== "operator-deal-review") return;
+    var d = dealById(state.reviewDealId);
+    if (!d){ box.innerHTML = '<div class="empty">Pick a deal from Deal approvals.</div>'; return; }
+    d.unreadOperator = false;
+    var est = dealCommissionEstimate(d);
+    var draft = state.dealDraft && state.dealDraft.id === d.id ? state.dealDraft.text : "";
+    var pricing = Object.keys(PRICING_CHECKS).map(function(k){
+      return '<label><input type="radio" name="pricingCheck" value="'+k+'" data-pricing-check="'+k+'"'+(d.pricingCheck===k?" checked":"")+'> '+esc(PRICING_CHECKS[k])+'</label>';
+    }).join("");
+    var closed = d.status === "approved" || d.status === "declined";
+    box.innerHTML = '<div class="deal-layout">'
+      + '<div style="display:flex;flex-direction:column;gap:16px;">'
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:14px;">'
+          + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><h2 style="font-size:1.15rem;margin:0;margin-right:auto;">'+esc(d.deal)+'</h2>'+dealStatusBadge(d)+'</div>'
+          + dealFactsHtml(d)
+          + '<div><div class="aff-section-title" style="margin-bottom:6px;">Partner\'s pricing notes</div><p class="program-desc" style="margin:0;white-space:pre-wrap;">'+(d.notes ? esc(d.notes) : '<span style="color:var(--ink-faint)">None given.</span>')+'</p></div>'
+        + '</div>'
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:8px;">'
+          + '<div class="aff-section-title">Partner commission on this deal</div>'
+          + (est ? '<div style="font-size:1.25rem;font-weight:700;font-family:\'IBM Plex Mono\',monospace;">'+esc(est.amount)+' <span style="font-size:.8rem;font-weight:500;color:var(--ink-soft);font-family:inherit;">first year</span></div>'
+              + '<span class="field-note">'+esc(est.tierName)+' rate '+esc(fmtPct(est.rate))+' of '+esc(est.base)+(est.renewalAmount ? ' · then '+esc(est.renewalAmount)+'/yr at '+esc(fmtPct(est.renewal))+' renewal' : '')+'. From the program\'s configured terms.</span>'
+            : '<span class="field-note">Can\'t estimate -- the deal value or the program\'s commission rate isn\'t a plain number.</span>')
+        + '</div>'
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;">'
+          + '<div class="aff-section-title">Pricing check</div>'
+          + '<p class="field-note" style="margin:0;">Your read on whether this price will land well with the customer and keep everyone happy. Saved on the deal; the partner doesn\'t see it unless you message them.</p>'
+          + '<div class="pricing-opts">'+pricing+'</div>'
+        + '</div>'
+      + '</div>'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+        + '<div class="aff-section-title">Conversation with '+esc(d.partner)+'</div>'
+        + '<div class="deal-thread" id="dealThread">'+threadHtml(d, "operator")+'</div>'
+        + '<div class="deal-compose">'
+          + '<div class="deal-templates" style="margin-bottom:8px;"><span class="field-note" style="align-self:center;">Start from:</span>'
+            + '<button type="button" class="btn ghost sm" data-deal-template="high">Looks high</button>'
+            + '<button type="button" class="btn ghost sm" data-deal-template="low">Looks low</button>'
+            + '<button type="button" class="btn ghost sm" data-deal-template="help">Offer to help close</button></div>'
+          + '<textarea id="dealMessage" placeholder="Message '+esc(d.partner)+' about this deal…" aria-label="Message to partner">'+esc(draft)+'</textarea>'
+        + '</div>'
+        + '<div id="dealError" class="login-msg bad" role="alert" hidden></div>'
+        + '<div class="cfg-actions">'
+          + '<button type="button" class="btn secondary sm" data-deal-action="message">Send message</button>'
+          + (closed ? '' :
+              '<button type="button" class="btn secondary sm" data-deal-action="changes">Request changes</button>'
+            + '<button type="button" class="btn ghost sm" data-deal-action="decline">Decline</button>'
+            + '<button type="button" class="btn primary sm" data-deal-action="approve" style="margin-left:auto;">Approve deal</button>')
+        + '</div>'
+        + '<span class="field-note">Request changes and Decline send your message to the partner as the reason. Approve can include an optional note.</span>'
+      + '</div>'
+    + '</div>';
+    var th = document.getElementById("dealThread"); if (th) th.scrollTop = th.scrollHeight;
+    saveDeals();
+  }
+
+  function dealAction(action){
+    var d = dealById(state.reviewDealId); if (!d || state.role !== "operator") return;
+    var ta = document.getElementById("dealMessage"), text = ta ? ta.value.trim() : "";
+    var err = document.getElementById("dealError");
+    var fail = function(msg){ err.textContent = msg; err.hidden = false; if (ta) ta.focus(); };
+    var me = state.account ? state.account.name + " (CloudWAV)" : "CloudWAV Program Operator";
+    if ((action === "message" || action === "changes") && !text) return fail(action === "message" ? "Write a message first." : "Tell the partner what needs adjusting -- your message is sent with the request.");
+    if (action === "decline" && !text) return fail("Add a reason for declining -- it's sent to the partner.");
+    if (text) d.thread.push({ from:"operator", name:me, time:nowStamp(), text:text });
+    if (action === "approve"){ d.status = "approved"; d.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV approved this deal" }); }
+    if (action === "changes"){ d.status = "changes"; d.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV requested changes" }); }
+    if (action === "decline"){ d.status = "declined"; d.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV declined this deal" }); }
+    d.unreadPartner = true;
+    state.dealDraft = null;
+    saveDeals();
+    toast(action === "approve" ? "Approved -- " + d.partner + " has been notified"
+      : action === "changes" ? "Changes requested -- sent to " + d.partner
+      : action === "decline" ? "Declined -- reason sent to " + d.partner
+      : "Message sent to " + d.partner);
+    if (action === "message"){ renderDealReview(); }
+    else { state.dealTab = "pending"; state.screen = "operator-approvals"; render(); } // back to the review queue
+  }
+
+  function renderPartnerDeals(){
+    var box = document.getElementById("myDealsList"); if (!box) return;
+    var mine = state.approvals.filter(function(d){ return d.partnerId && d.partnerId === state.myProfileId; });
+    box.innerHTML = mine.length ? mine.map(function(d){
+      var last = d.thread.filter(function(m){ return m.from === "operator"; }).slice(-1)[0];
+      return '<div class="deal-row"><span class="deal-row-name">'+esc(d.deal)
+          + '<span class="field-note" style="display:block;font-weight:400;">'+esc(d.program)+' · <span class="mono-num">'+esc(d.value)+'</span>'+(last ? ' · Last from CloudWAV: '+esc(last.time) : '')+'</span></span>'
+        + (d.unreadPartner ? '<span class="badge accent">New message</span>' : '')
+        + dealStatusBadge(d)
+        + '<button type="button" class="btn secondary sm" data-view-deal="'+esc(d.id)+'">View</button></div>';
+    }).join("") : '<div class="empty">No registered deals yet -- use "Submit a deal" or convert a lead.</div>';
+  }
+
+  function renderPartnerDealView(){
+    var box = document.getElementById("partnerDealContent");
+    if (!box || state.screen !== "partner-deal-view") return;
+    var d = dealById(state.viewDealId);
+    if (!d || d.partnerId !== state.myProfileId){ box.innerHTML = '<div class="empty">Deal not found.</div>'; return; }
+    d.unreadPartner = false;
+    var editing = d.status === "changes";
+    var editHtml = editing
+      ? '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+          + '<div class="aff-section-title">Update and resubmit</div>'
+          + '<p class="field-note" style="margin:0;">CloudWAV asked for changes -- adjust the deal and resubmit it for approval.</p>'
+          + '<div class="vp-form"><div class="vp-grid">'
+            + '<div><label for="pdValue">Deal value</label><input id="pdValue" type="text" value="'+esc(d.value).replace(/"/g,"&quot;")+'"></div>'
+            + '<div><label for="pdTerm">Term (months)</label><input id="pdTerm" type="number" min="1" step="1" value="'+esc(d.termMonths || "")+'"></div>'
+          + '</div><div><label for="pdNotes">Pricing notes</label><textarea id="pdNotes">'+esc(d.notes || "")+'</textarea></div></div>'
+          + '<div id="pdError" class="login-msg bad" role="alert" hidden></div>'
+          + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-resubmit-deal="'+esc(d.id)+'">Resubmit for approval</button></div>'
+        + '</div>'
+      : '';
+    box.innerHTML = '<div class="deal-layout">'
+      + '<div style="display:flex;flex-direction:column;gap:16px;">'
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:14px;">'
+          + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><h2 style="font-size:1.15rem;margin:0;margin-right:auto;">'+esc(d.deal)+'</h2>'+dealStatusBadge(d)+'</div>'
+          + dealFactsHtml(d)
+          + '<div><div class="aff-section-title" style="margin-bottom:6px;">Your pricing notes</div><p class="program-desc" style="margin:0;white-space:pre-wrap;">'+(d.notes ? esc(d.notes) : '<span style="color:var(--ink-faint)">None given.</span>')+'</p></div>'
+        + '</div>'
+        + editHtml
+      + '</div>'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+        + '<div class="aff-section-title">Conversation with CloudWAV</div>'
+        + '<div class="deal-thread" id="partnerDealThread">'+threadHtml(d, "partner")+'</div>'
+        + '<div class="deal-compose"><textarea id="partnerDealMessage" placeholder="Reply to CloudWAV, or ask for help closing…" aria-label="Message to CloudWAV"></textarea></div>'
+        + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-partner-deal-send="'+esc(d.id)+'">Send</button></div>'
+      + '</div>'
+    + '</div>';
+    var th = document.getElementById("partnerDealThread"); if (th) th.scrollTop = th.scrollHeight;
+    saveDeals();
+  }
+
   // ===== OPERATOR: CONFIGURE PROGRAM (values from the vendor agreement) =====
   var PROGRAM_TERMS_KEY = "partnerWAV_programTerms";
   var AGREEMENT_TYPES = ["Vendor Program Agreement","Joint Venture Agreement","Custom Marketing Agreement","SaaS Reseller Agreement"];
@@ -5036,7 +5330,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var p = programById(state.configProgramId), d = state.cfgDraft;
     var errs = validateConfig(d), box = document.getElementById("cfgError");
     if (errs.length){ box.innerHTML = errs.map(esc).join("<br>"); box.hidden = false; box.scrollIntoView({ block:"center" }); return; }
-    d.updatedAt = new Date().toISOString().slice(0, 16).replace("T", " ");
+    d.updatedAt = nowStamp();
     d.updatedBy = state.account ? state.account.name : "Program Operator";
     p.terms = JSON.parse(JSON.stringify(d));
     p.tiers = d.tiers.map(function(t){ return { tier:t.tier, rate:tierRateText(t), base:t.base || (d.revenueBase === "net" ? "Net revenue" : "Gross revenue") }; });
@@ -5066,7 +5360,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<p style="margin:0;color:var(--ink-soft);font-size:.9rem;line-height:1.5;">Registers this deal with the Program Operator for review -- lands in the same approval queue as every other partner\'s submissions.</p>'
       + '<div class="field-row"><label>Program</label><select id="dealProgram">'+progOptions+'</select></div>'
       + '<div class="field-row"><label>Deal name</label><input type="text" id="dealName" placeholder="e.g. Riverside Hospital voice-AI rollout"></div>'
+      + '<div class="field-row"><label>Customer</label><input type="text" id="dealCustomer" placeholder="e.g. Riverside Hospital"></div>'
       + '<div class="field-row"><label>Estimated value</label><input type="text" id="dealValue" placeholder="e.g. $18,500 or ฿148,200"></div>'
+      + '<div class="field-row"><label>Term (months)</label><input type="number" id="dealTerm" min="1" step="1" value="12"></div>'
+      + '<div class="field-row"><label>Pricing notes</label><textarea id="dealNotes" rows="3" placeholder="Seats, discounts, what the customer is comparing you against…"></textarea></div>'
       + '<div class="modal-actions"><button class="btn secondary" id="modalClose2">Cancel</button><button class="btn primary" id="modalSubmitDeal">Submit for review</button></div>'
     );
     back.querySelector("#modalClose2").addEventListener("click", closeModal);
@@ -5075,7 +5372,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var name = document.getElementById("dealName").value.trim();
       var value = document.getElementById("dealValue").value.trim();
       if (!name || !value){ toast("Add a deal name and estimated value first."); return; }
-      state.approvals.push({ partner:"Peter Phelan", program:program, deal:name, value:value, submitted:"just now" });
+      var pgm = programs.filter(function(x){ return x.name === program; })[0];
+      state.approvals.push(normalizeDeal({ partnerId: state.myProfileId, partner: currentPartnerName(), programId: pgm ? pgm.id : "", program: program,
+        productId:"", product:"", deal:name, customer: (document.getElementById("dealCustomer").value || "").trim(), value:value,
+        termMonths: parseInt(document.getElementById("dealTerm").value, 10) || "", notes: (document.getElementById("dealNotes").value || "").trim(),
+        submitted: nowStamp(), status:"pending", pricingCheck:"", thread:[] }));
+      saveDeals();
       toast("Deal submitted -- \"" + name + "\" is now awaiting Program Operator review");
       closeModal();
       render();
@@ -6640,6 +6942,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (navBtn){
       console.log("Nav button clicked, going to:", navBtn.getAttribute("data-screen"));
       state.screen = navBtn.getAttribute("data-screen");
+      if (state.screen === "operator-approvals") state.dealTab = "pending";
       render();
       return;
     }
@@ -7163,13 +7466,60 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
 
-    var approveBtn = e.target.closest("[data-approve]");
-    if (approveBtn){
-      var idx = parseInt(approveBtn.getAttribute("data-approve"), 10);
-      var a = state.approvals[idx];
-      state.approvals.splice(idx, 1);
-      toast("Approved -- "+a.deal);
-      render();
+    var dealTabBtn = e.target.closest("[data-deal-tab]");
+    if (dealTabBtn){ state.dealTab = dealTabBtn.getAttribute("data-deal-tab"); renderOperatorApprovals(); return; }
+
+    var reviewDealBtn = e.target.closest("[data-review-deal]");
+    if (reviewDealBtn){ state.reviewDealId = reviewDealBtn.getAttribute("data-review-deal"); state.dealDraft = null; state.screen = "operator-deal-review"; render(); window.scrollTo(0,0); return; }
+
+    var dealTplBtn = e.target.closest("[data-deal-template]");
+    if (dealTplBtn){
+      var dT = dealById(state.reviewDealId), ta2 = document.getElementById("dealMessage");
+      if (dT && ta2){ ta2.value = dealTemplates(dT)[dealTplBtn.getAttribute("data-deal-template")]; ta2.focus(); state.dealDraft = { id:dT.id, text:ta2.value }; }
+      return;
+    }
+
+    var pricingRadio = e.target.closest("[data-pricing-check]");
+    if (pricingRadio){
+      var dP = dealById(state.reviewDealId);
+      if (dP){ dP.pricingCheck = pricingRadio.getAttribute("data-pricing-check"); saveDeals(); toast("Pricing check saved: " + PRICING_CHECKS[dP.pricingCheck]); }
+      return;
+    }
+
+    var dealActionBtn = e.target.closest("[data-deal-action]");
+    if (dealActionBtn){ dealAction(dealActionBtn.getAttribute("data-deal-action")); return; }
+
+    var viewDealBtn = e.target.closest("[data-view-deal]");
+    if (viewDealBtn){ state.viewDealId = viewDealBtn.getAttribute("data-view-deal"); state.screen = "partner-deal-view"; render(); window.scrollTo(0,0); return; }
+
+    var partnerDealSend = e.target.closest("[data-partner-deal-send]");
+    if (partnerDealSend){
+      var dS = dealById(partnerDealSend.getAttribute("data-partner-deal-send")), taS = document.getElementById("partnerDealMessage");
+      var txt = taS ? taS.value.trim() : "";
+      if (!txt){ toast("Write a message first"); if (taS) taS.focus(); return; }
+      dS.thread.push({ from:"partner", name: currentPartnerName(), time: nowStamp(), text: txt });
+      dS.unreadOperator = true; saveDeals();
+      toast("Sent to CloudWAV");
+      renderPartnerDealView();
+      return;
+    }
+
+    var resubmitBtn = e.target.closest("[data-resubmit-deal]");
+    if (resubmitBtn){
+      var dR = dealById(resubmitBtn.getAttribute("data-resubmit-deal"));
+      var nv = (document.getElementById("pdValue").value || "").trim(), nt = parseInt(document.getElementById("pdTerm").value, 10), nn = (document.getElementById("pdNotes").value || "").trim();
+      var errR = document.getElementById("pdError");
+      if (!nv){ errR.textContent = "Enter the deal value."; errR.hidden = false; return; }
+      var changes = [];
+      if (nv !== dR.value) changes.push("value " + dR.value + " → " + nv);
+      if ((nt || "") !== (dR.termMonths || "")) changes.push("term " + (dR.termMonths || "--") + " → " + (nt || "--") + " months");
+      if (nn !== (dR.notes || "")) changes.push("pricing notes");
+      dR.value = nv; dR.termMonths = nt || ""; dR.notes = nn;
+      dR.status = "pending"; dR.unreadOperator = true;
+      dR.thread.push({ from:"system", time: nowStamp(), text: currentPartnerName() + " resubmitted" + (changes.length ? " -- updated " + changes.join(", ") : " with no changes") });
+      saveDeals();
+      toast("Resubmitted -- CloudWAV will review the updated deal");
+      renderPartnerDealView(); renderPartnerDeals();
       return;
     }
 
@@ -7597,6 +7947,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeModal(); });
 
+  // Deal review: remember the operator's unsent message if the view re-renders
+  document.addEventListener("input", function(e){
+    if (e.target.id === "dealMessage" && state.reviewDealId) state.dealDraft = { id: state.reviewDealId, text: e.target.value };
+  });
+
   // Configure program: live preview, revenue-base switch, Enter adds a deduction
   document.addEventListener("input", function(e){
     if (e.target.closest && e.target.closest("#programConfigForm") && e.target.id !== "cfgNewDeduction"){ readConfigForm(); updateConfigPreview(); }
@@ -7628,6 +7983,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadResourceData();
   loadVendorEdits();
   loadProgramTerms();
+  loadDeals();
 
   // ===== SIGN-IN (Supabase Auth + portal_users role mapping) =====
   // Each login maps to a role and the company it belongs to via the portal_users table
