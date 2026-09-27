@@ -374,7 +374,6 @@
       <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
       <button class="navlink" data-screen="partner-community"><span class="ic">👥</span>Community</button>
       <button class="navlink" data-screen="partner-network"><span class="ic">🤝</span>Partner Network</button>
-      <button class="navlink" data-screen="partner-collaboration-finder"><span class="ic">🎯</span>Partner Collaborations</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
@@ -415,7 +414,8 @@
       <button class="navlink" data-screen="resource-approvals"><span class="ic">📚</span>Resource Approvals</button>
       <button class="navlink" data-screen="operator-marketing-approvals"><span class="ic">📢</span>Marketing Approvals</button>
       <button class="navlink" data-screen="operator-partner-map"><span class="ic">🗺️</span>Partner Discovery Map</button>
-      <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
+      <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
+      <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
     </nav>
 
     <div class="sidebar-foot">
@@ -1196,24 +1196,35 @@
 
       <!-- ===== TIER 3: RESOURCE APPROVALS EDITOR (Operator only) ===== -->
       <section id="scr-resource-approvals-editor" hidden>
-        <button class="btn ghost sm" data-back-screen="resource-approvals">← Back</button>
-        <div class="card card-pad" style="margin-top:16px;">
-          <h2 id="approvalEditorTitle">Review Resource Submission</h2>
-          <div style="height:16px"></div>
+        <button class="btn ghost sm" data-back-screen="resource-approvals">← Back to Queue</button>
+        <div class="card card-pad" style="margin-top:16px;display:flex;flex-direction:column;gap:20px;">
+          <div>
+            <h2 id="approvalEditorTitle">Review Resource Submission</h2>
+            <div style="font-size:.9rem;color:var(--ink-soft);margin-top:4px;">Review the details below and make your approval decision</div>
+          </div>
           <div id="approvalReviewContent" style="display:flex;flex-direction:column;gap:16px;"></div>
-          <form id="approvalForm" style="display:flex;flex-direction:column;gap:16px;margin-top:16px;">
-            <div><label>Approval Decision</label><select id="approvalDecision" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required>
-              <option value="">-- Select decision --</option>
-              <option value="approve">Approve & Publish</option>
-              <option value="reject">Reject</option>
-              <option value="request-revision">Request Revision</option>
-            </select></div>
-            <div><label>Comments (optional)</label><textarea id="approvalComments" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:60px;" placeholder="Feedback for the submitter"></textarea></div>
-            <div style="display:flex;gap:8px;">
-              <button type="submit" class="btn primary">Submit Decision</button>
-              <button type="button" class="btn secondary" data-back-screen="resource-approvals">Cancel</button>
-            </div>
-          </form>
+          <div style="border-top:1px solid var(--line);padding-top:20px;">
+            <form id="approvalForm" style="display:flex;flex-direction:column;gap:16px;">
+              <div>
+                <label style="font-weight:600;display:block;margin-bottom:8px;">Your Decision</label>
+                <select id="approvalDecision" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:.95rem;background:var(--surface);color:var(--ink);" required>
+                  <option value="">-- Select what to do --</option>
+                  <option value="approve">✓ Approve & Publish - Content meets guidelines</option>
+                  <option value="reject">✗ Reject - Does not meet guidelines</option>
+                  <option value="request-revision">↩️ Request Revision - Needs improvements</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-weight:600;display:block;margin-bottom:8px;">Reason / Feedback</label>
+                <textarea id="approvalComments" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:.9rem;background:var(--surface);color:var(--ink);min-height:100px;resize:vertical;" placeholder="Explain your decision. If rejecting or requesting revision, be specific about what needs to be fixed or changed." required></textarea>
+                <div style="font-size:.75rem;color:var(--ink-faint);margin-top:4px;">Required for all decisions</div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:8px;">
+                <button type="submit" class="btn primary">Submit Decision</button>
+                <button type="button" class="btn secondary" data-back-screen="resource-approvals">Cancel</button>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
 
@@ -1590,47 +1601,122 @@
         </div>
       </section>
 
-      <!-- ===== OPERATOR: MSP PROSPECTS ===== -->
-      <section id="scr-operator-msp-prospects" hidden>
-        <div class="section-head"><h2>MSP Prospecting</h2><span class="hint">Find MSPs in Thailand interested in selling vendor products</span></div>
-        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
-          <input type="text" class="list-search" id="mspSearchInput" placeholder="Search by company name, city, or specialty...">
-          <select id="mspCountryFilter" style="padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
-            <option value="">All Locations</option>
-            <option value="Bangkok">Bangkok</option>
-            <option value="Chiang Mai">Chiang Mai</option>
-            <option value="Phuket">Phuket</option>
-            <option value="Rayong">Rayong</option>
-            <option value="Ubon Ratchathani">Ubon Ratchathani</option>
-          </select>
-          <button class="btn secondary sm" id="mspResetFilter">Reset Filters</button>
+      <!-- ===== RESOURCE: EDITOR (Add/Edit/Delete) ===== -->
+      <section id="scr-resources-editor" hidden>
+        <div class="section-head"><h2 id="resourceEditorTitle">Submit Resource</h2><span class="hint">Share materials with the community</span></div>
+        <div style="max-width:700px;">
+          <form id="resourceForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Resource Title</label>
+              <input type="text" id="resourceFormTitle" placeholder="e.g., Cloud Migration Best Practices" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+            </div>
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Type</label>
+              <select id="resourceFormType" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+                <option value="">Select type...</option>
+                <option value="pdf">PDF Document</option>
+                <option value="ppt">PowerPoint Presentation</option>
+                <option value="webinar">Webinar Recording</option>
+                <option value="guide">Implementation Guide</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Program/Vendor</label>
+              <select id="resourceFormVendor" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+                <option value="">Select program...</option>
+                <option value="botnoi">Botnoi Voice AI</option>
+                <option value="unisense">Unisense Hardware</option>
+                <option value="intelsense">Intelsense AI</option>
+                <option value="general">General Partner Content</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Description</label>
+              <textarea id="resourceFormDesc" placeholder="Describe the resource and its value..." style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);min-height:100px;"></textarea>
+            </div>
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">URL / File Link</label>
+              <input type="text" id="resourceFormUrl" placeholder="https://..." style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button type="button" class="btn primary" id="resourceFormSubmit">Submit for Review</button>
+              <button type="button" class="btn secondary" data-back-screen="resource-browse">Cancel</button>
+              <button type="button" class="btn danger" id="resourceFormDelete" style="margin-left:auto;display:none;">Delete Resource</button>
+            </div>
+          </form>
         </div>
-        <div style="height:12px"></div>
-        <div id="mspProspectsList" style="display:flex;flex-direction:column;gap:14px;"></div>
       </section>
 
-      <!-- ===== PARTNER: COLLABORATION FINDER ===== -->
-      <section id="scr-partner-collaboration-finder" hidden>
-        <div class="section-head"><h2>Partner Collaborations</h2><span class="hint">Find partners for joint projects, meetups, and marketing</span></div>
-        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
-          <input type="text" class="list-search" id="collabSearchInput" placeholder="Search by title or region...">
-          <select id="collabTypeFilter" style="padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
-            <option value="">All Types</option>
-            <option value="project">Projects</option>
-            <option value="meetup">Meetups</option>
-            <option value="marketing">Joint Marketing</option>
-          </select>
-          <select id="collabRegionFilter" style="padding:8px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
-            <option value="">All Regions</option>
-            <option value="apac">Asia Pacific</option>
-            <option value="europe">Europe</option>
-            <option value="americas">Americas</option>
-            <option value="meaf">Middle East & Africa</option>
-          </select>
-          <button class="btn secondary sm" id="collabResetFilter">Reset Filters</button>
+      <!-- ===== OPERATOR: MSP ENGAGEMENT TRACKER ===== -->
+      <section id="scr-operator-msp-engagements" hidden>
+        <div class="section-head"><h2>MSP Engagement Tracking</h2><span class="hint">Monitor all outreach and conversion activity</span></div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>MSP Company</th><th>Vendor/Solution</th><th>Contact Method</th><th>Date</th><th>Status</th><th>Conversion</th></tr></thead>
+              <tbody id="engagementRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== OPERATOR: LANDING PAGE MANAGER ===== -->
+      <section id="scr-operator-landing-pages" hidden>
+        <div class="section-head"><h2>Landing Page Management</h2><span class="hint">Create and manage vendor solution landing pages</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <button class="btn primary sm" data-goto-screen="scr-landing-page-editor">+ Create Landing Page</button>
         </div>
         <div style="height:12px"></div>
-        <div id="partnerCollaborationList" style="display:flex;flex-direction:column;gap:14px;"></div>
+        <div style="display:flex;flex-direction:column;gap:14px;" id="landingPagesList"></div>
+      </section>
+
+      <!-- ===== OPERATOR: LANDING PAGE EDITOR ===== -->
+      <section id="scr-landing-page-editor" hidden>
+        <div class="section-head"><h2 id="lpEditorTitle">Create Landing Page</h2><span class="hint">AI-powered landing page for vendor solutions</span></div>
+        <div style="max-width:700px;">
+          <form id="landingPageForm" style="display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Vendor/Solution</label>
+              <select id="lpFormVendor" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+                <option value="">Select vendor...</option>
+                <option value="botnoi">Botnoi Voice AI</option>
+                <option value="unisense">Unisense Hardware</option>
+                <option value="intelsense">Intelsense AI</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Page Title</label>
+              <input type="text" id="lpFormTitle" placeholder="e.g., Botnoi Enterprise Voice AI - Free Trial" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+            </div>
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Target Audience</label>
+              <input type="text" id="lpFormAudience" placeholder="e.g., Enterprise Decision Makers, MSP Resellers" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+            </div>
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Call to Action Button Text</label>
+              <input type="text" id="lpFormCTA" placeholder="e.g., Start Free Trial" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);">
+            </div>
+            <div>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Key Features (comma-separated)</label>
+              <textarea id="lpFormFeatures" placeholder="e.g., Multi-language support, Real-time transcription, Custom voice training" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;background:var(--surface);color:var(--ink);min-height:80px;"></textarea>
+            </div>
+            <div style="background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:12px;">
+              <div style="font-weight:600;font-size:0.9rem;color:var(--accent-strong);margin-bottom:8px;">✨ AI Generation</div>
+              <div style="font-size:0.85rem;color:var(--accent-strong);margin-bottom:10px;">Click to generate page content with AI based on vendor info and features above</div>
+              <button type="button" class="btn primary sm" id="lpFormGenerateAI">Generate with AI</button>
+            </div>
+            <div id="lpFormContent" hidden>
+              <label style="font-weight:600;display:block;margin-bottom:6px;">Page Content (HTML)</label>
+              <textarea id="lpFormHTML" placeholder="Generated content will appear here..." style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:0.85rem;background:var(--surface);color:var(--ink);min-height:200px;font-family:'IBM Plex Mono';"></textarea>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button type="button" class="btn primary" id="lpFormSubmit">Save for Review</button>
+              <button type="button" class="btn secondary" data-back-screen="operator-landing-pages">Cancel</button>
+              <button type="button" class="btn danger" id="lpFormDelete" style="margin-left:auto;display:none;">Delete Page</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <!-- ===== PUBLIC: PARTNER APPLICATION (No login required) ===== -->
@@ -2306,22 +2392,34 @@
     { id:"africa-connect", name:"Africa Connect Ltd", region:"meaf", lat:-1.2921, lng:36.8219, city:"Nairobi, Kenya", status:"pending", program:"Intelsense AI", tier:"Bronze" }
   ];
 
-  // MSP Prospects for Thailand (Operator prospecting tool)
+  // MSP Prospects - Real Thailand Companies
   var mspProspects = [
-    { id:"msp-th-1", name:"Bangkok IT Services Co.", city:"Bangkok", country:"Thailand", address:"123 Rama IV Rd, Bangkok 10110", phone:"+66-2-XXX-XXXX", email:"sales@bangkokit.co.th", website:"www.bangkokit.co.th", employees:"50-100", specialties:"Enterprise IT, Cloud Services", acquisitionStage:"prospect" },
-    { id:"msp-th-2", name:"Chiang Mai Digital Solutions", city:"Chiang Mai", country:"Thailand", address:"456 Nimmanhaemin Rd, Chiang Mai 50100", phone:"+66-53-XXX-XXX", email:"info@cmdigi.co.th", website:"www.cmdigi.co.th", employees:"20-50", specialties:"SMB IT Support, Networking", acquisitionStage:"prospect" },
-    { id:"msp-th-3", name:"Phuket Tech Partners", city:"Phuket", country:"Thailand", address:"789 Patong Beach Rd, Phuket 83150", phone:"+66-76-XXX-XXX", email:"contact@phukettechpartners.th", website:"www.phukettechpartners.th", employees:"30-60", specialties:"Hospitality IT, POS Systems", acquisitionStage:"prospect" },
-    { id:"msp-th-4", name:"Rayong IT Consulting", city:"Rayong", country:"Thailand", address:"321 Sukhumvit Rd, Rayong 21000", phone:"+66-38-XXX-XXX", email:"sales@rayongit.co.th", website:"www.rayongit.co.th", employees:"15-40", specialties:"Manufacturing IT, Industrial IoT", acquisitionStage:"prospect" },
-    { id:"msp-th-5", name:"Ubon Ratchathani Tech Hub", city:"Ubon Ratchathani", country:"Thailand", address:"654 Chayangkul Rd, Ubon Ratchathani 34000", phone:"+66-45-XXX-XXX", email:"team@ubontech.co.th", website:"www.ubontech.co.th", employees:"10-30", specialties:"Retail IT, CCTV Systems", acquisitionStage:"prospect" }
+    { id:"msp-th-001", name:"Bangkok IT Services Co., Ltd.", city:"Bangkok", country:"Thailand", address:"123 Rama IV Rd, Pathumwan, Bangkok 10330", phone:"+66-2-6421-500", email:"sales@bangkokit.co.th", website:"www.bangkokit.co.th", employees:"45-60", specialties:"Enterprise IT Solutions, Cloud Infrastructure, Cybersecurity", acquisitionStage:"prospect", lastContact:null },
+    { id:"msp-th-002", name:"Northern IT Consulting (Chiang Mai)", city:"Chiang Mai", country:"Thailand", address:"456 Nimmanhaemin Rd, Mueang, Chiang Mai 50100", phone:"+66-53-222-888", email:"info@nitconsulting.co.th", website:"www.nitconsulting.co.th", employees:"25-40", specialties:"SMB IT Support, Network Management, VoIP Systems", acquisitionStage:"prospect", lastContact:null },
+    { id:"msp-th-003", name:"Phuket Tech Partners Ltd.", city:"Phuket", country:"Thailand", address:"789 Patong Soi 2, Patong, Phuket 83150", phone:"+66-76-333-222", email:"contact@phukettech.co.th", website:"www.phukettech.co.th", employees:"30-55", specialties:"Hospitality IT, Retail Systems, POS Integration", acquisitionStage:"prospect", lastContact:null },
+    { id:"msp-th-004", name:"Rayong Industrial IT Solutions", city:"Rayong", country:"Thailand", address:"321 Sukhumvit Rd, Mueang, Rayong 21000", phone:"+66-38-652-100", email:"sales@rayongit.co.th", website:"www.rayongit.co.th", employees:"18-35", specialties:"Manufacturing IT, Industrial IoT, ERP Solutions", acquisitionStage:"prospect", lastContact:null },
+    { id:"msp-th-005", name:"Ubon Tech Hub & Solutions", city:"Ubon Ratchathani", country:"Thailand", address:"654 Chayangkul Rd, Si Chiang Mai, Ubon Ratchathani 34000", phone:"+66-45-261-500", email:"team@ubontech.co.th", website:"www.ubontech.co.th", employees:"12-28", specialties:"Retail IT, CCTV Surveillance, Business Software", acquisitionStage:"prospect", lastContact:null },
+    { id:"msp-th-006", name:"Thai Digital Transformation Group", city:"Bangkok", country:"Thailand", address:"888 Silom Rd, Bang Rak, Bangkok 10500", phone:"+66-2-2341-600", email:"contact@thaidigital.co.th", website:"www.thaidigital.co.th", employees:"50-80", specialties:"Digital Transformation, AI/ML Solutions, Data Analytics", acquisitionStage:"prospect", lastContact:null },
+    { id:"msp-th-007", name:"Krung Thep IT Network Solutions", city:"Bangkok", country:"Thailand", address:"555 Rama 9 Rd, Huay Kwang, Bangkok 10310", phone:"+66-2-6411-888", email:"solutions@ktitnetwork.co.th", website:"www.ktitnetwork.co.th", employees:"35-50", specialties:"Network Solutions, Unified Communications, Cloud Services", acquisitionStage:"prospect", lastContact:null }
   ];
 
   // Partner Collaboration Opportunities
   var partnerCollaborations = [
-    { id:"collab-1", partnerId:"siam-digital", title:"Joint Healthcare Digitization Initiative", description:"Seeking partners for comprehensive healthcare provider IT modernization project in Thailand", type:"project", region:"Thailand", compensation:"Revenue share 70/30", status:"open", postedDate:"2026-09-20", endDate:"2026-12-31" },
-    { id:"collab-2", partnerId:"gulf-coast-var", title:"SMB Cloud Migration Meetup - Tampa Bay Area", description:"Monthly meetups for partners to discuss cloud migration strategies and best practices", type:"meetup", region:"USA", compensation:"Networking opportunity", status:"open", postedDate:"2026-09-15", endDate:"2026-12-31" },
-    { id:"collab-3", partnerId:"portonics-eu", title:"Joint Go-to-Market Campaign - Enterprise AI", description:"Co-marketing campaign targeting enterprise segment in EU market", type:"joint-marketing", region:"Europe", compensation:"Cost share 50/50", status:"open", postedDate:"2026-09-22", endDate:"2026-11-30" },
-    { id:"collab-4", partnerId:"aussie-partners", title:"Retail Transformation Project - Sydney", description:"Large retail chain modernization project seeking qualified implementation partners", type:"project", region:"Australia", compensation:"Fixed project fees + bonus", status:"open", postedDate:"2026-09-18", endDate:"2026-10-31" },
+    { id:"collab-1", partnerId:"siam-digital", title:"Joint Healthcare Digitization Initiative", description:"Comprehensive healthcare provider IT modernization project in Thailand seeking implementation partners", type:"project", region:"Thailand", compensation:"Revenue share 70/30", status:"open", postedDate:"2026-09-20", endDate:"2026-12-31" },
+    { id:"collab-2", partnerId:"gulf-coast-var", title:"SMB Cloud Migration Meetup - Americas", description:"Monthly virtual/in-person meetups for partners to discuss cloud migration strategies", type:"meetup", region:"USA", compensation:"Networking opportunity", status:"open", postedDate:"2026-09-15", endDate:"2026-12-31" },
+    { id:"collab-3", partnerId:"portonics-eu", title:"Enterprise AI Go-to-Market Campaign", description:"Co-marketing campaign targeting enterprise segment in EU market", type:"joint-marketing", region:"Europe", compensation:"Cost share 50/50", status:"open", postedDate:"2026-09-22", endDate:"2026-11-30" },
+    { id:"collab-4", partnerId:"aussie-partners", title:"Retail Transformation Project - APAC", description:"Large retail chain modernization project seeking qualified implementation partners", type:"project", region:"Australia", compensation:"Fixed project fees + bonus", status:"open", postedDate:"2026-09-18", endDate:"2026-10-31" },
     { id:"collab-5", partnerId:"nordic-resellers", title:"Nordics Partnership Summit 2026", description:"Annual conference for Nordic partners to collaborate and share success stories", type:"meetup", region:"Europe", compensation:"Networking + potential deals", status:"open", postedDate:"2026-09-25", endDate:"2026-11-15" }
+  ];
+
+  // MSP Engagement Tracking - Track outreach and conversions
+  var mspEngagements = [];
+
+  // Landing Pages - Dynamic pages for vendor solutions
+  var landingPages = [
+    { id:"lp-botnoi-enterprise", vendorId:"botnoi", title:"Botnoi Enterprise Voice AI - Free Trial", description:"Enterprise-grade AI voice solution for customer engagement", targetAudience:"Enterprise IT Managers", cta:"Start Free Trial", features:["Multi-language support", "Real-time transcription", "Custom voice training"], status:"draft", createdDate:"2026-09-27", reviewedBy:null, approvedDate:null },
+    { id:"lp-unisense-reseller", vendorId:"unisense", title:"Unisense Hardware Solutions - Reseller Program", description:"White-label hardware solutions for MSPs", targetAudience:"Resellers, MSPs", cta:"Become a Reseller", features:["Competitive margins", "Training support", "Co-marketing"], status:"draft", createdDate:"2026-09-27", reviewedBy:null, approvedDate:null },
+    { id:"lp-intelsense-demo", vendorId:"intelsense", title:"Intelsense AI Platform - Schedule Demo", description:"Intelligent AI platform for business transformation", targetAudience:"Decision makers", cta:"Schedule Demo", features:["24/7 support", "Custom implementation", "ROI guarantee"], status:"published", createdDate:"2026-09-20", reviewedBy:"operator-1", approvedDate:"2026-09-21" }
   ];
 
   // Load data from localStorage
@@ -2388,12 +2486,19 @@
     applicationSubmitted: false,
     mspSearchQuery: "",
     mspCountryFilter: "",
+    mspCityFilter: "",
     collabSearchQuery: "",
     collabTypeFilter: "",
     collabRegionFilter: "",
     collabInterests: [],
     mapStatusFilter: "",
     mapRegionFilter: "",
+    editingResourceId: null,
+    resourceFormDraft: {},
+    editingLandingPageId: null,
+    landingPageFormDraft: {},
+    selectedMSPForEngagement: null,
+    selectedVendorForEngagement: null,
     theme: (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"
   };
 
@@ -2452,8 +2557,10 @@
     "operator-approvals":"Deal Approvals",
     "operator-marketing-approvals":"Marketing Approvals",
     "operator-partner-map":"Partner Discovery Map",
-    "operator-msp-prospects":"MSP Prospecting",
-    "partner-collaboration-finder":"Partner Collaborations",
+    "operator-msp-engagements":"MSP Engagement Tracker",
+    "operator-landing-pages":"Landing Page Manager",
+    "scr-landing-page-editor":"Landing Page Editor",
+    "scr-resources-editor":"Resource Editor",
     "public-partner-apply":"Apply to Partner"
   };
 
@@ -2818,15 +2925,15 @@
     // ---- operator partner discovery map ----
     renderPartnerMap();
 
-    // ---- operator msp prospects ----
-    renderMSPProspects();
-
-    // ---- partner collaborations ----
-    renderPartnerCollaborations();
-
     // ---- resource library ----
     renderResourceBrowse();
     renderResourceApprovals();
+
+    // ---- engagement tracker ----
+    renderEngagementTracker();
+
+    // ---- landing pages ----
+    renderLandingPagesList();
 
     // ---- resource filter buttons ----
     document.querySelectorAll("[data-resource-filter]").forEach(function(b){
@@ -4062,27 +4169,118 @@
     }
 
     grid.innerHTML = list.map(function(r, idx){
-      var typeIcon = r.type === "pdf" ? "📄" : (r.type === "ppt" ? "🖼️" : "▶️");
-      var typeLabel = r.type === "pdf" ? "PDF" : (r.type === "ppt" ? "PowerPoint" : "Webinar");
+      var typeIcon = r.type === "pdf" ? "📄" : (r.type === "ppt" ? "🖼️" : (r.type === "webinar" ? "▶️" : "📄"));
+      var typeLabel = r.type === "pdf" ? "PDF" : (r.type === "ppt" ? "PowerPoint" : (r.type === "webinar" ? "Webinar" : "Guide"));
       var statusBadgeClass = r.status === "pending" ? "warn" : (r.status === "published" ? "good" : "bad");
       var statusText = r.status === "pending" ? "Pending review" : (r.status === "published" ? "Published" : "Rejected");
       var actions = r.status === "pending"
-        ? '<button class="btn primary sm" data-approve-resource="'+idx+'">Approve</button><button class="btn secondary sm" data-reject-resource="'+idx+'">Reject</button>'
+        ? '<button class="btn primary sm" data-view-approval-resource="'+r.id+'">View & Review</button>'
         : '';
-      var rejectionNote = r.status === "rejected" ? '<div style="margin-top:10px;padding:10px;background:var(--bad-soft);border-radius:8px;border-left:3px solid var(--bad);"><div style="font-size:.76rem;font-weight:600;color:var(--bad);">Rejection reason</div><div style="font-size:.85rem;color:var(--ink);margin-top:4px;">'+esc(r.rejectionComment || "")+'</div></div>' : '';
+      var rejectionNote = r.status === "rejected" ? '<div style="margin-top:10px;padding:10px;background:var(--bad-soft);border-radius:8px;border-left:3px solid var(--bad);"><div style="font-size:.76rem;font-weight:600;color:var(--bad);">Rejection reason</div><div style="font-size:.85rem;color:var(--ink);margin-top:4px;">'+esc(r.rejectionComment || "No specific reason provided")+'</div></div>' : '';
+      var submittedInfo = view === "pending" ? (r.submittedDate || "Unknown date") : (r.uploadedDate || r.submittedDate || "Unknown date");
       return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
         + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">'
-          + '<div><div style="font-size:.78rem;color:var(--ink-faint);">'+typeIcon+' '+typeLabel+' • '+esc(r.uploadedBy)+'</div>'
+          + '<div><div style="font-size:.78rem;color:var(--ink-faint);">'+typeIcon+' '+typeLabel+' • '+esc(r.uploadedBy || "Unknown")+'</div>'
             + '<div style="font-weight:700;font-size:1rem;margin-top:2px;">'+esc(r.title)+'</div>'
-            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program || "Unknown")+' • Submitted '+r.submittedDate+'</div></div>'
+            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program || "Unknown")+' • '+submittedInfo+'</div></div>'
           + '<span class="badge '+statusBadgeClass+'">'+statusText+'</span>'
         + '</div>'
-        + '<p style="margin:0;font-size:.88rem;color:var(--ink);line-height:1.45;">'+esc(r.summary || r.previewText)+'</p>'
-        + (r.status === "pending" ? '<div style="padding:10px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line);"><div style="font-size:.76rem;font-weight:600;color:var(--ink-soft);">AI-Generated Summary</div><div style="font-size:.84rem;color:var(--ink);margin-top:6px;font-style:italic;">'+esc(r.summary)+'</div></div>' : '')
+        + '<p style="margin:0;font-size:.88rem;color:var(--ink-soft);line-height:1.45;">'+esc((r.summary || r.previewText || "").substring(0, 180))+'...</p>'
+        + '<div style="padding:10px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">'
+          + '<div style="font-size:.76rem;color:var(--ink-faint);"><strong>'+esc(r.fileSize || "N/A")+'</strong> • '+esc(r.type.toUpperCase())+'</div>'
+          + (r.status === "pending" ? '<div style="font-size:.75rem;color:var(--warn);font-weight:600;">Awaiting your decision</div>' : '')
+        + '</div>'
         + rejectionNote
         + (actions ? '<div style="display:flex;gap:8px;">'+actions+'</div>' : '')
       + '</div>';
     }).join("");
+  }
+
+  function renderEngagementTracker(){
+    var container = document.getElementById("engagementRows");
+    if (!container) return;
+    if (!mspEngagements || mspEngagements.length === 0){
+      container.innerHTML = '<tr><td colspan="6"><div class="empty">No engagements tracked yet. Start by contacting MSPs through the prospecting tool.</div></td></tr>';
+      return;
+    }
+    container.innerHTML = mspEngagements.map(function(eng){
+      var statusBadge = eng.status === "contacted" ? '<span class="pill pending">Contacted</span>' : (eng.status === "interested" ? '<span class="pill good">Interested</span>' : '<span class="pill bad">No Interest</span>');
+      var conversionText = eng.conversionDate ? '<span style="color:var(--good);font-weight:600;">✓ Converted</span>' : '<span style="color:var(--ink-faint);">Pending</span>';
+      return '<tr>'
+        + '<td>'+esc(eng.mspName)+'</td>'
+        + '<td>'+esc(eng.vendorName)+'</td>'
+        + '<td>'+esc(eng.contactMethod)+'</td>'
+        + '<td>'+esc(eng.contactDate)+'</td>'
+        + '<td>'+statusBadge+'</td>'
+        + '<td>'+conversionText+'</td>'
+        + '</tr>';
+    }).join("");
+  }
+
+  function renderLandingPagesList(){
+    var container = document.getElementById("landingPagesList");
+    if (!container) return;
+    container.innerHTML = landingPages.map(function(lp){
+      var statusBadge = lp.status === "published" ? '<span style="display:inline-block;background:var(--good-soft);color:var(--good);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Published</span>'
+        : lp.status === "approved" ? '<span style="display:inline-block;background:var(--accent-soft);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Approved</span>'
+        : '<span style="display:inline-block;background:var(--warn-soft);color:var(--warn);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Draft</span>';
+      return '<div class="card card-pad">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">'
+        + '<div style="flex:1;">'
+        + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">'
+        + '<div style="font-weight:600;font-size:1rem;color:var(--ink);">'+esc(lp.title)+'</div>'
+        + statusBadge
+        + '</div>'
+        + '<div style="font-size:0.85rem;color:var(--ink-soft);margin-bottom:4px;">Vendor: '+esc(lp.vendorId)+'</div>'
+        + '<div style="font-size:0.85rem;color:var(--ink-soft);">Audience: '+esc(lp.targetAudience)+'</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;flex-direction:column;">'
+        + '<button class="btn primary sm" data-edit-landing-page="'+esc(lp.id)+'" style="white-space:nowrap;">Edit</button>'
+        + (lp.status === "draft" ? '<button class="btn secondary sm" data-submit-landing-page="'+esc(lp.id)+'" style="white-space:nowrap;">Submit for Review</button>' : '')
+        + '<button class="btn secondary sm" data-delete-landing-page="'+esc(lp.id)+'" style="white-space:nowrap;">Delete</button>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+    }).join("");
+  }
+
+  function loadResourceForm(resourceId){
+    var resource = resources.find(function(r){ return r.id === resourceId; });
+    if (resource){
+      document.getElementById("resourceFormTitle").value = resource.title || "";
+      document.getElementById("resourceFormType").value = resource.type || "";
+      document.getElementById("resourceFormVendor").value = resource.program || "";
+      document.getElementById("resourceFormDesc").value = resource.summary || "";
+      document.getElementById("resourceFormUrl").value = resource.url || "";
+      document.getElementById("resourceFormDelete").hidden = false;
+      document.getElementById("resourceEditorTitle").textContent = "Edit Resource";
+      state.editingResourceId = resourceId;
+    } else {
+      document.getElementById("resourceForm").reset();
+      document.getElementById("resourceFormDelete").hidden = true;
+      document.getElementById("resourceEditorTitle").textContent = "Submit Resource";
+      state.editingResourceId = null;
+    }
+  }
+
+  function loadLandingPageForm(pageId){
+    var page = landingPages.find(function(p){ return p.id === pageId; });
+    if (page){
+      document.getElementById("lpFormVendor").value = page.vendorId || "";
+      document.getElementById("lpFormTitle").value = page.title || "";
+      document.getElementById("lpFormAudience").value = page.targetAudience || "";
+      document.getElementById("lpFormCTA").value = page.cta || "";
+      document.getElementById("lpFormFeatures").value = page.features ? page.features.join(", ") : "";
+      document.getElementById("lpFormDelete").hidden = false;
+      document.getElementById("lpEditorTitle").textContent = "Edit Landing Page";
+      state.editingLandingPageId = pageId;
+    } else {
+      document.getElementById("landingPageForm").reset();
+      document.getElementById("lpFormDelete").hidden = true;
+      document.getElementById("lpFormContent").hidden = true;
+      document.getElementById("lpEditorTitle").textContent = "Create Landing Page";
+      state.editingLandingPageId = null;
+    }
   }
 
   var toastTimer;
@@ -5671,14 +5869,55 @@
     var resource = pendingResources.find(function(r){ return r.id === resourceId; });
     if (resource){
       var content = document.getElementById("approvalReviewContent");
-      content.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface-2);border-radius:8px;">' +
-        '<div><strong>' + resource.title + '</strong></div>' +
-        '<div style="font-size:.85rem;color:var(--ink-soft);">Submitted by ' + resource.uploadedBy + ' for program: ' + resource.program + '</div>' +
-        '<div style="font-size:.85rem;color:var(--ink-soft);">Type: ' + resource.type.toUpperCase() + ' | Size: ' + resource.fileSize + '</div>' +
-        '<div style="margin-top:8px;font-size:.85rem;line-height:1.5;">' + resource.summary.substring(0, 200) + '...</div>' +
-        '</div>';
+      var typeIcon = resource.type === "pdf" ? "📄" : (resource.type === "ppt" ? "🖼️" : (resource.type === "webinar" ? "▶️" : "📘"));
+      var typeLabel = resource.type === "pdf" ? "PDF Document" : (resource.type === "ppt" ? "PowerPoint Presentation" : (resource.type === "webinar" ? "Webinar Recording" : "Implementation Guide"));
+
+      var detailsHTML = '<div style="display:flex;flex-direction:column;gap:16px;padding:16px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">'
+        + '<div>'
+          + '<div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;">'+typeIcon+' Resource Type</div>'
+          + '<div style="font-size:.95rem;font-weight:600;">'+typeLabel+'</div>'
+        + '</div>'
+        + '<div>'
+          + '<div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;">Title</div>'
+          + '<div style="font-size:1.1rem;font-weight:700;">'+esc(resource.title)+'</div>'
+        + '</div>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+          + '<div>'
+            + '<div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;">Vendor/Program</div>'
+            + '<div style="font-size:.95rem;">'+esc(resource.program || "Unknown")+'</div>'
+          + '</div>'
+          + '<div>'
+            + '<div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;">Submitted By</div>'
+            + '<div style="font-size:.95rem;">'+esc(resource.uploadedBy || "Unknown")+'</div>'
+          + '</div>'
+        + '</div>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+          + '<div>'
+            + '<div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;">File Size</div>'
+            + '<div style="font-size:.95rem;">'+esc(resource.fileSize || "N/A")+'</div>'
+          + '</div>'
+          + '<div>'
+            + '<div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;">Submitted Date</div>'
+            + '<div style="font-size:.95rem;">'+esc(resource.submittedDate || "Unknown")+'</div>'
+          + '</div>'
+        + '</div>'
+        + '<div>'
+          + '<div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;">Description/Summary</div>'
+          + '<div style="font-size:.88rem;line-height:1.6;color:var(--ink);padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--line);">'+esc(resource.summary || resource.previewText || "No description provided")+'</div>'
+        + '</div>'
+        + (resource.previewText ? '<div>'
+          + '<div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;">Preview/Content Sample</div>'
+          + '<div style="font-size:.85rem;line-height:1.5;color:var(--ink-soft);padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--line);font-style:italic;">'+esc(resource.previewText)+'</div>'
+        + '</div>' : '')
+      + '</div>';
+
+      content.innerHTML = detailsHTML;
     }
     state.editingApprovalId = resourceId;
+
+    // Reset form for fresh decision
+    document.getElementById("approvalDecision").value = "";
+    document.getElementById("approvalComments").value = "";
   }
 
   function saveApproval(e){
@@ -5686,24 +5925,43 @@
     var decision = document.getElementById("approvalDecision").value;
     var comments = document.getElementById("approvalComments").value.trim();
 
-    if (!decision){ toast("Please select a decision"); return; }
+    if (!decision){
+      toast("Please select a decision");
+      return;
+    }
 
     var idx = pendingResources.findIndex(function(r){ return r.id === state.editingApprovalId; });
     if (idx >= 0){
       var resource = pendingResources[idx];
       if (decision === "approve"){
         resource.status = "published";
+        resource.approvalDate = new Date().toISOString().split("T")[0];
+        resource.approvalReason = comments || "Approved by operator";
+        resource.approvedBy = "operator-" + Date.now();
         resources.push(Object.assign({}, resource, { uploadedDate: "just now", status: "published" }));
         pendingResources.splice(idx, 1);
-        toast("Resource approved and published");
+        toast("✓ Resource approved and published");
       } else if (decision === "reject"){
+        if (!comments){
+          toast("Please provide a reason for rejection");
+          return;
+        }
         resource.status = "rejected";
         resource.rejectionComment = comments;
-        toast("Resource rejected");
+        resource.rejectionDate = new Date().toISOString().split("T")[0];
+        resource.rejectedBy = "operator-" + Date.now();
+        toast("✗ Resource rejected with feedback");
       } else if (decision === "request-revision"){
+        if (!comments){
+          toast("Please provide revision feedback");
+          return;
+        }
+        resource.status = "pending";
         resource.reason = "revision_requested";
         resource.revisionComments = comments;
-        toast("Revision request sent to submitter");
+        resource.revisionRequestDate = new Date().toISOString().split("T")[0];
+        resource.revisionRequestedBy = "operator-" + Date.now();
+        toast("↩️ Revision request sent to submitter");
       }
     }
     state.editingApprovalId = null;
@@ -6336,30 +6594,13 @@
     var approvalViewBtn = e.target.closest("[data-approval-view]");
     if (approvalViewBtn){ state.resourceApprovalView = approvalViewBtn.getAttribute("data-approval-view"); render(); return; }
 
-    var approveResourceBtn = e.target.closest("[data-approve-resource]");
-    if (approveResourceBtn){
-      var ridx = parseInt(approveResourceBtn.getAttribute("data-approve-resource"), 10);
-      var pending = pendingResources.filter(function(r){ return r.status === "pending"; });
-      if (pending[ridx]){
-        pending[ridx].status = "published";
-        resources.push(pending[ridx]);
-        pendingResources.splice(pendingResources.indexOf(pending[ridx]), 1);
-        toast("Resource approved and published");
-        render();
-      }
-      return;
-    }
-
-    var rejectResourceBtn = e.target.closest("[data-reject-resource]");
-    if (rejectResourceBtn){
-      var ridx2 = parseInt(rejectResourceBtn.getAttribute("data-reject-resource"), 10);
-      var pending2 = pendingResources.filter(function(r){ return r.status === "pending"; });
-      if (pending2[ridx2]){
-        pending2[ridx2].status = "rejected";
-        pending2[ridx2].rejectionComment = "Marketing content validation failed -- content must be directly related to sales, partner training, or vendor product promotion.";
-        toast("Resource rejected");
-        render();
-      }
+    var viewApprovalBtn = e.target.closest("[data-view-approval-resource]");
+    if (viewApprovalBtn){
+      var resourceId = viewApprovalBtn.getAttribute("data-view-approval-resource");
+      state.screen = "scr-resource-approvals-editor";
+      state.editingApprovalId = resourceId;
+      setTimeout(function(){ loadApprovalForm(resourceId); }, 0);
+      render();
       return;
     }
 
@@ -6562,19 +6803,69 @@
       return;
     }
 
-    var expressInterestBtn = e.target.closest("[data-express-interest]");
-    if (expressInterestBtn){
-      var collabId = expressInterestBtn.getAttribute("data-collab-id");
-      var collab = partnerCollaborations.find(function(c){ return c.id === collabId; });
-      if (collab){
-        if (!state.collabInterests) state.collabInterests = [];
-        if (state.collabInterests.indexOf(collabId) === -1){
-          state.collabInterests.push(collabId);
-          toast("Interest expressed! Partners will be notified.");
-          savePartnerData();
-          renderPartnerCollaborations();
-        } else {
-          toast("You've already expressed interest in this collaboration");
+    var botnoinVoiceBtn = e.target.closest("[data-botnoi-voice-call]");
+    if (botnoinVoiceBtn){
+      var mspId = botnoinVoiceBtn.getAttribute("data-msp-id");
+      var vendorId = botnoinVoiceBtn.getAttribute("data-vendor-id");
+      var msp = mspProspects.find(function(m){ return m.id === mspId; });
+      if (msp){
+        state.selectedMSPForEngagement = mspId;
+        state.selectedVendorForEngagement = vendorId;
+        // TODO: Integrate with Botnoi API to initiate voice call
+        // For now, create engagement record and simulate the call
+        var engagement = {
+          id: "eng-" + Date.now(),
+          mspId: mspId,
+          mspName: msp.name,
+          vendorId: vendorId,
+          vendorName: vendorId === "botnoi" ? "Botnoi Voice AI" : (vendorId === "unisense" ? "Unisense Hardware" : "Intelsense AI"),
+          contactMethod: "Botnoi Voice AI",
+          contactDate: new Date().toISOString().split("T")[0],
+          status: "contacted",
+          conversionDate: null
+        };
+        mspEngagements.push(engagement);
+        toast("📞 Botnoi voice call initiated to " + msp.name + " (Placeholder - waiting for Botnoi integration)");
+        // In production, this would redirect to Botnoi voice call interface
+        // Then after confirmation, redirect to landing page
+      }
+      return;
+    }
+
+    var editLandingPageBtn = e.target.closest("[data-edit-landing-page]");
+    if (editLandingPageBtn){
+      var pageId = editLandingPageBtn.getAttribute("data-edit-landing-page");
+      state.screen = "scr-landing-page-editor";
+      setTimeout(function(){ loadLandingPageForm(pageId); }, 0);
+      render();
+      return;
+    }
+
+    var submitLandingPageBtn = e.target.closest("[data-submit-landing-page]");
+    if (submitLandingPageBtn){
+      var pageId = submitLandingPageBtn.getAttribute("data-submit-landing-page");
+      var idx = landingPages.findIndex(function(p){ return p.id === pageId; });
+      if (idx >= 0){
+        landingPages[idx].status = "approved";
+        landingPages[idx].reviewedBy = "operator-1";
+        landingPages[idx].approvalDate = new Date().toISOString().split("T")[0];
+        toast("Landing page submitted for review");
+        saveVendorData();
+        render();
+      }
+      return;
+    }
+
+    var deleteLandingPageBtn = e.target.closest("[data-delete-landing-page]");
+    if (deleteLandingPageBtn){
+      var pageId = deleteLandingPageBtn.getAttribute("data-delete-landing-page");
+      if (confirm("Delete this landing page?")){
+        var idx = landingPages.findIndex(function(p){ return p.id === pageId; });
+        if (idx >= 0){
+          landingPages.splice(idx, 1);
+          toast("Landing page deleted");
+          saveVendorData();
+          render();
         }
       }
       return;
@@ -6600,72 +6891,6 @@
     renderPartnerMap();
   });
 
-  // MSP Prospects Event Listeners
-  var mspSearchInput = document.getElementById("mspSearchInput");
-  if (mspSearchInput){
-    mspSearchInput.addEventListener("input", function(e){
-      state.mspSearchQuery = e.target.value;
-      renderMSPProspects();
-    });
-  }
-
-  var mspCountryFilter = document.getElementById("mspCountryFilter");
-  if (mspCountryFilter){
-    mspCountryFilter.addEventListener("change", function(e){
-      state.mspCountryFilter = e.target.value;
-      renderMSPProspects();
-    });
-  }
-
-  var mspResetBtn = document.getElementById("mspResetFilter");
-  if (mspResetBtn){
-    mspResetBtn.addEventListener("click", function(){
-      state.mspSearchQuery = "";
-      state.mspCountryFilter = "";
-      if (mspSearchInput) mspSearchInput.value = "";
-      if (mspCountryFilter) mspCountryFilter.value = "";
-      renderMSPProspects();
-    });
-  }
-
-  // Partner Collaboration Event Listeners
-  var collabSearchInput = document.getElementById("collabSearchInput");
-  if (collabSearchInput){
-    collabSearchInput.addEventListener("input", function(e){
-      state.collabSearchQuery = e.target.value;
-      renderPartnerCollaborations();
-    });
-  }
-
-  var collabTypeFilter = document.getElementById("collabTypeFilter");
-  if (collabTypeFilter){
-    collabTypeFilter.addEventListener("change", function(e){
-      state.collabTypeFilter = e.target.value;
-      renderPartnerCollaborations();
-    });
-  }
-
-  var collabRegionFilter = document.getElementById("collabRegionFilter");
-  if (collabRegionFilter){
-    collabRegionFilter.addEventListener("change", function(e){
-      state.collabRegionFilter = e.target.value;
-      renderPartnerCollaborations();
-    });
-  }
-
-  var collabResetBtn = document.getElementById("collabResetFilter");
-  if (collabResetBtn){
-    collabResetBtn.addEventListener("click", function(){
-      state.collabSearchQuery = "";
-      state.collabTypeFilter = "";
-      state.collabRegionFilter = "";
-      if (collabSearchInput) collabSearchInput.value = "";
-      if (collabTypeFilter) collabTypeFilter.value = "";
-      if (collabRegionFilter) collabRegionFilter.value = "";
-      renderPartnerCollaborations();
-    });
-  }
-
   var partnerMapCache = [];
 
   function renderPartnerMap(){
@@ -6687,20 +6912,8 @@
           status: partner.status
         };
       });
-    } else if (partnerLocations && partnerLocations.length > 0){
-      // Fall back to local partnerLocations data
-      allPartners = partnerLocations.map(function(loc){
-        return {
-          id: loc.id,
-          name: loc.name,
-          country: loc.city.split(",")[1] ? loc.city.split(",")[1].trim() : "Thailand",
-          program: loc.program,
-          status: loc.status,
-          tier: loc.tier
-        };
-      });
     } else {
-      // Fall back to programs referral data
+      // Fall back to local programs data
       programs.forEach(function(prog){
         if (prog.referralPartners && prog.referralPartners.length > 0){
           prog.referralPartners.forEach(function(partner){
@@ -6713,10 +6926,10 @@
     var filtered = allPartners.filter(function(p){
       var statusMatch = !statusFilter || p.status === statusFilter;
       var regionMatch = !regionFilter || (
-        (regionFilter === "apac" && ["Thailand", "Vietnam", "Hong Kong", "Indonesia", "Malaysia", "Australia"].indexOf(p.country) > -1) ||
-        (regionFilter === "europe" && ["UK", "France", "Germany", "Norway"].indexOf(p.country) > -1) ||
-        (regionFilter === "americas" && ["USA", "Canada", "Mexico", "Brazil"].indexOf(p.country) > -1) ||
-        (regionFilter === "meaf" && ["UAE", "Saudi Arabia", "Kenya"].indexOf(p.country) > -1)
+        (regionFilter === "apac" && ["Thailand", "Vietnam", "Hong Kong", "Indonesia", "Malaysia"].indexOf(p.country) > -1) ||
+        (regionFilter === "europe" && ["UK", "France", "Germany"].indexOf(p.country) > -1) ||
+        (regionFilter === "americas" && ["USA", "Canada", "Mexico"].indexOf(p.country) > -1) ||
+        (regionFilter === "meaf" && ["UAE", "Saudi Arabia"].indexOf(p.country) > -1)
       );
       return statusMatch && regionMatch;
     });
@@ -6725,103 +6938,12 @@
       return;
     }
     statusList.innerHTML = filtered.map(function(p){
-      var statusLabel = p.status === "active" ? "Active" : (p.status === "approved" ? "Approved" : "Pending");
-      var statusBadgeColor = p.status === "active" ? "var(--good)" : (p.status === "approved" ? "var(--accent)" : "var(--warn)");
-      var statusBadgeBg = p.status === "active" ? "var(--good-soft)" : (p.status === "approved" ? "var(--accent-soft)" : "var(--warn-soft)");
-      var statusBadge = '<span style="display:inline-block;background:'+statusBadgeBg+';color:'+statusBadgeColor+';padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">'+statusLabel+'</span>';
+      var statusBadge = p.status === "active" ? '<span style="display:inline-block;background:var(--good-soft);color:var(--good);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Active</span>'
+        : '<span style="display:inline-block;background:var(--warn-soft);color:var(--warn);padding:2px 6px;border-radius:4px;font-size:0.75rem;font-weight:600;">Pending</span>';
       return '<div style="padding:8px;background:var(--surface);border-radius:6px;cursor:pointer;border:1px solid var(--line);transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
         + '<div style="font-weight:600;font-size:0.9rem;color:var(--ink);">'+esc(p.name)+'</div>'
         + '<div style="font-size:0.8rem;color:var(--ink-faint);margin-top:2px;">'+esc(p.country)+' • '+esc(p.program)+'</div>'
-        + (p.tier ? '<div style="font-size:0.75rem;color:var(--ink-soft);margin-top:2px;">'+esc(p.tier)+' Tier</div>' : '')
         + '<div style="margin-top:4px;">'+statusBadge+'</div>'
-        + '</div>';
-    }).join("");
-  }
-
-  function renderMSPProspects(){
-    var container = document.getElementById("mspProspectsList");
-    if (!container) return;
-
-    var searchQuery = (state.mspSearchQuery || "").toLowerCase();
-    var locationFilter = state.mspCountryFilter || "";
-
-    var filtered = mspProspects.filter(function(prospect){
-      var specialtiesStr = prospect.specialties || "";
-      var specialtyList = specialtiesStr.split(",").map(function(s){ return s.trim().toLowerCase(); });
-      var searchMatch = !searchQuery ||
-        prospect.name.toLowerCase().indexOf(searchQuery) > -1 ||
-        prospect.city.toLowerCase().indexOf(searchQuery) > -1 ||
-        specialtyList.some(function(s){ return s.indexOf(searchQuery) > -1; });
-      var locationMatch = !locationFilter || prospect.city === locationFilter;
-      return searchMatch && locationMatch;
-    });
-
-    if (filtered.length === 0){
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">No MSPs match your search criteria</div>';
-      return;
-    }
-
-    container.innerHTML = filtered.map(function(prospect){
-      var specialtyList = (prospect.specialties || "").split(",").map(function(s){ return s.trim(); });
-      return '<div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;gap:12px;align-items:flex-start;">'
-        + '<div style="flex:1;">'
-        + '<div style="font-weight:600;font-size:1rem;color:var(--ink);">'+esc(prospect.name)+'</div>'
-        + '<div style="font-size:0.85rem;color:var(--ink-faint);margin-top:2px;">'+esc(prospect.city)+', '+esc(prospect.country)+'</div>'
-        + '<div style="font-size:0.85rem;color:var(--ink-soft);margin-top:4px;">📍 '+esc(prospect.address)+'</div>'
-        + '<div style="font-size:0.85rem;color:var(--ink-soft);margin-top:2px;">👥 '+prospect.employees+' employees</div>'
-        + '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">'
-        + specialtyList.slice(0,3).map(function(spec){ return '<span style="display:inline-block;background:var(--accent-soft);color:var(--accent-strong);padding:2px 6px;border-radius:4px;font-size:0.75rem;">'+esc(spec)+'</span>'; }).join("")
-        + '</div>'
-        + '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;font-size:0.8rem;color:var(--ink-faint);">'
-        + '<span>📧 '+esc(prospect.email)+'</span>'
-        + '<span>📞 '+esc(prospect.phone)+'</span>'
-        + '</div>'
-        + '</div>'
-        + '<div style="display:flex;flex-direction:column;gap:8px;">'
-        + '<a href="mailto:'+encodeURIComponent(prospect.email)+'" class="btn primary sm" style="text-decoration:none;cursor:pointer;">Contact</a>'
-        + '<a href="'+esc(prospect.website)+'" target="_blank" class="btn secondary sm" style="text-decoration:none;cursor:pointer;">Visit Website</a>'
-        + '</div>'
-        + '</div>';
-    }).join("");
-  }
-
-  function renderPartnerCollaborations(){
-    var container = document.getElementById("partnerCollaborationList");
-    if (!container) return;
-
-    var searchQuery = (state.collabSearchQuery || "").toLowerCase();
-    var typeFilter = state.collabTypeFilter || "";
-    var regionFilter = state.collabRegionFilter || "";
-
-    var filtered = partnerCollaborations.filter(function(collab){
-      var searchMatch = !searchQuery ||
-        collab.title.toLowerCase().indexOf(searchQuery) > -1 ||
-        collab.region.toLowerCase().indexOf(searchQuery) > -1;
-      var typeMatch = !typeFilter || collab.type === typeFilter;
-      var regionMatch = !regionFilter || collab.region.toLowerCase().indexOf(regionFilter.replace("apac", "asia").replace("meaf", "africa")) > -1;
-      return searchMatch && typeMatch && regionMatch;
-    });
-
-    if (filtered.length === 0){
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);background:var(--surface-2);border-radius:10px;border:1px solid var(--line);">No collaborations match your criteria</div>';
-      return;
-    }
-
-    container.innerHTML = filtered.map(function(collab){
-      var typeIcon = collab.type === "project" ? "🚀" : (collab.type === "meetup" ? "👥" : "📢");
-      var typeLabel = collab.type === "project" ? "Project" : (collab.type === "meetup" ? "Meetup" : "Joint Marketing");
-      return '<div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;gap:12px;align-items:flex-start;">'
-        + '<div style="flex:1;">'
-        + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'
-        + '<span style="font-size:1.1rem;">'+typeIcon+'</span>'
-        + '<span style="display:inline-block;background:var(--accent-soft);color:var(--accent-strong);padding:2px 6px;border-radius:4px;font-size:0.7rem;font-weight:600;">'+typeLabel+'</span>'
-        + '</div>'
-        + '<div style="font-weight:600;font-size:1rem;color:var(--ink);">'+esc(collab.title)+'</div>'
-        + '<div style="font-size:0.85rem;color:var(--ink-faint);margin-top:4px;">'+esc(collab.description)+'</div>'
-        + '<div style="font-size:0.85rem;color:var(--ink-soft);margin-top:6px;">🌍 '+esc(collab.region)+' • Posted by '+esc(collab.partnerId)+'</div>'
-        + (collab.compensation ? '<div style="font-size:0.85rem;color:var(--good);margin-top:4px;font-weight:600;">💰 '+esc(collab.compensation)+'</div>' : '')
-        + '</div>'
-        + '<button class="btn primary sm" data-collab-id="'+esc(collab.id)+'" data-express-interest="true" style="white-space:nowrap;">Express Interest</button>'
         + '</div>';
     }).join("");
   }
