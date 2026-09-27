@@ -1,5 +1,26 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}  .map-tiles-dark{ filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
 
+
+  /* ===== Shop + partner levels ===== */
+  .shop-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:14px; }
+  .shop-card{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); display:flex; flex-direction:column; }
+  .shop-cover{ height:96px; display:flex; align-items:flex-end; justify-content:space-between; padding:10px 12px; color:#fff; }
+  .shop-cover.big{ height:150px; border-radius:12px; margin-bottom:14px; }
+  .shop-icon{ font-size:2rem; line-height:1; } .shop-cover.big .shop-icon{ font-size:3rem; }
+  .shop-type{ font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; background:rgba(255,255,255,.2); border-radius:99px; padding:2px 8px; }
+  .shop-body{ padding:12px 14px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .shop-cat{ font-size:.74rem; color:var(--ink-faint); font-weight:600; }
+  .shop-title{ font-weight:700; font-size:1rem; line-height:1.25; }
+  .shop-summary{ margin:0; font-size:.86rem; color:var(--ink-soft); flex:1; }
+  .shop-foot{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; } .shop-foot .btn{ margin-left:auto; }
+  .shop-price{ font-weight:800; font-size:1.05rem; }
+  .shop-list{ margin:6px 0 0; padding-left:20px; font-size:.9rem; display:flex; flex-direction:column; gap:3px; }
+  .shop-detail{ max-width:760px; }
+  .shop-mini{ width:34px; height:34px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .lvl-progress{ height:6px; border-radius:99px; background:var(--surface-2); overflow:hidden; border:1px solid var(--line); }
+  .lvl-progress div{ height:100%; background:var(--accent); }
+  .lvl-table input, .lvl-table textarea{ width:100%; min-width:90px; font:inherit; }
+  .stat-btn{ cursor:pointer; font:inherit; color:inherit; text-align:left; }
   /* ===== Incentive flyers ===== */
   .fly-layout{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; }
   @media (max-width: 980px){ .fly-layout{ grid-template-columns:minmax(0,1fr); } }
@@ -604,6 +625,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
+      <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="training"><span class="ic">🎓</span>Training</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
     </nav>
@@ -619,6 +641,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
       <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
+      <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
     </nav>
 
@@ -629,6 +652,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
       <button class="navlink" data-screen="affiliate-projects"><span class="ic">📋</span>Partner Projects</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
+      <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
     </nav>
 
     <nav class="navgroup" id="navOperator" hidden>
@@ -644,6 +668,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
       <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
       <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
+      <button class="navlink" data-screen="operator-shop"><span class="ic">🛒</span>Shop Manager</button>
     </nav>
 
     <div class="sidebar-foot">
@@ -688,6 +713,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             <button class="btn primary sm" data-goto-screen="partner-my-profile">Complete profile</button>
           </div>
         </div>
+        <div id="partnerLevelCard"></div>
         <div class="stat-row">
           <div class="stat-tile"><span class="stat-label">Enrolled programs</span><span class="stat-value" id="statEnrolled">2</span><span class="stat-trend">of 4 in the directory</span></div>
           <div class="stat-tile"><span class="stat-label">Commission YTD</span><span class="stat-value">$184,200</span><span class="stat-trend">↑ 12%</span></div>
@@ -1896,16 +1922,36 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
       <!-- ===== OPERATOR: PARTNERS & TIERS ===== -->
       <section id="scr-operator-partners" hidden>
-        <div class="section-head"><h2>Partners &amp; tiers</h2><span class="hint">Every partner, across every program</span></div>
+        <div class="section-head"><h2>Partners &amp; tiers</h2><span class="hint">Every partner in every program: approve, track performance, and move them up levels</span></div>
         <div style="height:14px"></div>
-        <div class="card">
-          <div class="table-scroll">
-            <table>
-              <thead><tr><th>Partner</th><th>Country</th><th>Program</th><th>Tier</th><th>Status</th></tr></thead>
-              <tbody id="operatorPartnerRows"></tbody>
-            </table>
-          </div>
-        </div>
+        <div id="operatorPartnersContent"></div>
+      </section>
+
+      <section id="scr-operator-partner-detail" hidden>
+        <button class="btn ghost sm" data-en-back>← Back to Partners &amp; Tiers</button>
+        <div id="partnerDetailContent" style="margin-top:14px;"></div>
+      </section>
+
+      <section id="scr-operator-shop" hidden>
+        <div class="section-head"><h2>Shop Manager</h2><span class="hint">CloudWAV courses, templates and toolkits for partners, vendors and affiliates</span></div>
+        <div style="height:14px"></div>
+        <div id="operatorShopContent"></div>
+      </section>
+
+      <section id="scr-operator-shop-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="operator-shop">← Back to Shop Manager</button>
+        <div id="shopEditorContent" style="margin-top:14px;"></div>
+      </section>
+
+      <section id="scr-shop" hidden>
+        <div class="section-head"><h2>Training &amp; Shop</h2><span class="hint">Courses and toolkits from CloudWAV to help you sell more and grow your audience</span></div>
+        <div style="height:14px"></div>
+        <div id="shopContent"></div>
+      </section>
+
+      <section id="scr-shop-product" hidden>
+        <button class="btn ghost sm" data-screen-go="shop">← Back to the shop</button>
+        <div id="shopProductContent" style="margin-top:14px;"></div>
       </section>
 
       <!-- ===== OPERATOR: DEAL APPROVALS ===== -->
@@ -2952,6 +2998,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-program-config":"Configure Program",
     "operator-deal-review":"Review Deal",
     "operator-incentive-review":"Review Incentive",
+    "operator-partner-detail":"Partner",
+    "operator-shop":"Shop Manager",
+    "operator-shop-editor":"Shop Product",
+    "shop":"Training & Shop",
+    "shop-product":"Training & Shop",
     "vendor-flyer-editor":"Incentive Flyer",
     "operator-flyer-review":"Review Flyer",
     "operator-msp-prospects":"MSP Prospecting",
@@ -3459,13 +3510,6 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       }).join("");
     }
 
-    // ---- operator partners ----
-    var opPartnerRows = document.getElementById("operatorPartnerRows");
-    if (opPartnerRows){
-      opPartnerRows.innerHTML = partnerRows.map(function(r){
-        return "<tr><td>"+esc(r.name)+"</td><td>"+esc(r.country)+"</td><td>"+esc(r.program)+"</td><td>"+esc(r.tier)+"</td><td>"+statusPill(r.status)+"</td></tr>";
-      }).join("");
-    }
 
     // ---- operator approvals + deal review; partner deals ----
     renderMSPProspects();
@@ -3485,6 +3529,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderFlyerEditor();
     renderOperatorFlyers();
     renderFlyerReview();
+    renderShop();
+    renderShopProduct();
+    renderOperatorShop();
+    renderShopEditor();
+    renderOperatorPartners();
+    renderPartnerDetail();
+    renderPartnerLevelCard();
     renderPartnerDeals();
     renderPartnerDealView();
 
@@ -6976,6 +7027,489 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
   });
 
+  // ===== SHOP: CloudWAV digital products + training =====
+  // Operator sells courses, templates and toolkits to partners, vendors and affiliates.
+  // Checkout is a payment link (Stripe / PayPal / bank page) set per product; the operator confirms
+  // payment, which unlocks the product in the buyer's library. No link yet = "Join waitlist".
+  var SHOP_KEY = "partnerWAV_shopProducts", ORDERS_KEY = "partnerWAV_shopOrders", WAIT_KEY = "partnerWAV_shopWaitlist";
+  var SHOP_TYPES = ["Course","Live workshop","Template pack","Toolkit","E-book"];
+  var SHOP_CATS = ["Sales","Bigger deals","Social media","Community & events","Marketing","AI & tech"];
+  var SHOP_AUDIENCE = { all:"Everyone", partner:"Partners", vendor:"Vendors", affiliate:"Affiliates" };
+  var ORDER_STATUS = { awaiting:{ label:"Awaiting payment", cls:"warn" }, paid:{ label:"Paid", cls:"good" }, refunded:{ label:"Refunded", cls:"neutral" }, cancelled:{ label:"Cancelled", cls:"neutral" } };
+  var shopProducts = [
+    { id:"shop-sales-fundamentals", title:"Sales Fundamentals for MSPs & VARs", type:"Course", category:"Sales", audience:"partner", price:149, cover:"#4338ca", icon:"📈", certifies:true,
+      summary:"A practical sales system for IT service companies: find the right customers, run discovery, and close without discounting.",
+      learn:"Build an ideal-customer profile for your area\nRun a discovery call that finds the real pain\nWrite proposals customers can say yes to\nHandle price objections without cutting margin",
+      outline:"Who buys managed services -- and why\nProspecting that doesn't feel like cold calling\nThe discovery call (with a Thai-market script)\nProposals, pricing and packaging\nObjections and closing\nTurning customers into referrals",
+      duration:"6 modules · about 4 hours", paymentLink:"", accessLink:"", status:"published", created:"2026-09-27" },
+    { id:"shop-bigger-deals", title:"Finding & Closing Bigger Deals", type:"Course", category:"Bigger deals", audience:"partner", price:249, cover:"#0f766e", icon:"🏆", certifies:true,
+      summary:"Move from one-off jobs to six-figure accounts: enterprise and government buyers, multi-stakeholder deals, and longer sales cycles.",
+      learn:"Spot accounts that can grow into big deals\nMap the buying committee and find a champion\nBuild a business case with ROI the CFO accepts\nUse vendor programs, MDF and deal registration to win",
+      outline:"What makes a deal 'big' (and worth it)\nAccount selection and research\nMulti-threading the buying committee\nBusiness cases and ROI\nNegotiation and procurement\nUsing vendor support: deal registration, MDF, SPIFs",
+      duration:"6 modules · about 5 hours", paymentLink:"", accessLink:"", status:"published", created:"2026-09-27" },
+    { id:"shop-social-following", title:"Build a Bigger Following on Social Media", type:"Course", category:"Social media", audience:"all", price:99, cover:"#9d174d", icon:"📣", certifies:true,
+      summary:"Grow an audience of buyers on LinkedIn, Facebook and LINE -- a repeatable weekly content routine for busy business owners.",
+      learn:"Pick the one or two platforms your buyers use\nA 30-minute-a-week content routine\nPosts that start conversations, not just likes\nTurn followers into meetings",
+      outline:"Choosing platforms (LinkedIn, Facebook, LINE OA, TikTok)\nYour profile as a landing page\nContent pillars and a weekly routine\nWriting hooks and short videos\nEngagement that leads to DMs\nMeasuring what works",
+      duration:"6 modules · about 3 hours", paymentLink:"", accessLink:"", status:"published", created:"2026-09-27" },
+    { id:"shop-smm-101", title:"Social Media Marketing 101", type:"Course", category:"Social media", audience:"all", price:0, cover:"#c2410c", icon:"🧭", certifies:false,
+      summary:"The basics in one sitting: platforms, posting, simple ads and measuring results. Free starter course.",
+      learn:"What each platform is good for\nA simple monthly content calendar\nBoosted posts vs. ads -- when to pay\nReading your analytics",
+      outline:"Platforms at a glance\nPlanning a month of content\nYour first ad (with a small budget)\nMeasuring results",
+      duration:"4 lessons · about 1 hour", paymentLink:"", accessLink:"", status:"published", created:"2026-09-27" },
+    { id:"shop-meetup", title:"How to Build and Run a Meetup Group", type:"Toolkit", category:"Community & events", audience:"all", price:79, cover:"#1f2937", icon:"🤝", certifies:false,
+      summary:"Start a local tech or business meetup that people keep coming back to -- and that brings you customers and partners.",
+      learn:"Pick a topic and format people will show up for\nFind venues and sponsors (including vendor MDF)\nRun the night: agenda, host script, follow-up\nGrow from 10 to 100 members",
+      outline:"Why meetups work for B2B\nTopic, name and format\nVenues, sponsors and budget\nPromotion (Meetup, LINE groups, Facebook, LinkedIn)\nOn the night: checklist and host script\nFollow-up that turns attendees into leads",
+      duration:"Guide + checklists + templates", paymentLink:"", accessLink:"", status:"published", created:"2026-09-27" },
+    { id:"shop-selling-ai", title:"Selling AI to Small and Mid-sized Businesses", type:"Course", category:"AI & tech", audience:"partner", price:149, cover:"#4338ca", icon:"🤖", certifies:true,
+      summary:"How to explain, demo and price AI products (chatbots, voice AI, automation) to SMB owners who are curious but cautious.",
+      learn:"Explain AI in plain business terms\nFind quick-win use cases by industry\nRun a demo that sells\nPrice pilots and roll-outs",
+      outline:"What SMB owners actually worry about\nUse cases: retail, clinics, hotels, services\nDemos that land\nPilots, pricing and ROI\nData, privacy and PDPA basics",
+      duration:"5 modules · about 3 hours", paymentLink:"", accessLink:"", status:"published", created:"2026-09-27" },
+    { id:"shop-outreach-templates", title:"Outreach & Follow-up Template Pack", type:"Template pack", category:"Sales", audience:"all", price:39, cover:"#0f766e", icon:"✉️", certifies:false,
+      summary:"Ready-to-edit emails, LINE messages and call scripts for prospecting, follow-ups and re-engaging quiet leads -- English and Thai.",
+      learn:"25 email templates\n15 LINE / chat messages\n5 call scripts\nA follow-up cadence you can copy",
+      outline:"First contact\nFollow-ups\nMeeting requests\nAfter the proposal\nRe-engaging old leads",
+      duration:"45 templates (EN + TH)", paymentLink:"", accessLink:"", status:"published", created:"2026-09-27" },
+    { id:"shop-partner-playbook", title:"The Partner Program Playbook", type:"E-book", category:"Marketing", audience:"partner", price:29, cover:"#1f2937", icon:"📘", certifies:false,
+      summary:"Get the most from vendor partner programs: tiers, deal registration, MDF, SPIFs and co-marketing -- and how to negotiate better terms.",
+      learn:"How tiers and margins really work\nUsing deal registration to protect your deals\nWinning MDF and co-marketing funds\nNegotiating with vendors",
+      outline:"How partner programs make money for you\nTiers and requirements\nDeal registration\nMDF, SPIFs and incentives\nCo-marketing that works",
+      duration:"About 60 pages", paymentLink:"", accessLink:"", status:"published", created:"2026-09-27" },
+    { id:"shop-vendor-channel", title:"Building a Channel Program in Southeast Asia", type:"Live workshop", category:"Bigger deals", audience:"vendor", price:490, cover:"#9d174d", icon:"🌏", certifies:false,
+      summary:"For vendors: recruit, enable and grow resellers in Thailand and SEA -- program design, incentives and partner marketing.",
+      learn:"Design tiers and margins partners want\nRecruit the right MSPs and VARs\nEnablement that gets partners selling\nIncentives that change behaviour",
+      outline:"Session 1: Program design\nSession 2: Recruiting partners\nSession 3: Enablement and incentives",
+      duration:"3 live sessions · 90 minutes each", paymentLink:"", accessLink:"", status:"draft", created:"2026-09-27" }
+  ];
+  var shopOrders = [], shopWaitlist = [];
+  function saveShop(){ try { localStorage.setItem(SHOP_KEY, JSON.stringify(shopProducts)); localStorage.setItem(ORDERS_KEY, JSON.stringify(shopOrders)); localStorage.setItem(WAIT_KEY, JSON.stringify(shopWaitlist)); } catch(e){ console.log("Could not save shop:", e); } }
+  function loadShop(){
+    try {
+      var sp = JSON.parse(localStorage.getItem(SHOP_KEY) || "null"); if (Array.isArray(sp) && sp.length) shopProducts = sp;
+      var so = JSON.parse(localStorage.getItem(ORDERS_KEY) || "null"); if (Array.isArray(so)) shopOrders = so;
+      var sw = JSON.parse(localStorage.getItem(WAIT_KEY) || "null"); if (Array.isArray(sw)) shopWaitlist = sw;
+    } catch(e){ console.log("Could not load shop:", e); }
+  }
+  function shopById(id){ return shopProducts.filter(function(x){ return x.id === id; })[0] || null; }
+  function shopPrice(p){ return !p.price ? "Free" : "$" + Number(p.price).toLocaleString("en-US"); }
+  function buyerKey(){
+    var id = state.role === "vendor" ? state.myVendorId : state.role === "partner" ? state.myProfileId : state.role === "affiliate" ? myAffiliateProfileId() : null;
+    return id ? state.role + ":" + id : null;
+  }
+  function buyerName(key){
+    var parts = String(key || "").split(":"); var n = entityNameFor(parts[0], parts[1]);
+    return n || parts[1] || "Unknown";
+  }
+  function myOrders(){ var k = buyerKey(); return shopOrders.filter(function(o){ return o.buyer === k && o.status !== "cancelled"; }); }
+  function orderFor(productId, key){ return shopOrders.filter(function(o){ return o.productId === productId && o.buyer === key && o.status !== "cancelled" && o.status !== "refunded"; })[0] || null; }
+  function onWaitlist(productId, key){ return shopWaitlist.some(function(w){ return w.productId === productId && w.buyer === key; }); }
+  function shopVisibleTo(p, role){ return p.status === "published" && (p.audience === "all" || p.audience === role); }
+  function shopCover(p, big){
+    return '<div class="shop-cover'+(big ? " big" : "")+'" style="background:'+attr(p.cover || "#4338ca")+'"><span class="shop-icon">'+esc(p.icon || "🎓")+'</span><span class="shop-type">'+esc(p.type)+'</span></div>';
+  }
+
+  // ----- buyer: browse + library -----
+  function renderShop(){
+    var box = document.getElementById("shopContent");
+    if (!box || state.screen !== "shop") return;
+    var tab = state.shopTab || "browse", key = buyerKey();
+    var tabs = '<div class="filter-chip-row" style="margin-bottom:14px;"><button type="button" class="filter-chip" data-shop-tab="browse" aria-pressed="'+(tab==="browse")+'">Browse</button>'
+      + '<button type="button" class="filter-chip" data-shop-tab="library" aria-pressed="'+(tab==="library")+'">My library ('+myOrders().length+')</button></div>';
+    if (tab === "library"){
+      var mine = myOrders();
+      box.innerHTML = tabs + (mine.length ? '<div class="shop-grid">' + mine.map(function(o){
+        var p = shopById(o.productId); if (!p) return "";
+        var paid = o.status === "paid";
+        return '<div class="shop-card" data-lib-card="'+attr(p.id)+'">'+shopCover(p)
+          + '<div class="shop-body"><div class="shop-title">'+esc(p.title)+'</div>'
+          + '<div>'+'<span class="badge '+ORDER_STATUS[o.status].cls+'">'+esc(ORDER_STATUS[o.status].label)+'</span>'+(o.completedAt ? ' <span class="badge good">Completed</span>' : '')+'</div>'
+          + (paid ? (p.accessLink ? '<a class="btn primary sm" href="'+attr(p.accessLink)+'" target="_blank" rel="noopener noreferrer">Open '+esc(p.type.toLowerCase())+'</a>' : '<span class="field-note">CloudWAV will email you access shortly.</span>')
+                  : '<span class="field-note">We\'ll unlock this as soon as CloudWAV confirms your payment.'+(p.paymentLink ? ' <a href="'+attr(p.paymentLink)+'" target="_blank" rel="noopener noreferrer">Payment page</a>' : '')+'</span>')
+          + (paid && p.certifies && !o.completedAt ? '<button type="button" class="btn secondary sm" data-shop-complete="'+attr(o.id)+'">Mark as completed</button><span class="field-note">Completed courses count toward your partner level.</span>' : '')
+          + '<button type="button" class="btn ghost sm" data-shop-view="'+attr(p.id)+'">Details</button>'
+          + '</div></div>';
+      }).join("") + '</div>' : '<div class="empty">Nothing here yet -- browse the shop to get started.</div>');
+      return;
+    }
+    var cat = state.shopCat || "";
+    var list = shopProducts.filter(function(p){ return shopVisibleTo(p, state.role) && (!cat || p.category === cat); });
+    var cats = SHOP_CATS.filter(function(c){ return shopProducts.some(function(p){ return shopVisibleTo(p, state.role) && p.category === c; }); });
+    box.innerHTML = tabs
+      + '<div class="filter-chip-row" style="margin-bottom:14px;"><button type="button" class="filter-chip" data-shop-cat="" aria-pressed="'+(!cat)+'">All</button>' + cats.map(function(c){ return '<button type="button" class="filter-chip" data-shop-cat="'+attr(c)+'" aria-pressed="'+(cat===c)+'">'+esc(c)+'</button>'; }).join("") + '</div>'
+      + (list.length ? '<div class="shop-grid">' + list.map(function(p){
+          var o = key ? orderFor(p.id, key) : null, w = key && onWaitlist(p.id, key);
+          return '<div class="shop-card" data-shop-card="'+attr(p.id)+'">'+shopCover(p)
+            + '<div class="shop-body"><div class="shop-cat">'+esc(p.category)+(p.certifies ? ' · <span title="Counts toward partner levels">🎖 Counts toward partner level</span>' : '')+'</div>'
+            + '<div class="shop-title">'+esc(p.title)+'</div><p class="shop-summary">'+esc(p.summary)+'</p>'
+            + '<div class="shop-foot"><span class="shop-price">'+shopPrice(p)+'</span>'
+            + (o ? '<span class="badge '+ORDER_STATUS[o.status].cls+'">'+(o.status === "paid" ? "In your library" : ORDER_STATUS[o.status].label)+'</span>' : w ? '<span class="badge neutral">On the waitlist</span>' : '')
+            + '<button type="button" class="btn primary sm" data-shop-view="'+attr(p.id)+'">View</button></div></div></div>';
+        }).join("") + '</div>' : '<div class="empty">No products here yet.</div>');
+  }
+
+  function renderShopProduct(){
+    var box = document.getElementById("shopProductContent");
+    if (!box || state.screen !== "shop-product") return;
+    var p = shopById(state.shopProductId);
+    if (!p){ box.innerHTML = '<div class="empty">Product not found.</div>'; return; }
+    var key = buyerKey(), o = key ? orderFor(p.id, key) : null, w = key && onWaitlist(p.id, key);
+    var action;
+    if (state.role === "operator") action = '<button type="button" class="btn primary" data-shop-edit="'+attr(p.id)+'">Edit product</button>';
+    else if (!key) action = '<span class="field-note">Complete your profile first to buy.</span>';
+    else if (o && o.status === "paid") action = '<button type="button" class="btn primary" data-shop-tab-go="library">Open in my library</button>';
+    else if (o) action = '<div class="field-note">Order placed '+esc(o.created)+' -- awaiting payment confirmation.'+(p.paymentLink ? ' <a href="'+attr(p.paymentLink)+'" target="_blank" rel="noopener noreferrer">Go to payment page</a>' : '')+'</div>';
+    else if (!p.price) action = '<button type="button" class="btn primary" data-shop-buy="'+attr(p.id)+'">Get it free</button>';
+    else if (p.paymentLink) action = '<button type="button" class="btn primary" data-shop-buy="'+attr(p.id)+'">Buy for '+shopPrice(p)+'</button><span class="field-note">Opens a secure payment page in a new tab.</span>';
+    else action = w ? '<span class="badge neutral">You\'re on the waitlist -- we\'ll let you know when it opens</span>' : '<button type="button" class="btn primary" data-shop-waitlist="'+attr(p.id)+'">Join the waitlist</button><span class="field-note">Opening soon at '+shopPrice(p)+'. We\'ll let you know first.</span>';
+    var list = function(t){ return lines(t).map(function(x){ return '<li>'+esc(x)+'</li>'; }).join(""); };
+    box.innerHTML = '<div class="shop-detail">'
+      + shopCover(p, true)
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+        + '<div class="shop-cat">'+esc(p.category)+' · '+esc(p.type)+(p.duration ? ' · '+esc(p.duration) : '')+'</div>'
+        + '<h2 style="margin:0;font-size:1.4rem;">'+esc(p.title)+'</h2>'
+        + '<p style="margin:0;color:var(--ink-soft);">'+esc(p.summary)+'</p>'
+        + '<div class="shop-price" style="font-size:1.4rem;">'+shopPrice(p)+'</div>'
+        + '<div class="cfg-actions" style="flex-wrap:wrap;">'+action+'</div>'
+        + (p.certifies ? '<div class="field-note">🎖 Completing this counts toward your partner level.</div>' : '')
+        + (lines(p.learn).length ? '<div><div class="aff-section-title">What you\'ll learn</div><ul class="shop-list">'+list(p.learn)+'</ul></div>' : '')
+        + (lines(p.outline).length ? '<div><div class="aff-section-title">What\'s inside</div><ol class="shop-list">'+list(p.outline)+'</ol></div>' : '')
+      + '</div></div>';
+  }
+
+  function shopBuy(id){
+    var p = shopById(id), key = buyerKey(); if (!p || !key || orderFor(id, key)) return;
+    var o = { id:"ord-" + Date.now().toString(36), productId:id, buyer:key, price:p.price || 0, status: p.price ? "awaiting" : "paid", created: nowStamp(), paidAt: p.price ? "" : nowStamp() };
+    shopOrders.unshift(o); saveShop();
+    if (p.price && p.paymentLink) window.open(p.paymentLink, "_blank", "noopener");
+    toast(p.price ? "Order placed -- finish paying in the new tab. We'll unlock it once payment is confirmed." : "Added to your library");
+    renderShopProduct();
+  }
+
+  // ----- operator: products, orders, waitlist -----
+  function renderOperatorShop(){
+    var box = document.getElementById("operatorShopContent");
+    if (!box || state.screen !== "operator-shop") return;
+    var tab = state.opShopTab || "products";
+    var awaiting = shopOrders.filter(function(o){ return o.status === "awaiting"; }).length;
+    var paid = shopOrders.filter(function(o){ return o.status === "paid"; });
+    var revenue = paid.reduce(function(a, o){ return a + (Number(o.price) || 0); }, 0);
+    var html = '<div class="map-stats" style="margin-bottom:12px;">'
+      + '<div class="map-stat"><b>'+shopProducts.filter(function(p){ return p.status === "published"; }).length+'</b>published</div>'
+      + '<div class="map-stat"><b>'+paid.length+'</b>sales</div><div class="map-stat"><b>$'+revenue.toLocaleString("en-US")+'</b>revenue</div>'
+      + '<div class="map-stat"><b>'+awaiting+'</b>awaiting payment</div><div class="map-stat"><b>'+shopWaitlist.length+'</b>on waitlists</div></div>'
+      + '<div class="filter-chip-row" style="margin-bottom:12px;">'
+      + ["products","orders","waitlist"].map(function(k){ return '<button type="button" class="filter-chip" data-opshop-tab="'+k+'" aria-pressed="'+(tab===k)+'">'+({products:"Products",orders:"Orders"+(awaiting ? " ("+awaiting+" to confirm)" : ""),waitlist:"Waitlist"})[k]+'</button>'; }).join("")
+      + '<button type="button" class="btn primary sm" data-shop-edit="" style="margin-left:auto;">+ New product</button></div>';
+    if (tab === "products"){
+      html += '<div style="display:flex;flex-direction:column;gap:10px;">' + shopProducts.map(function(p){
+        var sales = shopOrders.filter(function(o){ return o.productId === p.id && o.status === "paid"; }).length;
+        var wl = shopWaitlist.filter(function(w){ return w.productId === p.id; }).length;
+        return '<div class="deal-row" data-opshop-row="'+attr(p.id)+'"><span class="shop-mini" style="background:'+attr(p.cover)+'">'+esc(p.icon || "🎓")+'</span><span class="deal-row-name">'+esc(p.title)
+          + '<span class="field-note" style="display:block;font-weight:400;">'+esc(p.type)+' · '+esc(p.category)+' · for '+esc(SHOP_AUDIENCE[p.audience] || "Everyone")+' · '+shopPrice(p)+' · '+sales+' sold · '+wl+' waiting'+(p.price && !p.paymentLink ? ' · <b>no payment link yet (waitlist mode)</b>' : '')+'</span></span>'
+          + '<span class="badge '+(p.status === "published" ? "good" : "neutral")+'">'+(p.status === "published" ? "Published" : "Draft")+'</span>'
+          + '<button type="button" class="btn secondary sm" data-shop-edit="'+attr(p.id)+'">Edit</button></div>';
+      }).join("") + '</div>';
+    } else if (tab === "orders"){
+      html += shopOrders.length ? '<div class="table-scroll"><table><thead><tr><th>Buyer</th><th>Product</th><th style="text-align:right">Price</th><th>Status</th><th>Ordered</th><th></th></tr></thead><tbody>'
+        + shopOrders.map(function(o){ var p = shopById(o.productId) || { title:o.productId };
+            return '<tr data-order-row="'+attr(o.id)+'"><td>'+esc(buyerName(o.buyer))+'<span class="field-note" style="display:block;">'+esc(cap(String(o.buyer).split(":")[0]))+'</span></td><td>'+esc(p.title)+'</td><td style="text-align:right">'+(o.price ? "$" + Number(o.price).toLocaleString("en-US") : "Free")+'</td><td><span class="badge '+ORDER_STATUS[o.status].cls+'">'+esc(ORDER_STATUS[o.status].label)+'</span>'+(o.completedAt ? ' <span class="badge good">Completed</span>' : '')+'</td><td>'+esc(o.created)+'</td><td class="row-actions">'
+              + (o.status === "awaiting" ? '<button type="button" class="btn primary sm" data-order-act="paid" data-order-id="'+attr(o.id)+'">Mark paid</button> <button type="button" class="btn ghost sm" data-order-act="cancelled" data-order-id="'+attr(o.id)+'">Cancel</button>' : '')
+              + (o.status === "paid" && o.price ? '<button type="button" class="btn ghost sm" data-order-act="refunded" data-order-id="'+attr(o.id)+'">Refund</button>' : '')
+              + '</td></tr>'; }).join("") + '</tbody></table></div><p class="field-note">Check the payment in your Stripe / PayPal / bank account, then Mark paid to unlock it for the buyer.</p>'
+        : '<div class="empty">No orders yet.</div>';
+    } else {
+      var byP = {}; shopWaitlist.forEach(function(w){ (byP[w.productId] = byP[w.productId] || []).push(w); });
+      html += Object.keys(byP).length ? Object.keys(byP).map(function(pid){ var p = shopById(pid) || { title: pid };
+          return '<div class="card card-pad" style="margin-bottom:10px;"><div class="aff-section-title">'+esc(p.title)+' · '+byP[pid].length+' waiting</div><div class="field-note">'+byP[pid].map(function(w){ return esc(buyerName(w.buyer)) + ' (' + esc(w.created) + ')'; }).join(", ")+'</div></div>'; }).join("")
+        + '<p class="field-note">Waitlists show demand before you build or price something. Add a payment link to open sales.</p>'
+        : '<div class="empty">No one is on a waitlist yet.</div>';
+    }
+    box.innerHTML = html;
+  }
+
+  function renderShopEditor(){
+    var box = document.getElementById("shopEditorContent");
+    if (!box || state.screen !== "operator-shop-editor") return;
+    var p = state.shopDraft || {};
+    var f = function(key, label, ph, type){ return '<div class="field-row"><label for="shp_'+key+'">'+label+'</label><input type="'+(type||"text")+'" id="shp_'+key+'" value="'+attr(p[key] == null ? "" : p[key])+'" placeholder="'+attr(ph||"")+'"></div>'; };
+    var ta = function(key, label, ph, rows){ return '<div class="field-row"><label for="shp_'+key+'">'+label+'</label><textarea id="shp_'+key+'" rows="'+(rows||4)+'" placeholder="'+attr(ph||"")+'">'+esc(p[key] || "")+'</textarea></div>'; };
+    var sel = function(key, label, opts){ return '<div class="field-row"><label for="shp_'+key+'">'+label+'</label><select id="shp_'+key+'">'+opts.map(function(o){ var v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o; return '<option value="'+attr(v)+'"'+(p[key] === v ? " selected" : "")+'>'+esc(t)+'</option>'; }).join("")+'</select></div>'; };
+    box.innerHTML = '<div class="fly-layout"><div class="card card-pad fly-form">'
+      + '<h2 style="margin:0;font-size:1.15rem;">'+(p.id ? "Edit product" : "New product")+'</h2>'
+      + f("title","Title *","e.g. Sales Fundamentals for MSPs")
+      + '<div class="vp-grid">' + sel("type","Type",SHOP_TYPES) + sel("category","Category",SHOP_CATS) + sel("audience","For",Object.keys(SHOP_AUDIENCE).map(function(k){ return [k, SHOP_AUDIENCE[k]]; })) + '</div>'
+      + '<div class="vp-grid">' + f("price","Price (USD, 0 = free)","149","number") + f("duration","Length / format","6 modules · about 4 hours") + f("icon","Icon (emoji)","📈") + '</div>'
+      + ta("summary","Short description *","One or two sentences shown on the card",2)
+      + ta("learn","What they'll learn (one per line)","",4)
+      + ta("outline","What's inside -- modules / lessons (one per line)","",5)
+      + f("paymentLink","Payment link","https://buy.stripe.com/… or PayPal / bank payment page","url")
+      + '<span class="field-note">Create a payment link in Stripe or PayPal and paste it here. Leave empty to take waitlist sign-ups instead.</span>'
+      + f("accessLink","Access link (shown after payment)","https://… course, Google Drive folder or download","url")
+      + '<label class="cfg-check"><input type="checkbox" id="shp_certifies"'+(p.certifies ? " checked" : "")+'> Completing this counts toward partner levels</label>'
+      + '<div class="field-row"><label>Cover colour</label><div class="fly-swatches">'+Object.keys(FLY_THEMES).map(function(k){ return '<button type="button" class="fly-swatch" data-shop-color="'+FLY_THEMES[k][1]+'" aria-pressed="'+(p.cover===FLY_THEMES[k][1])+'" style="background:'+FLY_THEMES[k][1]+'"><span class="sr-only">'+esc(FLY_THEMES[k][0])+'</span></button>'; }).join("")+'</div></div>'
+      + '<div id="shopEditError" class="login-msg bad" hidden></div>'
+      + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-shop-save="draft">Save as draft</button><button type="button" class="btn primary sm" data-shop-save="published" style="margin-left:auto;">Publish</button></div>'
+      + '</div><div class="fly-preview-wrap"><div class="aff-section-title" style="margin-bottom:8px;">Card preview</div><div id="shopEditPreview" style="max-width:320px;"></div></div></div>';
+    refreshShopPreview();
+  }
+  function readShopForm(){
+    var p = state.shopDraft; if (!p) return null;
+    ["title","type","category","audience","duration","icon","summary","learn","outline","paymentLink","accessLink"].forEach(function(k){ var el = document.getElementById("shp_"+k); if (el) p[k] = el.value.trim(); });
+    var pr = document.getElementById("shp_price"); p.price = pr && pr.value !== "" ? Math.max(0, Number(pr.value)) : 0;
+    var c = document.getElementById("shp_certifies"); p.certifies = !!(c && c.checked);
+    return p;
+  }
+  function refreshShopPreview(){
+    var p = readShopForm(), box = document.getElementById("shopEditPreview"); if (!p || !box) return;
+    box.innerHTML = '<div class="shop-card">'+shopCover(p)+'<div class="shop-body"><div class="shop-cat">'+esc(p.category || "")+'</div><div class="shop-title">'+esc(p.title || "Title")+'</div><p class="shop-summary">'+esc(p.summary || "")+'</p><div class="shop-foot"><span class="shop-price">'+shopPrice(p)+'</span></div></div></div>';
+  }
+  function saveShopProduct(status){
+    var p = readShopForm(); if (!p) return;
+    var err = document.getElementById("shopEditError"), probs = [];
+    if (!p.title) probs.push("Add a title.");
+    if (!p.summary) probs.push("Add a short description.");
+    ["paymentLink","accessLink"].forEach(function(k){ if (p[k] && !/^https?:\/\/\S+\.\S+/i.test(p[k])) probs.push("The " + (k === "paymentLink" ? "payment" : "access") + " link needs to be a full web address (https://...)."); });
+    if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+    p.status = status;
+    if (!p.id){ p.id = "shop-" + Date.now().toString(36); p.created = nowStamp(); shopProducts.unshift(p); }
+    else { var i = shopProducts.map(function(x){ return x.id; }).indexOf(p.id); if (i > -1) shopProducts[i] = p; else shopProducts.unshift(p); }
+    saveShop(); state.shopDraft = null;
+    toast(status === "published" ? "Published -- \"" + p.title + "\" is in the shop" : "Saved as a draft");
+    state.screen = "operator-shop"; render();
+  }
+
+  // ===== PARTNER LEVELS (performance tiers across all programs) =====
+  // Commission tiers (Reseller, Channel Manager...) come from each vendor agreement. Partner levels are
+  // CloudWAV's performance ladder on top: revenue, closed deals and completed training unlock benefits.
+  var LEVELS_KEY = "partnerWAV_levelRules", ENROLL_KEY = "partnerWAV_enrollments";
+  var levelRules = [
+    { level:"Registered", minRevenue:0,      minDeals:0,  minCourses:0, benefits:"Portal access, deal registration, Resource Library" },
+    { level:"Bronze",     minRevenue:10000,  minDeals:1,  minCourses:1, benefits:"Deal protection on registered deals, listing on the Partner Discovery Map" },
+    { level:"Silver",     minRevenue:50000,  minDeals:3,  minCourses:2, benefits:"+2% margin on top of commission, MDF eligibility, co-branded collateral" },
+    { level:"Gold",       minRevenue:150000, minDeals:8,  minCourses:3, benefits:"+5% margin, shared leads from CloudWAV, co-marketing campaigns, priority deal review" },
+    { level:"Platinum",   minRevenue:400000, minDeals:20, minCourses:4, benefits:"+8% margin, dedicated channel manager, early access to new vendors, event sponsorship" }
+  ];
+  var LEVEL_COLOR = { Registered:"neutral", Bronze:"warn", Silver:"neutral", Gold:"accent", Platinum:"good" };
+  // Enrollments: a partner in a program. revenue12m / dealsClosed are the recorded history; approved deals
+  // from Deal Approvals and completed Shop courses are added live.
+  var enrollments = [
+    { id:"en-siam-intelsense", partnerId:"siam-digital", partner:"Siam Digital MSP", country:"Thailand", programId:"intelsense", tier:"Reseller", level:"Gold", status:"active", joined:"2025-11-04", revenue12m:182000, dealsClosed:9, coursesBefore:3, lastActivity:"2026-09-25", history:[] },
+    { id:"en-siam-botnoi", partnerId:"siam-digital", partner:"Siam Digital MSP", country:"Thailand", programId:"botnoi", tier:"Channel Manager", level:"Bronze", status:"active", joined:"2026-06-12", revenue12m:14500, dealsClosed:2, coursesBefore:1, lastActivity:"2026-09-18", history:[] },
+    { id:"en-gulf-cross", partnerId:"gulf-coast", partner:"Gulf Coast VAR", country:"USA", programId:"crossconnect", tier:"Affiliate", level:"Registered", status:"pending", joined:"2026-09-20", revenue12m:0, dealsClosed:0, lastActivity:"2026-09-26", history:[] },
+    { id:"en-portonics-intelsense", partnerId:"portonics", partner:"Portonics Ltd.", country:"Bangladesh", programId:"intelsense", tier:"Reseller", level:"Silver", status:"active", joined:"2025-08-19", revenue12m:61000, dealsClosed:4, coursesBefore:2, lastActivity:"2026-07-02", history:[] },
+    { id:"en-riverside-botnoi", partnerId:"riverside", partner:"Riverside Telco", country:"USA", programId:"botnoi", tier:"Channel Manager", level:"Registered", status:"draft", joined:"2026-09-10", revenue12m:0, dealsClosed:0, lastActivity:"2026-09-10", history:[] },
+    { id:"en-portonics-unisense", partnerId:"portonics", partner:"Portonics Ltd.", country:"Bangladesh", programId:"unisense", tier:"Reseller", level:"Bronze", status:"active", joined:"2026-02-01", revenue12m:52000, dealsClosed:3, coursesBefore:2, lastActivity:"2026-09-21", history:[] }
+  ];
+  function saveLevels(){ try { localStorage.setItem(LEVELS_KEY, JSON.stringify(levelRules)); localStorage.setItem(ENROLL_KEY, JSON.stringify(enrollments)); } catch(e){ console.log("Could not save levels:", e); } }
+  function loadLevels(){
+    try {
+      var lr = JSON.parse(localStorage.getItem(LEVELS_KEY) || "null"); if (Array.isArray(lr) && lr.length) levelRules = lr;
+      var en = JSON.parse(localStorage.getItem(ENROLL_KEY) || "null"); if (Array.isArray(en) && en.length) enrollments = en;
+    } catch(e){ console.log("Could not load levels:", e); }
+  }
+  function levelIndex(name){ for (var i=0;i<levelRules.length;i++) if (levelRules[i].level === name) return i; return 0; }
+  function enById(id){ return enrollments.filter(function(e){ return e.id === id; })[0] || null; }
+  function enProgramName(e){ var p = programById(e.programId); return p ? p.name : e.programId; }
+  function enDeals(e){ return (state.approvals || []).filter(function(d){ return d.status === "approved" && d.programId === e.programId && (d.partnerId === e.partnerId || d.partner === e.partner); }); }
+  function enCourses(e){ return shopOrders.filter(function(o){ var p = shopById(o.productId); return o.buyer === "partner:" + e.partnerId && o.status === "paid" && o.completedAt && p && p.certifies; }); }
+  function enStats(e){
+    var live = enDeals(e), liveRev = live.reduce(function(a, d){ var v = dealAmount(d.value); return a + (v && /\$/.test(d.value) ? v : 0); }, 0);
+    return { revenue: (e.revenue12m || 0) + liveRev, deals: (e.dealsClosed || 0) + live.length, courses: (e.coursesBefore || 0) + enCourses(e).length, liveDeals: live };
+  }
+  function money(n){ return "$" + Math.round(n).toLocaleString("en-US"); }
+  // Highest level whose requirements the partner meets
+  function earnedLevel(e){ var s = enStats(e), best = 0; levelRules.forEach(function(r, i){ if (s.revenue >= r.minRevenue && s.deals >= r.minDeals && s.courses >= r.minCourses) best = i; }); return best; }
+  function enFlag(e){
+    if (e.status !== "active") return "";
+    var cur = levelIndex(e.level), earned = earnedLevel(e);
+    if (earned > cur) return "promote";
+    if (earned < cur) return "below";
+    var days = (Date.now() - new Date(e.lastActivity + "T00:00:00").getTime()) / 86400000;
+    return days > 60 ? "quiet" : "";
+  }
+  var FLAG_LABEL = { promote:["good","Ready to level up"], below:["warn","Below level requirements"], quiet:["neutral","Quiet 60+ days"] };
+  function levelBadge(name){ return '<span class="badge '+(LEVEL_COLOR[name] || "neutral")+'">'+esc(name)+'</span>'; }
+  function progressHtml(e){
+    var s = enStats(e), i = levelIndex(e.level), next = levelRules[i+1];
+    if (!next) return '<span class="field-note">Top level</span>';
+    var parts = [ [s.revenue, next.minRevenue], [s.deals, next.minDeals], [s.courses, next.minCourses] ];
+    var pct = Math.round(100 * parts.reduce(function(a, x){ return a + (x[1] ? Math.min(1, x[0] / x[1]) : 1); }, 0) / parts.length);
+    return '<div class="lvl-progress" title="'+pct+'% of the way to '+attr(next.level)+'"><div style="width:'+pct+'%"></div></div><span class="field-note">'+pct+'% to '+esc(next.level)+'</span>';
+  }
+
+  function renderOperatorPartners(){
+    var box = document.getElementById("operatorPartnersContent");
+    if (!box || state.screen !== "operator-partners") return;
+    var tab = state.opPartnersTab || "partners";
+    var tabsHtml = '<div class="filter-chip-row" style="margin-bottom:12px;"><button type="button" class="filter-chip" data-oppart-tab="partners" aria-pressed="'+(tab==="partners")+'">Partners</button><button type="button" class="filter-chip" data-oppart-tab="levels" aria-pressed="'+(tab==="levels")+'">Level requirements</button></div>';
+    if (tab === "levels"){
+      box.innerHTML = tabsHtml + '<p class="field-note" style="margin:0 0 10px;">Partner levels sit on top of each vendor\'s commission tiers. A partner qualifies for a level when they meet all three numbers (last 12 months). Courses are Shop products marked "counts toward partner levels".</p>'
+        + '<div class="table-scroll"><table class="lvl-table"><thead><tr><th>Level</th><th>Revenue (12 mo, USD)</th><th>Closed deals</th><th>Courses completed</th><th>Benefits</th></tr></thead><tbody>'
+        + levelRules.map(function(r, i){ return '<tr><td>'+levelBadge(r.level)+'</td>'
+          + '<td><input type="number" min="0" data-lvl="'+i+'" data-lvl-key="minRevenue" value="'+r.minRevenue+'"'+(i===0?" disabled":"")+'></td>'
+          + '<td><input type="number" min="0" data-lvl="'+i+'" data-lvl-key="minDeals" value="'+r.minDeals+'"'+(i===0?" disabled":"")+'></td>'
+          + '<td><input type="number" min="0" data-lvl="'+i+'" data-lvl-key="minCourses" value="'+r.minCourses+'"'+(i===0?" disabled":"")+'></td>'
+          + '<td><textarea rows="2" data-lvl="'+i+'" data-lvl-key="benefits">'+esc(r.benefits)+'</textarea></td></tr>'; }).join("")
+        + '</tbody></table></div><div id="lvlError" class="login-msg bad" hidden></div><div class="cfg-actions"><button type="button" class="btn primary sm" data-lvl-save>Save requirements</button></div>';
+      return;
+    }
+    var q = (state.opPartnerQ || "").toLowerCase(), fp = state.opPartnerProgram || "", fl = state.opPartnerLevel || "", fs = state.opPartnerStatus || "", ff = state.opPartnerFlag || "";
+    var list = enrollments.filter(function(e){
+      return (!q || (e.partner + " " + e.country + " " + enProgramName(e)).toLowerCase().indexOf(q) > -1) && (!fp || e.programId === fp) && (!fl || e.level === fl) && (!fs || e.status === fs) && (!ff || enFlag(e) === ff);
+    });
+    var cnt = function(fn){ return enrollments.filter(fn).length; };
+    var progs = enrollments.map(function(e){ return e.programId; }).filter(function(v, i, a){ return a.indexOf(v) === i; });
+    var opt = function(v, t, cur){ return '<option value="'+attr(v)+'"'+(v === cur ? " selected" : "")+'>'+esc(t)+'</option>'; };
+    box.innerHTML = tabsHtml
+      + '<div class="map-stats" style="margin-bottom:12px;">'
+        + '<div class="map-stat"><b>'+enrollments.length+'</b>enrollments</div>'
+        + '<div class="map-stat"><b>'+cnt(function(e){ return e.status === "active"; })+'</b>active</div>'
+        + '<button type="button" class="map-stat stat-btn" data-oppart-flag="pending-status"><b>'+cnt(function(e){ return e.status === "pending"; })+'</b>to approve</button>'
+        + '<button type="button" class="map-stat stat-btn" data-oppart-flag="promote"><b>'+cnt(function(e){ return enFlag(e) === "promote"; })+'</b>ready to level up</button>'
+        + '<button type="button" class="map-stat stat-btn" data-oppart-flag="quiet"><b>'+cnt(function(e){ return enFlag(e) === "quiet"; })+'</b>quiet 60+ days</button>'
+      + '</div>'
+      + '<div class="filter-row" style="flex-wrap:wrap;gap:10px;margin-bottom:12px;">'
+        + '<input type="text" class="list-search" id="opPartnerQ" placeholder="Search partner, country or program…" value="'+attr(state.opPartnerQ || "")+'" style="flex:1;min-width:200px;">'
+        + '<select class="filter" id="opPartnerProgram" aria-label="Program">'+opt("", "All programs", fp)+progs.map(function(id){ var p = programById(id); return opt(id, p ? p.name : id, fp); }).join("")+'</select>'
+        + '<select class="filter" id="opPartnerLevel" aria-label="Level">'+opt("", "All levels", fl)+levelRules.map(function(r){ return opt(r.level, r.level, fl); }).join("")+'</select>'
+        + '<select class="filter" id="opPartnerStatus" aria-label="Status">'+opt("", "All statuses", fs)+["active","pending","draft","suspended"].map(function(s2){ return opt(s2, cap(s2), fs); }).join("")+'</select>'
+        + '<select class="filter" id="opPartnerFlag" aria-label="Needs attention">'+opt("", "Needs attention: any", ff)+opt("promote", "Ready to level up", ff)+opt("below", "Below requirements", ff)+opt("quiet", "Quiet 60+ days", ff)+'</select>'
+        + '<button type="button" class="btn secondary sm" data-oppart-reset>Reset</button>'
+        + '<button type="button" class="btn ghost sm" data-oppart-export>Export CSV</button>'
+      + '</div>'
+      + '<div class="card"><div class="table-scroll"><table><thead><tr><th>Partner</th><th>Program</th><th>Commission tier</th><th>Level</th><th>Progress</th><th style="text-align:right">Revenue 12 mo</th><th style="text-align:right">Deals</th><th style="text-align:right">Courses</th><th>Status</th><th></th></tr></thead><tbody id="operatorPartnerRows">'
+      + (list.length ? list.map(function(e){ var s = enStats(e), fl2 = enFlag(e);
+          return '<tr data-en-row="'+attr(e.id)+'"><td><b>'+esc(e.partner)+'</b><span class="field-note" style="display:block;">'+esc(e.country)+'</span></td><td>'+esc(enProgramName(e))+'</td><td>'+esc(e.tier)+'</td>'
+            + '<td>'+levelBadge(e.level)+(fl2 ? '<span class="badge '+FLAG_LABEL[fl2][0]+'" style="margin-left:4px;">'+esc(FLAG_LABEL[fl2][1])+'</span>' : '')+'</td><td style="min-width:120px;">'+progressHtml(e)+'</td>'
+            + '<td style="text-align:right">'+money(s.revenue)+'</td><td style="text-align:right">'+s.deals+'</td><td style="text-align:right">'+s.courses+'</td><td>'+statusPill(e.status)+'</td>'
+            + '<td class="row-actions"><button type="button" class="btn primary sm" data-en-view="'+attr(e.id)+'">Manage</button></td></tr>'; }).join("")
+        : '<tr><td colspan="10"><div class="empty">No partners match.</div></td></tr>')
+      + '</tbody></table></div></div>';
+  }
+
+  function renderPartnerDetail(){
+    var box = document.getElementById("partnerDetailContent");
+    if (!box || state.screen !== "operator-partner-detail") return;
+    var e = enById(state.enViewId); if (!e){ box.innerHTML = '<div class="empty">Pick a partner from Partners &amp; Tiers.</div>'; return; }
+    var s = enStats(e), cur = levelIndex(e.level), earned = earnedLevel(e), next = levelRules[cur+1], prof = partnerById(e.partnerId);
+    var req = function(label, have, need, fmt){ var ok2 = have >= need; return '<li class="'+(ok2 ? "ok" : "warn")+'">'+(ok2 ? "✓ " : "○ ")+esc(label)+': '+esc(fmt ? fmt(have) : have)+' of '+esc(fmt ? fmt(need) : need)+'</li>'; };
+    var statusBtns = e.status === "pending" || e.status === "draft"
+      ? '<button type="button" class="btn primary sm" data-en-status="active">Approve enrollment</button><button type="button" class="btn ghost sm" data-en-status="declined">Decline</button>'
+      : e.status === "active" ? '<button type="button" class="btn ghost sm" data-en-status="suspended">Suspend</button>'
+      : '<button type="button" class="btn secondary sm" data-en-status="active">Reactivate</button>';
+    var courses = (e.coursesBefore ? '<li>'+e.coursesBefore+' earlier course'+(e.coursesBefore > 1 ? "s" : "")+' / certification'+(e.coursesBefore > 1 ? "s" : "")+' on record</li>' : '') + enCourses(e).map(function(o){ var p = shopById(o.productId); return '<li>'+esc(p ? p.title : o.productId)+' <span class="field-note">completed '+esc(o.completedAt)+'</span></li>'; }).join("");
+    var deals = s.liveDeals.map(function(d){ return '<li>'+esc(d.deal)+' · '+esc(d.value)+'</li>'; }).join("");
+    box.innerHTML = '<div class="deal-layout"><div style="display:flex;flex-direction:column;gap:16px;">'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+        + '<div class="profile-header">'+(prof ? logoOrFallback(prof, 56) : '')+'<div><h2 style="font-size:1.2rem;margin:0;">'+esc(e.partner)+'</h2><div class="thread-meta">'+esc(enProgramName(e))+' · '+esc(e.tier)+' · joined '+esc(e.joined)+' · '+esc(e.country)+'</div></div><div style="margin-left:auto;">'+statusPill(e.status)+'</div></div>'
+        + '<div class="map-stats"><div class="map-stat"><b>'+money(s.revenue)+'</b>revenue 12 mo</div><div class="map-stat"><b>'+s.deals+'</b>closed deals</div><div class="map-stat"><b>'+s.courses+'</b>courses</div><div class="map-stat"><b>'+esc(e.lastActivity)+'</b>last activity</div></div>'
+        + '<div class="cfg-actions" style="flex-wrap:wrap;">'+statusBtns+'<button type="button" class="btn secondary sm" data-message-partner="'+attr(e.partner)+'">Message</button>'+(prof ? '<button type="button" class="btn ghost sm" data-view-profile="'+attr(prof.id)+'">View profile</button>' : '')+'</div>'
+      + '</div>'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><div class="aff-section-title" style="margin-right:auto;">Partner level</div>'+levelBadge(e.level)+'</div>'
+        + '<div class="field-note">'+esc(levelRules[cur].benefits)+'</div>'
+        + (next ? '<div class="aff-section-title" style="margin-top:6px;">To reach '+esc(next.level)+'</div><ul class="fly-checks" style="list-style:none;padding:0;margin:0;">'
+            + req("Revenue (12 mo)", s.revenue, next.minRevenue, money) + req("Closed deals", s.deals, next.minDeals) + req("Courses completed", s.courses, next.minCourses) + '</ul>'
+            + progressHtml(e) : '<div class="field-note">Top level.</div>')
+        + (earned > cur ? '<div class="login-msg" style="margin:0;background:var(--good-soft);color:var(--good);">Meets the requirements for '+esc(levelRules[earned].level)+'.</div>' : earned < cur ? '<div class="login-msg bad" style="margin:0;">Currently below the '+esc(e.level)+' requirements -- consider a conversation before any change.</div>' : '')
+        + '<div class="field-row"><label for="enLevel">Change level</label><select id="enLevel">'+levelRules.map(function(r){ return '<option'+(r.level === e.level ? " selected" : "")+'>'+esc(r.level)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="enReason">Reason (shared with the partner)</label><input type="text" id="enReason" placeholder="e.g. Hit Gold requirements in Q3 -- congratulations!"></div>'
+        + '<div id="enError" class="login-msg bad" hidden></div>'
+        + '<div class="cfg-actions">'+(earned !== cur ? '<button type="button" class="btn secondary sm" data-en-suggest="'+attr(levelRules[earned].level)+'">Use suggested: '+esc(levelRules[earned].level)+'</button>' : '')+'<button type="button" class="btn primary sm" data-en-level-save style="margin-left:auto;">Save level</button></div>'
+      + '</div></div>'
+      + '<div style="display:flex;flex-direction:column;gap:16px;">'
+        + '<div class="card card-pad"><div class="aff-section-title">Level history</div>'+(e.history && e.history.length ? '<ul class="shop-list">'+e.history.slice().reverse().map(function(h){ return '<li>'+esc(h.from)+' → <b>'+esc(h.to)+'</b> · '+esc(h.date)+(h.reason ? '<span class="field-note" style="display:block;">'+esc(h.reason)+'</span>' : '')+'</li>'; }).join("")+'</ul>' : '<div class="field-note">No changes yet.</div>')+'</div>'
+        + '<div class="card card-pad"><div class="aff-section-title">Approved deals in the portal</div>'+(deals ? '<ul class="shop-list">'+deals+'</ul>' : '<div class="field-note">None yet -- approved deals from Deal Approvals are added here automatically.</div>')+'</div>'
+        + '<div class="card card-pad"><div class="aff-section-title">Training completed</div>'+(courses ? '<ul class="shop-list">'+courses+'</ul>' : '<div class="field-note">None yet. Courses from the Shop count toward levels.</div>')+'</div>'
+        + '<div class="card card-pad"><div class="field-row"><label for="enNotes">Private notes</label><textarea id="enNotes" rows="3" placeholder="Only CloudWAV sees this">'+esc(e.notes || "")+'</textarea></div></div>'
+      + '</div></div>';
+  }
+
+  function saveEnLevel(){
+    var e = enById(state.enViewId); if (!e || state.role !== "operator") return;
+    var to = document.getElementById("enLevel").value, reason = document.getElementById("enReason").value.trim(), err = document.getElementById("enError");
+    if (to === e.level){ err.textContent = "Pick a different level first."; err.hidden = false; return; }
+    if (levelIndex(to) < levelIndex(e.level) && !reason){ err.textContent = "Add a reason when moving a partner down -- it's shared with them."; err.hidden = false; return; }
+    e.history = e.history || []; e.history.push({ from:e.level, to:to, date:nowStamp(), reason:reason, by: state.account ? state.account.name : "CloudWAV" });
+    e.level = to; e.levelNotice = true; saveLevels();
+    toast(e.partner + " is now " + to + " in " + enProgramName(e));
+    renderPartnerDetail();
+  }
+  function exportPartnersCsv(){
+    var rows = [["Partner","Country","Program","Commission tier","Level","Status","Revenue 12mo (USD)","Closed deals","Courses completed","Joined","Last activity"]];
+    enrollments.forEach(function(e){ var s = enStats(e); rows.push([e.partner, e.country, enProgramName(e), e.tier, e.level, e.status, Math.round(s.revenue), s.deals, s.courses, e.joined, e.lastActivity]); });
+    var csv = rows.map(function(r){ return r.map(function(v){ v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }).join("\n");
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" })); a.download = "partnerwav-partners.csv"; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  // Partner overview: their level + what's next
+  function renderPartnerLevelCard(){
+    var box = document.getElementById("partnerLevelCard");
+    if (!box || state.screen !== "partner-overview") return;
+    var mine = enrollments.filter(function(e){ return e.partnerId === state.myProfileId && e.status === "active"; });
+    if (!mine.length){ box.innerHTML = ""; return; }
+    box.innerHTML = '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"><div class="section-head"><h2 style="font-size:.95rem;">Your partner level</h2><span class="hint">Revenue, closed deals and training unlock better margins and support</span></div>'
+      + mine.map(function(e){
+          var s = enStats(e), i = levelIndex(e.level), next = levelRules[i+1], last = (e.history || []).slice(-1)[0];
+          return '<div class="deal-row" data-my-level="'+attr(e.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(enProgramName(e))+' '+levelBadge(e.level)
+            + '<span class="field-note" style="display:block;font-weight:400;">'+esc(levelRules[i].benefits)+'</span>'
+            + (next ? '<span class="field-note" style="display:block;font-weight:400;">Next: <b>'+esc(next.level)+'</b> -- '+money(Math.max(0, next.minRevenue - s.revenue))+' more revenue, '+Math.max(0, next.minDeals - s.deals)+' more deals, '+Math.max(0, next.minCourses - s.courses)+' more courses</span>' : '')
+            + (e.levelNotice && last ? '<span class="field-note" style="display:block;font-weight:400;color:var(--accent-strong);">CloudWAV moved you to '+esc(last.to)+' on '+esc(last.date)+(last.reason ? ': '+esc(last.reason) : '')+'</span>' : '')
+            + '</span><div style="min-width:140px;">'+progressHtml(e)+'</div></div>';
+        }).join("")
+      + '<div><button type="button" class="btn secondary sm" data-screen-go="shop">Browse training in the Shop</button></div></div>';
+    mine.forEach(function(e){ if (e.levelNotice){ e.levelNotice = false; } });
+    saveLevels();
+  }
+
+  // ----- events -----
+  document.addEventListener("click", function(ev){
+    var t = ev.target, b;
+    if ((b = t.closest("[data-screen-go]"))){ state.screen = b.getAttribute("data-screen-go"); render(); window.scrollTo(0,0); return; }
+    if ((b = t.closest("[data-shop-tab]"))){ state.shopTab = b.getAttribute("data-shop-tab"); renderShop(); return; }
+    if ((b = t.closest("[data-shop-tab-go]"))){ state.shopTab = b.getAttribute("data-shop-tab-go"); state.screen = "shop"; render(); return; }
+    if ((b = t.closest("[data-shop-cat]"))){ state.shopCat = b.getAttribute("data-shop-cat"); renderShop(); return; }
+    if ((b = t.closest("[data-shop-view]"))){ state.shopProductId = b.getAttribute("data-shop-view"); state.screen = "shop-product"; render(); window.scrollTo(0,0); return; }
+    if ((b = t.closest("[data-shop-buy]"))){ shopBuy(b.getAttribute("data-shop-buy")); return; }
+    if ((b = t.closest("[data-shop-waitlist]"))){ var key = buyerKey(), pid = b.getAttribute("data-shop-waitlist"); if (key && !onWaitlist(pid, key)){ shopWaitlist.push({ productId:pid, buyer:key, created:nowStamp() }); saveShop(); toast("You're on the waitlist -- we'll let you know when it opens"); } renderShopProduct(); return; }
+    if ((b = t.closest("[data-shop-complete]"))){ var o = shopOrders.filter(function(x){ return x.id === b.getAttribute("data-shop-complete"); })[0]; if (o){ o.completedAt = nowStamp(); saveShop(); toast("Nice work -- this now counts toward your partner level"); renderShop(); } return; }
+    if ((b = t.closest("[data-opshop-tab]"))){ state.opShopTab = b.getAttribute("data-opshop-tab"); renderOperatorShop(); return; }
+    if ((b = t.closest("[data-shop-edit]"))){ var id = b.getAttribute("data-shop-edit"), ex = id ? shopById(id) : null;
+      state.shopDraft = ex ? JSON.parse(JSON.stringify(ex)) : { type:"Course", category:"Sales", audience:"all", price:0, icon:"🎓", cover:"#4338ca", certifies:false, status:"draft" };
+      state.screen = "operator-shop-editor"; render(); window.scrollTo(0,0); return; }
+    if ((b = t.closest("[data-shop-color]"))){ if (state.shopDraft){ state.shopDraft.cover = b.getAttribute("data-shop-color"); document.querySelectorAll("[data-shop-color]").forEach(function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); refreshShopPreview(); } return; }
+    if ((b = t.closest("[data-shop-save]"))){ saveShopProduct(b.getAttribute("data-shop-save")); return; }
+    if ((b = t.closest("[data-order-act]"))){ var od = shopOrders.filter(function(x){ return x.id === b.getAttribute("data-order-id"); })[0]; if (od && state.role === "operator"){ od.status = b.getAttribute("data-order-act"); if (od.status === "paid") od.paidAt = nowStamp(); saveShop(); toast(od.status === "paid" ? "Payment confirmed -- unlocked for " + buyerName(od.buyer) : "Order " + ORDER_STATUS[od.status].label.toLowerCase()); renderOperatorShop(); } return; }
+    if ((b = t.closest("[data-oppart-tab]"))){ state.opPartnersTab = b.getAttribute("data-oppart-tab"); renderOperatorPartners(); return; }
+    if ((b = t.closest("[data-oppart-flag]"))){ var fg = b.getAttribute("data-oppart-flag"); state.opPartnerStatus = fg === "pending-status" ? "pending" : ""; state.opPartnerFlag = fg === "pending-status" ? "" : fg; renderOperatorPartners(); return; }
+    if (t.closest("[data-oppart-reset]")){ state.opPartnerQ = state.opPartnerProgram = state.opPartnerLevel = state.opPartnerStatus = state.opPartnerFlag = ""; renderOperatorPartners(); return; }
+    if (t.closest("[data-oppart-export]")){ exportPartnersCsv(); return; }
+    if ((b = t.closest("[data-en-view]"))){ state.enViewId = b.getAttribute("data-en-view"); state.screen = "operator-partner-detail"; render(); window.scrollTo(0,0); return; }
+    if ((b = t.closest("[data-en-status]"))){ var en = enById(state.enViewId); if (en && state.role === "operator"){ en.status = b.getAttribute("data-en-status"); en.lastActivity = new Date().toISOString().slice(0,10); saveLevels(); toast(en.partner + ": " + cap(en.status)); renderPartnerDetail(); } return; }
+    if ((b = t.closest("[data-en-suggest]"))){ var sl = document.getElementById("enLevel"); if (sl) sl.value = b.getAttribute("data-en-suggest"); return; }
+    if (t.closest("[data-en-level-save]")){ saveEnLevel(); return; }
+    if (t.closest("[data-en-back]")){ state.screen = "operator-partners"; render(); return; }
+    if (t.closest("[data-lvl-save]")){
+      var err = document.getElementById("lvlError"), draft = JSON.parse(JSON.stringify(levelRules));
+      document.querySelectorAll("[data-lvl]").forEach(function(el){ var i = +el.getAttribute("data-lvl"), k = el.getAttribute("data-lvl-key"); draft[i][k] = k === "benefits" ? el.value.trim() : Math.max(0, Number(el.value) || 0); });
+      for (var i = 1; i < draft.length; i++){ if (draft[i].minRevenue < draft[i-1].minRevenue || draft[i].minDeals < draft[i-1].minDeals || draft[i].minCourses < draft[i-1].minCourses){ err.textContent = draft[i].level + " can't need less than " + draft[i-1].level + "."; err.hidden = false; return; } }
+      levelRules = draft; saveLevels(); toast("Level requirements saved"); renderOperatorPartners(); return;
+    }
+  });
+  document.addEventListener("input", function(ev){
+    var t = ev.target;
+    if (t.id === "opPartnerQ"){ state.opPartnerQ = t.value; renderOperatorPartners(); var el = document.getElementById("opPartnerQ"); if (el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } return; }
+    if (t.id && t.id.indexOf("shp_") === 0 && state.shopDraft){ refreshShopPreview(); return; }
+    if (t.id === "enNotes"){ var e = enById(state.enViewId); if (e){ e.notes = t.value; saveLevels(); } }
+  });
+  document.addEventListener("change", function(ev){
+    var t = ev.target, map = { opPartnerProgram:"opPartnerProgram", opPartnerLevel:"opPartnerLevel", opPartnerStatus:"opPartnerStatus", opPartnerFlag:"opPartnerFlag" };
+    if (map[t.id]){ state[map[t.id]] = t.value; renderOperatorPartners(); return; }
+    if (t.id && t.id.indexOf("shp_") === 0 && state.shopDraft) refreshShopPreview();
+  });
+
   // ===== HARDWARE OFFERINGS =====
   function renderHardwareOfferingsList(){
     var content = document.getElementById("hardwareOfferingsContent");
@@ -9791,6 +10325,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadMspProspects();
   loadIncentives();
   loadFlyers();
+  loadShop();
+  loadLevels();
   loadEngagementsAndPages();
 
   // ===== SIGN-IN (Supabase Auth + portal_users role mapping) =====
