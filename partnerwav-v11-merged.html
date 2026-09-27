@@ -1565,7 +1565,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             </div>
             <div>
               <label for="incType">Type of Incentive *</label>
-              <select id="incType" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required onchange="updateInccentiveTypeFields()">
+              <select id="incType" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;" required>
                 <option value="">Select type...</option>
                 <option value="spif">SPIF (Sales Performance Incentive Fund)</option>
                 <option value="mdf">MDF (Market Development Funds)</option>
@@ -1585,7 +1585,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
                   <input type="text" class="spifBonus" placeholder="e.g., 5%" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />
                 </div>
               </div>
-              <button type="button" class="btn secondary sm" style="margin-top:8px;" onclick="addSpifTier()">+ Add Tier</button>
+              <button type="button" class="btn secondary sm" style="margin-top:8px;" data-inc-add-tier>+ Add Tier</button>
             </div>
             <div id="mdfFields" style="display:none;border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--surface-2);">
               <h3 style="margin-top:0;margin-bottom:12px;font-size:.95rem;">MDF Details</h3>
@@ -1623,7 +1623,40 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
               <div id="giveawayPrizesContainer" style="display:flex;flex-direction:column;gap:12px;">
                 <input type="text" class="giveawayPrize" placeholder="1st Place: 1 year Unisense license" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />
               </div>
-              <button type="button" class="btn secondary sm" style="margin-top:8px;" onclick="addGiveawayPrize()">+ Add Prize</button>
+              <button type="button" class="btn secondary sm" style="margin-top:8px;" data-inc-add-prize>+ Add Prize</button>
+            </div>
+            <div id="incStandardFields" style="border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+              <h3 style="margin:0;font-size:.95rem;">Program terms</h3>
+              <p class="field-note" style="margin:0;">CloudWAV reviews these against common channel-incentive practice before partners can see the incentive.</p>
+              <div>
+                <label for="incEligibility">Who is eligible *</label>
+                <select id="incEligibility" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;">
+                  <option value="all">All enrolled partners</option>
+                  <option value="reseller+">Reseller tier and above</option>
+                  <option value="channel-manager">Channel Manager tier only</option>
+                  <option value="affiliate">Affiliate tier</option>
+                  <option value="new">Partners who joined this quarter</option>
+                </select>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+                <div><label for="incBudget">Total budget cap ($)</label><input type="number" id="incBudget" min="0" step="100" placeholder="e.g. 25000" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+                <div><label for="incPayoutTiming">Payout timing</label>
+                  <select id="incPayoutTiming" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;">
+                    <option value="">Select…</option>
+                    <option>With the next commission payout</option>
+                    <option>Within 30 days of claim approval</option>
+                    <option>Within 60 days of claim approval</option>
+                    <option>End of incentive period</option>
+                  </select></div>
+              </div>
+              <div id="incMdfTerms" style="display:none;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+                <div><label for="incMdfShare">Vendor reimburses (% of approved spend)</label><input type="number" id="incMdfShare" min="0" max="100" step="5" placeholder="e.g. 50" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+                <div><label for="incMdfClaimDays">Claim window (days after the activity)</label><input type="number" id="incMdfClaimDays" min="0" step="1" placeholder="e.g. 45" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+              </div>
+              <div>
+                <label for="incClaimProcess">How partners qualify, claim and get paid *</label>
+                <textarea id="incClaimProcess" placeholder="e.g. Register the deal in PartnerWAV; SPIF paid once the customer's first invoice is collected. MDF: submit a proposal before the activity, then invoices + proof of performance." style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-height:70px;"></textarea>
+              </div>
             </div>
             <div>
               <label for="incValidFrom">Valid From *</label>
@@ -1767,6 +1800,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         </div>
       </section>
 
+      <!-- ===== OPERATOR: INCENTIVE REVIEW ===== -->
+      <section id="scr-operator-incentive-review" hidden>
+        <button class="btn ghost sm" data-inc-back>← Back to Marketing &amp; Incentive Approvals</button>
+        <div id="incentiveReviewContent" style="margin-top:14px;"></div>
+      </section>
+
       <!-- ===== OPERATOR: DEAL REVIEW ===== -->
       <section id="scr-operator-deal-review" hidden>
         <button class="btn ghost sm" data-goto-screen="operator-approvals">← Back to Deal approvals</button>
@@ -1783,7 +1822,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-resource-browse" hidden>
         <div class="section-head"><h2>Resource Library</h2><span class="hint">Marketing materials and training webinars from vendors and affiliates</span></div>
         <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
-          <button class="btn primary sm" data-goto-screen="resources-editor">+ Submit Resource</button>
+          <button class="btn primary sm" data-goto-screen="resources-editor" id="submitResourceBtn">+ Submit Resource</button>
           <div class="filter-chip-row" style="flex:1;min-width:300px;">
             <button class="filter-chip" data-resource-filter="all" aria-pressed="true">All types</button>
             <button class="filter-chip" data-resource-filter="pdf">PDF</button>
@@ -2698,6 +2737,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "affiliate-manage":"My Affiliate Tool",
     "operator-program-config":"Configure Program",
     "operator-deal-review":"Review Deal",
+    "operator-incentive-review":"Review Incentive",
     "operator-msp-prospects":"MSP Prospecting",
     "partner-collaboration-finder":"Partner Collaborations",
     "partner-deal-view":"Registered Deal",
@@ -3070,6 +3110,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
 
   function render(){
+    if (state.screen === "resources-editor" && !state.editingResourceId && state.role !== "vendor" && state.role !== "partner") state.screen = "resource-browse";
     // (Referral URLs are handled once at startup -- see "HANDLE URL PARAMETERS".
     // Re-checking here on every render trapped visitors on the application form.)
 
@@ -3208,8 +3249,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     // ---- operator approvals + deal review; partner deals ----
     renderMSPProspects();
     renderPartnerCollaborations();
+    // Only Vendors and Partners submit resources; Operators review, Affiliates browse
+    var canSubmitRes = state.role === "vendor" || state.role === "partner";
+    var subResBtn = document.getElementById("submitResourceBtn"); if (subResBtn) subResBtn.hidden = !canSubmitRes;
+
     renderOperatorApprovals();
     renderDealReview();
+    renderIncentiveReview();
     renderPartnerDeals();
     renderPartnerDealView();
 
@@ -3912,6 +3958,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '</div>' : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Relationship &amp; tiers</h2></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">'+relBadges(p.relationships)+tiersHtml+'</div></div>'
         + (social ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Elsewhere</h2></div><div style="margin-top:8px;">'+social+'</div></div>' : '')
+        + (function(){
+            var today = new Date().toISOString().slice(0,10);
+            var live = vendorIncentiveOffers.filter(function(o){ return o.vendorId === p.id && o.status === "approved" && !o.archivedAt && (!o.validUntil || o.validUntil >= today); });
+            if (!live.length) return "";
+            return '<div><div class="section-head"><h2 style="font-size:.9rem;">Current partner incentives</h2></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">'
+              + live.map(function(o){ return '<div class="deal-row"><span class="deal-row-name">'+esc(o.title)+'<span class="field-note" style="display:block;font-weight:400;">'+esc(o.description || "")+(o.validUntil ? ' · Until '+esc(o.validUntil) : '')+'</span></span><span class="badge accent">'+esc(INC_TYPE_LABEL[o.type] || o.type)+'</span></div>'; }).join("")
+              + '</div></div>';
+          })()
         + productsHtml
         + referralHtml
       + '</div>';
@@ -5761,6 +5815,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("mdfFields").style.display = (type === "mdf") ? "block" : "none";
     document.getElementById("trialFields").style.display = (type === "trial-credits") ? "block" : "none";
     document.getElementById("giveawayFields").style.display = (type === "giveaway") ? "block" : "none";
+    var mdfT = document.getElementById("incMdfTerms"); if (mdfT) mdfT.style.display = (type === "mdf") ? "grid" : "none";
   }
 
   function addSpifTier(){
@@ -5795,6 +5850,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("mdfPeriod").value = "quarterly";
     document.getElementById("trialValue").value = "";
     document.getElementById("trialDays").value = "";
+    ["incBudget","incPayoutTiming","incMdfShare","incMdfClaimDays","incClaimProcess"].forEach(function(id){ document.getElementById(id).value = ""; });
+    document.getElementById("incEligibility").value = "all";
     document.getElementById("spifTiersContainer").innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;background:white;border-radius:6px;border:1px solid var(--line);"><input type="text" class="spifThreshold" placeholder="e.g., $0-10k" style="padding:8px;border:1px solid var(--line);border-radius:6px;" /><input type="text" class="spifBonus" placeholder="e.g., 5%" style="padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>';
     document.getElementById("giveawayPrizesContainer").innerHTML = '<input type="text" class="giveawayPrize" placeholder="1st Place: 1 year Unisense license" style="padding:8px;border:1px solid var(--line);border-radius:6px;" />';
 
@@ -5805,6 +5862,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       document.getElementById("incDesc").value = offer.description || "";
       document.getElementById("incValidFrom").value = offer.validFrom || "";
       document.getElementById("incValidUntil").value = offer.validUntil || "";
+      document.getElementById("incEligibility").value = offer.eligibility || "all";
+      document.getElementById("incBudget").value = offer.budgetCap || "";
+      document.getElementById("incPayoutTiming").value = offer.payoutTiming || "";
+      document.getElementById("incMdfShare").value = offer.mdfShare || "";
+      document.getElementById("incMdfClaimDays").value = offer.mdfClaimDays || "";
+      document.getElementById("incClaimProcess").value = offer.claimProcess || "";
 
       if (offer.type === "spif" && offer.tiers){
         document.getElementById("spifTiersContainer").innerHTML = "";
@@ -5854,10 +5917,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var validFrom = document.getElementById("incValidFrom").value;
     var validUntil = document.getElementById("incValidUntil").value;
 
-    if (!title || !type || !description || !validFrom || !validUntil){
-      toast("Please fill in all required fields");
+    var claimProcess = document.getElementById("incClaimProcess").value.trim();
+    if (!title || !type || !description || !validFrom || !validUntil || !claimProcess){
+      toast("Please fill in all required fields, including how partners claim and get paid");
       return;
     }
+    if (validUntil < validFrom){ toast("Valid Until must be after Valid From"); return; }
 
     var vendorId = state.myVendorId;
     if (!vendorId){
@@ -5869,8 +5934,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       vendorId: vendorId, title: title, type: type, description: description,
       validFrom: validFrom, validUntil: validUntil, status: "pending",
       submittedDate: new Date().toISOString().split("T")[0], submittedBy: vendorId,
-      archivedAt: null
+      archivedAt: null,
+      eligibility: document.getElementById("incEligibility").value,
+      budgetCap: parseFloat(document.getElementById("incBudget").value) || "",
+      payoutTiming: document.getElementById("incPayoutTiming").value,
+      claimProcess: claimProcess
     };
+    if (type === "mdf"){
+      incentiveData.mdfShare = parseFloat(document.getElementById("incMdfShare").value) || "";
+      incentiveData.mdfClaimDays = parseInt(document.getElementById("incMdfClaimDays").value, 10) || "";
+    }
 
     if (type === "spif"){
       var tiers = [];
@@ -5919,19 +5992,25 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (state.editingIncentiveId){
       var idx = vendorIncentiveOffers.findIndex(function(o){ return o.id === state.editingIncentiveId; });
       if (idx >= 0){
-        vendorIncentiveOffers[idx] = Object.assign(vendorIncentiveOffers[idx], incentiveData);
-        toast("Incentive updated");
+        var prevInc = vendorIncentiveOffers[idx];
+        var wasReviewed = prevInc.status === "changes" || prevInc.status === "rejected" || prevInc.status === "approved";
+        prevInc.thread = prevInc.thread || [];
+        vendorIncentiveOffers[idx] = Object.assign(prevInc, incentiveData);
+        if (wasReviewed) prevInc.thread.push({ from:"system", time: nowStamp(), text: (programById(vendorId) || {name:vendorId}).name + " updated and resubmitted the incentive" });
+        prevInc.unreadOperator = true;
+        toast(wasReviewed ? "Incentive updated and resubmitted for CloudWAV review" : "Incentive updated");
       }
     } else {
       var newId = "inc-" + Date.now();
       incentiveData.id = newId;
+      incentiveData.thread = [];
       vendorIncentiveOffers.push(incentiveData);
       toast("Incentive created and submitted for approval");
     }
 
     state.editingIncentiveId = null;
     state.screen = "vendor-incentives";
-    saveVendorData();
+    saveIncentives();
     render();
   }
 
@@ -5951,8 +6030,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
 
     content.innerHTML = incentives.map(function(inc){
-      var statusBadge = inc.status === "approved" ? '<span style="display:inline-block;background:var(--good-soft);color:var(--good);padding:4px 8px;border-radius:4px;font-size:.8rem;font-weight:600;">Approved</span>'
-        : '<span style="display:inline-block;background:var(--warn-soft);color:var(--warn);padding:4px 8px;border-radius:4px;font-size:.8rem;font-weight:600;">Pending</span>';
+      var statusBadge = incStatusBadge(inc);
+      var lastMsg = (inc.thread || []).filter(function(m){ return m.from === "operator"; }).slice(-1)[0];
+      var feedback = lastMsg ? '<div style="margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--surface-2);border-left:3px solid var(--accent);font-size:.86rem;"><b>CloudWAV:</b> '+esc(lastMsg.text)+' <span class="field-note">· '+esc(lastMsg.time)+'</span>'
+        + (inc.status === "changes" ? '<div class="field-note" style="margin-top:4px;">Edit the incentive to address this -- saving resubmits it for review.</div>' : '') + '</div>' : '';
+      if (inc.unreadVendor) inc.unreadVendor = false;
       return '<div style="padding:16px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px;">'
         + '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">'
         + '<div><strong>'+esc(inc.title)+'</strong><span style="display:inline-block;margin-left:8px;">'+statusBadge+'</span></div>'
@@ -5960,32 +6042,157 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '</div>'
         + '<p style="margin:8px 0;color:var(--ink-soft);font-size:.9rem;">'+esc(inc.description.substring(0,100))+(inc.description.length > 100 ? "..." : "")+'</p>'
         + '<p style="margin:8px 0;font-size:.85rem;color:var(--ink-faint);">Type: <strong>'+esc(inc.type.toUpperCase())+'</strong> | Valid: '+esc(inc.validFrom)+' to '+esc(inc.validUntil)+'</p>'
+        + feedback
         + '</div>';
     }).join("");
+  }
+
+  // ===== INCENTIVE REVIEW (Operator checks vendor incentives against industry practice) =====
+  var INC_STATUS = {
+    pending:  { label:"Needs review",      cls:"warn" },
+    changes:  { label:"Changes requested", cls:"accent" },
+    approved: { label:"Approved",          cls:"good" },
+    rejected: { label:"Rejected",          cls:"bad" }
+  };
+  var INC_TYPE_LABEL = { spif:"SPIF", mdf:"MDF", "trial-credits":"Trial credits", giveaway:"Giveaway / contest" };
+  var INC_ELIGIBILITY = { all:"All enrolled partners", "reseller+":"Reseller tier and above", "channel-manager":"Channel Manager tier only", affiliate:"Affiliate tier", "new":"Partners who joined this quarter" };
+  // Common channel-incentive practice -- a checklist for the reviewer, not hard rules
+  var INC_CHECKS = {
+    common: [
+      ["eligibility","Eligibility is clear and applies equally to every partner at the same tier"],
+      ["dates","Start and end dates are set and the period is realistic"],
+      ["budget","Budget cap or maximum payout is stated"],
+      ["payout","How and when partners get paid is stated"],
+      ["additive","Adds to the partner's commission -- doesn't reduce or replace it"],
+      ["compliance","No payments or gifts to the customer's staff (anti-bribery); local promotion rules checked"]
+    ],
+    spif: [["trigger","Payout trigger is measurable (per deal, per unit or volume) and tiers don't overlap"],["collected","Paid on booked/collected revenue, with clawback terms if the deal is cancelled"]],
+    mdf: [["proposal","Proposal and pre-approval required before the activity"],["pop","Proof of performance and invoices required to claim"],["window","Claim window and reimbursement share are stated"],["categories","Eligible and ineligible expenses are defined (per the Custom Marketing Agreement)"]],
+    "trial-credits": [["trialterms","Trial length and credit value are stated"],["noautocharge","No automatic charge to the customer when the trial ends without consent"],["attribution","Trial sign-ups are attributed to the partner who shared the link"]],
+    giveaway: [["criteria","Winning criteria are objective and measurable"],["prizes","Prizes and their values are listed"],["contestlaw","Contest/sweepstakes rules checked for each country it runs in (e.g. Thailand, US)"],["tax","Who pays any tax on prizes is stated"]]
+  };
+  var INCENTIVES_KEY = "partnerWAV_incentives";
+  function saveIncentives(){ try { localStorage.setItem(INCENTIVES_KEY, JSON.stringify(vendorIncentiveOffers)); } catch(e){ console.log("Could not save incentives:", e); } }
+  function loadIncentives(){
+    try {
+      var saved = JSON.parse(localStorage.getItem(INCENTIVES_KEY) || "null");
+      if (Array.isArray(saved)){ vendorIncentiveOffers.length = 0; saved.forEach(function(x){ vendorIncentiveOffers.push(x); }); }
+    } catch(e){ console.log("Could not load incentives:", e); }
+    vendorIncentiveOffers.forEach(function(o){
+      if (o.status === "denied") o.status = "rejected";
+      if (!INC_STATUS[o.status]) o.status = "pending";
+      if (!Array.isArray(o.thread)) o.thread = [];
+      if (!o.checks) o.checks = {};
+    });
+  }
+  function incStatusBadge(o){ var st = INC_STATUS[o.status] || INC_STATUS.pending; return '<span class="badge '+st.cls+'">'+esc(st.label)+'</span>'; }
+  function incById(id){ return vendorIncentiveOffers.filter(function(o){ return o.id === id; })[0] || null; }
+  function incVendorName(o){ var v = programById(o.vendorId); return v ? v.name : o.vendorId; }
+  function incChecklist(o){ return INC_CHECKS.common.concat(INC_CHECKS[o.type] || []); }
+
+  function incDetailsHtml(o){
+    var fact = function(label, val){ return '<div class="deal-fact"><span>'+label+'</span><span>'+(val !== "" && val != null ? esc(val) : '<span style="color:var(--ink-faint)">Not stated</span>')+'</span></div>'; };
+    var money = function(n){ return n !== "" && n != null ? "$" + Number(n).toLocaleString("en-US") : ""; };
+    var specific = "";
+    if (o.type === "spif" && o.tiers) specific = '<div><div class="aff-section-title" style="margin-bottom:6px;">SPIF tiers</div>' + o.tiers.map(function(t){ return '<div class="tier-line"><span>'+esc(t.threshold)+'</span><b>'+esc(t.bonus)+'</b></div>'; }).join("") + '</div>';
+    if (o.type === "mdf") specific = '<div class="deal-facts">' + fact("Amount per partner", money(o.amount)) + fact("Period", o.period ? cap(o.period) : "") + fact("Vendor reimburses", o.mdfShare !== "" && o.mdfShare != null ? o.mdfShare + "% of approved spend" : "") + fact("Claim window", o.mdfClaimDays ? o.mdfClaimDays + " days after activity" : "") + '</div>';
+    if (o.type === "trial-credits") specific = '<div class="deal-facts">' + fact("Credit value", money(o.creditValue)) + fact("Trial length", o.trialDays ? o.trialDays + " days" : "") + '</div>';
+    if (o.type === "giveaway") specific = '<div><div class="aff-section-title" style="margin-bottom:6px;">Prizes</div><ul style="margin:0;padding-left:18px;font-size:.88rem;">' + (o.prizes || []).map(function(pz){ return '<li>'+esc(pz)+'</li>'; }).join("") + '</ul>' + (o.winningCriteria ? '<p class="field-note" style="margin:6px 0 0;">Winning criteria: '+esc(o.winningCriteria)+'</p>' : '') + '</div>';
+    return '<div class="deal-facts">'
+        + fact("Vendor", incVendorName(o)) + fact("Type", INC_TYPE_LABEL[o.type] || o.type) + fact("Valid", (o.validFrom || "?") + " to " + (o.validUntil || "?"))
+        + fact("Eligible", INC_ELIGIBILITY[o.eligibility] || "") + fact("Budget cap", money(o.budgetCap)) + fact("Payout timing", o.payoutTiming || "")
+      + '</div>'
+      + '<div><div class="aff-section-title" style="margin-bottom:6px;">Description</div><p class="program-desc" style="margin:0;white-space:pre-wrap;">'+esc(o.description || "")+'</p></div>'
+      + specific
+      + '<div><div class="aff-section-title" style="margin-bottom:6px;">How partners qualify, claim and get paid</div><p class="program-desc" style="margin:0;white-space:pre-wrap;">'+(o.claimProcess ? esc(o.claimProcess) : '<span style="color:var(--ink-faint)">Not stated</span>')+'</p></div>';
   }
 
   function renderOperatorIncentiveApprovals(){
     var content = document.getElementById("incentiveApprovalsContent");
     if (!content || state.screen !== "operator-marketing-approvals") return;
-
-    var pendingIncentives = vendorIncentiveOffers.filter(function(o){ return o.status === "pending" && !o.archivedAt; });
-    if (pendingIncentives.length === 0){
-      content.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--ink-faint);">No pending incentive approvals.</div>';
-      return;
-    }
-
-    content.innerHTML = pendingIncentives.map(function(inc){
-      var vendorName = vendorPrograms.find(function(v){ return v.id === inc.vendorId; });
-      vendorName = vendorName ? vendorName.vendor : inc.vendorId;
-      return '<div style="padding:16px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px;background:var(--surface-2);">'
-        + '<div style="margin-bottom:12px;"><strong>'+esc(inc.title)+'</strong><span style="display:inline-block;margin-left:8px;font-size:.85rem;color:var(--ink-soft);">From: '+esc(vendorName)+'</span></div>'
-        + '<p style="margin:8px 0;color:var(--ink-soft);font-size:.9rem;">'+esc(inc.description)+'</p>'
-        + '<p style="margin:8px 0;font-size:.85rem;color:var(--ink-faint);">Type: <strong>'+esc(inc.type.toUpperCase())+'</strong> | Valid: '+esc(inc.validFrom)+' to '+esc(inc.validUntil)+'</p>'
-        + '<div style="margin-top:12px;display:flex;gap:8px;">'
-        + '<button class="btn primary sm" data-approve-incentive="'+esc(inc.id)+'">Approve</button>'
-        + '<button class="btn secondary sm" data-deny-incentive="'+esc(inc.id)+'">Deny</button>'
-        + '</div></div>';
+    var tab = state.incTab || "pending";
+    var tabs = Object.keys(INC_STATUS).map(function(k){
+      var n = vendorIncentiveOffers.filter(function(o){ return o.status === k && !o.archivedAt; }).length;
+      var unread = vendorIncentiveOffers.filter(function(o){ return o.status === k && o.unreadOperator && !o.archivedAt; }).length;
+      return '<button type="button" class="filter-chip" data-inc-tab="'+k+'" aria-pressed="'+(tab===k?"true":"false")+'">'+esc(INC_STATUS[k].label)+' ('+n+')'+(unread ? ' · '+unread+' updated' : '')+'</button>';
     }).join("");
+    var list = vendorIncentiveOffers.filter(function(o){ return o.status === tab && !o.archivedAt; });
+    content.innerHTML = '<div class="filter-chip-row" style="margin-bottom:12px;">'+tabs+'</div>'
+      + (list.length ? '<div style="display:flex;flex-direction:column;gap:10px;">' + list.map(function(o){
+          var done = incChecklist(o).filter(function(c){ return o.checks && o.checks[c[0]]; }).length, total = incChecklist(o).length;
+          return '<div class="deal-row"><span class="deal-row-name">'+esc(o.title)
+              + '<span class="field-note" style="display:block;font-weight:400;">'+esc(incVendorName(o))+' · '+esc(INC_TYPE_LABEL[o.type] || o.type)+' · '+esc(o.validFrom || "")+' to '+esc(o.validUntil || "")+' · Checklist '+done+'/'+total+'</span></span>'
+            + (o.unreadOperator ? '<span class="badge accent">Updated</span>' : '')
+            + incStatusBadge(o)
+            + '<button type="button" class="btn primary sm" data-review-incentive="'+esc(o.id)+'">Review</button></div>';
+        }).join("") + '</div>'
+        : '<div class="empty">No incentives in "'+esc(INC_STATUS[tab].label)+'".</div>');
+  }
+
+  function renderIncentiveReview(){
+    var box = document.getElementById("incentiveReviewContent");
+    if (!box || state.screen !== "operator-incentive-review") return;
+    var o = incById(state.reviewIncentiveId);
+    if (!o){ box.innerHTML = '<div class="empty">Pick an incentive from Marketing &amp; Incentive Approvals.</div>'; return; }
+    o.unreadOperator = false;
+    var checks = incChecklist(o).map(function(c){
+      return '<label class="cfg-check"><input type="checkbox" data-inc-check="'+c[0]+'"'+(o.checks && o.checks[c[0]] ? " checked" : "")+'> '+esc(c[1])+'</label>';
+    }).join("");
+    var draft = state.incDraft && state.incDraft.id === o.id ? state.incDraft.text : "";
+    var closed = o.status === "approved" || o.status === "rejected";
+    var done = incChecklist(o).filter(function(c){ return o.checks && o.checks[c[0]]; }).length, total = incChecklist(o).length;
+    box.innerHTML = '<div class="deal-layout">'
+      + '<div style="display:flex;flex-direction:column;gap:16px;">'
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:14px;">'
+          + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><h2 style="font-size:1.15rem;margin:0;margin-right:auto;">'+esc(o.title)+'</h2>'+incStatusBadge(o)+'</div>'
+          + incDetailsHtml(o)
+        + '</div>'
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;">'
+          + '<div class="aff-section-title">Industry-standards check <span class="field-note" id="incCheckCount">('+done+'/'+total+')</span></div>'
+          + '<p class="field-note" style="margin:0;">Common channel-incentive practice. Tick what this incentive meets; anything unticked is worth raising with the vendor. Saved on the incentive, not shown to the vendor.</p>'
+          + '<div class="pricing-opts">'+checks+'</div>'
+        + '</div>'
+      + '</div>'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+        + '<div class="aff-section-title">Conversation with '+esc(incVendorName(o))+'</div>'
+        + '<div class="deal-thread" id="incThread">'+threadHtml(o, "operator").replace("CloudWAV will message you here if anything needs adjusting.", "")+'</div>'
+        + '<div class="deal-compose">'
+          + '<div class="deal-templates" style="margin-bottom:8px;"><span class="field-note" style="align-self:center;">Start from:</span>'
+            + '<button type="button" class="btn ghost sm" data-inc-template="gaps">List unticked items</button></div>'
+          + '<textarea id="incMessage" placeholder="Message '+esc(incVendorName(o))+' about this incentive…" aria-label="Message to vendor">'+esc(draft)+'</textarea>'
+        + '</div>'
+        + '<div id="incError" class="login-msg bad" role="alert" hidden></div>'
+        + '<div class="cfg-actions">'
+          + '<button type="button" class="btn secondary sm" data-inc-action="message">Send message</button>'
+          + (closed ? '' :
+              '<button type="button" class="btn secondary sm" data-inc-action="changes">Request changes</button>'
+            + '<button type="button" class="btn ghost sm" data-inc-action="reject">Reject</button>'
+            + '<button type="button" class="btn primary sm" data-inc-action="approve" style="margin-left:auto;">Approve</button>')
+        + '</div>'
+        + '<span class="field-note">Approved incentives appear on the vendor\'s profile for partners. Request changes and Reject send your message to the vendor.</span>'
+      + '</div>'
+    + '</div>';
+  }
+
+  function incentiveAction(action){
+    var o = incById(state.reviewIncentiveId); if (!o || state.role !== "operator") return;
+    var ta = document.getElementById("incMessage"), text = ta ? ta.value.trim() : "";
+    var err = document.getElementById("incError");
+    var fail = function(m){ err.textContent = m; err.hidden = false; if (ta) ta.focus(); };
+    if ((action === "message" || action === "changes") && !text) return fail(action === "message" ? "Write a message first." : "Tell the vendor what needs changing -- your message is sent with the request.");
+    if (action === "reject" && !text) return fail("Add a reason for rejecting -- it's sent to the vendor.");
+    var me = state.account ? state.account.name + " (CloudWAV)" : "CloudWAV Program Operator";
+    if (text) o.thread.push({ from:"operator", name:me, time:nowStamp(), text:text });
+    if (action === "approve"){ o.status = "approved"; o.approvedBy = me; o.approvalDate = nowStamp(); o.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV approved this incentive -- partners can now see it" }); }
+    if (action === "changes"){ o.status = "changes"; o.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV requested changes" }); }
+    if (action === "reject"){ o.status = "rejected"; o.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV rejected this incentive" }); }
+    o.unreadVendor = true; state.incDraft = null;
+    saveIncentives();
+    toast(action === "approve" ? "Approved -- " + o.title + " is live for partners"
+      : action === "changes" ? "Changes requested -- sent to " + incVendorName(o)
+      : action === "reject" ? "Rejected -- reason sent to " + incVendorName(o) : "Message sent to " + incVendorName(o));
+    if (action === "message") renderIncentiveReview();
+    else { state.incTab = "pending"; state.marketingApprovalsTab = "incentives"; state.screen = "operator-marketing-approvals"; render(); }
   }
 
   // ===== HARDWARE OFFERINGS =====
@@ -6802,6 +7009,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var duration = document.getElementById("resourceDuration").value.trim();
 
     if (!title || !type || !program || !vendor || !summary){ toast("Please fill in required fields"); return; }
+    if (!state.editingResourceId && state.role !== "vendor" && state.role !== "partner"){ toast("Only vendors and partners can submit resources"); return; }
     var fileUrl = document.getElementById("resourceFileUrl").value.trim();
     if (fileUrl && !/^https?:\/\/\S+\.\S+/i.test(fileUrl)){ toast("Enter a full link starting with https://"); return; }
     var up = state.resourceUpload;
@@ -7119,6 +7327,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       state.screen = navBtn.getAttribute("data-screen");
       if (state.screen === "operator-approvals") state.dealTab = "pending";
       if (state.screen === "resource-approvals") state.resourceApprovalView = "pending";
+      if (state.screen === "operator-marketing-approvals") state.incTab = "pending";
       render();
       return;
     }
@@ -7672,6 +7881,33 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var mapFocusBtn = e.target.closest("[data-map-focus]");
     if (mapFocusBtn){ focusMapPartner(mapFocusBtn.getAttribute("data-map-focus")); return; }
 
+    if (e.target.closest("[data-inc-add-tier]")){ addSpifTier(); return; }
+    if (e.target.closest("[data-inc-add-prize]")){ addGiveawayPrize(); return; }
+    var incTabBtn = e.target.closest("[data-inc-tab]");
+    if (incTabBtn){ state.incTab = incTabBtn.getAttribute("data-inc-tab"); renderOperatorIncentiveApprovals(); return; }
+    var reviewIncBtn = e.target.closest("[data-review-incentive]");
+    if (reviewIncBtn){ state.reviewIncentiveId = reviewIncBtn.getAttribute("data-review-incentive"); state.incDraft = null; state.screen = "operator-incentive-review"; render(); window.scrollTo(0,0); return; }
+    if (e.target.closest("[data-inc-back]")){ state.marketingApprovalsTab = "incentives"; state.screen = "operator-marketing-approvals"; render(); return; }
+    var incCheck = e.target.closest("[data-inc-check]");
+    if (incCheck){
+      var oC = incById(state.reviewIncentiveId);
+      if (oC){ oC.checks = oC.checks || {}; oC.checks[incCheck.getAttribute("data-inc-check")] = incCheck.checked; saveIncentives();
+        var dn = incChecklist(oC).filter(function(c){ return oC.checks[c[0]]; }).length, cc = document.getElementById("incCheckCount"); if (cc) cc.textContent = "(" + dn + "/" + incChecklist(oC).length + ")"; }
+      return;
+    }
+    var incTpl = e.target.closest("[data-inc-template]");
+    if (incTpl){
+      var oT = incById(state.reviewIncentiveId), taT = document.getElementById("incMessage");
+      if (oT && taT){
+        var gaps = incChecklist(oT).filter(function(c){ return !(oT.checks && oT.checks[c[0]]); }).map(function(c){ return "- " + c[1]; });
+        taT.value = "Hi " + incVendorName(oT) + " team -- thanks for submitting \"" + oT.title + "\". Before we publish it to partners, could you tighten up the following so it's in line with standard channel-incentive practice?\n\n" + (gaps.length ? gaps.join("\n") : "- (everything on our checklist is covered)") + "\n\nHappy to help with wording.";
+        state.incDraft = { id:oT.id, text:taT.value }; taT.focus();
+      }
+      return;
+    }
+    var incActionBtn = e.target.closest("[data-inc-action]");
+    if (incActionBtn){ incentiveAction(incActionBtn.getAttribute("data-inc-action")); return; }
+
     var dealTabBtn = e.target.closest("[data-deal-tab]");
     if (dealTabBtn){ state.dealTab = dealTabBtn.getAttribute("data-deal-tab"); renderOperatorApprovals(); return; }
 
@@ -7914,36 +8150,6 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
 
-    var approveIncentiveBtn = e.target.closest("[data-approve-incentive]");
-    if (approveIncentiveBtn){
-      var incId = approveIncentiveBtn.getAttribute("data-approve-incentive");
-      var idx = vendorIncentiveOffers.findIndex(function(o){ return o.id === incId; });
-      if (idx >= 0){
-        vendorIncentiveOffers[idx].status = "approved";
-        vendorIncentiveOffers[idx].approvedBy = "operator-1";
-        vendorIncentiveOffers[idx].approvalDate = new Date().toISOString().split("T")[0];
-        toast("Incentive approved");
-        saveVendorData();
-        render();
-      }
-      return;
-    }
-
-    var denyIncentiveBtn = e.target.closest("[data-deny-incentive]");
-    if (denyIncentiveBtn){
-      var incId = denyIncentiveBtn.getAttribute("data-deny-incentive");
-      var reason = prompt("Enter reason for denial (optional):");
-      var idx = vendorIncentiveOffers.findIndex(function(o){ return o.id === incId; });
-      if (idx >= 0){
-        vendorIncentiveOffers[idx].status = "denied";
-        vendorIncentiveOffers[idx].denialReason = reason || "";
-        vendorIncentiveOffers[idx].denialDate = new Date().toISOString().split("T")[0];
-        toast("Incentive denied");
-        saveVendorData();
-        render();
-      }
-      return;
-    }
 
     var editPartnerProfileBtn = e.target.closest("[data-edit-partner-profile]");
     if (editPartnerProfileBtn){
@@ -8477,7 +8683,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Deal review: remember the operator's unsent message if the view re-renders
   document.addEventListener("input", function(e){
     if (e.target.id === "dealMessage" && state.reviewDealId) state.dealDraft = { id: state.reviewDealId, text: e.target.value };
+    if (e.target.id === "incMessage" && state.reviewIncentiveId) state.incDraft = { id: state.reviewIncentiveId, text: e.target.value };
   });
+  document.addEventListener("change", function(e){ if (e.target.id === "incType") updateInccentiveTypeFields(); });
 
   // Configure program: live preview, revenue-base switch, Enter adds a deduction
   document.addEventListener("input", function(e){
@@ -8512,6 +8720,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadProgramTerms();
   loadDeals();
   loadMspProspects();
+  loadIncentives();
 
   // ===== SIGN-IN (Supabase Auth + portal_users role mapping) =====
   // Each login maps to a role and the company it belongs to via the portal_users table
@@ -8705,6 +8914,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     console.log('Deal approvals updated:', payload);
     render();
   });
+
+  // A few generated buttons still use inline onclick="..."; those need global access
+  window.closeModal = closeModal;
+  window.updateSOWItem = updateSOWItem;
 
   initAuth(); // after the sign-in settings above are defined
 
