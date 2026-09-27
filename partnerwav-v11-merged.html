@@ -2488,6 +2488,13 @@
 
   function affiliateById(id){ for (var i=0;i<affiliatePrograms.length;i++){ if (affiliatePrograms[i].id===id) return affiliatePrograms[i]; } return null; }
 
+  function generateAffiliateLink(affiliateId, partnerId){
+    var baseUrl = window.location.hostname.includes('github.io')
+      ? 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html'
+      : window.location.href.split('?')[0];
+    return baseUrl + '?apply=affiliate&affiliateId=' + encodeURIComponent(affiliateId) + '&partnerId=' + encodeURIComponent(partnerId);
+  }
+
   function affiliateCard(a, showOps){
     var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
     var isOperator = state.role === "operator";
@@ -2531,13 +2538,6 @@
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
       + '<div class="program-actions">'+(showOps ? opsButtons : actionBtn)+'</div>'
     + '</div>';
-  }
-
-  function generateAffiliateLink(affiliateId, partnerId){
-    var baseUrl = window.location.hostname.includes('github.io')
-      ? 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html'
-      : window.location.href.split('?')[0];
-    return baseUrl + '?apply=affiliate&affiliateId=' + encodeURIComponent(affiliateId) + '&partnerId=' + encodeURIComponent(partnerId);
   }
 
   function renderAffiliate(){
@@ -3103,10 +3103,7 @@
         + '<div class="profile-header">'+logoOrFallback(p, 104)
           + '<div><h2 style="font-size:1.3rem;">'+esc(p.name)+'</h2><div class="thread-meta">'+esc(p.country)+'</div></div>'
           + (mine
-              ? '<div style="margin-left:auto;display:flex;gap:8px;">'
-                + '<button class="btn primary sm" data-edit-own-partner="'+esc(p.id)+'">Edit profile</button>'
-                + '<button class="btn secondary sm" data-delete-own-partner="'+esc(p.id)+'" style="color:var(--bad);">Delete profile</button>'
-              + '</div>'
+              ? '<button class="btn primary sm" style="margin-left:auto;" data-goto-screen="partner-my-profile">Edit profile</button>'
               : '<button class="btn primary sm" style="margin-left:auto;" data-message-partner="'+esc(p.name)+'">Message</button>')
             + '</div>'
         + '<p class="program-desc" style="font-size:.92rem;">'+esc(p.tagline)+'</p>'
@@ -3260,7 +3257,7 @@
     }).join("");
     var social = socialLinksHtml(p.social);
 
-    // Product tiles section with product-specific referral links
+    // Product tiles section
     var productsHtml = '';
     if (p.products && p.products.length > 0) {
       var productsGrid = p.products.map(function(prod){
@@ -3273,20 +3270,15 @@
           productReferralUrl = baseUrl + '?apply=vendor&vendorId=' + encodeURIComponent(p.id) + '&productId=' + encodeURIComponent(prod.product_id);
         }
 
-        var tileHtml = '<div style="display:flex;flex-direction:column;gap:12px;padding:14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);min-height:220px;">'
+        var tileHtml = '<div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);min-height:200px;">'
           + '<h3 style="margin:0;font-size:.95rem;font-weight:600;color:var(--ink);">'+esc(prod.name)+'</h3>'
-          + '<p style="margin:0;font-size:.85rem;color:var(--ink-soft);line-height:1.5;flex:1;">'+esc(prod.desc)+'</p>';
+          + '<p style="margin:0;font-size:.85rem;color:var(--ink-soft);line-height:1.5;flex:1;">'+esc(prod.desc)+'</p>'
+          + '<div style="display:flex;gap:8px;flex-wrap:wrap;flex-direction:column;">';
 
-        // Show product-specific referral link to vendors, operators, and partners
+        // Show referral link only to vendor viewing own profile or operators
         if (mine || isOperator) {
-          tileHtml += '<div style="padding:8px;background:var(--accent-soft);border-radius:6px;border:1px solid var(--accent);font-size:.75rem;">'
-            + '<div style="font-weight:600;color:var(--accent-strong);margin-bottom:4px;">Your Product Referral Link</div>'
-            + '<input type="text" readonly value="'+esc(productReferralUrl)+'" style="width:100%;padding:6px;border:1px solid var(--accent);border-radius:4px;font-family:monospace;font-size:.7rem;background:var(--surface);color:var(--ink);margin-bottom:4px;" />'
-            + '<button class="btn primary xs" data-copy-product-link="'+esc(p.id)+'" data-product-id="'+esc(prod.product_id)+'" data-product-url="'+esc(productReferralUrl)+'">Copy link</button>'
-          + '</div>';
+          tileHtml += '<button class="btn primary xs" data-product-referral="'+esc(p.id)+'" data-product-id="'+esc(prod.product_id)+'" data-product-url="'+esc(productReferralUrl)+'">Get referral link →</button>';
         }
-
-        tileHtml += '<div style="display:flex;gap:8px;flex-wrap:wrap;flex-direction:column;">';
 
         // Show Apply and Demo buttons to logged-in partners
         if (isLoggedInPartner) {
@@ -6347,33 +6339,6 @@
 
     var configBtn = e.target.closest("[data-configure]");
     if (configBtn){ showConfigure(configBtn.getAttribute("data-configure")); return; }
-
-    var editOwnPartnerBtn = e.target.closest("[data-edit-own-partner]");
-    if (editOwnPartnerBtn){
-      var partnerId = editOwnPartnerBtn.getAttribute("data-edit-own-partner");
-      state.screen = "partner-profile-editor";
-      state.editingPartnerId = partnerId;
-      setTimeout(function(){ loadPartnerProfileForm(partnerId); }, 0);
-      render();
-      return;
-    }
-
-    var deleteOwnPartnerBtn = e.target.closest("[data-delete-own-partner]");
-    if (deleteOwnPartnerBtn){
-      var partnerId = deleteOwnPartnerBtn.getAttribute("data-delete-own-partner");
-      if (confirm("Delete your Partner profile? This cannot be undone.")){
-        var idx = partnerProfiles.findIndex(function(p){ return p.id === partnerId; });
-        if (idx >= 0){
-          partnerProfiles.splice(idx, 1);
-          state.myProfileId = null;
-          state.screen = "partner-overview";
-          toast("Partner profile deleted");
-          saveVendorData();
-          render();
-        }
-      }
-      return;
-    }
 
     var viewProfileBtn = e.target.closest("[data-view-profile]");
     if (viewProfileBtn){ state.viewingPartnerId = viewProfileBtn.getAttribute("data-view-profile"); state.screen = "partner-profile"; render(); return; }
