@@ -2496,7 +2496,7 @@
       + '<p class="program-desc">'+esc(a.desc)+'</p>'
       + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
-      + '<div class="program-actions">'+(showOps ? opsButtons : actionBtn)+'</div>'
+      + '<div class="program-actions">'+(opsButtons || actionBtn)+'</div>'
     + '</div>';
   }
 
