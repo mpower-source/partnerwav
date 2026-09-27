@@ -215,6 +215,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 .vp-product input,.vp-product textarea{ background:var(--surface); }
 .vp-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .cfg{ display:flex; flex-direction:column; gap:16px; max-width:1100px; }
+.res-attach{ display:flex; flex-direction:column; gap:6px; padding:12px; border:1px dashed var(--line); border-radius:10px; }
+.res-attach-or{ font-size:.76rem; color:var(--ink-faint); text-align:center; }
+.res-preview{ border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--surface-2); }
+.res-preview iframe, .res-preview video{ display:block; width:100%; height:520px; border:0; background:#fff; }
+.res-preview video{ background:#000; height:auto; max-height:520px; }
+.res-preview img{ display:block; max-width:100%; max-height:520px; margin:0 auto; }
+.res-preview-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 12px; border-top:1px solid var(--line); font-size:.84rem; }
+.res-preview-empty{ padding:18px; font-size:.88rem; line-height:1.5; }
+@media (max-width:700px){ .res-preview iframe{ height:380px; } }
 .deal-layout{ display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:16px; align-items:start; }
 @media (max-width:900px){ .deal-layout{ grid-template-columns:1fr; } }
 .deal-facts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
@@ -1328,6 +1337,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             <div><label>Summary/Description</label><textarea id="resourceSummary" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
             <div><label>File Size (e.g., 2.4MB)</label><input type="text" id="resourceFileSize" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div><label>Webinar Duration (if applicable, e.g., 1h 23m)</label><input type="text" id="resourceDuration" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div class="res-attach">
+              <label for="resourceFileUrl">Link to the file or recording</label>
+              <input type="url" id="resourceFileUrl" placeholder="https://drive.google.com/…, YouTube, Loom, Zoom recording, or a hosted PDF" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" />
+              <div class="res-attach-or">or</div>
+              <label for="resourceFileInput">Upload a file</label>
+              <input type="file" id="resourceFileInput" accept=".pdf,.ppt,.pptx,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp,.mp4,.webm,application/pdf,image/*,video/mp4,video/webm" />
+              <div id="resourceFileStatus" class="field-note"></div>
+              <p class="field-note" style="margin:4px 0 0;">The operator reviews this before partners can see it. Attach the actual material -- submissions without a file or link can't be approved.</p>
+            </div>
             <div style="display:flex;gap:8px;">
               <button type="submit" class="btn primary">Submit for Review</button>
               <button type="button" class="btn secondary" data-back-screen="resource-browse">Cancel</button>
@@ -4502,7 +4520,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var statusBadgeClass = r.status === "pending" ? "warn" : (r.status === "published" ? "good" : "bad");
       var statusText = r.status === "pending" ? "Pending review" : (r.status === "published" ? "Published" : "Rejected");
       var actions = r.status === "pending"
-        ? '<button class="btn primary sm" data-review-resource="'+esc(r.id)+'" data-review-decision="approve">Approve…</button>'
+        ? '<button class="btn secondary sm" data-review-resource="'+esc(r.id)+'" data-review-decision="">View</button>'
+          + '<button class="btn primary sm" data-review-resource="'+esc(r.id)+'" data-review-decision="approve">Approve…</button>'
           + '<button class="btn secondary sm" data-review-resource="'+esc(r.id)+'" data-review-decision="reject">Reject…</button>'
           + '<button class="btn ghost sm" data-review-resource="'+esc(r.id)+'" data-review-decision="request-revision">Request revision…</button>'
         : '';
@@ -4518,6 +4537,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<span class="badge '+statusBadgeClass+'">'+statusText+'</span>'
         + '</div>'
         + '<p style="margin:0;font-size:.88rem;color:var(--ink);line-height:1.45;">'+esc((r.status === "pending" && r.previewText) ? r.previewText : (r.summary || r.previewText || ""))+'</p>'
+        + (r.status === "pending" ? '<div class="field-note" style="font-size:.8rem;">'+(r.fileData ? '📎 File attached: '+esc(r.fileName || "file") : (r.fileUrl ? '🔗 Link attached' : '<span style="color:var(--bad);">⚠ Nothing attached -- no material to review</span>'))+'</div>' : '')
         + (r.status === "pending" ? '<div style="padding:10px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line);"><div style="font-size:.76rem;font-weight:600;color:var(--ink-soft);">AI-Generated Summary</div><div style="font-size:.84rem;color:var(--ink);margin-top:6px;font-style:italic;">'+esc(r.summary)+'</div></div>' : '')
         + rejectionNote
         + ((r.status === "published" && r.approvalComment) ? '<div style="margin-top:4px;padding:10px;background:var(--good-soft);border-radius:8px;border-left:3px solid var(--good);"><div style="font-size:.76rem;font-weight:600;color:var(--good);">Approval note</div><div style="font-size:.85rem;margin-top:4px;">'+esc(r.approvalComment)+'</div></div>' : '')
@@ -6663,6 +6683,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("resourceSummary").value = resource ? resource.summary : "";
     document.getElementById("resourceFileSize").value = resource ? resource.fileSize : "";
     document.getElementById("resourceDuration").value = resource ? (resource.duration || "") : "";
+    document.getElementById("resourceFileUrl").value = resource ? (resource.fileUrl || "") : "";
+    document.getElementById("resourceFileInput").value = "";
+    state.resourceUpload = resource && resource.fileData ? { name: resource.fileName, mime: resource.fileMime, data: resource.fileData, size: resource.fileSize } : null;
+    document.getElementById("resourceFileStatus").textContent = state.resourceUpload ? "Attached: " + state.resourceUpload.name : "";
     var deleteBtn = document.getElementById("deleteResourceBtn");
     deleteBtn.style.display = resource ? "block" : "none";
     if (resource) deleteBtn.setAttribute("data-resource-id", resourceId);
@@ -6680,13 +6704,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var duration = document.getElementById("resourceDuration").value.trim();
 
     if (!title || !type || !program || !vendor || !summary){ toast("Please fill in required fields"); return; }
+    var fileUrl = document.getElementById("resourceFileUrl").value.trim();
+    if (fileUrl && !/^https?:\/\/\S+\.\S+/i.test(fileUrl)){ toast("Enter a full link starting with https://"); return; }
+    var up = state.resourceUpload;
+    if (!fileUrl && !up){ toast("Attach the file or add a link so the operator can review it"); return; }
+    var fileFields = { fileUrl: fileUrl, fileName: up ? up.name : "", fileMime: up ? up.mime : "", fileData: up ? up.data : "" };
+    if (up && !fileSize) fileSize = up.size;
 
     if (state.editingResourceId){
       var idx = resources.findIndex(function(r){ return r.id === state.editingResourceId; });
       if (idx >= 0){
         resources[idx] = Object.assign(resources[idx], {
           title: title, type: type, program: program, vendor: vendor, summary: summary, fileSize: fileSize, duration: duration
-        });
+        }, fileFields);
         toast("Resource updated");
       }
     } else {
@@ -6695,14 +6725,60 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         id: newId, title: title, type: type, uploadedBy: vendor, program: program, vendor: vendor,
         status: "pending", fileSize: fileSize, submittedDate: "just now", summary: summary,
         transcription: "", previewText: summary.substring(0, 100), reason: "awaiting_review",
-        duration: duration || ""
+        duration: duration || "",
+        fileUrl: fileFields.fileUrl, fileName: fileFields.fileName, fileMime: fileFields.fileMime, fileData: fileFields.fileData
       });
       toast("Resource submitted for operator review");
     }
     state.editingResourceId = null;
+    state.resourceUpload = null;
     state.screen = "resource-browse";
     saveResourceData();
     render();
+  }
+
+  // ===== RESOURCE PREVIEW (what the operator reviews before approving) =====
+  var MAX_UPLOAD_BYTES = 3 * 1024 * 1024; // browser storage limit in this prototype
+  function humanSize(n){ return n >= 1048576 ? (n/1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n/1024)) + "KB"; }
+  function dataUrlToBlobUrl(dataUrl){
+    try {
+      var parts = dataUrl.split(","), mime = (parts[0].match(/data:([^;]+)/) || [])[1] || "application/octet-stream";
+      var bin = atob(parts[1]), arr = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return URL.createObjectURL(new Blob([arr], { type: mime }));
+    } catch(e){ return ""; }
+  }
+  // Only well-known providers are embedded; anything else opens in a new tab
+  function embedUrlFor(url){
+    var m;
+    if ((m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/i))) return "https://www.youtube.com/embed/" + m[1];
+    if ((m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i))) return "https://player.vimeo.com/video/" + m[1];
+    if ((m = url.match(/loom\.com\/share\/([\w-]+)/i))) return "https://www.loom.com/embed/" + m[1];
+    if ((m = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/i))) return "https://drive.google.com/file/d/" + m[1] + "/preview";
+    if ((m = url.match(/docs\.google\.com\/(document|presentation|spreadsheets)\/d\/([\w-]+)/i))) return "https://docs.google.com/" + m[1] + "/d/" + m[2] + "/preview";
+    if (/\.pdf(\?|#|$)/i.test(url)) return url;
+    return "";
+  }
+  function resourcePreviewHtml(r){
+    var bar = function(inner){ return '<div class="res-preview-bar">'+inner+'</div>'; };
+    if (r.fileData){
+      var mime = r.fileMime || "";
+      var blobUrl = dataUrlToBlobUrl(r.fileData);
+      var open = '<a class="btn secondary sm" href="'+esc(blobUrl)+'" target="_blank" rel="noopener" download="'+esc(r.fileName || "file")+'">Open file</a>';
+      var label = '<span>📎 <b>'+esc(r.fileName || "Uploaded file")+'</b>'+(r.fileSize ? ' · '+esc(r.fileSize) : '')+'</span>';
+      if (mime === "application/pdf") return '<div class="res-preview"><iframe title="Preview of '+esc(r.title)+'" src="'+esc(blobUrl)+'"></iframe>'+bar(label+open)+'</div>';
+      if (/^image\//.test(mime)) return '<div class="res-preview"><img alt="Preview of '+esc(r.title)+'" src="'+esc(blobUrl)+'">'+bar(label+open)+'</div>';
+      if (/^video\//.test(mime)) return '<div class="res-preview"><video controls src="'+esc(blobUrl)+'"></video>'+bar(label+open)+'</div>';
+      return '<div class="res-preview"><div class="res-preview-empty">This file type can\'t be previewed in the browser -- open it to review.</div>'+bar(label+open)+'</div>';
+    }
+    if (r.fileUrl && /^https?:\/\//i.test(r.fileUrl)){
+      var emb = embedUrlFor(r.fileUrl);
+      var openL = '<a class="btn secondary sm" href="'+esc(r.fileUrl)+'" target="_blank" rel="noopener noreferrer">Open in new tab</a>';
+      var lbl = '<span style="overflow-wrap:anywhere;">🔗 '+esc(r.fileUrl)+'</span>';
+      if (emb) return '<div class="res-preview"><iframe title="Preview of '+esc(r.title)+'" src="'+esc(emb)+'" referrerpolicy="no-referrer" allow="fullscreen; picture-in-picture"></iframe>'+bar(lbl+openL)+'</div>';
+      return '<div class="res-preview"><div class="res-preview-empty">This link can\'t be embedded here -- open it to review the material.</div>'+bar(lbl+openL)+'</div>';
+    }
+    return '<div class="res-preview"><div class="res-preview-empty"><b>Nothing attached.</b> This submission only has a description, so there\'s no material to check. Use <b>Request Revision</b> to ask '+esc(r.uploadedBy || "the submitter")+' to attach the file or a link.</div></div>';
   }
 
   // ===== TIER 3: RESOURCE APPROVALS =====
@@ -6729,7 +6805,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         '<div style="font-size:.85rem;color:var(--ink-soft);">Type: ' + esc(String(resource.type).toUpperCase()) + ' | Size: ' + esc(resource.fileSize) + '</div>' +
         (detail ? '<div style="margin-top:8px;font-size:.85rem;line-height:1.5;">' + esc(detail) + '</div>' : '') +
         (resource.revisionComments ? '<div style="font-size:.82rem;color:var(--warn);">Previously requested: ' + esc(resource.revisionComments) + '</div>' : '') +
-        '</div>';
+        '</div>' +
+        '<div><div class="aff-section-title" style="margin-bottom:8px;">Material submitted</div>' + resourcePreviewHtml(resource) + '</div>';
     } else {
       content.innerHTML = '<div class="empty">This submission is no longer pending.</div>';
     }
@@ -6943,6 +7020,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       console.log("Nav button clicked, going to:", navBtn.getAttribute("data-screen"));
       state.screen = navBtn.getAttribute("data-screen");
       if (state.screen === "operator-approvals") state.dealTab = "pending";
+      if (state.screen === "resource-approvals") state.resourceApprovalView = "pending";
       render();
       return;
     }
@@ -7946,6 +8024,26 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.documentElement.setAttribute("data-theme", state.theme);
 
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeModal(); });
+
+  // Resource upload: read the chosen file so the operator can preview it
+  document.addEventListener("change", function(e){
+    if (e.target.id !== "resourceFileInput") return;
+    var f = e.target.files && e.target.files[0], status = document.getElementById("resourceFileStatus");
+    if (!f){ state.resourceUpload = null; status.textContent = ""; return; }
+    if (f.size > MAX_UPLOAD_BYTES){
+      state.resourceUpload = null; e.target.value = "";
+      status.textContent = f.name + " is " + humanSize(f.size) + " -- too large to store in this prototype (max " + humanSize(MAX_UPLOAD_BYTES) + "). Upload it to Google Drive, Loom or YouTube and paste the link instead.";
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(){
+      state.resourceUpload = { name: f.name, mime: f.type || "", data: reader.result, size: humanSize(f.size) };
+      status.textContent = "Attached: " + f.name + " (" + humanSize(f.size) + ")";
+      var sz = document.getElementById("resourceFileSize"); if (sz && !sz.value) sz.value = humanSize(f.size);
+    };
+    reader.onerror = function(){ status.textContent = "Couldn't read that file -- try again or paste a link."; };
+    reader.readAsDataURL(f);
+  });
 
   // Deal review: remember the operator's unsent message if the view re-renders
   document.addEventListener("input", function(e){
