@@ -909,7 +909,7 @@
             </div>
             <div style="display:flex;gap:8px;">
               <button type="submit" class="btn primary">Save Profile</button>
-              <button type="button" class="btn secondary" data-back-screen="partner-overview">Cancel</button>
+              <button type="button" class="btn secondary" data-back-screen="partner-network">Cancel</button>
               <button type="button" class="btn secondary" id="deleteProfileBtn" style="margin-left:auto;display:none;">Delete Profile</button>
             </div>
           </form>
@@ -2321,6 +2321,15 @@
     } catch (e) {
       console.log("Could not load saved data:", e);
     }
+    try {
+      var savedProfiles = JSON.parse(localStorage.getItem("partnerWAV_partnerProfiles") || "null");
+      if (Array.isArray(savedProfiles) && savedProfiles.length){
+        partnerProfiles.length = 0;
+        savedProfiles.forEach(function(pp){ partnerProfiles.push(pp); });
+      }
+    } catch (e) {
+      console.log("Could not load saved partner profiles:", e);
+    }
   }
 
   // Save vendor referral data to localStorage
@@ -2333,6 +2342,7 @@
         }
       });
       localStorage.setItem("partnerWAV_vendorReferralData", JSON.stringify({ referralPartners: referralPartners }));
+      localStorage.setItem("partnerWAV_partnerProfiles", JSON.stringify(partnerProfiles));
     } catch (e) {
       console.log("Could not save data:", e);
     }
@@ -3172,12 +3182,19 @@
 
     var existingIdx = -1;
     for (var i=0;i<partnerProfiles.length;i++){ if (partnerProfiles[i].id === profile.id){ existingIdx = i; break; } }
-    if (existingIdx > -1) partnerProfiles[existingIdx] = profile; else partnerProfiles.push(profile);
+    if (existingIdx > -1){
+      var prev = partnerProfiles[existingIdx];
+      // keep fields this form doesn't edit (services, archive state)
+      if (!profile.services && prev.services) profile.services = prev.services;
+      if (profile.archivedAt === undefined) profile.archivedAt = prev.archivedAt || null;
+      partnerProfiles[existingIdx] = profile;
+    } else partnerProfiles.push(profile);
 
     state.myProfileId = profile.id;
     myContactInfo.phone = fieldVal("mpPhone");
     myContactInfo.email = fieldVal("mpEmail");
     myContactInfo.address = fieldVal("mpAddress");
+    saveVendorData();
 
     toast("Profile saved -- you're now listed in the Partner Network");
     render();
@@ -3187,19 +3204,29 @@
     var grid = document.getElementById("networkGrid");
     if (!grid) return;
     var q = (state.networkQuery||"").trim().toLowerCase();
-    var list = !q ? partnerProfiles : partnerProfiles.filter(function(p){
+    var active = partnerProfiles.filter(function(p){ return !p.archivedAt; });
+    var myProf = state.myProfileId ? partnerById(state.myProfileId) : null;
+    var restoreBanner = (myProf && myProf.archivedAt)
+      ? '<div class="card card-pad" style="grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--warn-soft);">'
+        + '<span style="font-size:.88rem;">Your profile (<b>'+esc(myProf.name)+'</b>) is archived and hidden from the Partner Network.</span>'
+        + '<button class="btn primary sm" style="margin-left:auto;" data-restore-my-profile>Restore my profile</button></div>'
+      : '';
+    var list = !q ? active : active.filter(function(p){
       var haystack = (p.name+" "+p.tagline+" "+p.specialties.join(" ")+" "+p.credentials.join(" ")).toLowerCase();
       return haystack.indexOf(q) > -1;
     });
     if (!list.length){
-      grid.innerHTML = '<div class="empty">No partners match "'+esc(state.networkQuery)+'" -- try a different name or specialty.</div>';
+      grid.innerHTML = restoreBanner + (q
+        ? '<div class="empty">No partners match "'+esc(state.networkQuery)+'" -- try a different name or specialty.</div>'
+        : '<div class="empty">No partner profiles yet.</div>');
       return;
     }
-    grid.innerHTML = list.map(function(p){
+    grid.innerHTML = restoreBanner + list.map(function(p){
       var mine = p.id === state.myProfileId;
       var chips = p.specialties.slice(0,2).map(function(s){ return '<span class="chip">'+esc(s)+'</span>'; }).join("");
       var actionBtn = mine
-        ? '<button class="btn secondary sm" data-goto-screen="partner-my-profile">Edit profile</button>'
+        ? '<button class="btn secondary sm" data-edit-partner-profile="'+esc(p.id)+'">Edit</button>'
+          + '<button class="btn ghost sm" data-delete-partner-profile="'+esc(p.id)+'">Delete</button>'
         : '<button class="btn secondary sm" data-message-partner="'+esc(p.name)+'">Message</button>';
       return '<div class="program-card">'
         + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div><span class="badge '+(mine?"accent2":"neutral")+'">'+(mine?"You":esc(p.country))+'</span></div>'
@@ -3231,7 +3258,8 @@
         + '<div class="profile-header">'+logoOrFallback(p, 104)
           + '<div><h2 style="font-size:1.3rem;">'+esc(p.name)+'</h2><div class="thread-meta">'+esc(p.country)+'</div></div>'
           + (mine
-              ? '<button class="btn primary sm" style="margin-left:auto;" data-goto-screen="partner-my-profile">Edit profile</button>'
+              ? '<div style="margin-left:auto;display:flex;gap:8px;"><button class="btn primary sm" data-edit-partner-profile="'+esc(p.id)+'">Edit profile</button>'
+                + '<button class="btn ghost sm" data-delete-partner-profile="'+esc(p.id)+'">Delete</button></div>'
               : '<button class="btn primary sm" style="margin-left:auto;" data-message-partner="'+esc(p.name)+'">Message</button>')
             + '</div>'
         + '<p class="program-desc" style="font-size:.92rem;">'+esc(p.tagline)+'</p>'
@@ -3240,6 +3268,8 @@
             + '<button class="btn secondary sm" style="margin-left:auto;" data-view-vendor="'+esc(p.vendorProgramId)+'">View Vendor profile →</button>'
           + '</div>' : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Specialties</h2></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">'+chips+'</div></div>'
+        + ((p.services && p.services.length) ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Services &amp; solutions</h2></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">'
+            + p.services.map(function(sv){ return '<span class="chip">'+esc(sv)+'</span>'; }).join("") + '</div></div>' : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Credentials</h2></div><ul style="margin:8px 0 0;padding-left:18px;font-size:.86rem;">'+creds+'</ul></div>'
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Past projects</h2></div><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">'+projects+'</div></div>'
         + (social ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Elsewhere</h2></div><div style="margin-top:8px;">'+social+'</div></div>' : '')
@@ -4565,8 +4595,8 @@
     var name = document.getElementById("profileName").value.trim();
     var country = document.getElementById("profileCountry").value.trim();
     var tagline = document.getElementById("profileTagline").value.trim();
-    var specialties = document.getElementById("profileSpecialties").value.split(",").map(function(s){ return s.trim(); });
-    var credentials = document.getElementById("profileCredentials").value.split(",").map(function(c){ return c.trim(); });
+    var specialties = document.getElementById("profileSpecialties").value.split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+    var credentials = document.getElementById("profileCredentials").value.split(",").map(function(c){ return c.trim(); }).filter(Boolean);
     var website = document.getElementById("profileWebsite").value.trim();
     var linkedin = document.getElementById("profileLinkedin").value.trim();
 
@@ -4587,7 +4617,7 @@
       if (idx >= 0){
         partnerProfiles[idx] = Object.assign(partnerProfiles[idx], {
           name: name, country: country, tagline: tagline, specialties: specialties,
-          credentials: credentials, website: website, services: services, social: Object.assign(partnerProfiles[idx].social, {linkedin: linkedin})
+          credentials: credentials, website: website, services: services, social: Object.assign({}, partnerProfiles[idx].social || {}, {linkedin: linkedin})
         });
         saveVendorData();
         toast("Profile updated");
@@ -4602,7 +4632,7 @@
       toast("Profile created");
     }
     state.editingProfileId = null;
-    state.screen = "partner-overview";
+    state.screen = "partner-network";
     saveVendorData();
     render();
   }
@@ -6077,7 +6107,11 @@
     var deleteProfileBtn = e.target.closest("#deleteProfileBtn");
     if (deleteProfileBtn){
       var profileId = deleteProfileBtn.getAttribute("data-profile-id");
-      if (confirm("Archive this profile? It can be restored later.")) softDeleteProfile("partner", profileId);
+      if (confirm("Archive this profile? It can be restored later.")){
+        state.editingProfileId = null;
+        state.screen = "partner-network";
+        softDeleteProfile("partner", profileId);
+      }
       return;
     }
 
@@ -6784,12 +6818,14 @@
     var deletePartnerProfileBtn = e.target.closest("[data-delete-partner-profile]");
     if (deletePartnerProfileBtn){
       var profileId = deletePartnerProfileBtn.getAttribute("data-delete-partner-profile");
-      if (confirm("Delete this partner profile?")){
+      if (confirm("Delete this partner profile? It will be hidden from the Partner Network (you can restore it later).")){
         var idx = partnerProfiles.findIndex(function(p){ return p.id === profileId; });
         if (idx >= 0){
-          partnerProfiles.splice(idx, 1);
+          partnerProfiles[idx].archivedAt = new Date().toISOString();
           saveVendorData();
-          toast("Profile deleted");
+          toast("Profile deleted -- hidden from the Partner Network");
+          state.viewingPartnerId = null;
+          state.editingProfileId = null;
           state.screen = "partner-network";
           render();
         }
@@ -6797,12 +6833,22 @@
       return;
     }
 
+    var restoreMyProfileBtn = e.target.closest("[data-restore-my-profile]");
+    if (restoreMyProfileBtn){
+      var myP = partnerById(state.myProfileId);
+      if (myP){ myP.archivedAt = null; saveVendorData(); toast("Profile restored"); render(); }
+      return;
+    }
+
     var addServiceBtn = e.target.closest("#addServiceBtn");
     if (addServiceBtn){
       var input = document.getElementById("newServiceInput");
       var service = input.value.trim();
-      if (service){
-        var container = document.getElementById("partnerServicesContainer");
+      var container = document.getElementById("partnerServicesContainer");
+      var existingSvc = [].map.call(container.querySelectorAll("[data-remove-service]"), function(b){ return b.getAttribute("data-remove-service").toLowerCase(); });
+      if (!service){ toast("Type a service name first"); input.focus(); }
+      else if (existingSvc.indexOf(service.toLowerCase()) > -1){ toast("\""+service+"\" is already listed"); }
+      else {
         var serviceChip = document.createElement("div");
         serviceChip.style.cssText = "background:var(--accent-soft);padding:6px 12px;border-radius:20px;font-size:13px;display:flex;align-items:center;gap:8px;";
         serviceChip.innerHTML = esc(service) + '<button type="button" class="btn ghost xs" data-remove-service="'+esc(service)+'" style="padding:0;margin-left:4px;">×</button>';
@@ -6971,6 +7017,7 @@
   // Enter in an affiliate "add service" box adds the service
   document.addEventListener("keydown", function(e){
     if (e.key !== "Enter") return;
+    if (e.target.id === "newServiceInput"){ e.preventDefault(); var asb = document.getElementById("addServiceBtn"); if (asb) asb.click(); return; }
     var svcInput = e.target.closest && e.target.closest("[data-aff-service-input]");
     if (svcInput){ e.preventDefault(); addAffiliateService(svcInput.getAttribute("data-aff-service-input"), svcInput.closest(".aff-panel")); }
   });
