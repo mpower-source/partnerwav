@@ -1,4 +1,37 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}  .map-tiles-dark{ filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
+
+  /* ===== Incentive flyers ===== */
+  .fly-layout{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; }
+  @media (max-width: 980px){ .fly-layout{ grid-template-columns:minmax(0,1fr); } }
+  .fly-form{ display:flex; flex-direction:column; gap:12px; }
+  .fly-form textarea, .fly-form input{ font:inherit; }
+  .fly-ai{ display:flex; flex-direction:column; gap:8px; padding:12px; border-radius:10px; background:var(--surface-2); border:1px solid var(--line); }
+  .fly-feedback{ padding:10px 12px; border-radius:8px; background:var(--surface-2); border-left:3px solid var(--accent); font-size:.86rem; }
+  .fly-swatches{ display:flex; gap:8px; flex-wrap:wrap; }
+  .fly-swatch{ width:30px; height:30px; border-radius:50%; border:2px solid transparent; cursor:pointer; box-shadow:0 0 0 1px var(--line); }
+  .fly-swatch[aria-pressed="true"]{ border-color:var(--bg, #fff); box-shadow:0 0 0 2px var(--ink); }
+  .fly-checks ul{ list-style:none; margin:6px 0; padding:0; display:flex; flex-direction:column; gap:4px; font-size:.86rem; }
+  .fly-checks li.ok{ color:var(--good, #15803d); } .fly-checks li.warn{ color:var(--warn); font-weight:600; }
+  .fly-preview-wrap{ position:sticky; top:16px; }
+  .fly-preview{ max-width:520px; }
+  .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .flyer{ position:relative; background:#fff; color:#1e1e28; border-radius:6px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,.18); border:1px solid #e3e3ea; aspect-ratio:210/297; display:flex; flex-direction:column; font-family:Helvetica, Arial, sans-serif; font-size:13px; line-height:1.4; }
+  .flyer-band{ background:var(--fly); color:#fff; padding:18px 22px 20px; }
+  .flyer-top{ display:flex; justify-content:space-between; gap:10px; font-weight:700; font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+  .flyer-pill{ border:1px solid rgba(255,255,255,.6); border-radius:99px; padding:1px 8px; font-size:10px; }
+  .flyer-h1{ font-size:24px; font-weight:800; line-height:1.15; margin-top:14px; overflow-wrap:anywhere; }
+  .flyer-sub{ margin-top:6px; font-size:13px; opacity:.95; }
+  .flyer-body{ padding:16px 22px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .flyer-offer{ background:color-mix(in srgb, var(--fly) 10%, #fff); color:var(--fly); font-weight:800; font-size:16px; padding:10px 12px; border-radius:6px; }
+  .flyer-h2{ color:var(--fly); font-weight:800; font-size:11px; letter-spacing:.06em; text-transform:uppercase; margin-top:6px; }
+  .flyer-list, .flyer-steps{ margin:0; padding-left:18px; } .flyer-list li::marker{ color:var(--fly); } .flyer-steps li::marker{ font-weight:700; }
+  .flyer-p{ margin:0; }
+  .flyer-facts{ display:grid; grid-template-columns:repeat(auto-fit, minmax(90px,1fr)); gap:8px; border-top:1px solid #e3e3ea; padding-top:8px; margin-top:6px; }
+  .flyer-facts span{ display:block; font-size:9px; text-transform:uppercase; color:#6e6e7d; letter-spacing:.05em; } .flyer-facts b{ font-size:11px; }
+  .flyer-cta{ background:var(--fly); color:#fff; border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; margin-top:6px; } .flyer-cta span{ font-size:11px; opacity:.9; overflow-wrap:anywhere; }
+  .flyer-fine{ font-size:9.5px; color:#646473; margin-top:4px; }
+  .flyer-foot{ text-align:center; font-size:9px; color:#8c8c96; padding:6px 0 10px; }
+  .flyer-wm{ position:absolute; top:46%; left:50%; transform:translate(-50%,-50%) rotate(-24deg); font-size:84px; font-weight:900; color:rgba(200,40,40,.12); pointer-events:none; letter-spacing:.1em; }
 </style></head><body>
 <script>
   // Sign-in required unless ?demo=1 (walk-through mode) or a public ?apply= referral link
@@ -1229,10 +1262,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
       <!-- ===== OPERATOR: MARKETING APPROVALS ===== -->
       <section id="scr-operator-marketing-approvals" hidden>
-        <div class="section-head"><h2>Marketing & Incentive Approvals</h2><span class="hint">Review and approve vendor marketing materials and partner incentives</span></div>
+        <div class="section-head"><h2>Marketing & Incentive Approvals</h2><span class="hint">A second look at vendor incentive flyers and partner incentives</span></div>
         <div style="height:12px"></div>
         <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:12px;">
-          <button class="tab-btn" data-tab="marketing" style="padding:8px 16px;border:none;background:transparent;color:var(--ink-soft);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;" aria-selected="true">📚 Marketing Materials</button>
+          <button class="tab-btn" data-tab="marketing" style="padding:8px 16px;border:none;background:transparent;color:var(--ink-soft);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;" aria-selected="true">📄 Incentive Flyers</button>
           <button class="tab-btn" data-tab="incentives" style="padding:8px 16px;border:none;background:transparent;color:var(--ink-soft);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;" aria-selected="false">🎁 Partner Incentives</button>
         </div>
         <div id="marketingApprovalsContent" hidden></div>
@@ -1567,6 +1600,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div class="card">
           <div id="vendorIncentivesContent">Loading...</div>
         </div>
+        <div class="section-head" style="margin-top:22px;"><h2 style="font-size:1rem;">Incentive flyers</h2><span class="hint">One-page PDFs you send to partners. AI drafts them from your incentive terms; CloudWAV takes a second look before they go out.</span></div>
+        <div id="vendorFlyersContent" style="display:flex;flex-direction:column;gap:10px;margin-top:10px;"></div>
       </section>
 
       <!-- ===== VENDOR: INCENTIVE EDITOR ===== -->
@@ -1861,6 +1896,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       </section>
 
       <!-- ===== OPERATOR: INCENTIVE REVIEW ===== -->
+      <section id="scr-operator-flyer-review" hidden>
+        <button class="btn ghost sm" data-fly-back>← Back to Incentive Flyers</button>
+        <div id="flyerReviewContent" style="margin-top:14px;"></div>
+      </section>
+
+      <section id="scr-vendor-flyer-editor" hidden>
+        <button class="btn ghost sm" data-back-screen="vendor-incentives">← Back to Partner Incentives</button>
+        <div id="flyerEditorContent" style="margin-top:14px;"></div>
+      </section>
+
       <section id="scr-operator-incentive-review" hidden>
         <button class="btn ghost sm" data-inc-back>← Back to Marketing &amp; Incentive Approvals</button>
         <div id="incentiveReviewContent" style="margin-top:14px;"></div>
@@ -2831,6 +2876,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-program-config":"Configure Program",
     "operator-deal-review":"Review Deal",
     "operator-incentive-review":"Review Incentive",
+    "vendor-flyer-editor":"Incentive Flyer",
+    "operator-flyer-review":"Review Flyer",
     "operator-msp-prospects":"MSP Prospecting",
     "operator-msp-engagements":"MSP Engagement Tracker",
     "operator-landing-pages":"Landing Pages",
@@ -3358,6 +3405,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderOperatorApprovals();
     renderDealReview();
     renderIncentiveReview();
+    renderVendorFlyers();
+    renderFlyerEditor();
+    renderOperatorFlyers();
+    renderFlyerReview();
     renderPartnerDeals();
     renderPartnerDealView();
 
@@ -4065,7 +4116,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             var live = vendorIncentiveOffers.filter(function(o){ return o.vendorId === p.id && o.status === "approved" && !o.archivedAt && (!o.validUntil || o.validUntil >= today); });
             if (!live.length) return "";
             return '<div><div class="section-head"><h2 style="font-size:.9rem;">Current partner incentives</h2></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">'
-              + live.map(function(o){ return '<div class="deal-row"><span class="deal-row-name">'+esc(o.title)+'<span class="field-note" style="display:block;font-weight:400;">'+esc(o.description || "")+(o.validUntil ? ' · Until '+esc(o.validUntil) : '')+'</span></span><span class="badge accent">'+esc(INC_TYPE_LABEL[o.type] || o.type)+'</span></div>'; }).join("")
+              + live.map(function(o){ return '<div class="deal-row"><span class="deal-row-name">'+esc(o.title)+'<span class="field-note" style="display:block;font-weight:400;">'+esc(o.description || "")+(o.validUntil ? ' · Until '+esc(o.validUntil) : '')+'</span></span><span class="badge accent">'+esc(INC_TYPE_LABEL[o.type] || o.type)+'</span>'
+                + incentiveFlyers.filter(function(f){ return f.incentiveId === o.id && f.status === "approved" && !f.archivedAt; }).slice(0,1).map(function(f){ return '<button type="button" class="btn secondary sm" data-flyer-pdf="'+esc(f.id)+'">Download flyer</button>'; }).join("")
+                + '</div>'; }).join("")
               + '</div></div>';
           })()
         + productsHtml
@@ -6140,7 +6193,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return '<div style="padding:16px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px;">'
         + '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">'
         + '<div><strong>'+esc(inc.title)+'</strong><span style="display:inline-block;margin-left:8px;">'+statusBadge+'</span></div>'
-        + '<div style="text-align:right;"><button class="btn secondary sm" data-edit-vendor-incentive="'+esc(inc.id)+'">Edit</button> <button class="btn secondary sm" data-delete-vendor-incentive="'+esc(inc.id)+'">Delete</button></div>'
+        + '<div style="text-align:right;"><button class="btn primary sm" data-flyer-new="'+esc(inc.id)+'">'+(incentiveFlyers.some(function(f){ return f.incentiveId === inc.id && !f.archivedAt; }) ? "Open flyer" : "Create flyer")+'</button> <button class="btn secondary sm" data-edit-vendor-incentive="'+esc(inc.id)+'">Edit</button> <button class="btn secondary sm" data-delete-vendor-incentive="'+esc(inc.id)+'">Delete</button></div>'
         + '</div>'
         + '<p style="margin:8px 0;color:var(--ink-soft);font-size:.9rem;">'+esc(inc.description.substring(0,100))+(inc.description.length > 100 ? "..." : "")+'</p>'
         + '<p style="margin:8px 0;font-size:.85rem;color:var(--ink-faint);">Type: <strong>'+esc(inc.type.toUpperCase())+'</strong> | Valid: '+esc(inc.validFrom)+' to '+esc(inc.validUntil)+'</p>'
@@ -6296,6 +6349,522 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (action === "message") renderIncentiveReview();
     else { state.incTab = "pending"; state.marketingApprovalsTab = "incentives"; state.screen = "operator-marketing-approvals"; render(); }
   }
+
+  // ===== INCENTIVE FLYERS =====
+  // Vendors build a one-page flyer for an incentive (AI helps write it), download it as a PDF,
+  // and submit it to CloudWAV. The operator checks that nothing critical is missing and that the
+  // offer reads like a normal channel incentive -- creative offers are fine.
+  var FLYERS_KEY = "partnerWAV_incentiveFlyers";
+  var incentiveFlyers = [];
+  var FLY_STATUS = {
+    draft:    { label:"Draft",             cls:"neutral" },
+    pending:  { label:"Needs review",      cls:"warn" },
+    changes:  { label:"Changes requested", cls:"accent" },
+    approved: { label:"Approved",          cls:"good" },
+    rejected: { label:"Rejected",          cls:"bad" }
+  };
+  var FLY_THEMES = { indigo:["Indigo","#4338ca"], teal:["Teal","#0f766e"], sunset:["Sunset","#c2410c"], charcoal:["Charcoal","#1f2937"], berry:["Berry","#9d174d"] };
+  var FLY_TONES = { professional:"Professional", bold:"Bold and energetic", friendly:"Friendly" };
+  // What a partner needs from any incentive flyer -- a reviewer's checklist, not a style guide
+  var FLY_CHECKS = [
+    ["offer","The offer and what it's worth are clear at a glance"],
+    ["who","Who qualifies is stated"],
+    ["dates","Start and end dates (or the deadline) are shown"],
+    ["how","How to qualify and claim is explained"],
+    ["terms","Key limits are summarised (caps, payout timing) with where to find the full terms"],
+    ["match","Nothing is promised that the approved incentive doesn't cover"],
+    ["claims","No misleading or absolute claims (e.g. \"guaranteed income\")"],
+    ["next","There's a clear next step or contact"]
+  ];
+  var FLY_RISKY = ["guarantee","guaranteed","risk-free","risk free","no risk","unlimited","free money","get rich","instant cash","no strings","100% profit","can't lose","cannot lose","double your"];
+  var JSPDF = { url:"https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js", sri:"sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" };
+
+  function attr(s){ return esc(s == null ? "" : s).replace(/"/g,"&quot;"); }
+  function saveFlyers(){ try { localStorage.setItem(FLYERS_KEY, JSON.stringify(incentiveFlyers)); } catch(e){ console.log("Could not save flyers:", e); } }
+  function loadFlyers(){
+    try { var saved = JSON.parse(localStorage.getItem(FLYERS_KEY) || "null"); if (Array.isArray(saved)) incentiveFlyers = saved; } catch(e){ console.log("Could not load flyers:", e); }
+    incentiveFlyers.forEach(function(f){ if (!FLY_STATUS[f.status]) f.status = "draft"; if (!Array.isArray(f.thread)) f.thread = []; if (!f.checks) f.checks = {}; if (!f.copy) f.copy = {}; });
+  }
+  function flyById(id){ return incentiveFlyers.filter(function(f){ return f.id === id; })[0] || null; }
+  function flyStatusBadge(f){ var st = FLY_STATUS[f.status] || FLY_STATUS.draft; return '<span class="badge '+st.cls+'">'+esc(st.label)+'</span>'; }
+  function flyIncentive(f){ return incById(f.incentiveId); }
+  function fmtDate(d){ if (!d) return ""; var dt = new Date(d + "T00:00:00"); return isNaN(dt) ? d : dt.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" }); }
+  function money0(n){ return n === "" || n == null || isNaN(Number(n)) ? "" : "$" + Number(n).toLocaleString("en-US"); }
+  function lines(t){ return String(t || "").split(/\n+/).map(function(x){ return x.replace(/^[\s\-*\u2022]+/, "").trim(); }).filter(Boolean); }
+
+  // Key facts come straight from the incentive, so the flyer can't drift from the approved terms
+  function flyFacts(inc){
+    if (!inc) return [];
+    var f = [];
+    if (inc.validFrom || inc.validUntil) f.push(["Runs", (inc.validFrom ? fmtDate(inc.validFrom) : "Now") + " - " + (inc.validUntil ? fmtDate(inc.validUntil) : "until further notice")]);
+    if (INC_ELIGIBILITY[inc.eligibility]) f.push(["Who", INC_ELIGIBILITY[inc.eligibility]]);
+    if (inc.payoutTiming) f.push(["Payout", inc.payoutTiming]);
+    if (inc.budgetCap) f.push(["Program cap", money0(inc.budgetCap)]);
+    return f;
+  }
+
+  // Offer summary from the terms (used by the built-in writer and as a fallback)
+  function flyOfferLine(inc){
+    if (!inc) return "";
+    if (inc.type === "spif" && inc.tiers && inc.tiers.length){ var top = inc.tiers[inc.tiers.length-1]; return "Earn up to " + top.bonus + " extra on top of your commission"; }
+    if (inc.type === "mdf") return "Up to " + (money0(inc.amount) || "a set amount") + " in co-marketing funds" + (inc.period ? " per " + String(inc.period).replace(/ly$/, "").replace("quarter", "quarter").replace("annual", "year").replace("month", "month") : "");
+    if (inc.type === "trial-credits") return (money0(inc.creditValue) ? money0(inc.creditValue) + " in credits" : "Free credits") + (inc.trialDays ? " and a " + inc.trialDays + "-day free trial for your customers" : " for your customers");
+    if (inc.type === "giveaway") return (inc.prizes && inc.prizes.length ? "Win " + inc.prizes[0].replace(/\s*\(.*\)$/, "") : "Win prizes") + (inc.winningCriteria ? " - " + inc.winningCriteria.toLowerCase() : "");
+    return inc.description || "";
+  }
+
+  // Built-in writer: drafts every section from the incentive's own terms (no invented numbers)
+  function flyTemplateCopy(inc, vendorName, tone){
+    var offer = flyOfferLine(inc), benefits = [], steps = [];
+    var H = {
+      professional: { spif:"Grow your margin with the " + inc.title, mdf:"Co-fund your next campaign with " + vendorName, "trial-credits":"Let customers try " + vendorName + " free", giveaway:"Compete for the " + inc.title },
+      bold: { spif:"Sell more. Earn more.", mdf:"Your marketing, our budget.", "trial-credits":"Free trials that close deals.", giveaway:"Top partners win big." },
+      friendly: { spif:"A little extra for every deal you close", mdf:"Let's market " + vendorName + " together", "trial-credits":"Give your customers a free test drive", giveaway:"A friendly race to the top" }
+    };
+    var headline = ((H[tone] || H.professional)[inc.type]) || inc.title;
+    if (inc.type === "spif" && inc.tiers){ inc.tiers.forEach(function(t){ benefits.push(t.threshold + " in sales: " + t.bonus + " bonus"); }); benefits.push("Paid on top of your standard partner commission"); steps = ["Register each deal in the PartnerWAV portal", "Close the deal within the program dates", "Your bonus is calculated on the tier you reach"]; }
+    if (inc.type === "mdf"){ if (inc.amount) benefits.push(money0(inc.amount) + " available per partner" + (inc.period ? ", " + inc.period : "")); if (inc.mdfShare !== "" && inc.mdfShare != null) benefits.push(vendorName + " reimburses " + inc.mdfShare + "% of approved spend"); benefits.push("Use it for events, digital campaigns and co-branded content"); steps = ["Send a short proposal before the activity", "Run the approved campaign", "Claim with invoices and proof of performance" + (inc.mdfClaimDays ? " within " + inc.mdfClaimDays + " days" : "")]; }
+    if (inc.type === "trial-credits"){ if (inc.creditValue) benefits.push(money0(inc.creditValue) + " in credits for each new customer"); if (inc.trialDays) benefits.push(inc.trialDays + "-day free trial - no card needed to start"); benefits.push("Trial sign-ups from your link are credited to you"); steps = ["Share your trial link or QR code", "Your customer starts the free trial", "Help them go live and earn your commission"]; }
+    if (inc.type === "giveaway"){ (inc.prizes || []).forEach(function(pz){ benefits.push(pz); }); steps = ["Make sure you're enrolled in the program", inc.winningCriteria ? "Winners are decided by: " + inc.winningCriteria : "Sell during the contest period", "Winners are announced after the contest ends"]; }
+    if (!benefits.length && inc.description) benefits.push(inc.description);
+    var sub = { professional: inc.description || "", bold: (inc.description || "") , friendly: inc.description || "" }[tone] || inc.description || "";
+    var fine = [];
+    if (inc.validFrom || inc.validUntil) fine.push("Valid " + (inc.validFrom ? fmtDate(inc.validFrom) : "now") + " to " + (inc.validUntil ? fmtDate(inc.validUntil) : "further notice") + ".");
+    if (INC_ELIGIBILITY[inc.eligibility]) fine.push("Open to: " + INC_ELIGIBILITY[inc.eligibility].toLowerCase() + ".");
+    if (inc.budgetCap) fine.push("Total program budget capped at " + money0(inc.budgetCap) + ".");
+    if (inc.payoutTiming) fine.push("Payout: " + inc.payoutTiming.charAt(0).toLowerCase() + inc.payoutTiming.slice(1) + ".");
+    fine.push("Full terms in the " + vendorName + " partner program on PartnerWAV.");
+    return {
+      headline: headline, subheadline: sub, offer: offer,
+      benefits: benefits.join("\n"), qualify: INC_ELIGIBILITY[inc.eligibility] ? INC_ELIGIBILITY[inc.eligibility] + " in the " + vendorName + " partner program." : "Enrolled " + vendorName + " partners.",
+      steps: steps.join("\n"), cta: "Log in to PartnerWAV to take part", ctaLink: appBaseUrl(), finePrint: fine.join(" ")
+    };
+  }
+
+  // AI writer: a Supabase Edge Function (supabase/functions/flyer-assist) that asks Claude to write
+  // the copy from the incentive terms only. Falls back to the built-in writer if it isn't reachable.
+  function flyerAssist(inc, vendorName, tone, notes, cb){
+    var fallback = function(why){ cb(flyTemplateCopy(inc, vendorName, tone), "template", why); };
+    if (!supabase || !supabase.functions || !state.account) return fallback("signed-out");
+    var terms = {}; ["title","type","description","validFrom","validUntil","eligibility","budgetCap","payoutTiming","claimProcess","tiers","amount","period","mdfShare","mdfClaimDays","creditValue","trialDays","prizes","winningCriteria"].forEach(function(k){ if (inc[k] !== undefined && inc[k] !== "") terms[k] = inc[k]; });
+    if (INC_ELIGIBILITY[inc.eligibility]) terms.eligibilityLabel = INC_ELIGIBILITY[inc.eligibility];
+    var done = false, timer = setTimeout(function(){ if (!done){ done = true; fallback("timeout"); } }, 30000);
+    supabase.functions.invoke("flyer-assist", { body: { vendor: vendorName, tone: FLY_TONES[tone] || tone, notes: notes || "", incentive: terms } })
+      .then(function(res){
+        if (done) return; done = true; clearTimeout(timer);
+        var d = res && res.data; if (typeof d === "string"){ try { d = JSON.parse(d); } catch(e){ d = null; } }
+        if (res.error || !d || !d.headline) return fallback("error");
+        var base = flyTemplateCopy(inc, vendorName, tone);
+        cb({ headline: d.headline, subheadline: d.subheadline || "", offer: d.offer || base.offer,
+          benefits: Array.isArray(d.benefits) ? d.benefits.join("\n") : (d.benefits || base.benefits),
+          qualify: d.qualify || base.qualify, steps: Array.isArray(d.steps) ? d.steps.join("\n") : (d.steps || base.steps),
+          cta: d.cta || base.cta, ctaLink: base.ctaLink, finePrint: d.finePrint || base.finePrint }, "ai");
+      })
+      .catch(function(){ if (!done){ done = true; clearTimeout(timer); fallback("error"); } });
+  }
+
+  // Automatic checks shown to the vendor before submitting and to CloudWAV while reviewing
+  function flyAutoChecks(f){
+    var c = f.copy || {}, inc = flyIncentive(f), out = [];
+    var all = [c.headline, c.subheadline, c.offer, c.benefits, c.qualify, c.steps, c.cta, c.finePrint].join("\n");
+    var add = function(ok, text, key){ out.push({ ok: ok, text: text, key: key }); };
+    add(!!(c.headline && c.offer), c.headline && c.offer ? "Headline and offer are filled in" : "Add a headline and the offer", "offer");
+    add(!!inc, inc ? "Linked to the incentive \"" + inc.title + "\"" : "The incentive this flyer promotes was deleted", "inc");
+    if (inc) add(inc.status === "approved", inc.status === "approved" ? "The incentive itself is approved" : "The incentive is still \"" + (INC_STATUS[inc.status] || INC_STATUS.pending).label + "\" -- the flyer can be approved once it is", "incapproved");
+    add(lines(c.steps).length > 0 || !!(c.qualify), lines(c.steps).length ? "Explains how to take part" : "Add how partners take part / claim", "how");
+    add(!!c.cta, c.cta ? "Has a next step" : "Add a call to action (what partners do next)", "next");
+    add(!!c.finePrint, c.finePrint ? "Has fine print / terms line" : "Add a short terms line (dates, caps, where the full terms are)", "terms");
+    // figures in the copy that don't appear anywhere in the incentive terms
+    if (inc){
+      var src = JSON.stringify(inc).replace(/,(?=\d{3})/g, "");
+      var figs = (all.match(/\$\s?\d[\d,]*(\.\d+)?k?|\d+(\.\d+)?\s?%|\b\d+[\s-]days?\b/gi) || []).map(function(x){ return x.trim(); });
+      var odd = figs.filter(function(x, i, a){
+        if (a.indexOf(x) !== i) return false;
+        var raw = x.replace(/[^\d.k]/gi, "").toLowerCase(), full = raw.replace(/k$/, "000"), bare = raw.replace(/k$/, "");
+        return src.toLowerCase().indexOf(raw) < 0 && src.indexOf(full) < 0 && !(/k$/.test(raw) && src.indexOf(bare + ",000") > -1);
+      });
+      add(!odd.length, odd.length ? "Figures not found in the incentive terms: " + odd.join(", ") : "All figures match the incentive terms", "figures");
+    }
+    var low = all.toLowerCase(), hits = FLY_RISKY.filter(function(w){ return low.indexOf(w) > -1; });
+    add(!hits.length, hits.length ? "Wording to double-check: \"" + hits.join("\", \"") + "\"" : "No absolute or high-pressure claims found", "claims");
+    return out;
+  }
+
+  // ----- the flyer itself (HTML preview) -----
+  function flyerHtml(f, opts){
+    opts = opts || {};
+    var c = f.copy || {}, inc = flyIncentive(f), color = (FLY_THEMES[f.theme] || FLY_THEMES.indigo)[1];
+    var vName = (programById(f.vendorId) || { name: f.vendorId }).name;
+    var list = function(t, cls){ var l = lines(t); return l.length ? '<ul class="'+cls+'">' + l.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("") + '</ul>' : ''; };
+    var steps = lines(c.steps);
+    var draft = f.status !== "approved" && !opts.clean;
+    return '<div class="flyer" style="--fly:'+attr(color)+'">'
+      + (draft ? '<div class="flyer-wm">DRAFT</div>' : '')
+      + '<div class="flyer-band"><div class="flyer-top"><span class="flyer-vendor">'+esc(vName)+'</span><span class="flyer-pill">'+esc(inc ? (INC_TYPE_LABEL[inc.type] || inc.type) : "Partner incentive")+'</span></div>'
+        + '<div class="flyer-h1">'+esc(c.headline || "Your headline")+'</div>'
+        + (c.subheadline ? '<div class="flyer-sub">'+esc(c.subheadline)+'</div>' : '')
+      + '</div>'
+      + '<div class="flyer-body">'
+        + (c.offer ? '<div class="flyer-offer">'+esc(c.offer)+'</div>' : '')
+        + (lines(c.benefits).length ? '<div class="flyer-h2">What you get</div>' + list(c.benefits, "flyer-list") : '')
+        + (c.qualify ? '<div class="flyer-h2">Who can take part</div><p class="flyer-p">'+esc(c.qualify)+'</p>' : '')
+        + (steps.length ? '<div class="flyer-h2">How it works</div><ol class="flyer-steps">' + steps.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("") + '</ol>' : '')
+        + (flyFacts(inc).length ? '<div class="flyer-facts">' + flyFacts(inc).map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("") + '</div>' : '')
+        + (c.cta ? '<div class="flyer-cta"><b>'+esc(c.cta)+'</b>'+(c.ctaLink ? '<span>'+esc(c.ctaLink)+'</span>' : '')+'</div>' : '')
+        + (c.finePrint ? '<div class="flyer-fine">'+esc(c.finePrint)+'</div>' : '')
+      + '</div>'
+      + '<div class="flyer-foot">Partner program operated by CloudWAV · PartnerWAV</div>'
+    + '</div>';
+  }
+
+  // ----- PDF -----
+  function loadJsPDF(cb){
+    if (window.jspdf && window.jspdf.jsPDF) return cb(true);
+    var s = document.createElement("script"); s.src = JSPDF.url; s.integrity = JSPDF.sri; s.crossOrigin = "anonymous";
+    s.onload = function(){ cb(!!(window.jspdf && window.jspdf.jsPDF)); }; s.onerror = function(){ cb(false); };
+    document.head.appendChild(s);
+  }
+  function pdfSafe(t){ return String(t || "").replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2013\u2014]/g, "-").replace(/\u2022/g, "-").replace(/\u00b7/g, "-").replace(/\u2026/g, "..."); }
+  function flyHasNonLatin(f){ var c = f.copy || {}; return /[^\u0000-\u00ff]/.test(pdfSafe([c.headline, c.subheadline, c.offer, c.benefits, c.qualify, c.steps, c.cta, c.ctaLink, c.finePrint, (programById(f.vendorId) || {}).name].join(" "))); }
+  function hexRgb(h){ var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+
+  function buildFlyerPdf(f, opts, cb){
+    opts = opts || {};
+    loadJsPDF(function(ok){
+      if (!ok) return cb(null, "Couldn't load the PDF maker. Check your connection, or use Print / save as PDF.");
+      var doc = new window.jspdf.jsPDF({ unit:"mm", format:"a4" });
+      var c = f.copy || {}, inc = flyIncentive(f), rgb = hexRgb((FLY_THEMES[f.theme] || FLY_THEMES.indigo)[1]);
+      var vName = pdfSafe((programById(f.vendorId) || { name: f.vendorId }).name);
+      var W = 210, M = 16, CW = W - 2*M, y;
+      // header band
+      doc.setFont("helvetica","bold"); doc.setFontSize(26);
+      var h1 = doc.splitTextToSize(pdfSafe(c.headline || ""), CW);
+      doc.setFont("helvetica","normal"); doc.setFontSize(12);
+      var sub = c.subheadline ? doc.splitTextToSize(pdfSafe(c.subheadline), CW) : [];
+      var bandH = 30 + h1.length * 10 + sub.length * 5.5 + 6;
+      doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.rect(0, 0, W, bandH, "F");
+      doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(11);
+      doc.text(vName.toUpperCase(), M, 16);
+      var pill = pdfSafe(inc ? (INC_TYPE_LABEL[inc.type] || inc.type) : "Partner incentive").toUpperCase();
+      doc.setFontSize(9); doc.text(pill, W - M, 16, { align:"right" });
+      doc.setFontSize(26); y = 32; h1.forEach(function(l){ doc.text(l, M, y); y += 10; });
+      doc.setFont("helvetica","normal"); doc.setFontSize(12); y += 1; sub.forEach(function(l){ doc.text(l, M, y); y += 5.5; });
+      y = bandH + 10;
+      doc.setTextColor(30,30,40);
+      if (c.offer){
+        doc.setFont("helvetica","bold"); doc.setFontSize(15);
+        var off = doc.splitTextToSize(pdfSafe(c.offer), CW - 12);
+        var oh = off.length * 7 + 8;
+        doc.setFillColor(Math.round(rgb[0]*0.1+230), Math.round(rgb[1]*0.1+230), Math.round(rgb[2]*0.1+230)); doc.roundedRect(M, y, CW, oh, 3, 3, "F");
+        doc.setTextColor(rgb[0], rgb[1], rgb[2]); var oy = y + 8; off.forEach(function(l){ doc.text(l, M + 6, oy); oy += 7; });
+        y += oh + 8; doc.setTextColor(30,30,40);
+      }
+      var heading = function(t){ doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(rgb[0], rgb[1], rgb[2]); doc.text(t.toUpperCase(), M, y); y += 6; doc.setTextColor(30,30,40); };
+      var para = function(t, size){ doc.setFont("helvetica","normal"); doc.setFontSize(size || 11); doc.splitTextToSize(pdfSafe(t), CW).forEach(function(l){ doc.text(l, M, y); y += (size || 11) * 0.48; }); y += 3; };
+      var bl = lines(c.benefits);
+      if (bl.length){ heading("What you get"); doc.setFont("helvetica","normal"); doc.setFontSize(11); bl.forEach(function(b){ var ls = doc.splitTextToSize(pdfSafe(b), CW - 7); doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.circle(M + 1.5, y - 1.3, 1, "F"); ls.forEach(function(l){ doc.text(l, M + 6, y); y += 5.3; }); y += 0.8; }); y += 3; }
+      if (c.qualify){ heading("Who can take part"); para(c.qualify); }
+      var st = lines(c.steps);
+      if (st.length){ heading("How it works"); doc.setFontSize(11); st.forEach(function(s, i){ doc.setFont("helvetica","bold"); doc.text((i+1) + ".", M, y); doc.setFont("helvetica","normal"); doc.splitTextToSize(pdfSafe(s), CW - 7).forEach(function(l){ doc.text(l, M + 6, y); y += 5.3; }); y += 0.8; }); y += 3; }
+      var facts = flyFacts(inc);
+      if (facts.length){
+        var colW = CW / facts.length; doc.setDrawColor(220,220,228); doc.line(M, y, W - M, y); y += 6;
+        facts.forEach(function(fx, i){ var x = M + i * colW; doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(110,110,125); doc.text(pdfSafe(fx[0]).toUpperCase(), x, y);
+          doc.setFont("helvetica","bold"); doc.setFontSize(9.5); doc.setTextColor(30,30,40); var fl = doc.splitTextToSize(pdfSafe(fx[1]), colW - 4); fl.slice(0,3).forEach(function(l, j){ doc.text(l, x, y + 5 + j * 4.3); }); });
+        y += 20;
+      }
+      if (c.cta){
+        doc.setFillColor(rgb[0], rgb[1], rgb[2]); var ch = c.ctaLink ? 17 : 12; doc.roundedRect(M, y, CW, ch, 3, 3, "F");
+        doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text(doc.splitTextToSize(pdfSafe(c.cta), CW - 12)[0], M + 6, y + 8);
+        if (c.ctaLink){ doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.text(pdfSafe(c.ctaLink), M + 6, y + 13.5); doc.link(M, y, CW, ch, { url: c.ctaLink }); }
+        y += ch + 7; doc.setTextColor(30,30,40);
+      }
+      if (c.finePrint){ doc.setTextColor(100,100,115); para(c.finePrint, 8.5); }
+      doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(140,140,150);
+      doc.text("Partner program operated by CloudWAV - PartnerWAV", W / 2, 289, { align:"center" });
+      if (f.status !== "approved" && !opts.clean){
+        doc.setTextColor(200,40,40); doc.setFont("helvetica","bold"); doc.setFontSize(10);
+        doc.text("DRAFT - not yet reviewed by CloudWAV. Do not distribute.", W / 2, 283, { align:"center" });
+      }
+      doc.setProperties({ title: pdfSafe(c.headline || "Incentive flyer"), subject: pdfSafe(inc ? inc.title : ""), author: vName, creator: "PartnerWAV" });
+      cb(doc);
+    });
+  }
+  function flyFileName(f){ var inc = flyIncentive(f); return ((programById(f.vendorId) || { name: f.vendorId }).name + " " + (inc ? inc.title : "incentive") + " flyer").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() + ".pdf"; }
+  function downloadFlyerPdf(f, errEl){
+    if (flyHasNonLatin(f)){ var m = "This flyer uses Thai or other characters the PDF download can't draw yet. Use \"Print / save as PDF\" instead -- it keeps every character."; if (errEl){ errEl.textContent = m; errEl.hidden = false; } else toast(m); return; }
+    buildFlyerPdf(f, {}, function(doc, err){
+      if (!doc){ if (errEl){ errEl.textContent = err; errEl.hidden = false; } else toast(err); return; }
+      doc.save(flyFileName(f));
+    });
+  }
+  function printFlyer(f){
+    var css = Array.prototype.map.call(document.querySelectorAll("style"), function(s){ return s.textContent; }).join("\n");
+    var w = window.open("", "_blank");
+    if (!w){ toast("Allow pop-ups to print the flyer"); return; }
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(flyFileName(f).replace(/\.pdf$/, ""))+'</title><style>'+css+' @page{size:A4;margin:0} html,body{background:#fff;margin:0} .flyer{box-shadow:none;border:0;width:210mm;min-height:297mm;border-radius:0}</style></head><body>'+flyerHtml(f)+'<script>setTimeout(function(){window.print();},300)<\/script></body></html>');
+    w.document.close();
+  }
+
+  // ----- vendor: list of flyers on the Partner Incentives screen -----
+  function renderVendorFlyers(){
+    var box = document.getElementById("vendorFlyersContent");
+    if (!box || state.screen !== "vendor-incentives") return;
+    var mine = incentiveFlyers.filter(function(f){ return f.vendorId === state.myVendorId && !f.archivedAt; });
+    box.innerHTML = mine.length ? mine.map(function(f){
+      var inc = flyIncentive(f), lastMsg = (f.thread || []).filter(function(m){ return m.from === "operator"; }).slice(-1)[0];
+      if (f.unreadVendor) f.unreadVendor = false;
+      return '<div class="deal-row" data-flyer-row="'+attr(f.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc((f.copy && f.copy.headline) || "Untitled flyer")
+        + '<span class="field-note" style="display:block;font-weight:400;">For: '+esc(inc ? inc.title : "deleted incentive")+' · updated '+esc(f.updatedAt || "")+'</span>'
+        + (lastMsg ? '<span class="field-note" style="display:block;font-weight:400;"><b>CloudWAV:</b> '+esc(lastMsg.text)+'</span>' : '')
+        + '</span>' + flyStatusBadge(f)
+        + '<button type="button" class="btn secondary sm" data-flyer-edit="'+attr(f.id)+'">'+(f.status === "pending" ? "View" : "Edit")+'</button>'
+        + '<button type="button" class="btn '+(f.status === "approved" ? "primary" : "ghost")+' sm" data-flyer-pdf="'+attr(f.id)+'">'+(f.status === "approved" ? "Download PDF" : "Draft PDF")+'</button></div>';
+    }).join("") : '<div class="empty">No flyers yet. Use "Create flyer" on an incentive above -- AI drafts it from your incentive terms.</div>';
+  }
+
+  function newFlyer(incId){
+    var inc = incById(incId); if (!inc) return null;
+    return { id:"fly-" + Date.now().toString(36), vendorId: inc.vendorId, incentiveId: inc.id, status:"draft", theme:"indigo", tone:"professional", notes:"", copy:{}, thread:[], checks:{}, updatedAt: nowStamp() };
+  }
+  function openFlyerEditor(flyerId, incId){
+    var f = flyerId ? flyById(flyerId) : null;
+    if (!f && incId){
+      var existing = incentiveFlyers.filter(function(x){ return x.incentiveId === incId && x.vendorId === state.myVendorId && !x.archivedAt; })[0];
+      f = existing || null;
+    }
+    state.flyerDraft = f ? JSON.parse(JSON.stringify(f)) : newFlyer(incId);
+    state.flyerIsNew = !f; state.flyerAiNote = "";
+    state.screen = "vendor-flyer-editor"; render(); window.scrollTo(0,0);
+  }
+
+  function renderFlyerEditor(){
+    var box = document.getElementById("flyerEditorContent");
+    if (!box || state.screen !== "vendor-flyer-editor") return;
+    var f = state.flyerDraft;
+    if (!f){ box.innerHTML = '<div class="empty">Pick an incentive on Partner Incentives and choose "Create flyer".</div>'; return; }
+    var inc = flyIncentive(f), c = f.copy || {}, locked = f.status === "pending";
+    var myIncs = vendorIncentiveOffers.filter(function(o){ return o.vendorId === state.myVendorId && !o.archivedAt; });
+    var fld = function(key, label, rows, ph, note){
+      var v = attr(c[key] || "");
+      return '<div class="field-row"><label for="fly_'+key+'">'+label+'</label>'
+        + (rows ? '<textarea id="fly_'+key+'" data-fly-field="'+key+'" rows="'+rows+'" placeholder="'+attr(ph || "")+'"'+(locked?" disabled":"")+'>'+esc(c[key] || "")+'</textarea>'
+                : '<input type="text" id="fly_'+key+'" data-fly-field="'+key+'" value="'+v+'" placeholder="'+attr(ph || "")+'"'+(locked?" disabled":"")+'>')
+        + (note ? '<span class="field-note">'+note+'</span>' : '') + '</div>';
+    };
+    var swatches = Object.keys(FLY_THEMES).map(function(k){ return '<button type="button" class="fly-swatch" data-fly-theme="'+k+'" aria-pressed="'+(f.theme===k?"true":"false")+'" title="'+attr(FLY_THEMES[k][0])+'" style="background:'+FLY_THEMES[k][1]+'"'+(locked?" disabled":"")+'><span class="sr-only">'+esc(FLY_THEMES[k][0])+'</span></button>'; }).join("");
+    var checks = flyAutoChecks(f).map(function(x){ return '<li class="'+(x.ok ? "ok" : "warn")+'">'+(x.ok ? "✓ " : "! ")+esc(x.text)+'</li>'; }).join("");
+    var lastMsgs = (f.thread || []).filter(function(m){ return m.from === "operator"; }).slice(-2);
+    box.innerHTML = '<div class="fly-layout">'
+      + '<div class="card card-pad fly-form">'
+        + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><h2 style="font-size:1.15rem;margin:0;margin-right:auto;">Incentive flyer</h2>'+flyStatusBadge(f)+'</div>'
+        + (lastMsgs.length ? lastMsgs.map(function(m){ return '<div class="fly-feedback"><b>CloudWAV:</b> '+esc(m.text)+' <span class="field-note">· '+esc(m.time)+'</span></div>'; }).join("") : '')
+        + (locked ? '<div class="field-note">CloudWAV is reviewing this flyer. You can download a draft, but editing opens again once they reply.</div>' : '')
+        + (f.status === "approved" ? '<div class="field-note">Approved. Editing and saving turns it back into a draft that needs a fresh review.</div>' : '')
+        + '<div class="field-row"><label for="flyIncentive">Incentive to promote</label><select id="flyIncentive"'+(locked || !state.flyerIsNew ? " disabled" : "")+'>'
+          + myIncs.map(function(o){ return '<option value="'+attr(o.id)+'"'+(o.id === f.incentiveId ? " selected" : "")+'>'+esc(o.title)+' ('+esc((INC_STATUS[o.status] || INC_STATUS.pending).label)+')</option>'; }).join("") + '</select></div>'
+        + '<div class="fly-ai">'
+          + '<div class="aff-section-title">✨ Write it with AI</div>'
+          + '<div class="field-row"><label for="flyTone">Tone</label><select id="flyTone"'+(locked?" disabled":"")+'>'+Object.keys(FLY_TONES).map(function(k){ return '<option value="'+k+'"'+(f.tone===k?" selected":"")+'>'+esc(FLY_TONES[k])+'</option>'; }).join("")+'</select></div>'
+          + '<div class="field-row"><label for="flyNotes">Anything to emphasise? <span class="field-note">(optional)</span></label><input type="text" id="flyNotes" value="'+attr(f.notes || "")+'" placeholder="e.g. aimed at hotel IT teams in Phuket; mention the Thai-language voice"'+(locked?" disabled":"")+'></div>'
+          + '<button type="button" class="btn primary sm" data-fly-ai'+(locked || !inc ? " disabled" : "")+'>'+(c.headline ? "Rewrite with AI" : "Draft with AI")+'</button>'
+          + '<span class="field-note" id="flyAiNote">'+esc(state.flyerAiNote || "AI writes from your incentive's terms. Edit anything it writes.")+'</span>'
+        + '</div>'
+        + fld("headline","Headline",0,"Short and specific")
+        + fld("subheadline","Sub-headline",2,"One sentence on why it matters")
+        + fld("offer","The offer",0,"e.g. Earn up to 15% extra on every deal","Keep figures the same as your incentive terms.")
+        + fld("benefits","What partners get",4,"One per line")
+        + fld("qualify","Who can take part",2,"")
+        + fld("steps","How it works",3,"One step per line")
+        + fld("cta","Call to action",0,"e.g. Register your first deal today")
+        + fld("ctaLink","Link or contact",0,"https://… or email")
+        + fld("finePrint","Fine print",3,"Dates, caps, payout timing, where the full terms are")
+        + '<div class="field-row"><label>Colour</label><div class="fly-swatches">'+swatches+'</div></div>'
+        + '<div class="fly-checks"><div class="aff-section-title">Before you submit</div><ul>'+checks+'</ul><span class="field-note">These are prompts, not rules -- creative offers are welcome. CloudWAV takes a second look for anything critical that\'s missing.</span></div>'
+        + '<div id="flyError" class="login-msg bad" role="alert" hidden></div>'
+        + '<div class="cfg-actions">'
+          + (locked ? '' : '<button type="button" class="btn secondary sm" data-fly-save="draft">Save draft</button>')
+          + '<button type="button" class="btn ghost sm" data-fly-download>'+(f.status === "approved" ? "Download PDF" : "Download draft PDF")+'</button>'
+          + '<button type="button" class="btn ghost sm" data-fly-print>Print / save as PDF</button>'
+          + (locked ? '' : '<button type="button" class="btn primary sm" data-fly-save="submit" style="margin-left:auto;">Submit to CloudWAV</button>')
+        + '</div>'
+      + '</div>'
+      + '<div class="fly-preview-wrap"><div class="aff-section-title" style="margin-bottom:8px;">Preview</div><div id="flyPreview" class="fly-preview">'+flyerHtml(f)+'</div></div>'
+    + '</div>';
+  }
+  function refreshFlyerPreview(){
+    var f = state.flyerDraft, p = document.getElementById("flyPreview"); if (!f || !p) return;
+    p.innerHTML = flyerHtml(f);
+    var ul = document.querySelector(".fly-checks ul");
+    if (ul) ul.innerHTML = flyAutoChecks(f).map(function(x){ return '<li class="'+(x.ok ? "ok" : "warn")+'">'+(x.ok ? "✓ " : "! ")+esc(x.text)+'</li>'; }).join("");
+  }
+
+  function saveFlyer(mode){
+    var f = state.flyerDraft; if (!f || state.role !== "vendor") return;
+    var err = document.getElementById("flyError");
+    var fail = function(m){ err.innerHTML = m; err.hidden = false; };
+    var c = f.copy;
+    if (!c.headline || !c.offer) return fail("Add a headline and the offer -- or use Draft with AI.");
+    if (mode === "submit"){
+      var miss = [];
+      if (!lines(c.steps).length && !c.qualify) miss.push("how partners take part");
+      if (!c.cta) miss.push("a call to action");
+      if (!c.finePrint) miss.push("a short terms line");
+      if (miss.length) return fail("Before submitting, add " + miss.join(", ") + ".");
+    }
+    var prev = flyById(f.id), wasReviewed = prev && prev.status !== "draft";
+    f.updatedAt = nowStamp();
+    if (mode === "submit"){
+      f.status = "pending"; f.submittedAt = nowStamp(); f.unreadOperator = true;
+      f.thread.push({ from:"system", time: nowStamp(), text: wasReviewed ? "Vendor updated and resubmitted the flyer" : "Vendor submitted the flyer for review" });
+    } else if (prev && (prev.status === "approved" || prev.status === "changes" || prev.status === "rejected")){
+      f.status = "draft";
+    }
+    if (prev) incentiveFlyers[incentiveFlyers.indexOf(prev)] = f; else incentiveFlyers.unshift(f);
+    saveFlyers();
+    toast(mode === "submit" ? "Flyer sent to CloudWAV for review" : "Flyer saved as a draft");
+    state.flyerDraft = null; state.screen = "vendor-incentives"; render();
+  }
+
+  // ----- operator: Marketing Materials tab = incentive flyers -----
+  function renderOperatorFlyers(){
+    var box = document.getElementById("marketingApprovalsContent");
+    if (!box || state.screen !== "operator-marketing-approvals") return;
+    var tab = state.flyTab || "pending";
+    var visible = incentiveFlyers.filter(function(f){ return f.status !== "draft" && !f.archivedAt; });
+    var tabs = ["pending","changes","approved","rejected"].map(function(k){
+      var n = visible.filter(function(f){ return f.status === k; }).length;
+      var unread = visible.filter(function(f){ return f.status === k && f.unreadOperator; }).length;
+      return '<button type="button" class="filter-chip" data-fly-tab="'+k+'" aria-pressed="'+(tab===k?"true":"false")+'">'+esc(FLY_STATUS[k].label)+' ('+n+')'+(unread ? ' · '+unread+' new' : '')+'</button>';
+    }).join("");
+    var list = visible.filter(function(f){ return f.status === tab; });
+    box.innerHTML = '<p class="field-note" style="margin:0 0 10px;">Flyers vendors send out to promote their partner incentives. A second pair of eyes: check nothing critical is missing and the offer makes sense -- creative offers are fine.</p>'
+      + '<div class="filter-chip-row" style="margin-bottom:12px;">'+tabs+'</div>'
+      + (list.length ? '<div style="display:flex;flex-direction:column;gap:10px;">' + list.map(function(f){
+          var inc = flyIncentive(f), warn = flyAutoChecks(f).filter(function(x){ return !x.ok; }).length;
+          return '<div class="deal-row"><span class="deal-row-name">'+esc((f.copy && f.copy.headline) || "Untitled flyer")
+            + '<span class="field-note" style="display:block;font-weight:400;">'+esc((programById(f.vendorId) || { name:f.vendorId }).name)+' · '+esc(inc ? inc.title : "deleted incentive")+' · '+(warn ? warn + ' automatic check'+(warn>1?"s":"")+' to look at' : 'automatic checks pass')+'</span></span>'
+            + (f.unreadOperator ? '<span class="badge accent">New</span>' : '') + flyStatusBadge(f)
+            + '<button type="button" class="btn primary sm" data-review-flyer="'+attr(f.id)+'">Review</button></div>';
+        }).join("") + '</div>'
+        : '<div class="empty">No flyers in "'+esc(FLY_STATUS[tab].label)+'".</div>');
+  }
+
+  function renderFlyerReview(){
+    var box = document.getElementById("flyerReviewContent");
+    if (!box || state.screen !== "operator-flyer-review") return;
+    var f = flyById(state.reviewFlyerId);
+    if (!f){ box.innerHTML = '<div class="empty">Pick a flyer from Marketing &amp; Incentive Approvals.</div>'; return; }
+    f.unreadOperator = false;
+    var inc = flyIncentive(f), vName = (programById(f.vendorId) || { name:f.vendorId }).name;
+    var auto = flyAutoChecks(f).map(function(x){ return '<li class="'+(x.ok ? "ok" : "warn")+'">'+(x.ok ? "✓ " : "! ")+esc(x.text)+'</li>'; }).join("");
+    var checks = FLY_CHECKS.map(function(c){ return '<label class="cfg-check"><input type="checkbox" data-fly-check="'+c[0]+'"'+(f.checks[c[0]] ? " checked" : "")+'> '+esc(c[1])+'</label>'; }).join("");
+    var done = FLY_CHECKS.filter(function(c){ return f.checks[c[0]]; }).length;
+    var closed = f.status === "approved" || f.status === "rejected";
+    var draft = state.flyMsgDraft && state.flyMsgDraft.id === f.id ? state.flyMsgDraft.text : "";
+    box.innerHTML = '<div class="fly-layout">'
+      + '<div style="display:flex;flex-direction:column;gap:16px;">'
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;">'
+          + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><h2 style="font-size:1.15rem;margin:0;margin-right:auto;">'+esc((f.copy && f.copy.headline) || "Flyer")+'</h2>'+flyStatusBadge(f)+'</div>'
+          + '<div class="field-note">'+esc(vName)+' · promotes <b>'+esc(inc ? inc.title : "a deleted incentive")+'</b>'+(inc ? ' ('+esc((INC_STATUS[inc.status] || INC_STATUS.pending).label)+')' : '')+(inc ? ' · <button type="button" class="btn ghost sm" data-review-incentive="'+attr(inc.id)+'">Open incentive</button>' : '')+'</div>'
+          + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-fly-download-id="'+attr(f.id)+'">Download PDF</button><button type="button" class="btn ghost sm" data-fly-print-id="'+attr(f.id)+'">Print / save as PDF</button></div>'
+          + '<div id="flyReviewError" class="login-msg bad" hidden></div>'
+        + '</div>'
+        + '<div class="card card-pad fly-checks"><div class="aff-section-title">Automatic checks</div><ul>'+auto+'</ul><span class="field-note">Compares the flyer with the incentive terms and flags absolute claims. Treat these as pointers.</span></div>'
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;">'
+          + '<div class="aff-section-title">Second look <span class="field-note" id="flyCheckCount">('+done+'/'+FLY_CHECKS.length+')</span></div>'
+          + '<p class="field-note" style="margin:0;">What any partner needs from an incentive flyer. Style, tone and how creative the offer is are the vendor\'s call. Saved on the flyer, not shown to the vendor.</p>'
+          + '<div class="pricing-opts">'+checks+'</div>'
+        + '</div>'
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+          + '<div class="aff-section-title">Conversation with '+esc(vName)+'</div>'
+          + '<div class="deal-thread" id="flyThread">'+threadHtml(f, "operator").replace(" Use the box below to ask about pricing or offer help closing.", "")+'</div>'
+          + '<div class="deal-templates"><span class="field-note" style="align-self:center;">Start from:</span><button type="button" class="btn ghost sm" data-fly-template="gaps">List unticked items</button></div>'
+          + '<textarea id="flyMessage" placeholder="Message '+attr(vName)+' about this flyer…" aria-label="Message to vendor">'+esc(draft)+'</textarea>'
+          + '<div id="flyMsgError" class="login-msg bad" role="alert" hidden></div>'
+          + '<div class="cfg-actions">'
+            + '<button type="button" class="btn secondary sm" data-fly-action="message">Send message</button>'
+            + (closed ? '' : '<button type="button" class="btn secondary sm" data-fly-action="changes">Request changes</button><button type="button" class="btn ghost sm" data-fly-action="reject">Reject</button><button type="button" class="btn primary sm" data-fly-action="approve" style="margin-left:auto;">Approve</button>')
+          + '</div>'
+          + '<span class="field-note">Approving lets the vendor download the final PDF (no DRAFT mark) and shows it to partners on the vendor\'s profile.</span>'
+        + '</div>'
+      + '</div>'
+      + '<div class="fly-preview-wrap"><div class="aff-section-title" style="margin-bottom:8px;">Flyer</div><div class="fly-preview">'+flyerHtml(f)+'</div></div>'
+    + '</div>';
+  }
+
+  function flyerAction(action){
+    var f = flyById(state.reviewFlyerId); if (!f || state.role !== "operator") return;
+    var ta = document.getElementById("flyMessage"), text = ta ? ta.value.trim() : "", err = document.getElementById("flyMsgError");
+    var fail = function(m){ err.textContent = m; err.hidden = false; if (ta) ta.focus(); };
+    if ((action === "message" || action === "changes") && !text) return fail(action === "message" ? "Write a message first." : "Tell the vendor what to change -- your message goes with the request.");
+    if (action === "reject" && !text) return fail("Add a reason for rejecting -- it's sent to the vendor.");
+    var inc = flyIncentive(f);
+    if (action === "approve" && (!inc || inc.status !== "approved")) return fail("Approve the incentive itself first -- the flyer can't go out for an incentive that isn't approved.");
+    var me = state.account ? state.account.name + " (CloudWAV)" : "CloudWAV Program Operator";
+    if (text) f.thread.push({ from:"operator", name:me, time:nowStamp(), text:text });
+    if (action === "approve"){ f.status = "approved"; f.approvedBy = me; f.approvedAt = nowStamp(); f.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV approved the flyer -- the final PDF is ready to send out" }); }
+    if (action === "changes"){ f.status = "changes"; f.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV requested changes" }); }
+    if (action === "reject"){ f.status = "rejected"; f.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV rejected the flyer" }); }
+    f.unreadVendor = true; state.flyMsgDraft = null; saveFlyers();
+    var vName = (programById(f.vendorId) || { name:f.vendorId }).name;
+    toast(action === "approve" ? "Flyer approved -- " + vName + " can send it out" : action === "changes" ? "Changes requested -- sent to " + vName : action === "reject" ? "Rejected -- reason sent to " + vName : "Message sent to " + vName);
+    if (action === "message") renderFlyerReview();
+    else { state.flyTab = "pending"; state.marketingApprovalsTab = "marketing"; state.screen = "operator-marketing-approvals"; render(); }
+  }
+
+  // ----- events -----
+  document.addEventListener("click", function(e){
+    var t;
+    if ((t = e.target.closest("[data-flyer-new]"))){ if (state.role === "vendor") openFlyerEditor(null, t.getAttribute("data-flyer-new")); return; }
+    if ((t = e.target.closest("[data-flyer-edit]"))){ if (state.role === "vendor") openFlyerEditor(t.getAttribute("data-flyer-edit")); return; }
+    if ((t = e.target.closest("[data-flyer-pdf]"))){ var fp = flyById(t.getAttribute("data-flyer-pdf")); if (fp) downloadFlyerPdf(fp); return; }
+    if ((t = e.target.closest("[data-fly-theme]"))){ if (state.flyerDraft){ state.flyerDraft.theme = t.getAttribute("data-fly-theme"); document.querySelectorAll("[data-fly-theme]").forEach(function(b){ b.setAttribute("aria-pressed", b === t ? "true" : "false"); }); refreshFlyerPreview(); } return; }
+    if (e.target.closest("[data-fly-ai]")){
+      var f = state.flyerDraft, inc = f && flyIncentive(f); if (!inc) return;
+      var btn = e.target.closest("[data-fly-ai]"); btn.disabled = true; btn.textContent = "Writing…";
+      flyerAssist(inc, (programById(inc.vendorId) || { name: inc.vendorId }).name, f.tone, f.notes, function(copy, source){
+        if (state.flyerDraft !== f) return;
+        f.copy = copy; f.aiSource = source;
+        state.flyerAiNote = source === "ai" ? "Drafted by AI from your incentive terms -- review and edit before submitting." : "Drafted from your incentive terms with the built-in writer (the AI writer isn't connected yet). Edit anything you like.";
+        renderFlyerEditor();
+      });
+      return;
+    }
+    if (e.target.closest("[data-fly-save]")){ saveFlyer(e.target.closest("[data-fly-save]").getAttribute("data-fly-save")); return; }
+    if (e.target.closest("[data-fly-download]")){ if (state.flyerDraft) downloadFlyerPdf(state.flyerDraft, document.getElementById("flyError")); return; }
+    if (e.target.closest("[data-fly-print]")){ if (state.flyerDraft) printFlyer(state.flyerDraft); return; }
+    if ((t = e.target.closest("[data-fly-download-id]"))){ var fd = flyById(t.getAttribute("data-fly-download-id")); if (fd) downloadFlyerPdf(fd, document.getElementById("flyReviewError")); return; }
+    if ((t = e.target.closest("[data-fly-print-id]"))){ var fq = flyById(t.getAttribute("data-fly-print-id")); if (fq) printFlyer(fq); return; }
+    if ((t = e.target.closest("[data-fly-tab]"))){ state.flyTab = t.getAttribute("data-fly-tab"); renderOperatorFlyers(); return; }
+    if ((t = e.target.closest("[data-review-flyer]"))){ state.reviewFlyerId = t.getAttribute("data-review-flyer"); state.flyMsgDraft = null; state.screen = "operator-flyer-review"; render(); window.scrollTo(0,0); return; }
+    if (e.target.closest("[data-fly-back]")){ state.marketingApprovalsTab = "marketing"; state.screen = "operator-marketing-approvals"; render(); return; }
+    if ((t = e.target.closest("[data-fly-action]"))){ flyerAction(t.getAttribute("data-fly-action")); return; }
+    if (e.target.closest("[data-fly-template]")){
+      var fr = flyById(state.reviewFlyerId); if (!fr) return;
+      var gaps = FLY_CHECKS.filter(function(c){ return !fr.checks[c[0]]; }).map(function(c){ return "- " + c[1]; });
+      var autoGaps = flyAutoChecks(fr).filter(function(x){ return !x.ok && x.key !== "incapproved"; }).map(function(x){ return "- " + x.text; });
+      var ta = document.getElementById("flyMessage");
+      if (ta){ ta.value = "Thanks for the flyer -- it looks good. Before it goes out, could you look at:\n" + gaps.concat(autoGaps).join("\n") + "\n\nThe style and the offer itself are your call; these are just the things partners will need to act on it."; ta.focus(); }
+      return;
+    }
+  });
+  document.addEventListener("input", function(e){
+    var t = e.target;
+    if (t.hasAttribute && t.hasAttribute("data-fly-field") && state.flyerDraft){ state.flyerDraft.copy[t.getAttribute("data-fly-field")] = t.value; refreshFlyerPreview(); return; }
+    if (t.id === "flyNotes" && state.flyerDraft){ state.flyerDraft.notes = t.value; return; }
+    if (t.id === "flyMessage" && state.reviewFlyerId){ state.flyMsgDraft = { id: state.reviewFlyerId, text: t.value }; }
+  });
+  document.addEventListener("change", function(e){
+    var t = e.target;
+    if (t.id === "flyTone" && state.flyerDraft){ state.flyerDraft.tone = t.value; return; }
+    if (t.id === "flyIncentive" && state.flyerDraft){ var inc = incById(t.value); if (inc){ state.flyerDraft.incentiveId = inc.id; refreshFlyerPreview(); } return; }
+    if (t.hasAttribute && t.hasAttribute("data-fly-check")){
+      var f = flyById(state.reviewFlyerId); if (!f || state.role !== "operator") return;
+      f.checks[t.getAttribute("data-fly-check")] = t.checked; saveFlyers();
+      var n = document.getElementById("flyCheckCount"); if (n) n.textContent = "(" + FLY_CHECKS.filter(function(c){ return f.checks[c[0]]; }).length + "/" + FLY_CHECKS.length + ")";
+    }
+  });
 
   // ===== HARDWARE OFFERINGS =====
   function renderHardwareOfferingsList(){
@@ -9099,6 +9668,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadDeals();
   loadMspProspects();
   loadIncentives();
+  loadFlyers();
   loadEngagementsAndPages();
 
   // ===== SIGN-IN (Supabase Auth + portal_users role mapping) =====
