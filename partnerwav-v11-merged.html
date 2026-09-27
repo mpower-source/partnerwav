@@ -1964,12 +1964,21 @@
         { tier:"Affiliate", rate:"12% on hardware sale + attach bonus", base:"Gross sale price" }
       ], agreement:{ type:"Vendor Program Agreement", status:"active" }, status:"active",
       logo:dataLogo("C","#7a9c00"), website:"https://crossconnectapp.com",
-      social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
+      social:{ linkedin:"", twitter:"", facebook:"" },
+      products:[
+        { product_id:"prayer-pendant-b", name:"Prayer Pendant™ (Model B)", desc:"Wearable device with direct customer shipping - no installation required. Ideal for healthcare and wellness applications." }
+      ],
+      referralPartners:[] },
     { id:"botnoi", name:"Botnoi Voice", vertical:"Conversational AI (voice)", origin:"Thailand", desc:"Thai voice/conversational-AI platform expanding into the US market -- open to a straight Vendor Program relationship or a deeper Joint Venture, depending on the partner.", relationships:["Vendor Program","Joint Venture"], tiers:[
         { tier:"Channel Manager", rate:"Per JV profit-allocation schedule", base:"Per Joint Venture Agreement, Schedule C" }
       ], agreement:{ type:"Joint Venture Agreement", status:"pending" }, status:"onboarding",
       logo:"", website:"https://botnoigroup.com",
-      social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
+      social:{ linkedin:"", twitter:"", facebook:"" },
+      products:[
+        { product_id:"botnoi-voice-api", name:"Botnoi Voice API", desc:"Thai voice API platform for building conversational AI applications with natural language understanding." },
+        { product_id:"botnoi-ivr", name:"Botnoi IVR Solution", desc:"Interactive voice response system powered by AI for customer service automation." }
+      ],
+      referralPartners:[] },
     { id:"zipevent", name:"ZipEvent", vertical:"Events & marketing (Thailand)", origin:"Thailand", desc:"Thailand's largest AI/tech event platform -- a co-marketing relationship, not a reseller program.", relationships:["Custom Marketing"], tiers:[
         { tier:"Marketing partner", rate:"Per-campaign MDF, 50/50 upfront/milestone", base:"Approved campaign budget" }
       ], agreement:{ type:"Custom Marketing Agreement", status:"draft" }, status:"onboarding",
@@ -1985,7 +1994,11 @@
         { tier:"Reseller", rate:"25% of subscription value, life of account", base:"Monthly recurring subscription revenue" }
       ], agreement:{ type:"SaaS Reseller Agreement", status:"draft" }, status:"onboarding",
       logo:"", website:"https://intelsense.ai/unisense",
-      social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] }
+      social:{ linkedin:"", twitter:"", facebook:"" },
+      products:[
+        { product_id:"unisense-platform", name:"Unisense Platform", desc:"Sales and marketing automation platform for lead management, email campaigns, and customer engagement tracking." }
+      ],
+      referralPartners:[] }
   ];
 
   var trainingPrograms = [
@@ -2511,22 +2524,44 @@
       }
     }
 
-    var actionBtn = enrolled && isPartner
-      ? (partnerAffiliateLinkHtml ? partnerAffiliateLinkHtml : '<button class="btn primary sm" data-partner-enroll-affiliate="'+a.id+'">Sign up as affiliate</button>')
-      : enrolled && !isOperator
-      ? '<button class="btn secondary sm" disabled>Enrolled ✓</button>'
-      : !enrolled && !isOperator
-      ? '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>'
-      : '';
-    var opsButtons = (isOperator && showOps)
-      ? '<button class="btn secondary sm" data-edit-affiliate-offer="'+a.id+'">Edit</button> <button class="btn secondary sm" data-delete-affiliate-offer="'+a.id+'">Delete</button>'
-      : '';
+    var actionBtn = '';
+    if (isOperator && showOps){
+      actionBtn = '<button class="btn secondary sm" data-edit-affiliate-offer="'+a.id+'">Edit</button> <button class="btn secondary sm" data-delete-affiliate-offer="'+a.id+'">Delete</button>';
+    } else if (isPartner){
+      var hasEnrollment = partnerAffiliateEnrollments.some(function(e){
+        return e.affiliateId === a.id && e.partnerId === state.myProfileId;
+      });
+      if (hasEnrollment){
+        var enrollment = partnerAffiliateEnrollments.find(function(e){
+          return e.affiliateId === a.id && e.partnerId === state.myProfileId;
+        });
+        if (enrollment){
+          actionBtn = '<div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:4px;">'
+            + '<p style="margin:0 0 8px 0;font-size:12px;color:#666;">Your affiliate link:</p>'
+            + '<div style="display:flex;gap:8px;align-items:center;">'
+            + '<input type="text" value="'+esc(enrollment.affiliateLink)+'" readonly style="flex:1;padding:6px;font-size:12px;border:1px solid #ddd;border-radius:3px;font-family:monospace;" />'
+            + '<button class="btn secondary xs" data-copy-affiliate-link="'+a.id+'">Copy</button>'
+            + '</div>'
+            + '</div>';
+        }
+      } else {
+        actionBtn = '<button class="btn primary sm" data-partner-enroll-affiliate="'+a.id+'">Sign up as affiliate</button>';
+      }
+    } else {
+      var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
+      if (enrolled){
+        actionBtn = '<button class="btn secondary sm" disabled>Enrolled ✓</button>';
+      } else {
+        actionBtn = '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>';
+      }
+    }
+
     return '<div class="program-card">'
       + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(a)+'<span class="program-name">'+esc(a.name)+'</span></div><span class="badge neutral">'+esc(a.category)+'</span></div>'
       + '<p class="program-desc">'+esc(a.desc)+'</p>'
       + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
-      + '<div class="program-actions">'+(showOps ? opsButtons : actionBtn)+'</div>'
+      + '<div class="program-actions">'+actionBtn+'</div>'
     + '</div>';
   }
 
@@ -3063,13 +3098,16 @@
       var actionBtn = mine
         ? '<button class="btn secondary sm" data-goto-screen="partner-my-profile">Edit profile</button>'
         : '<button class="btn secondary sm" data-message-partner="'+esc(p.name)+'">Message</button>';
+      var editDeleteBtn = mine
+        ? '<button class="btn ghost sm" data-edit-partner-profile="'+p.id+'" style="color:var(--accent);">Edit</button> <button class="btn ghost sm" data-delete-partner-profile="'+p.id+'" style="color:var(--bad);">Delete</button>'
+        : '';
       return '<div class="program-card">'
         + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div><span class="badge '+(mine?"accent2":"neutral")+'">'+(mine?"You":esc(p.country))+'</span></div>'
         + '<p class="program-desc">'+esc(p.tagline)+'</p>'
         + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+chips+'</div>'
         + '<div class="program-actions">'
           + '<button class="btn ghost sm" data-view-profile="'+p.id+'">View profile →</button>'
-          + actionBtn
+          + (mine ? editDeleteBtn : actionBtn)
         + '</div></div>';
     }).join("");
   }
@@ -6349,6 +6387,31 @@
     var backNetworkBtn = e.target.closest("[data-back-network]");
     if (backNetworkBtn){ state.screen = "partner-network"; render(); return; }
 
+    var editPartnerProfileBtn = e.target.closest("[data-edit-partner-profile]");
+    if (editPartnerProfileBtn){
+      state.editingProfileId = editPartnerProfileBtn.getAttribute("data-edit-partner-profile");
+      state.screen = "partner-profile-editor";
+      setTimeout(function(){ loadPartnerProfileForm(state.editingProfileId); attachFormHandlers(); }, 0);
+      render();
+      return;
+    }
+
+    var deletePartnerProfileBtn = e.target.closest("[data-delete-partner-profile]");
+    if (deletePartnerProfileBtn){
+      var profileId = deletePartnerProfileBtn.getAttribute("data-delete-partner-profile");
+      if (confirm("Delete this partner profile? This action cannot be undone.")){
+        var idx = partnerProfiles.findIndex(function(p){ return p.id === profileId; });
+        if (idx >= 0){
+          partnerProfiles.splice(idx, 1);
+          toast("Partner profile deleted");
+          saveVendorData();
+          state.screen = "partner-network";
+          render();
+        }
+      }
+      return;
+    }
+
     var msgPartnerBtn = e.target.closest("[data-message-partner]");
     if (msgPartnerBtn){ openConversationWith(msgPartnerBtn.getAttribute("data-message-partner")); return; }
 
@@ -6402,8 +6465,13 @@
       var text = ta && ta.value.trim();
       if (text){
         var thread = projectThreads.filter(function(x){ return x.id===tid; })[0];
-        thread.posts.push({ author:"Peter Phelan", init:"PP", time:"just now", text:text });
+        var currentUser = state.role === "partner" && state.myProfileId ? partnerById(state.myProfileId) : null;
+        var authorName = currentUser ? currentUser.name : currentPartnerName();
+        var authorInit = currentUser ? currentUser.init : "YU";
+        thread.posts.push({ author: authorName, init: authorInit, time:"just now", text:text });
+        ta.value = "";
         toast("Posted to "+thread.deal);
+        saveVendorData();
         renderCommunity();
       }
       return;
