@@ -7,8 +7,34 @@ with sync_playwright() as p:
     nav(pg, "operator-msp-prospects")
     ok(visible_screen(pg) == ["scr-operator-msp-prospects"], "MSP Prospecting screen opens")
     cards = pg.locator("#mspProspectsList .msp-card")
-    ok(cards.count() == 5, "The 5 original Thailand MSP records are restored")
+    ok(cards.count() == 31, "5 original records + 26 Apollo.io companies: " + str(cards.count()))
     ok(pg.locator("#mspProspectsList .badge.warn").count() == 5, "Placeholder records are labelled Sample data")
+    ok(pg.locator("#mspProspectsList [data-msp-apollo]").count() == 26, "Apollo companies labelled Apollo.io")
+
+    # Apollo records: real name + website, type/city flagged unverified
+    sky = pg.locator('[data-msp-card="apl-skyict"]')
+    t = sky.inner_text().upper()
+    ok("SKY ICT" in t and "TYPE NOT VERIFIED" in t and "CITY NOT VERIFIED" in t and "SAMPLE DATA" not in t, "Apollo record flags unverified type/city")
+    ok(sky.locator('a:has-text("Visit website")').get_attribute("href") == "https://skyict.co.th", "Apollo record links to the real website")
+    pg.select_option("#mspSourceFilter", "apollo"); pg.wait_for_timeout(150)
+    ok(cards.count() == 26, "Source filter: Apollo.io")
+    pg.select_option("#mspSourceFilter", "sample"); pg.wait_for_timeout(150)
+    ok(cards.count() == 5, "Source filter: Sample data")
+    pg.select_option("#mspSourceFilter", ""); pg.select_option("#mspTypeFilter", "unverified"); pg.wait_for_timeout(150)
+    ok(cards.count() == 26, "Type filter: not verified")
+    pg.select_option("#mspTypeFilter", ""); pg.wait_for_timeout(100)
+    pg.fill("#mspSearchInput", "gopomelo.com"); pg.wait_for_timeout(150)
+    ok(cards.count() == 1 and "GoPomelo" in cards.first.inner_text(), "Search matches website")
+    pg.fill("#mspSearchInput", ""); pg.wait_for_timeout(100)
+    # verify an Apollo company after research
+    pg.click('[data-msp-edit="apl-skyict"]'); pg.wait_for_timeout(200)
+    ok(pg.input_value("#mspF_type") == "", "Editor keeps type as Not verified")
+    pg.select_option("#mspF_type", "VAR"); pg.fill("#mspF_city", "Bangkok"); pg.click("#mspFSave"); pg.wait_for_timeout(200)
+    t = pg.locator('[data-msp-card="apl-skyict"]').inner_text().upper()
+    ok("VAR" in t and "BANGKOK" in t and "TYPE NOT VERIFIED" not in t and "APOLLO.IO" in t, "Verified details saved, source kept")
+    pg.click('[data-msp-invite="apl-cloudhm"]'); pg.wait_for_timeout(200)
+    ok("sample" not in pg.inner_text(".modal").lower() and pg.input_value("#mspInvEmail") == "", "Apollo invite: no sample warning, needs a contact email")
+    pg.click(".modal-close"); pg.wait_for_timeout(100)
 
     # filters
     pg.fill("#mspSearchInput", "hospitality"); pg.wait_for_timeout(150)
@@ -17,7 +43,7 @@ with sync_playwright() as p:
     pg.select_option("#mspCountryFilter", "Chiang Mai"); pg.wait_for_timeout(150)
     ok(cards.count() == 1 and "Chiang Mai Digital Solutions" in cards.first.inner_text(), "Location filter")
     pg.click("#mspResetFilter"); pg.wait_for_timeout(150)
-    ok(cards.count() == 5, "Reset filters")
+    ok(cards.count() == 31, "Reset filters")
 
     # add a real VAR
     pg.click("[data-msp-add]"); pg.wait_for_timeout(200)
@@ -28,9 +54,9 @@ with sync_playwright() as p:
     ok("valid email" in pg.inner_text("#mspFError"), "Email validated")
     pg.fill("#mspF_email", "partners@krungthep-si.example"); pg.fill("#mspF_specialties", "Network Engineering, Cybersecurity")
     pg.click("#mspFSave"); pg.wait_for_timeout(200)
-    ok(cards.count() == 6 and "Krungthep Systems Integration" in cards.first.inner_text() and "VAR" in cards.first.inner_text(), "New VAR added at the top")
+    ok(cards.count() == 32 and "Krungthep Systems Integration" in cards.first.inner_text() and "VAR" in cards.first.inner_text(), "New VAR added at the top")
     pg.select_option("#mspTypeFilter", "VAR"); pg.wait_for_timeout(150)
-    ok(cards.count() == 1, "Type filter: VARs only")
+    ok(cards.count() == 2, "Type filter: VARs (new one + verified SKY ICT)")
     pg.select_option("#mspTypeFilter", ""); pg.wait_for_timeout(100)
 
     # stage + notes
@@ -65,7 +91,7 @@ with sync_playwright() as p:
 
     # persistence
     pg.reload(); pg.wait_for_timeout(700); role(pg, "operator"); nav(pg, "operator-msp-prospects")
-    ok(pg.locator("#mspProspectsList .msp-card").count() == 6 and pg.input_value("#mspNotes-msp-th-2") == "Spoke to Khun Nok, wants a Unisense demo", "Prospects, stages and notes persist")
+    ok(pg.locator("#mspProspectsList .msp-card").count() == 32 and pg.input_value("#mspNotes-msp-th-2") == "Spoke to Khun Nok, wants a Unisense demo", "Prospects, stages and notes persist")
 
     # partner collaborations
     role(pg, "partner")

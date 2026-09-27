@@ -26,7 +26,7 @@ def open_map_page(p, block_leaflet=False):
         ctx.route("**/cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css", lambda r: r.fulfill(status=200, content_type="text/css", body=files["leaflet.css"], headers={"access-control-allow-origin": "*"}))
     def tile(r):
         tiles.append(r.request.url); r.fulfill(status=200, content_type="image/png", body=BLANK_PNG)
-    ctx.route("**/*.basemaps.cartocdn.com/**", tile)
+    ctx.route("**/tile.openstreetmap.org/**", tile)
     pg = ctx.new_page(); _wire(pg)
     pg.goto(URL + "?demo=1"); pg.wait_for_timeout(600)
     return b, pg
@@ -37,7 +37,7 @@ with sync_playwright() as p:
     ok(pg.evaluate("!!(window.L && window.L.map)"), "Leaflet loaded (with SRI integrity check)")
     ok(pg.locator("#partnerMapContainer.leaflet-container").count() == 1, "Interactive world map rendered")
     ok(pg.locator("#partnerMapContainer path.leaflet-interactive").count() == 9, "All 9 partners plotted: " + str(pg.locator("#partnerMapContainer path.leaflet-interactive").count()))
-    ok(any("light_all" in t for t in tiles), "Light basemap tiles requested")
+    ok(any("tile.openstreetmap.org" in t for t in tiles), "OpenStreetMap tiles requested (no API key)")
     stats = pg.inner_text("#mapStats")
     ok("9" in stats and "active" in stats and "countries" in stats, "Stats row: " + stats.replace("\n", " "))
     ok(pg.locator("[data-map-focus]").count() == 9, "Partner list shows all 9")
@@ -73,8 +73,9 @@ with sync_playwright() as p:
     ok(pg.locator(".leaflet-popup-content").count() == 1, "Clicking a marker opens its popup")
 
     # dark theme swaps basemap
-    tiles.clear(); pg.click("#themeToggle"); pg.wait_for_timeout(800)
-    ok(any(("dark_all" in t) for t in tiles) or pg.evaluate("document.documentElement.getAttribute('data-theme')") == "light", "Dark theme uses dark basemap")
+    pg.click("#themeToggle"); pg.wait_for_timeout(800)
+    dark = pg.evaluate("document.documentElement.getAttribute('data-theme')") == "dark"
+    ok(pg.locator("#partnerMapContainer .map-tiles-dark").count() == (1 if dark else 0), "Dark theme darkens the map tiles")
 
     # mobile
     pg.set_viewport_size({"width": 390, "height": 844}); pg.wait_for_timeout(400)

@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}  .map-tiles-dark{ filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
+</style></head><body>
 <script>
   // Sign-in required unless ?demo=1 (walk-through mode) or a public ?apply= referral link
   (function(){ var q = location.search;
@@ -1744,12 +1745,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div class="filter-row" style="flex-wrap:wrap;gap:10px;">
           <input type="text" class="list-search" id="mspSearchInput" placeholder="Search by company, city or specialty…" style="flex:1;min-width:200px;">
           <select class="filter" id="mspCountryFilter" aria-label="Location"><option value="">All locations</option></select>
-          <select class="filter" id="mspTypeFilter" aria-label="Type"><option value="">MSPs &amp; VARs</option><option value="MSP">MSPs</option><option value="VAR">VARs</option></select>
+          <select class="filter" id="mspTypeFilter" aria-label="Type"><option value="">MSPs &amp; VARs</option><option value="MSP">MSPs</option><option value="VAR">VARs</option><option value="unverified">Type not verified</option></select>
+          <select class="filter" id="mspSourceFilter" aria-label="Source"><option value="">All sources</option><option value="apollo">From Apollo.io</option><option value="manual">Added by you</option><option value="sample">Sample data</option></select>
           <select class="filter" id="mspStageFilter" aria-label="Outreach stage"><option value="">All stages</option></select>
           <button class="btn secondary sm" id="mspResetFilter">Reset filters</button>
           <button class="btn primary sm" data-msp-add>+ Add prospect</button>
         </div>
         <div style="height:12px"></div>
+        <p class="field-note" style="margin:0 0 10px;">Companies marked <b>Apollo.io</b> are real Thailand IT companies from an Apollo company lookup. Only the name and website come from Apollo -- confirm whether each is an MSP or VAR, where they are, and who to contact before inviting them.</p>
         <div id="mspProspectsList" style="display:flex;flex-direction:column;gap:12px;"></div>
       </section>
 
@@ -2644,7 +2647,35 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"msp-th-2", sample:true, type:"MSP", name:"Chiang Mai Digital Solutions", city:"Chiang Mai", country:"Thailand", address:"456 Nimmanhaemin Rd, Chiang Mai 50100", phone:"+66-53-XXX-XXX", email:"info@cmdigi.co.th", website:"www.cmdigi.co.th", employees:"20-50", specialties:"SMB IT Support, Networking", stage:"new", notes:"" },
     { id:"msp-th-3", sample:true, type:"MSP", name:"Phuket Tech Partners", city:"Phuket", country:"Thailand", address:"789 Patong Beach Rd, Phuket 83150", phone:"+66-76-XXX-XXX", email:"contact@phukettechpartners.th", website:"www.phukettechpartners.th", employees:"30-60", specialties:"Hospitality IT, POS Systems", stage:"new", notes:"" },
     { id:"msp-th-4", sample:true, type:"MSP", name:"Rayong IT Consulting", city:"Rayong", country:"Thailand", address:"321 Sukhumvit Rd, Rayong 21000", phone:"+66-38-XXX-XXX", email:"sales@rayongit.co.th", website:"www.rayongit.co.th", employees:"15-40", specialties:"Manufacturing IT, Industrial IoT", stage:"new", notes:"" },
-    { id:"msp-th-5", sample:true, type:"MSP", name:"Ubon Ratchathani Tech Hub", city:"Ubon Ratchathani", country:"Thailand", address:"654 Chayangkul Rd, Ubon Ratchathani 34000", phone:"+66-45-XXX-XXX", email:"team@ubontech.co.th", website:"www.ubontech.co.th", employees:"10-30", specialties:"Retail IT, CCTV Systems", stage:"new", notes:"" }
+    { id:"msp-th-5", sample:true, type:"MSP", name:"Ubon Ratchathani Tech Hub", city:"Ubon Ratchathani", country:"Thailand", address:"654 Chayangkul Rd, Ubon Ratchathani 34000", phone:"+66-45-XXX-XXX", email:"team@ubontech.co.th", website:"www.ubontech.co.th", employees:"10-30", specialties:"Retail IT, CCTV Systems", stage:"new", notes:"" },
+    // Real Thailand companies from an Apollo.io organization lookup (company name + website only).
+    // Type (MSP/VAR), city, size and contacts are NOT verified -- confirm before outreach.
+    { id:"apl-skyict", source:"apollo", sample:false, type:"", name:"SKY ICT", city:"", country:"Thailand", website:"skyict.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-ii", source:"apollo", sample:false, type:"", name:"I&I Group", city:"", country:"Thailand", website:"ii.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-cloudhm", source:"apollo", sample:false, type:"", name:"Cloud HM", city:"", country:"Thailand", website:"cloudhm.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-vpls", source:"apollo", sample:false, type:"", name:"VPLS Thailand", city:"", country:"Thailand", website:"vpls.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-tcc-technology", source:"apollo", sample:false, type:"", name:"TCC Technology", city:"", country:"Thailand", website:"tcc-technology.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-tnds", source:"apollo", sample:false, type:"", name:"T.N. Digital Solutions", city:"", country:"Thailand", website:"tnds.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-locus", source:"apollo", sample:false, type:"", name:"Locus Telecommunication", city:"", country:"Thailand", website:"locus.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-gopomelo", source:"apollo", sample:false, type:"", name:"GoPomelo", city:"", country:"Thailand", website:"gopomelo.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-ata-it-th", source:"apollo", sample:false, type:"", name:"ATA IT", city:"", country:"Thailand", website:"ata-it-th.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-bmsp", source:"apollo", sample:false, type:"", name:"BMSP", city:"", country:"Thailand", website:"bmsp.tech", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-fusionsol", source:"apollo", sample:false, type:"", name:"Fusion Solution", city:"", country:"Thailand", website:"fusionsol.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-magmatechsolution", source:"apollo", sample:false, type:"", name:"MagmaTech Solution", city:"", country:"Thailand", website:"magmatechsolution.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-pccth", source:"apollo", sample:false, type:"", name:"Professional Computer", city:"", country:"Thailand", website:"pccth.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-safecoms", source:"apollo", sample:false, type:"", name:"SafeComs", city:"", country:"Thailand", website:"safecoms.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-lansingbs", source:"apollo", sample:false, type:"", name:"Lansing Business Systems", city:"", country:"Thailand", website:"lansingbs.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-x10-it", source:"apollo", sample:false, type:"", name:"Extend IT Resource", city:"", country:"Thailand", website:"x10-it.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-ait", source:"apollo", sample:false, type:"", name:"Advanced Information Technology", city:"", country:"Thailand", website:"ait.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-noventiq", source:"apollo", sample:false, type:"", name:"Noventiq Thailand", city:"", country:"Thailand", website:"noventiq.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-clarityit", source:"apollo", sample:false, type:"", name:"Clarity IT", city:"", country:"Thailand", website:"clarityit.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-d1asia", source:"apollo", sample:false, type:"", name:"Dataone Asia", city:"", country:"Thailand", website:"d1asia.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-netizen", source:"apollo", sample:false, type:"", name:"Netizen", city:"", country:"Thailand", website:"netizen.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-priorsolution", source:"apollo", sample:false, type:"", name:"Prior Solution", city:"", country:"Thailand", website:"priorsolution.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-infostarbiz", source:"apollo", sample:false, type:"", name:"Infostar Business Solutions", city:"", country:"Thailand", website:"infostarbiz.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-softsquaregroup", source:"apollo", sample:false, type:"", name:"Soft Square", city:"", country:"Thailand", website:"softsquaregroup.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-beryl8", source:"apollo", sample:false, type:"", name:"Beryl8", city:"", country:"Thailand", website:"beryl8.com", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" },
+    { id:"apl-iamconsulting", source:"apollo", sample:false, type:"", name:"I AM Consulting", city:"", country:"Thailand", website:"iamconsulting.co.th", email:"", phone:"", employees:"", specialties:"", stage:"new", notes:"" }
   ];
 
   // Outreach log (MSP Engagement Tracker). Filled from MSP Prospecting invites and "Log activity".
@@ -7962,7 +7993,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var mspInviteBtn = e.target.closest("[data-msp-invite]");
     if (mspInviteBtn){ showMspInvite(mspInviteBtn.getAttribute("data-msp-invite")); return; }
     if (e.target.id === "mspResetFilter"){
-      state.mspSearchQuery = ""; state.mspCountryFilter = ""; state.mspTypeFilter = ""; state.mspStageFilter = "";
+      state.mspSearchQuery = ""; state.mspCountryFilter = ""; state.mspTypeFilter = ""; state.mspStageFilter = ""; state.mspSourceFilter = "";
       renderMSPProspects(); return;
     }
     var expressInterestBtn = e.target.closest("[data-express-interest]");
@@ -8371,12 +8402,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function loadMspProspects(){
     try {
       var saved = JSON.parse(localStorage.getItem(MSP_KEY) || "null");
-      if (Array.isArray(saved)){ mspProspects.length = 0; saved.forEach(function(x){ mspProspects.push(x); }); }
+      if (Array.isArray(saved)){
+        // keep any seeded Apollo companies this browser hasn't seen yet
+        var fresh = mspProspects.filter(function(x){ return x.source === "apollo" && !saved.some(function(y){ return y.id === x.id; }); });
+        mspProspects.length = 0; saved.forEach(function(x){ mspProspects.push(x); }); fresh.forEach(function(x){ mspProspects.push(x); });
+      }
       var ci = JSON.parse(localStorage.getItem(COLLAB_KEY) || "null");
       if (Array.isArray(ci)) state.collabInterests = ci;
     } catch(e){ console.log("Could not load prospects:", e); }
   }
   function mspStageLabel(k){ for (var i=0;i<MSP_STAGES.length;i++) if (MSP_STAGES[i][0]===k) return MSP_STAGES[i][1]; return k; }
+  function mspSource(x){ return x.sample ? "sample" : (x.source === "apollo" ? "apollo" : "manual"); }
   function mspById(id){ return mspProspects.filter(function(x){ return x.id === id; })[0] || null; }
   function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e || ""); }
   function webUrl(w){ return !w ? "" : (/^https?:\/\//i.test(w) ? w : "https://" + w); }
@@ -8384,7 +8420,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function renderMSPProspects(){
     var container = document.getElementById("mspProspectsList");
     if (!container) return;
-    var q = (state.mspSearchQuery || "").toLowerCase(), loc = state.mspCountryFilter || "", typ = state.mspTypeFilter || "", stg = state.mspStageFilter || "";
+    var q = (state.mspSearchQuery || "").toLowerCase(), loc = state.mspCountryFilter || "", typ = state.mspTypeFilter || "", stg = state.mspStageFilter || "", src = state.mspSourceFilter || "";
 
     var locSel = document.getElementById("mspCountryFilter");
     if (locSel){
@@ -8395,6 +8431,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (stSel && stSel.options.length <= 1){ stSel.innerHTML = '<option value="">All stages</option>' + MSP_STAGES.map(function(s2){ return '<option value="'+s2[0]+'">'+esc(s2[1])+'</option>'; }).join(""); }
     if (stSel) stSel.value = stg;
     var tySel = document.getElementById("mspTypeFilter"); if (tySel) tySel.value = typ;
+    var srSel = document.getElementById("mspSourceFilter"); if (srSel) srSel.value = src;
     var srch = document.getElementById("mspSearchInput"); if (srch && srch.value !== (state.mspSearchQuery || "")) srch.value = state.mspSearchQuery || "";
 
     var stats = document.getElementById("mspStats");
@@ -8406,8 +8443,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
 
     var filtered = mspProspects.filter(function(x){
-      var hay = (x.name + " " + x.city + " " + (x.specialties || "")).toLowerCase();
-      return (!q || hay.indexOf(q) > -1) && (!loc || x.city === loc) && (!typ || x.type === typ) && (!stg || x.stage === stg);
+      var hay = (x.name + " " + (x.city || "") + " " + (x.website || "") + " " + (x.specialties || "")).toLowerCase();
+      var xs = mspSource(x);
+      return (!q || hay.indexOf(q) > -1) && (!loc || x.city === loc) && (!typ || (typ === "unverified" ? !x.type : x.type === typ)) && (!stg || x.stage === stg) && (!src || xs === src);
     });
     if (!filtered.length){ container.innerHTML = '<div class="empty">No MSPs or VARs match your search.</div>'; return; }
 
@@ -8418,9 +8456,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var site = webUrl(x.website);
       return '<div class="msp-card" data-msp-card="'+esc(x.id)+'">'
         + '<div class="msp-main">'
-          + '<div class="msp-name">'+esc(x.name)+' <span class="badge neutral">'+esc(x.type || "MSP")+'</span>'
-            + (x.sample ? ' <span class="badge warn" title="Placeholder record -- not a verified company">Sample data</span>' : '') + '</div>'
-          + '<div class="msp-meta">'+esc([x.city, x.country].filter(Boolean).join(", "))+(x.employees ? ' · 👥 '+esc(x.employees)+' employees' : '')+'</div>'
+          + '<div class="msp-name">'+esc(x.name)+' '+(x.type ? '<span class="badge neutral">'+esc(x.type)+'</span>' : '<span class="badge neutral" title="Not yet confirmed as an MSP or VAR">Type not verified</span>')
+            + (x.sample ? ' <span class="badge warn" title="Placeholder record -- not a verified company">Sample data</span>' : '')
+            + (x.source === "apollo" ? ' <span class="badge neutral" data-msp-apollo title="Company name and website from an Apollo.io lookup">Apollo.io</span>' : '') + '</div>'
+          + '<div class="msp-meta">'+esc([x.city || (x.source === "apollo" ? "City not verified" : ""), x.country].filter(Boolean).join(", "))+(x.employees ? ' · 👥 '+esc(x.employees)+' employees' : '')+'</div>'
           + (x.address ? '<div class="msp-meta">📍 '+esc(x.address)+'</div>' : '')
           + '<div class="msp-meta">'+(x.email ? '📧 '+esc(x.email) : '📧 <span style="color:var(--ink-faint)">no email yet</span>')+(x.phone ? ' · 📞 '+esc(x.phone) : '')+'</div>'
           + (tags ? '<div class="msp-tags">'+tags+'</div>' : '')
@@ -8503,7 +8542,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var back = openModal(
       '<div class="modal-head"><h2>'+(x ? "Edit prospect" : "Add an MSP or VAR")+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
       + f("name","Company name *","e.g. Siam Cloud Services")
-      + '<div class="field-row"><label for="mspF_type">Type</label><select id="mspF_type"><option value="MSP"'+(x&&x.type==="VAR"?"":" selected")+'>MSP</option><option value="VAR"'+(x&&x.type==="VAR"?" selected":"")+'>VAR</option></select></div>'
+      + '<div class="field-row"><label for="mspF_type">Type</label><select id="mspF_type">'+(x && !x.type ? '<option value="" selected>Not verified yet</option>' : '')+'<option value="MSP"'+(x&&x.type==="MSP"||!x?" selected":"")+'>MSP</option><option value="VAR"'+(x&&x.type==="VAR"?" selected":"")+'>VAR</option></select></div>'
       + f("city","City *","e.g. Bangkok") + f("country","Country","Thailand")
       + f("website","Website","https://…","url") + f("email","Contact email","sales@…","email") + f("phone","Phone","+66 …")
       + f("employees","Employees","e.g. 20-50") + f("specialties","Specialties (comma-separated)","e.g. Cloud, Cybersecurity")
@@ -8516,7 +8555,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var g = function(k){ return back.querySelector("#mspF_"+k).value.trim(); };
       var err = back.querySelector("#mspFError"), problems = [];
       if (!g("name")) problems.push("Company name is required.");
-      if (!g("city")) problems.push("City is required.");
+      if (!g("city") && !(x && x.source === "apollo")) problems.push("City is required.");
       if (g("email") && !validEmail(g("email"))) problems.push("Enter a valid email address.");
       if (problems.length){ err.innerHTML = problems.map(esc).join("<br>"); err.hidden = false; return; }
       var data = { name:g("name"), type:g("type"), city:g("city"), country:g("country") || "Thailand", website:g("website"), email:g("email"),
@@ -8859,9 +8898,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!mapState.map){
       container.innerHTML = "";
       mapState.map = L.map(container, { worldCopyJump:true, minZoom:2, zoomControl:true }).setView([20, 20], 2);
-      var attr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
-      mapState.tiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { attribution: attr, subdomains:"abcd", maxZoom:18 });
-      mapState.tilesDark = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution: attr, subdomains:"abcd", maxZoom:18 });
+      // OpenStreetMap standard tiles: free, no API key or account needed (attribution required).
+      var attr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+      var osm = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+      mapState.tiles = L.tileLayer(osm, { attribution: attr, maxZoom:19 });
+      mapState.tilesDark = L.tileLayer(osm, { attribution: attr, maxZoom:19, className:"map-tiles-dark" });
     } else {
       mapState.map.invalidateSize();
     }
@@ -8964,6 +9005,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var id = e.target.id;
     if (id === "mspCountryFilter"){ state.mspCountryFilter = e.target.value; renderMSPProspects(); }
     else if (id === "mspTypeFilter"){ state.mspTypeFilter = e.target.value; renderMSPProspects(); }
+    else if (id === "mspSourceFilter"){ state.mspSourceFilter = e.target.value; renderMSPProspects(); }
     else if (id === "mspStageFilter"){ state.mspStageFilter = e.target.value; renderMSPProspects(); }
     else if (id === "engVendorFilter"){ state.engVendorFilter = e.target.value; renderEngagementTracker(); }
     else if (id === "engMethodFilter"){ state.engMethodFilter = e.target.value; renderEngagementTracker(); }
