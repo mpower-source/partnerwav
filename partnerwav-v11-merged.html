@@ -143,6 +143,19 @@
   .program-meta{ font-size:.74rem; color:var(--ink-faint); }
   .program-desc{ font-size:.84rem; color:var(--ink-soft); line-height:1.45; margin:0; flex:1; }
   .program-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.aff-panel{ border-top:1px solid var(--line); margin-top:4px; padding-top:12px; display:flex; flex-direction:column; gap:14px; }
+.aff-section{ display:flex; flex-direction:column; gap:7px; min-width:0; }
+.aff-section-title{ font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); }
+.aff-link-row{ display:flex; gap:8px; align-items:center; min-width:0; }
+.aff-link-input,.aff-service-input{ flex:1; min-width:0; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink); font:inherit; font-size:.8rem; }
+.aff-link-input{ font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.74rem; text-overflow:ellipsis; }
+.aff-services{ display:flex; flex-wrap:wrap; gap:6px; }
+.aff-service-chip{ display:inline-flex; align-items:center; gap:4px; font-size:.76rem; padding:4px 6px 4px 11px; border-radius:999px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); font-weight:600; }
+.aff-chip-remove{ border:0; background:transparent; color:var(--ink-faint); cursor:pointer; font-size:1rem; line-height:1; padding:0 4px; border-radius:999px; }
+.aff-chip-remove:hover{ color:var(--ink); background:var(--line); }
+.aff-activity{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.aff-activity li{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:.82rem; }
+.aff-activity-name{ font-weight:600; margin-right:auto; }
 
   .badge{ font-family:"IBM Plex Mono"; font-size:.66rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; padding:4px 8px; border-radius:6px; white-space:nowrap; }
   .badge.accent{ background:var(--accent-soft); color:var(--accent-strong); }
@@ -1616,7 +1629,18 @@
   // ===== SUPABASE INITIALIZATION =====
   const SUPABASE_URL = 'https://lnawgyaapcpyrvdtkarp.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxuYXdneWFhcGNweXJ2ZHRrYXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNTk3ODMsImV4cCI6MjEwNTgzNTc4M30.o5csIk7DanXKJQLesAa1lLRrRIu6M4raZAuV8RIQzns';
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // If the Supabase CDN fails to load (offline, blocked network, CDN outage), keep the
+  // portal usable on local data instead of letting the whole script die here.
+  var supabase = null;
+  try {
+    if (window.supabase && window.supabase.createClient) {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+      console.warn("Supabase library not loaded - running on local data only");
+    }
+  } catch(e) {
+    console.warn("Supabase init failed - running on local data only:", e);
+  }
 
   // Vendor UUID mapping
   var vendorUUIDs = {
@@ -1670,6 +1694,7 @@
   }
 
   async function fetchPartnerMapDataSB() {
+    if (!supabase) return [];
     try {
       const { data, error } = await supabase
         .from('v_partner_map_data')
@@ -1900,6 +1925,7 @@
 
   // ===== REAL-TIME SUBSCRIPTIONS =====
   function subscribeToPartnerApplicationsSB(callback) {
+    if (!supabase) return null;
     try {
       const subscription = supabase
         .channel('public:partner_applications')
@@ -1919,6 +1945,7 @@
   }
 
   function subscribeToDealsApprovalsSB(callback) {
+    if (!supabase) return null;
     try {
       const subscription = supabase
         .channel('public:deal_approvals')
@@ -2405,7 +2432,7 @@
   // Generate affiliate tracking link for a partner
   function generateAffiliateLink(affiliateId, partnerId){
     var baseUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? window.location.origin
+      ? window.location.origin + window.location.pathname
       : window.location.hostname.includes("github.io")
         ? "https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html"
         : window.location.href.split("?")[0];
@@ -2482,6 +2509,140 @@
 
   function affiliateById(id){ for (var i=0;i<affiliatePrograms.length;i++){ if (affiliatePrograms[i].id===id) return affiliatePrograms[i]; } return null; }
 
+  // ===== COPY TO CLIPBOARD (with fallback for file:// and older browsers) =====
+  function copyText(text, successMsg){
+    function fallback(){
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.setAttribute("readonly", "");
+        ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        toast(ok ? successMsg : "Could not copy -- select the link and copy it manually");
+      } catch(e){ toast("Could not copy -- select the link and copy it manually"); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext){
+      navigator.clipboard.writeText(text).then(function(){ toast(successMsg); }, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  // ===== AFFILIATE ENROLLMENTS (single source of truth for links, services, link activity) =====
+  var AFFILIATE_STORAGE_KEY = "partnerWAV_affiliateData";
+
+  function saveAffiliateData(){
+    try {
+      localStorage.setItem(AFFILIATE_STORAGE_KEY, JSON.stringify({
+        affiliateEnrolled: state.affiliateEnrolled,
+        enrollments: partnerAffiliateEnrollments
+      }));
+    } catch(e){ console.log("Could not save affiliate data:", e); }
+  }
+
+  function loadAffiliateData(){
+    try {
+      var saved = localStorage.getItem(AFFILIATE_STORAGE_KEY);
+      if (!saved) return;
+      var data = JSON.parse(saved);
+      if (Array.isArray(data.affiliateEnrolled)) state.affiliateEnrolled = data.affiliateEnrolled;
+      if (Array.isArray(data.enrollments)){
+        partnerAffiliateEnrollments.length = 0;
+        data.enrollments.forEach(function(en){ partnerAffiliateEnrollments.push(en); });
+      }
+    } catch(e){ console.log("Could not load affiliate data:", e); }
+  }
+
+  // Sample link activity so the seeded enrollment isn't empty in demos
+  var AFFILIATE_SAMPLE_ACTIVITY = {
+    xero: [
+      { name:"Bangkok Bookkeeping Co.", type:"Customer", date:"2026-09-12", status:"Signed up" },
+      { name:"Chiang Mai Dental Group", type:"Customer", date:"2026-09-19", status:"Trial" }
+    ]
+  };
+
+  // Returns this partner's enrollment record, creating it if they're enrolled but have no record yet
+  function getAffiliateEnrollment(affiliateId, create){
+    var partnerId = state.myProfileId;
+    var found = null;
+    for (var i=0;i<partnerAffiliateEnrollments.length;i++){
+      var en = partnerAffiliateEnrollments[i];
+      if (en.affiliateId === affiliateId && en.partnerId === partnerId){ found = en; break; }
+    }
+    if (!found && create){
+      found = {
+        id: "aff-enroll-" + affiliateId + "-" + partnerId,
+        affiliateId: affiliateId,
+        partnerId: partnerId,
+        enrolledDate: new Date().toISOString().split("T")[0],
+        affiliateLink: generateAffiliateLink(affiliateId, partnerId),
+        commissionRate: "Per program terms",
+        status: "active",
+        servicesOffered: [],
+        linkActivity: (AFFILIATE_SAMPLE_ACTIVITY[affiliateId] || []).slice()
+      };
+      partnerAffiliateEnrollments.push(found);
+    }
+    if (found){
+      if (!Array.isArray(found.servicesOffered)) found.servicesOffered = [];
+      if (!Array.isArray(found.linkActivity)) found.linkActivity = [];
+    }
+    return found;
+  }
+
+  function addAffiliateService(affiliateId, panel){
+    var input = panel ? panel.querySelector('[data-aff-service-input]') : null;
+    var name = input ? input.value.trim() : "";
+    if (!name){ toast("Type a service name first"); if (input) input.focus(); return; }
+    var en = getAffiliateEnrollment(affiliateId, true);
+    var dup = en.servicesOffered.some(function(s){ return s.toLowerCase() === name.toLowerCase(); });
+    if (dup){ toast("\""+name+"\" is already listed"); return; }
+    en.servicesOffered.push(name);
+    saveAffiliateData();
+    toast("Added \""+name+"\" to your services");
+    render();
+  }
+
+  function enrollInAffiliate(affiliateId){
+    if (state.affiliateEnrolled.indexOf(affiliateId) === -1) state.affiliateEnrolled.push(affiliateId);
+    getAffiliateEnrollment(affiliateId, true);
+    saveAffiliateData();
+  }
+
+  function affiliateManagePanel(a){
+    var en = getAffiliateEnrollment(a.id, true);
+    var services = en.servicesOffered.length
+      ? en.servicesOffered.map(function(s, idx){
+          return '<span class="aff-service-chip">'+esc(s)
+            + '<button type="button" class="aff-chip-remove" data-aff-remove-service="'+esc(a.id)+'" data-aff-service-index="'+idx+'" aria-label="Remove '+esc(s)+'">&times;</button></span>';
+        }).join("")
+      : '<span class="field-note">No services added yet -- add what you offer around '+esc(a.name)+'.</span>';
+    var activity = en.linkActivity.length
+      ? '<ul class="aff-activity">' + en.linkActivity.map(function(r){
+          return '<li><span class="aff-activity-name">'+esc(r.name)+'</span><span class="field-note">'+esc(r.type)+' · '+esc(r.date)+'</span><span class="badge '+(r.status==="Signed up"?"good":"neutral")+'">'+esc(r.status)+'</span></li>';
+        }).join("") + '</ul>'
+      : '<span class="field-note">Nobody has used your link yet. Share it with customers and partners to start tracking.</span>';
+    return '<div class="aff-panel">'
+      + '<div class="aff-section">'
+      +   '<div class="aff-section-title">Your affiliate link</div>'
+      +   '<div class="aff-link-row"><input type="text" class="aff-link-input" readonly value="'+esc(en.affiliateLink)+'" aria-label="Affiliate link for '+esc(a.name)+'">'
+      +   '<button type="button" class="btn primary sm" data-copy-affiliate-link="'+esc(a.id)+'">Copy</button></div>'
+      +   '<span class="field-note">Enrolled '+esc(en.enrolledDate)+' · Commission: '+esc(en.commissionRate)+'</span>'
+      + '</div>'
+      + '<div class="aff-section">'
+      +   '<div class="aff-section-title">Services I offer</div>'
+      +   '<div class="aff-services">'+services+'</div>'
+      +   '<div class="aff-link-row"><input type="text" class="aff-service-input" data-aff-service-input="'+esc(a.id)+'" placeholder="e.g., '+esc(a.name)+' setup &amp; onboarding" aria-label="New service for '+esc(a.name)+'">'
+      +   '<button type="button" class="btn secondary sm" data-aff-add-service="'+esc(a.id)+'">+ Add Service</button></div>'
+      + '</div>'
+      + '<div class="aff-section">'
+      +   '<div class="aff-section-title">Link activity <span class="field-note">('+en.linkActivity.length+')</span></div>'
+      +   activity
+      + '</div>'
+    + '</div>';
+  }
+
   function affiliateCard(a, showOps){
     var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
     var isOperator = state.role === "operator";
@@ -2497,6 +2658,7 @@
       + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
       + '<div class="program-actions">'+(opsButtons || actionBtn)+'</div>'
+      + ((enrolled && !isOperator) ? affiliateManagePanel(a) : '')
     + '</div>';
   }
 
@@ -6197,9 +6359,25 @@
     if (enrollAffiliateBtn){
       var affId = enrollAffiliateBtn.getAttribute("data-enroll-affiliate");
       if (state.affiliateEnrolled.indexOf(affId) === -1){
-        state.affiliateEnrolled.push(affId);
+        enrollInAffiliate(affId);
         var aff = affiliateById(affId);
-        toast("Enrolled -- "+(aff?aff.name:"affiliate tool")+" is now in My affiliate tools");
+        toast("Enrolled -- your "+(aff?aff.name:"affiliate")+" link is ready below");
+        render();
+      }
+      return;
+    }
+
+    var affAddServiceBtn = e.target.closest("[data-aff-add-service]");
+    if (affAddServiceBtn){ addAffiliateService(affAddServiceBtn.getAttribute("data-aff-add-service"), affAddServiceBtn.closest(".aff-panel")); return; }
+
+    var affRemoveServiceBtn = e.target.closest("[data-aff-remove-service]");
+    if (affRemoveServiceBtn){
+      var rmEn = getAffiliateEnrollment(affRemoveServiceBtn.getAttribute("data-aff-remove-service"), false);
+      var rmIdx = parseInt(affRemoveServiceBtn.getAttribute("data-aff-service-index"), 10);
+      if (rmEn && !isNaN(rmIdx) && rmEn.servicesOffered[rmIdx] !== undefined){
+        var removedName = rmEn.servicesOffered.splice(rmIdx, 1)[0];
+        saveAffiliateData();
+        toast("Removed \""+removedName+"\"");
         render();
       }
       return;
@@ -6585,23 +6763,8 @@
     var partnerEnrollAffiliateBtn = e.target.closest("[data-partner-enroll-affiliate]");
     if (partnerEnrollAffiliateBtn){
       var affiliateId = partnerEnrollAffiliateBtn.getAttribute("data-partner-enroll-affiliate");
-      var partnerId = state.myProfileId;
-      var existingEnrollment = partnerAffiliateEnrollments.find(function(e){
-        return e.affiliateId === affiliateId && e.partnerId === partnerId;
-      });
-      if (!existingEnrollment){
-        var affiliateLink = generateAffiliateLink(affiliateId, partnerId);
-        var newEnrollment = {
-          id: "aff-enroll-" + Date.now(),
-          affiliateId: affiliateId,
-          partnerId: partnerId,
-          enrolledDate: new Date().toISOString().split("T")[0],
-          affiliateLink: affiliateLink,
-          commissionRate: "Per program terms",
-          status: "active"
-        };
-        partnerAffiliateEnrollments.push(newEnrollment);
-        saveVendorData();
+      if (state.affiliateEnrolled.indexOf(affiliateId) === -1){
+        enrollInAffiliate(affiliateId);
         toast("Successfully enrolled as affiliate -- use your unique link to drive sales");
         render();
       }
@@ -6610,19 +6773,9 @@
 
     var copyAffiliateLinkBtn = e.target.closest("[data-copy-affiliate-link]");
     if (copyAffiliateLinkBtn){
-      var affiliateId = copyAffiliateLinkBtn.getAttribute("data-copy-affiliate-link");
-      var enrollment = partnerAffiliateEnrollments.find(function(e){
-        return e.affiliateId === affiliateId && e.partnerId === state.myProfileId;
-      });
-      if (enrollment && navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(enrollment.affiliateLink).then(function(){
-          toast("Affiliate link copied to clipboard");
-        });
-      } else if (!enrollment){
-        toast("Not enrolled in this affiliate program");
-      } else {
-        toast("Clipboard copy not supported");
-      }
+      var enrollment = getAffiliateEnrollment(copyAffiliateLinkBtn.getAttribute("data-copy-affiliate-link"), false);
+      if (enrollment){ copyText(enrollment.affiliateLink, "Affiliate link copied to clipboard"); }
+      else { toast("Not enrolled in this affiliate program"); }
       return;
     }
   });
@@ -6752,11 +6905,19 @@
 
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeModal(); });
 
+  // Enter in an affiliate "add service" box adds the service
+  document.addEventListener("keydown", function(e){
+    if (e.key !== "Enter") return;
+    var svcInput = e.target.closest && e.target.closest("[data-aff-service-input]");
+    if (svcInput){ e.preventDefault(); addAffiliateService(svcInput.getAttribute("data-aff-service-input"), svcInput.closest(".aff-panel")); }
+  });
+
   // Load saved data on page initialization
   loadSavedData();
+  loadAffiliateData();
 
   // ===== SUPABASE AUTH STATE MONITORING =====
-  supabase.auth.onAuthStateChange(function(event, session) {
+  if (supabase) supabase.auth.onAuthStateChange(function(event, session) {
     console.log('Auth state changed:', event, session ? 'User logged in' : 'User logged out');
     if (session) {
       console.log('Current user:', session.user.email);
