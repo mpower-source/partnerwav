@@ -886,14 +886,12 @@
             <div><label>Credentials (comma-separated)</label><input type="text" id="profileCredentials" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., Reseller -- Intelsense AI" /></div>
             <div><label>Website</label><input type="url" id="profileWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div><label>LinkedIn URL</label><input type="url" id="profileLinkedin" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
-            <div style="border-top:1px solid var(--line);padding-top:12px;">
-              <label style="font-weight:600;margin-bottom:8px;display:block;">Services & Solutions</label>
-              <div id="partnerServicesContainer" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
-                <!-- Services will be rendered here -->
-              </div>
+            <div>
+              <label>Services & Solutions</label>
+              <div id="partnerServicesContainer" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
               <div style="display:flex;gap:8px;">
-                <input type="text" id="newServiceInput" placeholder="Add a service..." style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-size:.9rem;" />
-                <button type="button" class="btn secondary sm" id="addServiceBtn">Add</button>
+                <input type="text" id="newServiceInput" placeholder="e.g., Xero Accounting Setup" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;" />
+                <button type="button" id="addServiceBtn" class="btn secondary" style="white-space:nowrap;">+ Add Service</button>
               </div>
             </div>
             <div style="display:flex;gap:8px;">
@@ -2095,7 +2093,7 @@
         { name:"Regional clinic wearable pilot", program:"Cross Connect", desc:"60-unit Prayer Pendant™ rollout for a regional clinic network -- in progress." }
       ],
       logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" },
-      services:[] },
+      services:["Wearable Device Integration","Healthcare IT Consulting","Hardware Procurement"] },
     { id:"portonics", name:"Portonics Ltd.", init:"PL", country:"Bangladesh", tagline:"Digital-transformation and AI consultancy -- hardware-linked deployments a specialty.",
       specialties:["AI Consultancy","Hardware Integration","Digital Transformation"],
       credentials:["Installer -- Intelsense AI","Certified Integrator -- Cross Connect"],
@@ -2105,19 +2103,13 @@
       ],
       logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" },
       vendorProgramId:"portonics-dev",
-      services:[] },
+      services:["AI-IVR Implementation","Enterprise Integration Services","Digital Transformation Consulting"] },
     { id:"riverside", name:"Riverside Telco", init:"RT", country:"USA", tagline:"Telecom and voice-AI channel manager building a Thai-vendor bench for US carriers.",
       specialties:["Telecom / UCaaS","Channel Management","Voice AI"],
       credentials:["Channel Manager -- Botnoi Voice (draft)"],
       pastProjects:[],
       logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" },
-      services:[] }
-  ];
-
-  // Partner affiliate enrollments - tracks which partners have enrolled in which affiliate programs
-  var partnerAffiliateEnrollments = [
-    { id:"enroll-1", partnerId:"siam-digital", affiliateId:"xero", enrolledDate:"2026-09-01", affiliateLink:"", commissionRate:20, status:"active" },
-    { id:"enroll-2", partnerId:"gulf-coast", affiliateId:"xero", enrolledDate:"2026-09-05", affiliateLink:"", commissionRate:20, status:"active" }
+      services:["Voice AI Platform Setup","Telecom Integration","Channel Management Services"] }
   ];
 
   // Affiliate profiles - same structure as partner profiles
@@ -2133,6 +2125,9 @@
       pastProjects:[],
       logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" }, status:"active", archivedAt:null }
   ];
+
+  // Partner affiliate enrollments - tracks when partners sign up as affiliates
+  var partnerAffiliateEnrollments = [];
 
   // Vendor marketing materials pending operator approval
   var vendorMarketingMaterials = [
@@ -2316,15 +2311,22 @@
           referralPartners[p.id] = p.referralPartners;
         }
       });
-      var dataToSave = {
+      localStorage.setItem("partnerWAV_vendorReferralData", JSON.stringify({
         referralPartners: referralPartners,
         partnerAffiliateEnrollments: partnerAffiliateEnrollments,
         partnerProfiles: partnerProfiles
-      };
-      localStorage.setItem("partnerWAV_vendorReferralData", JSON.stringify(dataToSave));
+      }));
     } catch (e) {
       console.log("Could not save data:", e);
     }
+  }
+
+  // Generate affiliate tracking link for a partner
+  function generateAffiliateLink(affiliateId, partnerId){
+    var baseUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? window.location.origin
+      : "https://cloudwavconsulting.github.io/PartnerWAV";
+    return baseUrl + "?apply=affiliate&affiliateId=" + encodeURIComponent(affiliateId) + "&partnerId=" + encodeURIComponent(partnerId);
   }
 
   var state = {
@@ -2488,46 +2490,34 @@
 
   function affiliateById(id){ for (var i=0;i<affiliatePrograms.length;i++){ if (affiliatePrograms[i].id===id) return affiliatePrograms[i]; } return null; }
 
-  function generateAffiliateLink(affiliateId, partnerId){
-    var baseUrl = window.location.hostname.includes('github.io')
-      ? 'https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html'
-      : window.location.href.split('?')[0];
-    return baseUrl + '?apply=affiliate&affiliateId=' + encodeURIComponent(affiliateId) + '&partnerId=' + encodeURIComponent(partnerId);
-  }
-
   function affiliateCard(a, showOps){
     var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
     var isOperator = state.role === "operator";
     var isPartner = state.role === "partner";
 
-    // Check if partner has enrolled in this program
-    var partnerEnrollment = null;
-    if (isPartner && state.myProfileId) {
-      partnerEnrollment = partnerAffiliateEnrollments.find(function(e){
-        return e.partnerId === state.myProfileId && e.affiliateId === a.id;
+    var partnerAffiliateLinkHtml = '';
+    if (isPartner && enrolled){
+      var existingEnrollment = partnerAffiliateEnrollments.find(function(e){
+        return e.affiliateId === a.id && e.partnerId === state.myProfileId;
       });
-    }
-
-    var actionBtn = '';
-    if (isPartner) {
-      if (partnerEnrollment) {
-        var affiliateLink = generateAffiliateLink(a.id, state.myProfileId);
-        actionBtn = '<div style="display:flex;flex-direction:column;gap:8px;width:100%;">'
-          + '<button class="btn secondary xs" disabled>Enrolled ✓</button>'
-          + '<div style="padding:8px;background:var(--accent-soft);border-radius:4px;font-size:.8rem;">'
-          + '<input type="text" readonly value="'+esc(affiliateLink)+'" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;font-size:.75rem;margin-bottom:4px;" />'
-          + '<button type="button" class="btn primary xs" data-copy-affiliate-link="'+affiliateLink+'" style="width:100%;">Copy link</button>'
+      if (existingEnrollment){
+        partnerAffiliateLinkHtml = '<div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:4px;">'
+          + '<p style="margin:0 0 8px 0;font-size:12px;color:#666;">Your affiliate link:</p>'
+          + '<div style="display:flex;gap:8px;align-items:center;">'
+          + '<input type="text" value="'+esc(existingEnrollment.affiliateLink)+'" readonly style="flex:1;padding:6px;font-size:12px;border:1px solid #ddd;border-radius:3px;font-family:monospace;" />'
+          + '<button class="btn secondary xs" data-copy-affiliate-link="'+a.id+'">Copy</button>'
           + '</div>'
           + '</div>';
-      } else {
-        actionBtn = '<button class="btn primary sm" data-partner-enroll-affiliate="'+a.id+'">Sign up as affiliate</button>';
       }
-    } else {
-      actionBtn = enrolled
-        ? '<button class="btn secondary sm" disabled>Enrolled ✓</button>'
-        : '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>';
     }
 
+    var actionBtn = enrolled && isPartner
+      ? (partnerAffiliateLinkHtml ? partnerAffiliateLinkHtml : '<button class="btn primary sm" data-partner-enroll-affiliate="'+a.id+'">Sign up as affiliate</button>')
+      : enrolled && !isOperator
+      ? '<button class="btn secondary sm" disabled>Enrolled ✓</button>'
+      : !enrolled && !isOperator
+      ? '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>'
+      : '';
     var opsButtons = (isOperator && showOps)
       ? '<button class="btn secondary sm" data-edit-affiliate-offer="'+a.id+'">Edit</button> <button class="btn secondary sm" data-delete-affiliate-offer="'+a.id+'">Delete</button>'
       : '';
@@ -3113,7 +3103,11 @@
           + '</div>' : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Specialties</h2></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">'+chips+'</div></div>'
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Credentials</h2></div><ul style="margin:8px 0 0;padding-left:18px;font-size:.86rem;">'+creds+'</ul></div>'
-        + (p.services && p.services.length ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Services & Solutions</h2></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">'+p.services.map(function(s){ return '<span class="chip" style="background:var(--accent-soft);color:var(--accent-strong);">'+esc(s)+'</span>'; }).join("")+'</div></div>' : '')
+        + (p.services && p.services.length
+            ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Services & Solutions</h2></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">'
+              + p.services.map(function(s){ return '<span class="chip" style="background:var(--accent-soft);color:var(--ink);">'+esc(s)+'</span>'; }).join("")
+              + '</div></div>'
+            : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Past projects</h2></div><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">'+projects+'</div></div>'
         + (social ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Elsewhere</h2></div><div style="margin-top:8px;">'+social+'</div></div>' : '')
       + '</div>';
@@ -4416,17 +4410,18 @@
     document.getElementById("profileWebsite").value = profile ? profile.website : "";
     document.getElementById("profileLinkedin").value = profile ? (profile.social && profile.social.linkedin) : "";
 
-    // Render services
     var servicesContainer = document.getElementById("partnerServicesContainer");
-    if (servicesContainer && profile && profile.services){
-      servicesContainer.innerHTML = profile.services.map(function(svc){
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--surface-2);border-radius:4px;">'
-          + '<span>'+esc(svc)+'</span>'
-          + '<button type="button" class="btn secondary xs" data-remove-service="'+esc(svc)+'">Remove</button>'
-          + '</div>';
-      }).join("");
+    if (servicesContainer){
+      servicesContainer.innerHTML = profile && profile.services
+        ? profile.services.map(function(service){
+            return '<div style="background:var(--accent-soft);padding:6px 12px;border-radius:20px;font-size:13px;display:flex;align-items:center;gap:8px;">'
+              + esc(service)
+              + '<button type="button" class="btn ghost xs" data-remove-service="'+esc(service)+'" style="padding:0;margin-left:4px;">×</button>'
+              + '</div>';
+          }).join("")
+        : "";
     }
-
+    document.getElementById("newServiceInput").value = "";
     var deleteBtn = document.getElementById("deleteProfileBtn");
     deleteBtn.style.display = profile ? "block" : "none";
     if (profile) deleteBtn.setAttribute("data-profile-id", profileId);
@@ -4438,19 +4433,18 @@
     var name = document.getElementById("profileName").value.trim();
     var country = document.getElementById("profileCountry").value.trim();
     var tagline = document.getElementById("profileTagline").value.trim();
-    var specialties = document.getElementById("profileSpecialties").value.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s; });
-    var credentials = document.getElementById("profileCredentials").value.split(",").map(function(c){ return c.trim(); }).filter(function(c){ return c; });
+    var specialties = document.getElementById("profileSpecialties").value.split(",").map(function(s){ return s.trim(); });
+    var credentials = document.getElementById("profileCredentials").value.split(",").map(function(c){ return c.trim(); });
     var website = document.getElementById("profileWebsite").value.trim();
     var linkedin = document.getElementById("profileLinkedin").value.trim();
 
-    // Get current services from the services container
     var servicesContainer = document.getElementById("partnerServicesContainer");
     var services = [];
     if (servicesContainer){
-      var serviceEls = servicesContainer.querySelectorAll("[data-remove-service]");
-      serviceEls.forEach(function(el){
-        var svc = el.getAttribute("data-remove-service");
-        if (svc) services.push(svc);
+      var serviceChips = servicesContainer.querySelectorAll("div");
+      serviceChips.forEach(function(chip){
+        var text = chip.textContent.replace("×", "").trim();
+        if (text) services.push(text);
       });
     }
 
@@ -4473,7 +4467,6 @@
         specialties: specialties, credentials: credentials, pastProjects: [], logo: "", website: website,
         services: services, social: {linkedin: linkedin, twitter: "", facebook: ""}, status: "active", archivedAt: null
       });
-      state.myProfileId = newId;
       toast("Profile created");
     }
     state.editingProfileId = null;
@@ -6248,30 +6241,27 @@
       return;
     }
 
-    var partnerEnrollBtn = e.target.closest("[data-partner-enroll-affiliate]");
-    if (partnerEnrollBtn){
-      var affId = partnerEnrollBtn.getAttribute("data-partner-enroll-affiliate");
-      if (!state.myProfileId){
-        toast("Please create your partner profile first");
-        return;
-      }
-      var existing = partnerAffiliateEnrollments.find(function(e){
-        return e.partnerId === state.myProfileId && e.affiliateId === affId;
+    var partnerEnrollAffiliateBtn = e.target.closest("[data-partner-enroll-affiliate]");
+    if (partnerEnrollAffiliateBtn){
+      var affiliateId = partnerEnrollAffiliateBtn.getAttribute("data-partner-enroll-affiliate");
+      var partnerId = state.myProfileId;
+      var existingEnrollment = partnerAffiliateEnrollments.find(function(e){
+        return e.affiliateId === affiliateId && e.partnerId === partnerId;
       });
-      if (!existing){
-        var enrollId = "enroll-" + Date.now();
-        partnerAffiliateEnrollments.push({
-          id: enrollId,
-          partnerId: state.myProfileId,
-          affiliateId: affId,
-          enrolledDate: new Date().toISOString().split('T')[0],
-          affiliateLink: generateAffiliateLink(affId, state.myProfileId),
-          commissionRate: 20,
+      if (!existingEnrollment){
+        var affiliateLink = generateAffiliateLink(affiliateId, partnerId);
+        var newEnrollment = {
+          id: "aff-enroll-" + Date.now(),
+          affiliateId: affiliateId,
+          partnerId: partnerId,
+          enrolledDate: new Date().toISOString(),
+          affiliateLink: affiliateLink,
+          commissionRate: 0,
           status: "active"
-        });
-        var aff = affiliateById(affId);
-        toast("You've enrolled as an affiliate for "+(aff?aff.name:"this program"));
+        };
+        partnerAffiliateEnrollments.push(newEnrollment);
         saveVendorData();
+        toast("Successfully enrolled as affiliate -- use your unique link to drive sales");
         render();
       }
       return;
@@ -6279,19 +6269,32 @@
 
     var copyAffiliateLinkBtn = e.target.closest("[data-copy-affiliate-link]");
     if (copyAffiliateLinkBtn){
-      var linkUrl = copyAffiliateLinkBtn.getAttribute("data-copy-affiliate-link");
-      if (navigator.clipboard){
-        navigator.clipboard.writeText(linkUrl).then(function(){
-          toast("Affiliate link copied!");
-        }).catch(function(){ toast("Failed to copy link"); });
-      } else {
-        var input = document.createElement("input");
-        input.value = linkUrl;
-        document.body.appendChild(input);
-        input.select();
-        try { document.execCommand("copy"); toast("Affiliate link copied!"); }
-        catch(err) { toast("Failed to copy link"); }
-        document.body.removeChild(input);
+      var affiliateId = copyAffiliateLinkBtn.getAttribute("data-copy-affiliate-link");
+      var enrollment = partnerAffiliateEnrollments.find(function(e){
+        return e.affiliateId === affiliateId && e.partnerId === state.myProfileId;
+      });
+      if (enrollment){
+        if (navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(enrollment.affiliateLink).then(function(){
+            toast("Affiliate link copied to clipboard");
+          }).catch(function(){
+            var inp = document.createElement("input");
+            inp.value = enrollment.affiliateLink;
+            document.body.appendChild(inp);
+            inp.select();
+            document.execCommand("copy");
+            document.body.removeChild(inp);
+            toast("Affiliate link copied to clipboard");
+          });
+        } else {
+          var inp = document.createElement("input");
+          inp.value = enrollment.affiliateLink;
+          document.body.appendChild(inp);
+          inp.select();
+          document.execCommand("copy");
+          document.body.removeChild(inp);
+          toast("Affiliate link copied to clipboard");
+        }
       }
       return;
     }
@@ -6299,26 +6302,26 @@
     var addServiceBtn = e.target.closest("#addServiceBtn");
     if (addServiceBtn){
       var input = document.getElementById("newServiceInput");
-      var service = input ? input.value.trim() : "";
+      var service = input.value.trim();
       if (service){
         var container = document.getElementById("partnerServicesContainer");
-        if (container){
-          var serviceHtml = '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--surface-2);border-radius:4px;">'
-            + '<span>'+esc(service)+'</span>'
-            + '<button type="button" class="btn secondary xs" data-remove-service="'+esc(service)+'">Remove</button>'
-            + '</div>';
-          container.innerHTML += serviceHtml;
-          if (input) input.value = "";
-          toast("Service added");
-        }
+        var serviceChip = document.createElement("div");
+        serviceChip.style.cssText = "background:var(--accent-soft);padding:6px 12px;border-radius:20px;font-size:13px;display:flex;align-items:center;gap:8px;";
+        serviceChip.innerHTML = esc(service) + '<button type="button" class="btn ghost xs" data-remove-service="'+esc(service)+'" style="padding:0;margin-left:4px;">×</button>';
+        container.appendChild(serviceChip);
+        input.value = "";
+        toast("Service added");
       }
       return;
     }
 
     var removeServiceBtn = e.target.closest("[data-remove-service]");
     if (removeServiceBtn){
-      removeServiceBtn.closest("div").remove();
-      toast("Service removed");
+      var serviceChip = removeServiceBtn.closest("div");
+      if (serviceChip){
+        serviceChip.remove();
+        toast("Service removed");
+      }
       return;
     }
 
