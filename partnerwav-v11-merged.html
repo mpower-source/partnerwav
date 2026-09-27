@@ -214,6 +214,33 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 .vp-product{ padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); display:flex; flex-direction:column; gap:8px; }
 .vp-product input,.vp-product textarea{ background:var(--surface); }
 .vp-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.cfg{ display:flex; flex-direction:column; gap:16px; max-width:1100px; }
+.cfg-head{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.cfg-head h2{ font-size:1.2rem; margin:0; }
+.cfg-section{ display:flex; flex-direction:column; gap:12px; }
+.cfg-section h3{ margin:0; font-size:.95rem; font-family:"Space Grotesk",sans-serif; }
+.cfg-section .cfg-ref{ font-size:.74rem; color:var(--ink-faint); font-weight:500; margin-left:6px; }
+.cfg label{ display:block; font-size:.76rem; font-weight:600; color:var(--ink-soft); margin-bottom:5px; }
+.cfg input[type=text],.cfg input[type=number],.cfg input[type=date],.cfg select{ width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink); font:inherit; font-size:.86rem; }
+.cfg input[type=number]{ font-family:"IBM Plex Mono",ui-monospace,monospace; }
+.cfg-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+.cfg-check{ display:flex !important; align-items:flex-start; gap:8px; font-size:.86rem !important; font-weight:500 !important; color:var(--ink) !important; cursor:pointer; }
+.cfg-check input{ margin-top:3px; }
+.cfg-tiers{ width:100%; border-collapse:collapse; }
+.cfg-tiers th{ text-align:left; font-size:.72rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); padding:0 6px 6px; }
+.cfg-tiers td{ padding:4px 6px; vertical-align:top; }
+.cfg-tiers td.num{ width:96px; }
+.cfg-tier-remove{ border:0; background:transparent; color:var(--ink-faint); cursor:pointer; font-size:1.1rem; padding:6px; }
+.cfg-tier-remove:hover{ color:var(--bad); }
+.cfg-preview{ background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:6px; }
+.cfg-preview .tier-line{ background:var(--surface); }
+.cfg-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+@media (max-width:700px){
+  .cfg-tiers thead{ display:none; }
+  .cfg-tiers, .cfg-tiers tbody, .cfg-tiers tr, .cfg-tiers td{ display:block; width:100% !important; box-sizing:border-box; }
+  .cfg-tiers tr{ border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:10px; }
+  .cfg-tiers td[data-label]::before{ content:attr(data-label); display:block; font-size:.72rem; font-weight:700; color:var(--ink-soft); margin-bottom:4px; }
+}
 .aff-panel{ border-top:1px solid var(--line); margin-top:4px; padding-top:12px; display:flex; flex-direction:column; gap:14px; }
 .aff-section{ display:flex; flex-direction:column; gap:7px; min-width:0; }
 .aff-section-title{ font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); }
@@ -1574,6 +1601,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         </div>
       </section>
 
+      <!-- ===== OPERATOR: CONFIGURE PROGRAM (terms from the vendor agreement) ===== -->
+      <section id="scr-operator-program-config" hidden>
+        <button class="btn ghost sm" data-config-cancel>← Back to Manage programs</button>
+        <div id="programConfigContent" style="margin-top:14px;"></div>
+      </section>
+
       <!-- ===== OPERATOR: MANAGE PROGRAMS ===== -->
       <section id="scr-operator-programs" hidden>
         <div class="section-head"><h2>Manage programs</h2><span class="hint">Every vendor program CloudWAV operates</span></div>
@@ -1583,7 +1616,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div class="card">
           <div class="table-scroll">
             <table>
-              <thead><tr><th>Program</th><th>Vertical</th><th>Relationship</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th>Program</th><th>Vertical</th><th>Relationship</th><th>Commission</th><th>Status</th><th></th></tr></thead>
               <tbody id="operatorProgramRows"></tbody>
             </table>
           </div>
@@ -2512,6 +2545,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "affiliate-overview":"Overview",
     "affiliate-marketplace":"Affiliate Marketplace",
     "affiliate-manage":"My Affiliate Tool",
+    "operator-program-config":"Configure Program",
     "affiliate-projects":"Partner Projects",
     "affiliate-project-view":"Project Details",
     "operator-overview":"Overview",
@@ -2984,6 +3018,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     // ---- affiliate screens (shared: Partner + Vendor + Affiliate) ----
     renderAffiliate();
     renderAffiliateManage();
+    renderProgramConfig();
 
     // ---- operator overview ----
     var opSummary = document.getElementById("operatorProgramSummary");
@@ -3000,7 +3035,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var opRows = document.getElementById("operatorProgramRows");
     if (opRows){
       opRows.innerHTML = programs.map(function(p){
-        return "<tr><td>"+esc(p.name)+"</td><td>"+esc(p.vertical)+"</td><td>"+relBadges(p.relationships)+"</td><td>"+statusPill(p.status)+"</td>"
+        var firstTier = p.tiers && p.tiers[0] ? esc(p.tiers[0].tier)+": "+esc(p.tiers[0].rate) : "--";
+        var cfgNote = p.terms && p.terms.updatedAt ? "<div class='field-note'>Configured "+esc(p.terms.updatedAt)+"</div>" : "";
+        return "<tr><td>"+esc(p.name)+cfgNote+"</td><td>"+esc(p.vertical)+"</td><td>"+relBadges(p.relationships)+"</td><td style='font-size:.82rem;'>"+firstTier+"</td><td>"+statusPill(p.status)+"</td>"
           + "<td class='row-actions'><button class='btn secondary sm' data-configure='"+p.id+"'>Configure</button></td></tr>";
       }).join("");
     }
@@ -4720,21 +4757,296 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (upgradeBtn) upgradeBtn.addEventListener("click", function(){ requestTierUpgrade(p.id); closeModal(); });
   }
 
-  function showConfigure(id){
+  // ===== OPERATOR: CONFIGURE PROGRAM (values from the vendor agreement) =====
+  var PROGRAM_TERMS_KEY = "partnerWAV_programTerms";
+  var AGREEMENT_TYPES = ["Vendor Program Agreement","Joint Venture Agreement","Custom Marketing Agreement","SaaS Reseller Agreement"];
+  var AGREEMENT_STATUSES = ["draft","sent","active","expired","terminated"];
+  var PROGRAM_STATUSES = ["active","onboarding","pending","paused","archived"];
+  var PAYOUT_SCHEDULES = ["Every 30 days","Every 45 days","Monthly, net 15","Monthly, net 30","Quarterly"];
+  var CURRENCIES = ["USD","THB","BDT","SGD","EUR","GBP","AUD","JPY","KRW","CNY"];
+  var RENEWAL_DURATIONS = ["Life of account","12 months","24 months","36 months","First year only"];
+  var BASE_SUGGESTIONS = ["Net revenue","Gross revenue","Sub-reseller revenue","Gross sale price","Monthly recurring subscription revenue","Approved campaign budget"];
+  var DEFAULT_DEDUCTIONS = ["Refunds and chargebacks","Sales tax / VAT actually remitted","Payment processing fees"];
+
+  function num(v){ if (v === "" || v === null || v === undefined) return ""; var n = parseFloat(v); return isNaN(n) ? "" : n; }
+  function fmtPct(n){ return (Math.round(n * 100) / 100) + "%"; }
+
+  // "15% + 5%", "15% + 5% + 5% override", "12% on hardware sale" -> structured, keeping any extra words as a note
+  function parseTierRate(t){
+    var r = String(t.rate || "").trim(), m;
+    if ((m = r.match(/^(\d+(?:\.\d+)?)%\s*\+\s*(\d+(?:\.\d+)?)%(?:\s*\+\s*(\d+(?:\.\d+)?)%\s*override)?$/i)))
+      return { tier:t.tier, firstYear:+m[1], renewal:+m[2], override: m[3] ? +m[3] : "", base:t.base || "", note:"" };
+    if ((m = r.match(/^(\d+(?:\.\d+)?)%\s*(.*)$/)))
+      return { tier:t.tier, firstYear:+m[1], renewal:"", override:"", base:t.base || "", note:m[2] || "" };
+    return { tier:t.tier, firstYear:"", renewal:"", override:"", base:t.base || "", note:r };
+  }
+  function tierRateText(t){
+    var parts = [];
+    if (t.firstYear !== "") parts.push(fmtPct(t.firstYear));
+    if (t.renewal !== "" && t.renewal > 0) parts.push(fmtPct(t.renewal));
+    var s = parts.join(" + ");
+    if (t.override !== "" && t.override > 0) s += (s ? " + " : "") + fmtPct(t.override) + " override";
+    if (t.note) s += (s ? " " : "") + t.note;
+    return s || "--";
+  }
+
+  function defaultTerms(p){
+    var tiers = (p.tiers || []).map(parseTierRate);
+    var baseIsGross = tiers.length && /gross/i.test(tiers[0].base);
+    var lifeOfAccount = (p.tiers || []).some(function(t){ return /life of account/i.test(t.rate); });
+    var overrides = {};
+    (p.products || []).forEach(function(prod){ overrides[prod.product_id] = { firstYear:"", renewal:"" }; });
+    return {
+      agreementType: (p.agreement && p.agreement.type) || AGREEMENT_TYPES[0],
+      agreementStatus: (p.agreement && p.agreement.status) || "draft",
+      programStatus: p.status || "active",
+      effectiveDate: "", termMonths: 24, autoRenew: true,
+      tiers: tiers,
+      revenueBase: baseIsGross ? "gross" : "net",
+      deductions: baseIsGross ? [] : DEFAULT_DEDUCTIONS.slice(),
+      renewalDuration: lifeOfAccount ? "Life of account" : "36 months",
+      currency: "USD", payoutSchedule: "Every 30 days", minPayout: 100,
+      installerMargin: "",
+      dealProtectionDays: 90, approvalSlaDays: 3, nonCircumvention: true,
+      proServicesAllowed: true,
+      terminationNoticeDays: 60, postTerminationMonths: 6, commissionTailMonths: 12,
+      productOverrides: overrides,
+      updatedAt: "", updatedBy: ""
+    };
+  }
+  function termsFor(p){
+    var d = defaultTerms(p);
+    if (!p.terms) return d;
+    var t = JSON.parse(JSON.stringify(p.terms));
+    Object.keys(d).forEach(function(k){ if (t[k] === undefined) t[k] = d[k]; });
+    (p.products || []).forEach(function(prod){ if (!t.productOverrides[prod.product_id]) t.productOverrides[prod.product_id] = { firstYear:"", renewal:"" }; });
+    return t;
+  }
+
+  function saveProgramTerms(){
+    try {
+      var out = {};
+      programs.forEach(function(pg){ if (pg.terms) out[pg.id] = { terms: pg.terms, tiers: pg.tiers, agreement: pg.agreement, status: pg.status }; });
+      localStorage.setItem(PROGRAM_TERMS_KEY, JSON.stringify(out));
+    } catch(e){ console.log("Could not save program terms:", e); }
+  }
+  function loadProgramTerms(){
+    try {
+      var saved = JSON.parse(localStorage.getItem(PROGRAM_TERMS_KEY) || "null");
+      if (!saved) return;
+      Object.keys(saved).forEach(function(id){
+        var pg = programById(id); if (!pg) return;
+        pg.terms = saved[id].terms; pg.tiers = saved[id].tiers; pg.agreement = saved[id].agreement; pg.status = saved[id].status;
+      });
+    } catch(e){ console.log("Could not load program terms:", e); }
+  }
+
+  function addConfigDeduction(){
+    var inp = document.getElementById("cfgNewDeduction"); var val = inp ? inp.value.trim() : "";
+    if (!val){ toast("Type a deduction first"); if (inp) inp.focus(); return; }
+    readConfigForm();
+    if (state.cfgDraft.deductions.some(function(x){ return x.toLowerCase() === val.toLowerCase(); })){ toast("\""+val+"\" is already listed"); return; }
+    state.cfgDraft.deductions.push(val);
+    renderProgramConfig();
+    var again = document.getElementById("cfgNewDeduction"); if (again) again.focus();
+  }
+
+  function openProgramConfig(id){
     var p = programById(id);
-    if (!p) return;
-    var tiersHtml = p.tiers.map(function(t){
-      return '<div class="field-row"><label>'+esc(t.tier)+' rate</label><input type="text" value="'+esc(t.rate)+'"></div>';
+    if (!p || state.role !== "operator") return;
+    state.configProgramId = id;
+    state.cfgDraft = termsFor(p);
+    state.screen = "operator-program-config";
+    render();
+    window.scrollTo(0, 0);
+  }
+  // kept for any old callers
+  function showConfigure(id){ openProgramConfig(id); }
+
+  function cfgOptions(list, current, labels){
+    return list.map(function(v){ return '<option value="'+esc(v)+'"'+(String(v)===String(current)?" selected":"")+'>'+esc(labels ? labels(v) : v)+'</option>'; }).join("");
+  }
+  function cfgInput(id, label, val, type, attrs){
+    return '<div><label for="'+id+'">'+label+'</label><input id="'+id+'" type="'+(type||"text")+'" value="'+esc(val === undefined || val === null ? "" : val).replace(/"/g,"&quot;")+'" '+(attrs||"")+'></div>';
+  }
+  function cap(s){ return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
+
+  function renderProgramConfig(){
+    var box = document.getElementById("programConfigContent");
+    if (!box || state.screen !== "operator-program-config") return;
+    var p = programById(state.configProgramId), d = state.cfgDraft;
+    if (!p || !d){ box.innerHTML = '<div class="empty">Pick a program from Manage programs.</div>'; return; }
+    var baseList = '<datalist id="cfgBaseList">'+BASE_SUGGESTIONS.map(function(b){ return '<option value="'+esc(b)+'">'; }).join("")+'</datalist>';
+    var tierRows = d.tiers.map(function(t, i){
+      return '<tr data-cfg-tier="'+i+'">'
+        + '<td data-label="Tier"><input type="text" class="cfg-t-name" value="'+esc(t.tier).replace(/"/g,"&quot;")+'" aria-label="Tier name"></td>'
+        + '<td class="num" data-label="First-year %"><input type="number" class="cfg-t-fy" min="0" max="100" step="0.5" value="'+esc(t.firstYear)+'" aria-label="First-year commission %"></td>'
+        + '<td class="num" data-label="Renewal %"><input type="number" class="cfg-t-ren" min="0" max="100" step="0.5" value="'+esc(t.renewal)+'" aria-label="Renewal commission %"></td>'
+        + '<td class="num" data-label="Override %"><input type="number" class="cfg-t-ovr" min="0" max="100" step="0.5" value="'+esc(t.override)+'" aria-label="Channel Manager override %"></td>'
+        + '<td data-label="Commission base"><input type="text" class="cfg-t-base" list="cfgBaseList" value="'+esc(t.base).replace(/"/g,"&quot;")+'" aria-label="Commission base"></td>'
+        + '<td data-label="Note"><input type="text" class="cfg-t-note" value="'+esc(t.note).replace(/"/g,"&quot;")+'" placeholder="e.g. + attach bonus" aria-label="Note"></td>'
+        + '<td><button type="button" class="cfg-tier-remove" data-cfg-remove-tier="'+i+'" aria-label="Remove tier"'+(d.tiers.length<2?' disabled title="A program needs at least one tier"':'')+'>&times;</button></td>'
+      + '</tr>';
     }).join("");
-    var back = openModal(
-      '<div class="modal-head"><h2>Configure -- '+esc(p.name)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
-      + '<div class="field-row"><label>Revenue base</label><select><option>Net revenue (itemized deductions)</option><option>Gross revenue</option></select></div>'
-      + '<div class="field-row"><label>Payout schedule</label><select><option>Every 30 days</option><option>Every 45 days</option><option>Monthly, net 15</option></select></div>'
-      + tiersHtml
-      + '<div class="modal-actions"><button class="btn secondary" id="modalClose2">Cancel</button><button class="btn primary" id="modalSave">Save (draft)</button></div>'
-    );
-    back.querySelector("#modalClose2").addEventListener("click", closeModal);
-    back.querySelector("#modalSave").addEventListener("click", function(){ toast("Saved -- "+p.name+" configuration updated (draft)"); closeModal(); });
+    var deductions = d.deductions.length ? d.deductions.map(function(x, i){
+      return '<span class="aff-service-chip">'+esc(x)+'<button type="button" class="aff-chip-remove" data-cfg-remove-deduction="'+i+'" aria-label="Remove '+esc(x)+'">&times;</button></span>';
+    }).join("") : '<span class="field-note">No deductions listed -- Net Revenue would equal gross collections.</span>';
+    var products = (p.products || []).map(function(prod){
+      var o = d.productOverrides[prod.product_id] || {};
+      return '<tr data-cfg-product="'+esc(prod.product_id)+'"><td data-label="Product" style="font-weight:600;padding-top:10px;">'+esc(prod.name)+'</td>'
+        + '<td class="num" data-label="First-year %"><input type="number" class="cfg-p-fy" min="0" max="100" step="0.5" value="'+esc(o.firstYear)+'" placeholder="Program" aria-label="'+esc(prod.name)+' first-year %"></td>'
+        + '<td class="num" data-label="Renewal %"><input type="number" class="cfg-p-ren" min="0" max="100" step="0.5" value="'+esc(o.renewal)+'" placeholder="Program" aria-label="'+esc(prod.name)+' renewal %"></td></tr>';
+    }).join("");
+    var actions = '<div class="cfg-actions"><button type="button" class="btn primary sm" data-config-save>Save changes</button>'
+      + '<button type="button" class="btn secondary sm" data-config-cancel>Cancel</button>'
+      + (d.updatedAt ? '<span class="field-note">Last saved '+esc(d.updatedAt)+(d.updatedBy ? ' by '+esc(d.updatedBy) : '')+'</span>' : '<span class="field-note">Not configured yet -- starting values come from the current listing; update them to match the signed agreement.</span>')
+      + '</div>';
+
+    box.innerHTML = baseList + '<form class="cfg" id="programConfigForm" novalidate>'
+      + '<div class="card card-pad cfg-head">'+logoOrFallback(p, 56)
+        + '<div><h2>Configure -- '+esc(p.name)+'</h2><div class="thread-meta">Set these to match the signed '+esc(d.agreementType)+'. Partners see the result in the Program Directory and on the vendor profile.</div></div>'
+        + '<div style="margin-left:auto;">'+actions+'</div></div>'
+      + '<div id="cfgError" class="login-msg bad" role="alert" hidden></div>'
+
+      + '<div class="card card-pad cfg-section"><h3>Agreement</h3><div class="cfg-grid">'
+        + '<div><label for="cfgAgreementType">Agreement type</label><select id="cfgAgreementType">'+cfgOptions(AGREEMENT_TYPES, d.agreementType)+'</select></div>'
+        + '<div><label for="cfgAgreementStatus">Agreement status</label><select id="cfgAgreementStatus">'+cfgOptions(AGREEMENT_STATUSES, d.agreementStatus, cap)+'</select></div>'
+        + cfgInput("cfgEffectiveDate","Effective date",d.effectiveDate,"date")
+        + cfgInput("cfgTermMonths","Initial term (months)",d.termMonths,"number",'min="1" step="1"')
+        + '<div><label for="cfgProgramStatus">Program status</label><select id="cfgProgramStatus">'+cfgOptions(PROGRAM_STATUSES, d.programStatus, cap)+'</select></div>'
+      + '</div><label class="cfg-check"><input type="checkbox" id="cfgAutoRenew"'+(d.autoRenew?" checked":"")+'> Renews automatically at the end of the term</label></div>'
+
+      + '<div class="card card-pad cfg-section"><h3>Commission tiers<span class="cfg-ref">Agreement §4-5 · Schedule A</span></h3>'
+        + '<p class="field-note" style="margin:0;">Override % is paid by the vendor <b>on top of</b> the tier\'s own rate on sub-reseller revenue -- never carved out of it.</p>'
+        + '<div class="table-scroll"><table class="cfg-tiers"><thead><tr><th>Tier</th><th>First-year %</th><th>Renewal %</th><th>Override %</th><th>Commission base</th><th>Note</th><th></th></tr></thead><tbody>'+tierRows+'</tbody></table></div>'
+        + '<div><button type="button" class="btn secondary sm" data-cfg-add-tier>+ Add tier</button></div>'
+        + '<div class="cfg-grid">'
+          + '<div><label for="cfgRenewalDuration">Renewal commission paid for</label><select id="cfgRenewalDuration">'+cfgOptions(RENEWAL_DURATIONS, d.renewalDuration)+'</select></div>'
+        + '</div>'
+        + '<div><label>What partners will see</label><div class="cfg-preview" id="cfgPreview"></div></div>'
+      + '</div>'
+
+      + '<div class="card card-pad cfg-section"><h3>Revenue base<span class="cfg-ref">Agreement §5.4 -- Net Revenue definition</span></h3><div class="cfg-grid">'
+        + '<div><label for="cfgRevenueBase">Commission calculated on</label><select id="cfgRevenueBase">'+cfgOptions(["net","gross"], d.revenueBase, function(v){ return v==="net" ? "Net Revenue (itemized deductions only)" : "Gross revenue"; })+'</select></div>'
+      + '</div>'
+      + (d.revenueBase === "net"
+          ? '<div><label>Permitted deductions (only these may be subtracted from gross)</label><div class="aff-services" style="margin-bottom:8px;">'+deductions+'</div>'
+            + '<div class="aff-link-row"><input type="text" id="cfgNewDeduction" class="aff-service-input" placeholder="e.g. Third-party marketplace fees"><button type="button" class="btn secondary sm" data-cfg-add-deduction>+ Add deduction</button></div></div>'
+          : '<p class="field-note" style="margin:0;">Commission is paid on the full amount collected from the customer.</p>')
+      + '</div>'
+
+      + '<div class="card card-pad cfg-section"><h3>Payouts</h3><div class="cfg-grid">'
+        + '<div><label for="cfgCurrency">Currency</label><select id="cfgCurrency">'+cfgOptions(CURRENCIES, d.currency)+'</select></div>'
+        + '<div><label for="cfgPayoutSchedule">Payout schedule</label><select id="cfgPayoutSchedule">'+cfgOptions(PAYOUT_SCHEDULES, d.payoutSchedule)+'</select></div>'
+        + cfgInput("cfgMinPayout","Minimum payout ("+esc(d.currency)+")",d.minPayout,"number",'min="0" step="1"')
+        + cfgInput("cfgInstallerMargin","Installer Network margin %",d.installerMargin,"number",'min="0" max="100" step="0.5" placeholder="n/a"')
+      + '</div></div>'
+
+      + '<div class="card card-pad cfg-section"><h3>Deal registration<span class="cfg-ref">Agreement §6</span></h3><div class="cfg-grid">'
+        + cfgInput("cfgProtectionDays","Protection window (days)",d.dealProtectionDays,"number",'min="0" step="1"')
+        + cfgInput("cfgApprovalSla","Approval deadline (business days)",d.approvalSlaDays,"number",'min="0" step="1"')
+      + '</div><label class="cfg-check"><input type="checkbox" id="cfgNonCircumvention"'+(d.nonCircumvention?" checked":"")+'> Vendor non-circumvention applies (§6.3-6.5): the vendor may not sell direct around a registered deal</label></div>'
+
+      + '<div class="card card-pad cfg-section"><h3>Professional services<span class="cfg-ref">Agreement §9</span></h3>'
+        + '<label class="cfg-check"><input type="checkbox" id="cfgProServices"'+(d.proServicesAllowed?" checked":"")+'> Partners and CloudWAV may deliver consulting and implementation work for this product</label></div>'
+
+      + '<div class="card card-pad cfg-section"><h3>Termination<span class="cfg-ref">Agreement §13.2, §13.5</span></h3><div class="cfg-grid">'
+        + cfgInput("cfgNoticeDays","Termination notice -- either party (days)",d.terminationNoticeDays,"number",'min="0" step="1"')
+        + cfgInput("cfgPostTermMonths","Post-termination restriction (months)",d.postTerminationMonths,"number",'min="0" step="1"')
+        + cfgInput("cfgTailMonths","Commission tail after termination (months)",d.commissionTailMonths,"number",'min="0" step="1"')
+      + '</div><p class="field-note" style="margin:0;">Notice is symmetric by design -- the same period applies to the vendor and to CloudWAV.</p></div>'
+
+      + (products ? '<div class="card card-pad cfg-section"><h3>Per-product rates<span class="cfg-ref">Schedule A</span></h3>'
+          + '<p class="field-note" style="margin:0;">Leave blank to use the program\'s first tier rate. Fill in only where a product\'s agreement rate differs.</p>'
+          + '<div class="table-scroll"><table class="cfg-tiers"><thead><tr><th>Product</th><th>First-year %</th><th>Renewal %</th></tr></thead><tbody>'+products+'</tbody></table></div></div>' : '')
+
+      + '<div class="card card-pad">'+actions+'</div>'
+    + '</form>';
+    updateConfigPreview();
+  }
+
+  function readConfigForm(){
+    var d = state.cfgDraft; if (!d) return;
+    var f = document.getElementById("programConfigForm"); if (!f) return;
+    var v = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var c = function(id){ var el = document.getElementById(id); return !!(el && el.checked); };
+    d.agreementType = v("cfgAgreementType"); d.agreementStatus = v("cfgAgreementStatus"); d.programStatus = v("cfgProgramStatus");
+    d.effectiveDate = v("cfgEffectiveDate"); d.termMonths = num(v("cfgTermMonths")); d.autoRenew = c("cfgAutoRenew");
+    d.tiers = [].map.call(f.querySelectorAll("[data-cfg-tier]"), function(row){
+      var g = function(cls){ return row.querySelector(cls).value.trim(); };
+      return { tier:g(".cfg-t-name"), firstYear:num(g(".cfg-t-fy")), renewal:num(g(".cfg-t-ren")), override:num(g(".cfg-t-ovr")), base:g(".cfg-t-base"), note:g(".cfg-t-note") };
+    });
+    d.renewalDuration = v("cfgRenewalDuration"); d.revenueBase = v("cfgRevenueBase") || d.revenueBase;
+    d.currency = v("cfgCurrency"); d.payoutSchedule = v("cfgPayoutSchedule"); d.minPayout = num(v("cfgMinPayout")); d.installerMargin = num(v("cfgInstallerMargin"));
+    d.dealProtectionDays = num(v("cfgProtectionDays")); d.approvalSlaDays = num(v("cfgApprovalSla")); d.nonCircumvention = c("cfgNonCircumvention");
+    d.proServicesAllowed = c("cfgProServices");
+    d.terminationNoticeDays = num(v("cfgNoticeDays")); d.postTerminationMonths = num(v("cfgPostTermMonths")); d.commissionTailMonths = num(v("cfgTailMonths"));
+    [].forEach.call(f.querySelectorAll("[data-cfg-product]"), function(row){
+      d.productOverrides[row.getAttribute("data-cfg-product")] = { firstYear:num(row.querySelector(".cfg-p-fy").value), renewal:num(row.querySelector(".cfg-p-ren").value) };
+    });
+  }
+
+  function updateConfigPreview(){
+    var box = document.getElementById("cfgPreview"); var d = state.cfgDraft;
+    if (!box || !d) return;
+    var p = programById(state.configProgramId);
+    var baseText = function(t){ return t.base || (d.revenueBase === "net" ? "Net revenue" : "Gross revenue"); };
+    var lines = d.tiers.map(function(t){
+      return '<div class="tier-line"><span>'+esc(t.tier || "(unnamed tier)")+' <span style="color:var(--ink-faint)">· '+esc(baseText(t))+'</span></span><b>'+esc(tierRateText(t))+'</b></div>';
+    });
+    (p && p.products || []).forEach(function(prod){
+      var o = d.productOverrides[prod.product_id] || {};
+      if (o.firstYear !== "" || o.renewal !== ""){
+        var t0 = d.tiers[0] || {};
+        var fy = o.firstYear !== "" ? o.firstYear : t0.firstYear, rn = o.renewal !== "" ? o.renewal : t0.renewal;
+        lines.push('<div class="tier-line"><span>'+esc(prod.name)+' <span style="color:var(--ink-faint)">· product rate</span></span><b>'+esc(tierRateText({ firstYear:fy, renewal:rn, override:"", note:"" }))+'</b></div>');
+      }
+    });
+    lines.push('<span class="field-note">Renewal paid for: '+esc(d.renewalDuration)+' · Payouts: '+esc(d.payoutSchedule)+' in '+esc(d.currency)+'</span>');
+    box.innerHTML = lines.join("");
+  }
+
+  function validateConfig(d){
+    var errs = [];
+    var pct = function(x){ return x === "" || (x >= 0 && x <= 100); };
+    var whole = function(x){ return x !== "" && x >= 0 && Math.floor(x) === x; };
+    if (!d.tiers.length) errs.push("Add at least one commission tier.");
+    d.tiers.forEach(function(t, i){
+      var n = "Tier " + (i + 1) + (t.tier ? " (" + t.tier + ")" : "");
+      if (!t.tier) errs.push(n + " needs a name.");
+      if (t.firstYear === "" && !t.note) errs.push(n + " needs a first-year % or a note describing how it's paid.");
+      if (!pct(t.firstYear) || !pct(t.renewal) || !pct(t.override)) errs.push(n + ": percentages must be between 0 and 100.");
+    });
+    if (d.revenueBase === "net" && !d.deductions.length) errs.push("Net Revenue needs its permitted deductions itemized (§5.4) -- add at least one, or switch to Gross revenue.");
+    if (!pct(d.installerMargin)) errs.push("Installer Network margin must be between 0 and 100.");
+    [["termMonths","Initial term"],["dealProtectionDays","Protection window"],["approvalSlaDays","Approval deadline"],["terminationNoticeDays","Termination notice"],["postTerminationMonths","Post-termination restriction"],["commissionTailMonths","Commission tail"],["minPayout","Minimum payout"]].forEach(function(f){
+      if (!whole(d[f[0]])) errs.push(f[1] + " must be a whole number (0 or more).");
+    });
+    if (d.termMonths === 0) errs.push("Initial term must be at least 1 month.");
+    Object.keys(d.productOverrides).forEach(function(k){
+      var o = d.productOverrides[k];
+      if (!pct(o.firstYear) || !pct(o.renewal)) errs.push("Per-product rates must be between 0 and 100.");
+    });
+    return errs.filter(function(e, i, a){ return a.indexOf(e) === i; });
+  }
+
+  function saveProgramConfig(){
+    if (state.role !== "operator") return;
+    readConfigForm();
+    var p = programById(state.configProgramId), d = state.cfgDraft;
+    var errs = validateConfig(d), box = document.getElementById("cfgError");
+    if (errs.length){ box.innerHTML = errs.map(esc).join("<br>"); box.hidden = false; box.scrollIntoView({ block:"center" }); return; }
+    d.updatedAt = new Date().toISOString().slice(0, 16).replace("T", " ");
+    d.updatedBy = state.account ? state.account.name : "Program Operator";
+    p.terms = JSON.parse(JSON.stringify(d));
+    p.tiers = d.tiers.map(function(t){ return { tier:t.tier, rate:tierRateText(t), base:t.base || (d.revenueBase === "net" ? "Net revenue" : "Gross revenue") }; });
+    p.agreement = Object.assign({}, p.agreement || {}, { type:d.agreementType, status:d.agreementStatus });
+    p.status = d.programStatus;
+    saveProgramTerms();
+    toast("Saved -- " + p.name + " now matches the agreement terms");
+    state.cfgDraft = null; state.configProgramId = null;
+    state.screen = "operator-programs";
+    render();
   }
 
   function showSubmitDeal(){
@@ -6732,7 +7044,21 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (simSignedBtn && !simSignedBtn.closest(".modal")){ simulateSigned(simSignedBtn.getAttribute("data-simulate-signed")); return; }
 
     var configBtn = e.target.closest("[data-configure]");
-    if (configBtn){ showConfigure(configBtn.getAttribute("data-configure")); return; }
+    if (configBtn){ openProgramConfig(configBtn.getAttribute("data-configure")); return; }
+
+    if (e.target.closest("[data-config-save]")){ saveProgramConfig(); return; }
+    if (e.target.closest("[data-config-cancel]")){ state.cfgDraft = null; state.configProgramId = null; state.screen = "operator-programs"; render(); return; }
+    if (e.target.closest("[data-cfg-add-tier]")){
+      readConfigForm(); state.cfgDraft.tiers.push({ tier:"", firstYear:"", renewal:"", override:"", base:"", note:"" });
+      renderProgramConfig();
+      var rows = document.querySelectorAll("[data-cfg-tier]"); if (rows.length) rows[rows.length-1].querySelector(".cfg-t-name").focus();
+      return;
+    }
+    var cfgRemoveTier = e.target.closest("[data-cfg-remove-tier]");
+    if (cfgRemoveTier){ readConfigForm(); if (state.cfgDraft.tiers.length > 1){ state.cfgDraft.tiers.splice(+cfgRemoveTier.getAttribute("data-cfg-remove-tier"), 1); renderProgramConfig(); } return; }
+    if (e.target.closest("[data-cfg-add-deduction]")){ addConfigDeduction(); return; }
+    var cfgRemoveDed = e.target.closest("[data-cfg-remove-deduction]");
+    if (cfgRemoveDed){ readConfigForm(); state.cfgDraft.deductions.splice(+cfgRemoveDed.getAttribute("data-cfg-remove-deduction"), 1); renderProgramConfig(); return; }
 
     var viewProfileBtn = e.target.closest("[data-view-profile]");
     if (viewProfileBtn){ state.viewingPartnerId = viewProfileBtn.getAttribute("data-view-profile"); state.screen = "partner-profile"; render(); return; }
@@ -7271,6 +7597,22 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeModal(); });
 
+  // Configure program: live preview, revenue-base switch, Enter adds a deduction
+  document.addEventListener("input", function(e){
+    if (e.target.closest && e.target.closest("#programConfigForm") && e.target.id !== "cfgNewDeduction"){ readConfigForm(); updateConfigPreview(); }
+  });
+  document.addEventListener("change", function(e){
+    if (e.target.id === "cfgRevenueBase" || e.target.id === "cfgCurrency"){
+      readConfigForm();
+      if (e.target.id === "cfgRevenueBase" && state.cfgDraft.revenueBase === "net" && !state.cfgDraft.deductions.length) state.cfgDraft.deductions = DEFAULT_DEDUCTIONS.slice();
+      renderProgramConfig();
+    }
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Enter" && e.target.id === "cfgNewDeduction"){ e.preventDefault(); addConfigDeduction(); }
+    else if (e.key === "Enter" && e.target.closest && e.target.closest("#programConfigForm") && e.target.tagName === "INPUT"){ e.preventDefault(); }
+  });
+
   // Enter in an affiliate "add service" box adds the service
   document.addEventListener("keydown", function(e){
     if (e.key !== "Enter") return;
@@ -7285,6 +7627,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadCommunityData();
   loadResourceData();
   loadVendorEdits();
+  loadProgramTerms();
 
   // ===== SIGN-IN (Supabase Auth + portal_users role mapping) =====
   // Each login maps to a role and the company it belongs to via the portal_users table
