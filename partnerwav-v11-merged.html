@@ -1964,21 +1964,12 @@
         { tier:"Affiliate", rate:"12% on hardware sale + attach bonus", base:"Gross sale price" }
       ], agreement:{ type:"Vendor Program Agreement", status:"active" }, status:"active",
       logo:dataLogo("C","#7a9c00"), website:"https://crossconnectapp.com",
-      social:{ linkedin:"", twitter:"", facebook:"" },
-      products:[
-        { product_id:"prayer-pendant-b", name:"Prayer Pendant™ (Model B)", desc:"Wearable device with direct customer shipping - no installation required. Ideal for healthcare and wellness applications." }
-      ],
-      referralPartners:[] },
+      social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
     { id:"botnoi", name:"Botnoi Voice", vertical:"Conversational AI (voice)", origin:"Thailand", desc:"Thai voice/conversational-AI platform expanding into the US market -- open to a straight Vendor Program relationship or a deeper Joint Venture, depending on the partner.", relationships:["Vendor Program","Joint Venture"], tiers:[
         { tier:"Channel Manager", rate:"Per JV profit-allocation schedule", base:"Per Joint Venture Agreement, Schedule C" }
       ], agreement:{ type:"Joint Venture Agreement", status:"pending" }, status:"onboarding",
       logo:"", website:"https://botnoigroup.com",
-      social:{ linkedin:"", twitter:"", facebook:"" },
-      products:[
-        { product_id:"botnoi-voice-api", name:"Botnoi Voice API", desc:"Thai voice API platform for building conversational AI applications with natural language understanding." },
-        { product_id:"botnoi-ivr", name:"Botnoi IVR Solution", desc:"Interactive voice response system powered by AI for customer service automation." }
-      ],
-      referralPartners:[] },
+      social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
     { id:"zipevent", name:"ZipEvent", vertical:"Events & marketing (Thailand)", origin:"Thailand", desc:"Thailand's largest AI/tech event platform -- a co-marketing relationship, not a reseller program.", relationships:["Custom Marketing"], tiers:[
         { tier:"Marketing partner", rate:"Per-campaign MDF, 50/50 upfront/milestone", base:"Approved campaign budget" }
       ], agreement:{ type:"Custom Marketing Agreement", status:"draft" }, status:"onboarding",
@@ -1994,11 +1985,7 @@
         { tier:"Reseller", rate:"25% of subscription value, life of account", base:"Monthly recurring subscription revenue" }
       ], agreement:{ type:"SaaS Reseller Agreement", status:"draft" }, status:"onboarding",
       logo:"", website:"https://intelsense.ai/unisense",
-      social:{ linkedin:"", twitter:"", facebook:"" },
-      products:[
-        { product_id:"unisense-platform", name:"Unisense Platform", desc:"Sales and marketing automation platform for lead management, email campaigns, and customer engagement tracking." }
-      ],
-      referralPartners:[] }
+      social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] }
   ];
 
   var trainingPrograms = [
@@ -2092,37 +2079,37 @@
     { id:"siam-digital", name:"Siam Digital MSP", init:"SD", country:"Thailand", tagline:"Enterprise IT and AI-rollout specialists for banks and logistics groups across Bangkok.",
       specialties:["Conversational AI","Enterprise IT","Banking & Finance"],
       credentials:["Reseller -- Intelsense AI","ISO 27001 (in progress)"],
+      services:["Xero Accounting Setup","Northstar PSA Implementation","MSP Training & Certification"],
       pastProjects:[
         { name:"Bangkok Bank branch rollout", program:"Intelsense AI", desc:"Phased conversational-AI rollout across 6 branches -- in progress." },
         { name:"Regional logistics chatbot pilot", program:"Intelsense AI", desc:"Closed 2025 -- 40-seat support-automation deployment." }
       ],
       logo:dataLogo("SD","#5b3df5"), website:"https://siamdigitalmsp.example.com",
-      social:{ linkedin:"https://linkedin.com/company/siam-digital-msp", twitter:"", facebook:"" },
-      services:["Xero Accounting Setup","Northstar PSA Implementation","MSP Training & Certification"] },
+      social:{ linkedin:"https://linkedin.com/company/siam-digital-msp", twitter:"", facebook:"" } },
     { id:"gulf-coast", name:"Gulf Coast VAR", init:"GC", country:"USA", tagline:"Healthcare and consumer-hardware fulfillment across the US Gulf Coast.",
       specialties:["Consumer Hardware","Healthcare IT","Wearables"],
       credentials:["Affiliate -- Cross Connect"],
+      services:["Wearable Device Integration","Healthcare IT Consulting","Hardware Procurement"],
       pastProjects:[
         { name:"Regional clinic wearable pilot", program:"Cross Connect", desc:"60-unit Prayer Pendant™ rollout for a regional clinic network -- in progress." }
       ],
-      logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" },
-      services:["Wearable Device Integration","Healthcare IT Consulting","Hardware Procurement"] },
+      logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" } },
     { id:"portonics", name:"Portonics Ltd.", init:"PL", country:"Bangladesh", tagline:"Digital-transformation and AI consultancy -- hardware-linked deployments a specialty.",
       specialties:["AI Consultancy","Hardware Integration","Digital Transformation"],
       credentials:["Installer -- Intelsense AI","Certified Integrator -- Cross Connect"],
+      services:["AI-IVR Implementation","Enterprise Integration Services","Digital Transformation Consulting"],
       pastProjects:[
         { name:"Enterprise VoIP migration", program:"Intelsense AI", desc:"Closed Aug 2026 -- full-site VoIP + AI-IVR migration for a Dhaka enterprise client." },
         { name:"Regional clinic wearable pilot (advisory)", program:"Cross Connect", desc:"Shared activation-webhook guidance with Gulf Coast VAR." }
       ],
       logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" },
-      vendorProgramId:"portonics-dev",
-      services:["AI-IVR Implementation","Enterprise Integration Services","Digital Transformation Consulting"] },
+      vendorProgramId:"portonics-dev" },
     { id:"riverside", name:"Riverside Telco", init:"RT", country:"USA", tagline:"Telecom and voice-AI channel manager building a Thai-vendor bench for US carriers.",
       specialties:["Telecom / UCaaS","Channel Management","Voice AI"],
       credentials:["Channel Manager -- Botnoi Voice (draft)"],
+      services:["Voice AI Platform Setup","Telecom Integration","Channel Management Services"],
       pastProjects:[],
-      logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" },
-      services:["Voice AI Platform Setup","Telecom Integration","Channel Management Services"] }
+      logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" } }
   ];
 
   // Affiliate profiles - same structure as partner profiles
@@ -2139,13 +2126,13 @@
       logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" }, status:"active", archivedAt:null }
   ];
 
-  // Partner affiliate enrollments - tracks when partners sign up as affiliates
-  var partnerAffiliateEnrollments = [];
-
   // Vendor marketing materials pending operator approval
   var vendorMarketingMaterials = [
     { id:"mkt1", vendorId:"intelsense", title:"Q4 2026 Partner Recruitment Campaign", description:"Email and social campaign promoting Intelsense Reseller program", submittedAt:"2026-09-15", status:"pending", submittedBy:"vendor", approvedAt:null, approvedBy:null, archivedAt:null }
   ];
+
+  // Partner affiliate enrollments - tracks when partners sign up as affiliates
+  var partnerAffiliateEnrollments = [];
 
   var conversations = [
     { id:"c1", withName:"Portonics Ltd.", withType:"partner", withInit:"PL", unreadCount:1, project:"Enterprise VoIP migration (closed)", messages:[
@@ -2303,12 +2290,6 @@
             }
           });
         }
-        if (data.partnerAffiliateEnrollments && Array.isArray(data.partnerAffiliateEnrollments)){
-          partnerAffiliateEnrollments = data.partnerAffiliateEnrollments;
-        }
-        if (data.partnerProfiles && Array.isArray(data.partnerProfiles)){
-          partnerProfiles = data.partnerProfiles;
-        }
       }
     } catch (e) {
       console.log("Could not load saved data:", e);
@@ -2324,22 +2305,10 @@
           referralPartners[p.id] = p.referralPartners;
         }
       });
-      localStorage.setItem("partnerWAV_vendorReferralData", JSON.stringify({
-        referralPartners: referralPartners,
-        partnerAffiliateEnrollments: partnerAffiliateEnrollments,
-        partnerProfiles: partnerProfiles
-      }));
+      localStorage.setItem("partnerWAV_vendorReferralData", JSON.stringify({ referralPartners: referralPartners }));
     } catch (e) {
       console.log("Could not save data:", e);
     }
-  }
-
-  // Generate affiliate tracking link for a partner
-  function generateAffiliateLink(affiliateId, partnerId){
-    var baseUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? window.location.origin
-      : "https://cloudwavconsulting.github.io/PartnerWAV";
-    return baseUrl + "?apply=affiliate&affiliateId=" + encodeURIComponent(affiliateId) + "&partnerId=" + encodeURIComponent(partnerId);
   }
 
   var state = {
@@ -2433,6 +2402,16 @@
   function programById(id){ for (var i=0;i<programs.length;i++){ if (programs[i].id===id) return programs[i]; } return null; }
   function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 
+  // Generate affiliate tracking link for a partner
+  function generateAffiliateLink(affiliateId, partnerId){
+    var baseUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? window.location.origin
+      : window.location.hostname.includes("github.io")
+        ? "https://mpower-source.github.io/partnerwav/partnerwav-v11-merged.html"
+        : window.location.href.split("?")[0];
+    return baseUrl + "?apply=affiliate&affiliateId=" + encodeURIComponent(affiliateId) + "&partnerId=" + encodeURIComponent(partnerId);
+  }
+
   function statusPill(status){
     var label = status.charAt(0).toUpperCase()+status.slice(1);
     return '<span class="pill '+status+'">'+label+'</span>';
@@ -2506,62 +2485,18 @@
   function affiliateCard(a, showOps){
     var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
     var isOperator = state.role === "operator";
-    var isPartner = state.role === "partner";
-
-    var partnerAffiliateLinkHtml = '';
-    if (isPartner && enrolled){
-      var existingEnrollment = partnerAffiliateEnrollments.find(function(e){
-        return e.affiliateId === a.id && e.partnerId === state.myProfileId;
-      });
-      if (existingEnrollment){
-        partnerAffiliateLinkHtml = '<div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:4px;">'
-          + '<p style="margin:0 0 8px 0;font-size:12px;color:#666;">Your affiliate link:</p>'
-          + '<div style="display:flex;gap:8px;align-items:center;">'
-          + '<input type="text" value="'+esc(existingEnrollment.affiliateLink)+'" readonly style="flex:1;padding:6px;font-size:12px;border:1px solid #ddd;border-radius:3px;font-family:monospace;" />'
-          + '<button class="btn secondary xs" data-copy-affiliate-link="'+a.id+'">Copy</button>'
-          + '</div>'
-          + '</div>';
-      }
-    }
-
-    var actionBtn = '';
-    if (isOperator && showOps){
-      actionBtn = '<button class="btn secondary sm" data-edit-affiliate-offer="'+a.id+'">Edit</button> <button class="btn secondary sm" data-delete-affiliate-offer="'+a.id+'">Delete</button>';
-    } else if (isPartner){
-      var hasEnrollment = partnerAffiliateEnrollments.some(function(e){
-        return e.affiliateId === a.id && e.partnerId === state.myProfileId;
-      });
-      if (hasEnrollment){
-        var enrollment = partnerAffiliateEnrollments.find(function(e){
-          return e.affiliateId === a.id && e.partnerId === state.myProfileId;
-        });
-        if (enrollment){
-          actionBtn = '<div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:4px;">'
-            + '<p style="margin:0 0 8px 0;font-size:12px;color:#666;">Your affiliate link:</p>'
-            + '<div style="display:flex;gap:8px;align-items:center;">'
-            + '<input type="text" value="'+esc(enrollment.affiliateLink)+'" readonly style="flex:1;padding:6px;font-size:12px;border:1px solid #ddd;border-radius:3px;font-family:monospace;" />'
-            + '<button class="btn secondary xs" data-copy-affiliate-link="'+a.id+'">Copy</button>'
-            + '</div>'
-            + '</div>';
-        }
-      } else {
-        actionBtn = '<button class="btn primary sm" data-partner-enroll-affiliate="'+a.id+'">Sign up as affiliate</button>';
-      }
-    } else {
-      var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
-      if (enrolled){
-        actionBtn = '<button class="btn secondary sm" disabled>Enrolled ✓</button>';
-      } else {
-        actionBtn = '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>';
-      }
-    }
-
+    var actionBtn = enrolled
+      ? '<button class="btn secondary sm" disabled>Enrolled ✓</button>'
+      : '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>';
+    var opsButtons = (isOperator && showOps)
+      ? '<button class="btn secondary sm" data-edit-affiliate-offer="'+a.id+'">Edit</button> <button class="btn secondary sm" data-delete-affiliate-offer="'+a.id+'">Delete</button>'
+      : '';
     return '<div class="program-card">'
       + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(a)+'<span class="program-name">'+esc(a.name)+'</span></div><span class="badge neutral">'+esc(a.category)+'</span></div>'
       + '<p class="program-desc">'+esc(a.desc)+'</p>'
       + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
-      + '<div class="program-actions">'+actionBtn+'</div>'
+      + '<div class="program-actions">'+(showOps ? opsButtons : actionBtn)+'</div>'
     + '</div>';
   }
 
@@ -3098,16 +3033,13 @@
       var actionBtn = mine
         ? '<button class="btn secondary sm" data-goto-screen="partner-my-profile">Edit profile</button>'
         : '<button class="btn secondary sm" data-message-partner="'+esc(p.name)+'">Message</button>';
-      var editDeleteBtn = mine
-        ? '<button class="btn ghost sm" data-edit-partner-profile="'+p.id+'" style="color:var(--accent);">Edit</button> <button class="btn ghost sm" data-delete-partner-profile="'+p.id+'" style="color:var(--bad);">Delete</button>'
-        : '';
       return '<div class="program-card">'
         + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div><span class="badge '+(mine?"accent2":"neutral")+'">'+(mine?"You":esc(p.country))+'</span></div>'
         + '<p class="program-desc">'+esc(p.tagline)+'</p>'
         + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+chips+'</div>'
         + '<div class="program-actions">'
           + '<button class="btn ghost sm" data-view-profile="'+p.id+'">View profile →</button>'
-          + (mine ? editDeleteBtn : actionBtn)
+          + actionBtn
         + '</div></div>';
     }).join("");
   }
@@ -3141,11 +3073,6 @@
           + '</div>' : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Specialties</h2></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">'+chips+'</div></div>'
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Credentials</h2></div><ul style="margin:8px 0 0;padding-left:18px;font-size:.86rem;">'+creds+'</ul></div>'
-        + (p.services && p.services.length
-            ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Services & Solutions</h2></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">'
-              + p.services.map(function(s){ return '<span class="chip" style="background:var(--accent-soft);color:var(--ink);">'+esc(s)+'</span>'; }).join("")
-              + '</div></div>'
-            : '')
         + '<div><div class="section-head"><h2 style="font-size:.9rem;">Past projects</h2></div><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">'+projects+'</div></div>'
         + (social ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Elsewhere</h2></div><div style="margin-top:8px;">'+social+'</div></div>' : '')
       + '</div>';
@@ -4447,7 +4374,6 @@
     document.getElementById("profileCredentials").value = profile ? profile.credentials.join(", ") : "";
     document.getElementById("profileWebsite").value = profile ? profile.website : "";
     document.getElementById("profileLinkedin").value = profile ? (profile.social && profile.social.linkedin) : "";
-
     var servicesContainer = document.getElementById("partnerServicesContainer");
     if (servicesContainer){
       servicesContainer.innerHTML = profile && profile.services
@@ -4493,9 +4419,9 @@
       if (idx >= 0){
         partnerProfiles[idx] = Object.assign(partnerProfiles[idx], {
           name: name, country: country, tagline: tagline, specialties: specialties,
-          credentials: credentials, website: website, services: services,
-          social: Object.assign(partnerProfiles[idx].social, {linkedin: linkedin})
+          credentials: credentials, website: website, services: services, social: Object.assign(partnerProfiles[idx].social, {linkedin: linkedin})
         });
+        saveVendorData();
         toast("Profile updated");
       }
     } else {
@@ -6279,90 +6205,6 @@
       return;
     }
 
-    var partnerEnrollAffiliateBtn = e.target.closest("[data-partner-enroll-affiliate]");
-    if (partnerEnrollAffiliateBtn){
-      var affiliateId = partnerEnrollAffiliateBtn.getAttribute("data-partner-enroll-affiliate");
-      var partnerId = state.myProfileId;
-      var existingEnrollment = partnerAffiliateEnrollments.find(function(e){
-        return e.affiliateId === affiliateId && e.partnerId === partnerId;
-      });
-      if (!existingEnrollment){
-        var affiliateLink = generateAffiliateLink(affiliateId, partnerId);
-        var newEnrollment = {
-          id: "aff-enroll-" + Date.now(),
-          affiliateId: affiliateId,
-          partnerId: partnerId,
-          enrolledDate: new Date().toISOString(),
-          affiliateLink: affiliateLink,
-          commissionRate: 0,
-          status: "active"
-        };
-        partnerAffiliateEnrollments.push(newEnrollment);
-        saveVendorData();
-        toast("Successfully enrolled as affiliate -- use your unique link to drive sales");
-        render();
-      }
-      return;
-    }
-
-    var copyAffiliateLinkBtn = e.target.closest("[data-copy-affiliate-link]");
-    if (copyAffiliateLinkBtn){
-      var affiliateId = copyAffiliateLinkBtn.getAttribute("data-copy-affiliate-link");
-      var enrollment = partnerAffiliateEnrollments.find(function(e){
-        return e.affiliateId === affiliateId && e.partnerId === state.myProfileId;
-      });
-      if (enrollment){
-        if (navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(enrollment.affiliateLink).then(function(){
-            toast("Affiliate link copied to clipboard");
-          }).catch(function(){
-            var inp = document.createElement("input");
-            inp.value = enrollment.affiliateLink;
-            document.body.appendChild(inp);
-            inp.select();
-            document.execCommand("copy");
-            document.body.removeChild(inp);
-            toast("Affiliate link copied to clipboard");
-          });
-        } else {
-          var inp = document.createElement("input");
-          inp.value = enrollment.affiliateLink;
-          document.body.appendChild(inp);
-          inp.select();
-          document.execCommand("copy");
-          document.body.removeChild(inp);
-          toast("Affiliate link copied to clipboard");
-        }
-      }
-      return;
-    }
-
-    var addServiceBtn = e.target.closest("#addServiceBtn");
-    if (addServiceBtn){
-      var input = document.getElementById("newServiceInput");
-      var service = input.value.trim();
-      if (service){
-        var container = document.getElementById("partnerServicesContainer");
-        var serviceChip = document.createElement("div");
-        serviceChip.style.cssText = "background:var(--accent-soft);padding:6px 12px;border-radius:20px;font-size:13px;display:flex;align-items:center;gap:8px;";
-        serviceChip.innerHTML = esc(service) + '<button type="button" class="btn ghost xs" data-remove-service="'+esc(service)+'" style="padding:0;margin-left:4px;">×</button>';
-        container.appendChild(serviceChip);
-        input.value = "";
-        toast("Service added");
-      }
-      return;
-    }
-
-    var removeServiceBtn = e.target.closest("[data-remove-service]");
-    if (removeServiceBtn){
-      var serviceChip = removeServiceBtn.closest("div");
-      if (serviceChip){
-        serviceChip.remove();
-        toast("Service removed");
-      }
-      return;
-    }
-
     var submitDealBtn = e.target.closest("#submitDealBtn");
     if (submitDealBtn){ showSubmitDeal(); return; }
 
@@ -6386,31 +6228,6 @@
 
     var backNetworkBtn = e.target.closest("[data-back-network]");
     if (backNetworkBtn){ state.screen = "partner-network"; render(); return; }
-
-    var editPartnerProfileBtn = e.target.closest("[data-edit-partner-profile]");
-    if (editPartnerProfileBtn){
-      state.editingProfileId = editPartnerProfileBtn.getAttribute("data-edit-partner-profile");
-      state.screen = "partner-profile-editor";
-      setTimeout(function(){ loadPartnerProfileForm(state.editingProfileId); attachFormHandlers(); }, 0);
-      render();
-      return;
-    }
-
-    var deletePartnerProfileBtn = e.target.closest("[data-delete-partner-profile]");
-    if (deletePartnerProfileBtn){
-      var profileId = deletePartnerProfileBtn.getAttribute("data-delete-partner-profile");
-      if (confirm("Delete this partner profile? This action cannot be undone.")){
-        var idx = partnerProfiles.findIndex(function(p){ return p.id === profileId; });
-        if (idx >= 0){
-          partnerProfiles.splice(idx, 1);
-          toast("Partner profile deleted");
-          saveVendorData();
-          state.screen = "partner-network";
-          render();
-        }
-      }
-      return;
-    }
 
     var msgPartnerBtn = e.target.closest("[data-message-partner]");
     if (msgPartnerBtn){ openConversationWith(msgPartnerBtn.getAttribute("data-message-partner")); return; }
@@ -6465,13 +6282,8 @@
       var text = ta && ta.value.trim();
       if (text){
         var thread = projectThreads.filter(function(x){ return x.id===tid; })[0];
-        var currentUser = state.role === "partner" && state.myProfileId ? partnerById(state.myProfileId) : null;
-        var authorName = currentUser ? currentUser.name : currentPartnerName();
-        var authorInit = currentUser ? currentUser.init : "YU";
-        thread.posts.push({ author: authorName, init: authorInit, time:"just now", text:text });
-        ta.value = "";
+        thread.posts.push({ author:"Peter Phelan", init:"PP", time:"just now", text:text });
         toast("Posted to "+thread.deal);
-        saveVendorData();
         renderCommunity();
       }
       return;
@@ -6715,6 +6527,101 @@
         toast("Incentive denied");
         saveVendorData();
         render();
+      }
+      return;
+    }
+
+    var editPartnerProfileBtn = e.target.closest("[data-edit-partner-profile]");
+    if (editPartnerProfileBtn){
+      state.editingProfileId = editPartnerProfileBtn.getAttribute("data-edit-partner-profile");
+      state.screen = "partner-profile-editor";
+      setTimeout(function(){ loadPartnerProfileForm(state.editingProfileId); attachFormHandlers(); }, 0);
+      render();
+      return;
+    }
+
+    var deletePartnerProfileBtn = e.target.closest("[data-delete-partner-profile]");
+    if (deletePartnerProfileBtn){
+      var profileId = deletePartnerProfileBtn.getAttribute("data-delete-partner-profile");
+      if (confirm("Delete this partner profile?")){
+        var idx = partnerProfiles.findIndex(function(p){ return p.id === profileId; });
+        if (idx >= 0){
+          partnerProfiles.splice(idx, 1);
+          saveVendorData();
+          toast("Profile deleted");
+          state.screen = "partner-network";
+          render();
+        }
+      }
+      return;
+    }
+
+    var addServiceBtn = e.target.closest("#addServiceBtn");
+    if (addServiceBtn){
+      var input = document.getElementById("newServiceInput");
+      var service = input.value.trim();
+      if (service){
+        var container = document.getElementById("partnerServicesContainer");
+        var serviceChip = document.createElement("div");
+        serviceChip.style.cssText = "background:var(--accent-soft);padding:6px 12px;border-radius:20px;font-size:13px;display:flex;align-items:center;gap:8px;";
+        serviceChip.innerHTML = esc(service) + '<button type="button" class="btn ghost xs" data-remove-service="'+esc(service)+'" style="padding:0;margin-left:4px;">×</button>';
+        container.appendChild(serviceChip);
+        input.value = "";
+        toast("Service added");
+      }
+      return;
+    }
+
+    var removeServiceBtn = e.target.closest("[data-remove-service]");
+    if (removeServiceBtn){
+      var serviceChip = removeServiceBtn.closest("div");
+      if (serviceChip){
+        serviceChip.remove();
+        toast("Service removed");
+      }
+      return;
+    }
+
+    var partnerEnrollAffiliateBtn = e.target.closest("[data-partner-enroll-affiliate]");
+    if (partnerEnrollAffiliateBtn){
+      var affiliateId = partnerEnrollAffiliateBtn.getAttribute("data-partner-enroll-affiliate");
+      var partnerId = state.myProfileId;
+      var existingEnrollment = partnerAffiliateEnrollments.find(function(e){
+        return e.affiliateId === affiliateId && e.partnerId === partnerId;
+      });
+      if (!existingEnrollment){
+        var affiliateLink = generateAffiliateLink(affiliateId, partnerId);
+        var newEnrollment = {
+          id: "aff-enroll-" + Date.now(),
+          affiliateId: affiliateId,
+          partnerId: partnerId,
+          enrolledDate: new Date().toISOString().split("T")[0],
+          affiliateLink: affiliateLink,
+          commissionRate: "Per program terms",
+          status: "active"
+        };
+        partnerAffiliateEnrollments.push(newEnrollment);
+        saveVendorData();
+        toast("Successfully enrolled as affiliate -- use your unique link to drive sales");
+        render();
+      }
+      return;
+    }
+
+    var copyAffiliateLinkBtn = e.target.closest("[data-copy-affiliate-link]");
+    if (copyAffiliateLinkBtn){
+      var affiliateId = copyAffiliateLinkBtn.getAttribute("data-copy-affiliate-link");
+      var enrollment = partnerAffiliateEnrollments.find(function(e){
+        return e.affiliateId === affiliateId && e.partnerId === state.myProfileId;
+      });
+      if (enrollment && navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(enrollment.affiliateLink).then(function(){
+          toast("Affiliate link copied to clipboard");
+        });
+      } else if (!enrollment){
+        toast("Not enrolled in this affiliate program");
+      } else {
+        toast("Clipboard copy not supported");
       }
       return;
     }
