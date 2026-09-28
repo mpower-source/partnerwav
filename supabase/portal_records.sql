@@ -144,6 +144,11 @@ begin
     is_new := not found;
   end if;
 
+  -- nobody can post a message as someone else
+  if new.collection = 'messages' and (new.data ->> 'from') is distinct from k then
+    raise exception 'Messages must be sent as yourself';
+  end if;
+
   if is_new then
     if public.portal_operator_only(new.collection) then
       raise exception 'Only CloudWAV can add % records', new.collection;
@@ -200,7 +205,48 @@ do $$ begin
 exception when duplicate_object then null; when undefined_object then null; end $$;
 
 -- ---------------------------------------------------------------------------
--- 7. Check (optional): after signing in to the portal as the operator and clicking
+-- 7. File storage for resource uploads (bucket "portal-files", private, 50 MB per file)
+--    Files live at resources/<record id>/<file name>. Whoever can read the resource record
+--    can read its file; only the submitter (or CloudWAV) can upload it.
+-- ---------------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('portal-files', 'portal-files', false, 52428800)
+on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit;
+
+drop policy if exists "portal-files read"   on storage.objects;
+drop policy if exists "portal-files upload" on storage.objects;
+drop policy if exists "portal-files update" on storage.objects;
+drop policy if exists "portal-files delete" on storage.objects;
+
+create policy "portal-files read" on storage.objects
+  for select to authenticated using (
+    bucket_id = 'portal-files'
+    and exists (select 1 from public.portal_records r            -- RLS on portal_records applies here
+                where r.collection in ('resources', 'pendingResources')
+                  and r.id = (storage.foldername(name))[2])
+  );
+
+create policy "portal-files upload" on storage.objects
+  for insert to authenticated with check (
+    bucket_id = 'portal-files'
+    and (storage.foldername(name))[1] = 'resources'
+    and (public.is_portal_operator()
+         or exists (select 1 from public.portal_records r
+                    where r.collection in ('resources', 'pendingResources')
+                      and r.id = (storage.foldername(name))[2]
+                      and public.portal_key() = any(r.writers)))
+  );
+
+create policy "portal-files update" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'portal-files' and (owner = auth.uid() or public.is_portal_operator()))
+  with check (bucket_id = 'portal-files' and (owner = auth.uid() or public.is_portal_operator()));
+
+create policy "portal-files delete" on storage.objects
+  for delete to authenticated using (bucket_id = 'portal-files' and (owner = auth.uid() or public.is_portal_operator()));
+
+-- ---------------------------------------------------------------------------
+-- 8. Check (optional): after signing in to the portal as the operator and clicking
 --    Cloud Data -> "Save all starter records to Supabase", this should list the collections.
 -- ---------------------------------------------------------------------------
 -- select collection, count(*) from public.portal_records group by 1 order by 1;

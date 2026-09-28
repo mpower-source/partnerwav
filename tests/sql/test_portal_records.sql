@@ -114,4 +114,44 @@ select t('login without a portal role sees only public rows', (select count(*) f
 select t('login without a portal role cannot write', fails($$insert into portal_records(collection,id,data,readers,writers) values ('threads','t9','{}','{*}','{*}')$$));
 reset role;
 
+-- ===== messages
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('conversations','partner:siam-digital__vendor:intelsense','{"participants":["partner:siam-digital","vendor:intelsense"]}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital,vendor:intelsense}');
+insert into portal_records(collection,id,data,readers,writers) values ('messages','m1','{"from":"partner:siam-digital","text":"hi"}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital}');
+select t('partner can message a vendor', (select count(*) from portal_records where collection='messages') = 1);
+select t('cannot send a message as someone else', fails($$insert into portal_records(collection,id,data,readers,writers) values ('messages','m2','{"from":"vendor:intelsense","text":"fake"}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('the vendor sees the message', (select count(*) from portal_records where collection='messages') = 1);
+insert into portal_records(collection,id,data,readers,writers) values ('messages','m3','{"from":"vendor:intelsense","text":"hello"}','{partner:siam-digital,vendor:intelsense}','{vendor:intelsense}');
+select t('vendor replies', (select count(*) from portal_records where collection='messages') = 2);
+select t('vendor cannot edit the partner''s message', (select count(*) from (select 1) x where not fails($$update portal_records set data='{"from":"partner:siam-digital","text":"edited"}' where id='m1'$$)) = 1 and (select data->>'text' from portal_records where id='m1') = 'hi');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+select t('a third partner cannot read the conversation', (select count(*) from portal_records where collection in ('messages','conversations')) = 0);
+reset role;
+
+-- ===== file storage
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('pendingResources','res-1','{"id":"res-1","status":"pending","ownerKey":"vendor:intelsense"}','{vendor:intelsense}','{vendor:intelsense}');
+insert into storage.objects(bucket_id,name) values ('portal-files','resources/res-1/deck.pdf');
+select t('submitter can upload the file for their resource', (select count(*) from storage.objects) = 1);
+select t('cannot upload a file for someone else''s resource', fails($$insert into storage.objects(bucket_id,name) values ('portal-files','resources/i1/x.pdf')$$));
+select t('cannot upload outside resources/', fails($$insert into storage.objects(bucket_id,name) values ('portal-files','other/res-1/x.pdf')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+select t('other users cannot see the pending file', (select count(*) from storage.objects) = 0);
+select t('other users cannot upload into it', fails($$insert into storage.objects(bucket_id,name) values ('portal-files','resources/res-1/evil.pdf')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV sees the pending file', (select count(*) from storage.objects) = 1);
+insert into portal_records(collection,id,data,readers,writers) values ('resources','res-1','{"id":"res-1","status":"published","ownerKey":"vendor:intelsense"}','{*}','{vendor:intelsense}');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+select t('once published, every signed-in user can open the file', (select count(*) from storage.objects) = 1);
+reset role;
+set role anon;
+select t('anonymous visitors cannot open files', (select count(*) from storage.objects) = 0);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

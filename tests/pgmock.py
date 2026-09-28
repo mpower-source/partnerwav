@@ -53,8 +53,56 @@ class PgSupabase(MockSupabase):
         con = psycopg2.connect(self.dsn); cur = con.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute("select * from portal_records order by collection, id"); r = cur.fetchall(); con.close(); return r
 
+    files = {}   # "bucket/path" -> (bytes, content type)
+
+    def handle_storage(self, route):
+        req = route.request; u = urllib.parse.urlparse(req.url)
+        hdr = {"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*", "access-control-expose-headers": "*"}
+        if req.method == "OPTIONS": return route.fulfill(status=200, headers=hdr)
+        uid = self.uid_from_auth(req.headers.get("authorization", ""))
+        path = urllib.parse.unquote(u.path[len("/storage/v1/object/"):])
+        def js(body, status=200): route.fulfill(status=status, content_type="application/json", body=json.dumps(body), headers=hdr)
+        try:
+            if path.startswith("sign/") and req.method == "POST":
+                bucket, name = path[5:].split("/", 1)
+                rows = self.sql("select name from storage.objects where bucket_id=%s and name=%s", (bucket, name), uid=uid)
+                if not rows: return js({"statusCode": "404", "error": "not_found", "message": "Object not found"}, 400)
+                return js({"signedURL": f"/object/sign/{bucket}/{urllib.parse.quote(name)}?token=t-{uid}"})
+            if path.startswith("sign/") and req.method == "GET":
+                bucket, name = path[5:].split("/", 1)
+                data, ctype = self.files.get(bucket + "/" + name, (b"", "application/octet-stream"))
+                return route.fulfill(status=200, body=data, headers={**hdr, "content-type": ctype})
+            if req.method in ("POST", "PUT"):
+                bucket, name = path.split("/", 1)
+                raw = req.post_data_buffer or b""; ctype = req.headers.get("content-type", "")
+                if ctype.startswith("multipart/form-data"):
+                    boundary = ctype.split("boundary=")[1].encode()
+                    for part in raw.split(b"--" + boundary):
+                        if b"filename=" in part or (b'name=""' in part and b"\r\n\r\n" in part):
+                            head, _, body = part.partition(b"\r\n\r\n")
+                            if b"cacheControl" in head: continue
+                            raw = body[:-2] if body.endswith(b"\r\n") else body
+                            m = [l for l in head.split(b"\r\n") if l.lower().startswith(b"content-type:")]
+                            ctype = m[0].split(b":", 1)[1].strip().decode() if m else "application/octet-stream"
+                            break
+                upsert = (req.headers.get("x-upsert") or "") == "true"
+                exists = self.sql("select 1 from storage.objects where bucket_id=%s and name=%s", (bucket, name), uid=uid)
+                if exists and upsert:
+                    n = self.sql("update storage.objects set name = name where bucket_id=%s and name=%s", (bucket, name), fetch=False, uid=uid)
+                    if not n: raise psycopg2.Error("new row violates row-level security policy")
+                else:
+                    self.sql("insert into storage.objects(bucket_id, name) values (%s, %s)", (bucket, name), fetch=False, uid=uid)
+                self.files[bucket + "/" + name] = (raw, ctype)
+                return js({"Id": name, "Key": bucket + "/" + name})
+        except psycopg2.Error as e:
+            msg = ((getattr(e, "pgerror", None) or str(e)).strip().split("\n")[0]).replace("ERROR:  ", "")
+            self.errors.append("storage: " + msg)
+            return js({"statusCode": "403", "error": "Unauthorized", "message": msg}, 400)
+        return js({"message": "not mocked"}, 404)
+
     def handle(self, route):
         req = route.request; u = urllib.parse.urlparse(req.url)
+        if u.path.startswith("/storage/v1/object/"): return self.handle_storage(route)
         if u.path != "/rest/v1/portal_records": return super().handle(route)
         hdr = {"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*", "access-control-expose-headers": "*"}
         if req.method == "OPTIONS": return route.fulfill(status=200, headers=hdr)

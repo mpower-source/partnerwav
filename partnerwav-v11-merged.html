@@ -7,6 +7,7 @@
   .cloud-status.saved{ color:var(--good); border-color:var(--good-soft); background:var(--good-soft); }
   .cloud-status.error{ color:var(--bad); border-color:var(--bad); }
   @media (max-width:640px){ .cloud-status{ display:none; } }
+  .msg-new{ padding:8px; border-bottom:1px solid var(--line); } .msg-new select{ width:100%; }
   /* ===== Shop + partner levels ===== */
   .shop-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:14px; }
   .shop-card{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); display:flex; flex-direction:column; }
@@ -659,11 +660,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="affiliate-projects"><span class="ic">📋</span>Partner Projects</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
+      <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
     </nav>
 
     <nav class="navgroup" id="navOperator" hidden>
       <div class="navgroup-label">Program Operator</div>
       <button class="navlink" data-screen="operator-overview"><span class="ic">📊</span>Overview</button>
+      <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="operator-programs"><span class="ic">⚙️</span>Manage Programs</button>
       <button class="navlink" data-screen="operator-partners"><span class="ic">👨‍💼</span>Partners &amp; Tiers</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
@@ -2649,23 +2652,25 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Partner affiliate enrollments - tracks when partners sign up as affiliates
   var partnerAffiliateEnrollments = [];
 
+  // Direct messages. A conversation is between two portal accounts ("role:entity" keys, "operator:" is the
+  // CloudWAV team inbox); each message is its own record so both people can write at the same time.
+  // These starter messages are demo data (demo partner = Siam Digital MSP).
+  function agoIso(mins){ return new Date(Date.now() - mins * 60000).toISOString(); }
   var conversations = [
-    { id:"c1", withName:"Portonics Ltd.", withType:"partner", withInit:"PL", unreadCount:1, project:"Enterprise VoIP migration (closed)", messages:[
-        { from:"Portonics Ltd.", time:"3 weeks ago", text:"Wrapped the VoIP migration on our end -- final invoice and sign-off doc are in the shared folder. Great working with you on this one." },
-        { from:"You", time:"3 weeks ago", text:"Appreciate it -- loop me in if you see another AI-IVR opportunity like this one, would love to team up again." },
-        { from:"Portonics Ltd.", time:"2 hours ago", text:"Funny you mention it -- we just picked up a similar lead in Chittagong. Want to jump on a call this week?" }
-      ] },
-    { id:"c2", withName:"Gulf Coast VAR", withType:"partner", withInit:"GC", unreadCount:0, project:"Regional clinic wearable pilot", messages:[
-        { from:"Gulf Coast VAR", time:"1 day ago", text:"Thanks for the intro to Portonics on the activation-webhook question -- saved us a ton of time." },
-        { from:"You", time:"20 hours ago", text:"Glad it helped -- let me know how the clinic rollout goes." }
-      ] },
-    { id:"c3", withName:"Riverside Telco", withType:"partner", withInit:"RT", unreadCount:0, project:null, messages:[
-        { from:"You", time:"2 days ago", text:"Saw you're circling Botnoi Voice for the US side -- happy to compare notes on the JV structure if it's useful." }
-      ] },
-    { id:"c4", withName:"Intelsense AI", withType:"vendor", withInit:"IN", unreadCount:1, project:"Bangkok Bank branch rollout", messages:[
-        { from:"You", time:"1 day ago", text:"Quick one ahead of the Bangkok Bank rollout -- is there a rate-limit tier above what's in the standard docs? We're scoping branch 2 of 6 now." },
-        { from:"Intelsense AI", time:"20 hours ago", text:"Yes -- enterprise accounts over a certain seat count get a higher default limit automatically, no separate request needed. I'll have our solutions team send the exact numbers." }
-      ] }
+    { id:"partner:portonics__partner:siam-digital", participants:["partner:portonics","partner:siam-digital"], subject:"Enterprise VoIP migration (closed)" },
+    { id:"partner:gulf-coast__partner:siam-digital", participants:["partner:gulf-coast","partner:siam-digital"], subject:"Regional clinic wearable pilot" },
+    { id:"partner:riverside__partner:siam-digital", participants:["partner:riverside","partner:siam-digital"], subject:"" },
+    { id:"partner:siam-digital__vendor:intelsense", participants:["partner:siam-digital","vendor:intelsense"], subject:"Bangkok Bank branch rollout" }
+  ];
+  var directMessages = [
+    { id:"dm-1", convoId:"partner:portonics__partner:siam-digital", from:"partner:portonics", text:"Wrapped the VoIP migration on our end -- final invoice and sign-off doc are in the shared folder. Great working with you on this one.", at:agoIso(30240) },
+    { id:"dm-2", convoId:"partner:portonics__partner:siam-digital", from:"partner:siam-digital", text:"Appreciate it -- loop me in if you see another AI-IVR opportunity like this one, would love to team up again.", at:agoIso(30200) },
+    { id:"dm-3", convoId:"partner:portonics__partner:siam-digital", from:"partner:portonics", text:"Funny you mention it -- we just picked up a similar lead in Chittagong. Want to jump on a call this week?", at:agoIso(120) },
+    { id:"dm-4", convoId:"partner:gulf-coast__partner:siam-digital", from:"partner:gulf-coast", text:"Thanks for the intro to Portonics on the activation-webhook question -- saved us a ton of time.", at:agoIso(1440) },
+    { id:"dm-5", convoId:"partner:gulf-coast__partner:siam-digital", from:"partner:siam-digital", text:"Glad it helped -- let me know how the clinic rollout goes.", at:agoIso(1200) },
+    { id:"dm-6", convoId:"partner:riverside__partner:siam-digital", from:"partner:siam-digital", text:"Saw you're circling Botnoi Voice for the US side -- happy to compare notes on the JV structure if it's useful.", at:agoIso(2880) },
+    { id:"dm-7", convoId:"partner:siam-digital__vendor:intelsense", from:"partner:siam-digital", text:"Quick one ahead of the Bangkok Bank rollout -- is there a rate-limit tier above what's in the standard docs? We're scoping branch 2 of 6 now.", at:agoIso(1440) },
+    { id:"dm-8", convoId:"partner:siam-digital__vendor:intelsense", from:"vendor:intelsense", text:"Yes -- enterprise accounts over a certain seat count get a higher default limit automatically, no separate request needed. I'll have our solutions team send the details.", at:agoIso(1200) }
   ];
 
   var projects = [
@@ -4908,51 +4913,120 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
   }
 
-  function openConversationWith(name, type){
-    type = type || "partner";
-    var convo = conversations.filter(function(c){ return c.withName === name; })[0];
-    if (!convo){
-      var init2;
-      if (type === "vendor"){ var v = programs.filter(function(x){ return x.name === name; })[0]; init2 = v ? initials(v.name) : name.slice(0,2).toUpperCase(); }
-      else { var p = partnerProfiles.filter(function(x){ return x.name === name; })[0]; init2 = p ? p.init : name.slice(0,2).toUpperCase(); }
-      convo = { id:"c-"+(conversations.length+1), withName:name, withType:type, withInit: init2, unreadCount:0, project:null, messages:[] };
-      conversations.push(convo);
-    }
-    state.activeConversation = convo.id;
+  // ----- direct messages -----
+  function myMsgKey(){
+    if (state.account) return state.account.role + ":" + (state.account.entityId || "");
+    var id = state.role === "partner" ? state.myProfileId : state.role === "vendor" ? state.myVendorId : state.role === "affiliate" ? myAffiliateProfileId() : "";
+    return state.role + ":" + (id || "");
+  }
+  function keyName(k){
+    var r = String(k || "").split(":")[0], id = String(k || "").slice(r.length + 1);
+    if (r === "operator") return "CloudWAV";
+    var e = r === "partner" ? partnerById(id) : r === "vendor" ? programById(id) : r === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : null;
+    return e ? e.name : (id || r);
+  }
+  function keyRoleLabel(k){ var r = String(k).split(":")[0]; return r === "operator" ? "Program operator" : cap(r); }
+  function resolveMsgKey(name, type){
+    if (!name) return null;
+    if (/^cloudwav/i.test(name)) return "operator:";
+    var n = String(name).toLowerCase();
+    var pick = function(list, role){ var e = list.filter(function(x){ return (x.name || "").toLowerCase() === n && !x.archivedAt; })[0]; return e ? role + ":" + e.id : null; };
+    if (type === "vendor") return pick(programs, "vendor") || pick(partnerProfiles, "partner");
+    return pick(partnerProfiles, "partner") || pick(programs, "vendor") || pick(affiliateProfiles, "affiliate");
+  }
+  function convoIdFor(a, b){ return [a, b].sort().join("__"); }
+  function convoById(id){ return conversations.filter(function(c){ return c.id === id; })[0] || null; }
+  function convoMessages(id){ return directMessages.filter(function(m){ return m.convoId === id; }).sort(function(a, b){ return a.at < b.at ? -1 : a.at > b.at ? 1 : 0; }); }
+  function otherParty(c, me){ return c.participants[0] === me ? c.participants[1] : c.participants[0]; }
+  function timeAgo(iso){
+    var t = new Date(iso).getTime(); if (isNaN(t)) return iso || "";
+    var m = Math.round((Date.now() - t) / 60000);
+    if (m < 1) return "just now"; if (m < 60) return m + " min ago";
+    var h = Math.round(m / 60); if (h < 24) return h + " hour" + (h > 1 ? "s" : "") + " ago";
+    var d = Math.round(h / 24); if (d < 14) return d + " day" + (d > 1 ? "s" : "") + " ago";
+    return new Date(t).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
+  }
+  function isUnread(c, me){
+    var msgs = convoMessages(c.id), last = msgs[msgs.length - 1];
+    if (!last || last.from === me) return false;
+    var seen = (state.msgLastRead || {})[c.id];
+    return !seen || seen < last.at;
+  }
+  function openConversationWith(name, type, subject){
+    var me = myMsgKey(), other = /^(partner|vendor|affiliate|operator):/.test(name || "") ? name : resolveMsgKey(name, type);
+    if (!other){ toast(name + " isn't on PartnerWAV yet -- invite them first"); return; }
+    if (other === me){ toast("That's you"); return; }
+    var id = convoIdFor(me, other), c = convoById(id);
+    if (!c){ c = { id:id, participants:[me, other].sort(), subject: subject || "" }; conversations.push(c); }
+    else if (subject && !c.subject){ c.subject = subject; }
+    state.activeConversation = id;
     state.screen = "partner-messages";
     render();
+  }
+  function msgContacts(me){
+    var out = [];
+    if (me !== "operator:") out.push(["operator:", "CloudWAV (program operator)"]);
+    partnerProfiles.forEach(function(p){ if (!p.archivedAt) out.push(["partner:" + p.id, p.name + " · Partner"]); });
+    programs.forEach(function(v){ out.push(["vendor:" + v.id, v.name + " · Vendor"]); });
+    affiliateProfiles.forEach(function(a){ if (!a.archivedAt) out.push(["affiliate:" + a.id, a.name + " · Affiliate"]); });
+    return out.filter(function(x){ return x[0] !== me; });
   }
 
   function renderMessages(){
     var listBox = document.getElementById("msgList");
-    if (!listBox) return;
-    if (!state.activeConversation && conversations.length) state.activeConversation = conversations[0].id;
+    if (!listBox || state.screen !== "partner-messages") return;
+    var me = myMsgKey();
+    var mine = conversations.filter(function(c){ return c.participants.indexOf(me) > -1; });
+    var lastAt = function(c){ var m = convoMessages(c.id); return m.length ? m[m.length - 1].at : ""; };
+    mine.sort(function(a, b){ return lastAt(a) < lastAt(b) ? 1 : -1; });
+    if (state.activeConversation && !mine.some(function(c){ return c.id === state.activeConversation; })) state.activeConversation = null;
+    if (!state.activeConversation && mine.length) state.activeConversation = mine[0].id;
+    var contacts = msgContacts(me);
+    listBox.innerHTML = '<div class="msg-new"><select id="msgNewTo" aria-label="Start a conversation with"><option value="">+ New message to…</option>'
+        + contacts.map(function(x){ return '<option value="'+esc(x[0]).replace(/"/g,"&quot;")+'">'+esc(x[1])+'</option>'; }).join("") + '</select></div>'
+      + (mine.length ? mine.map(function(c){
+          var other = otherParty(c, me), msgs = convoMessages(c.id), last = msgs[msgs.length - 1];
+          var active = c.id === state.activeConversation, badge = other.indexOf("partner:") === 0 ? "" : '<span class="badge neutral" style="margin-left:6px;">'+esc(keyRoleLabel(other))+'</span>';
+          return '<button class="msg-list-item'+(active?" active":"")+'" data-open-convo="'+esc(c.id)+'">'
+            + '<span class="p-avatar">'+esc(initials(keyName(other)))+'</span>'
+            + '<span class="msg-list-meta"><span class="msg-list-name">'+esc(keyName(other))+(isUnread(c, me)?' <span class="unread-dot" aria-label="Unread"></span>':"")+badge+'</span>'
+            + '<span class="msg-list-preview">'+(last ? esc((last.from === me ? "You: " : "") + last.text) : "No messages yet")+'</span></span>'
+            + '</button>';
+        }).join("") : '<div class="empty" style="padding:14px;">No conversations yet -- start one above.</div>');
 
-    listBox.innerHTML = conversations.map(function(c){
-      var last = c.messages[c.messages.length-1];
-      var active = c.id === state.activeConversation;
-      var typeBadge = c.withType === "vendor" ? '<span class="badge neutral" style="margin-left:6px;">Vendor</span>' : "";
-      return '<button class="msg-list-item'+(active?" active":"")+'" data-open-convo="'+c.id+'">'
-        + '<span class="p-avatar">'+esc(c.withInit)+'</span>'
-        + '<span class="msg-list-meta"><span class="msg-list-name">'+esc(c.withName)+(c.unreadCount>0?' <span class="unread-dot"></span>':"")+typeBadge+'</span>'
-        + '<span class="msg-list-preview">'+(last?esc(last.text):"No messages yet")+'</span></span>'
-        + '</button>';
-    }).join("");
-
-    var convo = conversations.filter(function(c){ return c.id === state.activeConversation; })[0];
-    var header = document.getElementById("msgThreadHeader");
-    var threadBody = document.getElementById("msgThreadBody");
+    var convo = convoById(state.activeConversation);
+    var header = document.getElementById("msgThreadHeader"), threadBody = document.getElementById("msgThreadBody");
     if (!convo){ header.innerHTML = ""; threadBody.innerHTML = '<div class="empty">Select a conversation.</div>'; return; }
-    convo.unreadCount = 0;
-    var typeBadgeHdr = convo.withType === "vendor" ? '<span class="badge neutral" style="margin-left:8px;">Vendor</span>' : "";
-    header.innerHTML = '<span class="p-avatar">'+esc(convo.withInit)+'</span><div><div class="thread-title">'+esc(convo.withName)+typeBadgeHdr+'</div>'
-      + (convo.project ? '<div class="thread-meta">Re: '+esc(convo.project)+'</div>' : '')+'</div>';
-    threadBody.innerHTML = convo.messages.length ? convo.messages.map(function(m){
-      var mine = m.from === "You";
-      return '<div class="msg-bubble-row'+(mine?" mine":"")+'"><div class="msg-bubble">'
-        + (mine ? "" : '<span class="post-author" style="display:block;font-size:.72rem;">'+esc(m.from)+'</span>')
-        + '<p class="post-text" style="margin-top:2px;">'+esc(m.text)+'</p><span class="post-time">'+esc(m.time)+'</span></div></div>';
+    var other = otherParty(convo, me), msgs = convoMessages(convo.id);
+    if (msgs.length){ state.msgLastRead = state.msgLastRead || {}; var la = msgs[msgs.length - 1].at; if (state.msgLastRead[convo.id] !== la){ state.msgLastRead[convo.id] = la; lsSet("partnerWAV_msgLastRead", JSON.stringify(state.msgLastRead)); } }
+    header.innerHTML = '<span class="p-avatar">'+esc(initials(keyName(other)))+'</span><div><div class="thread-title">'+esc(keyName(other))
+      + (other.indexOf("partner:") === 0 ? "" : '<span class="badge neutral" style="margin-left:8px;">'+esc(keyRoleLabel(other))+'</span>')+'</div>'
+      + (convo.subject ? '<div class="thread-meta">Re: '+esc(convo.subject)+'</div>' : '')+'</div>';
+    threadBody.innerHTML = msgs.length ? msgs.map(function(m){
+      var mineMsg = m.from === me;
+      return '<div class="msg-bubble-row'+(mineMsg?" mine":"")+'" data-msg="'+esc(m.id)+'"><div class="msg-bubble">'
+        + (mineMsg ? "" : '<span class="post-author" style="display:block;font-size:.72rem;">'+esc(keyName(m.from))+'</span>')
+        + '<p class="post-text" style="margin-top:2px;white-space:pre-wrap;">'+esc(m.text)+'</p><span class="post-time" title="'+esc(m.at)+'">'+esc(timeAgo(m.at))+'</span></div></div>';
     }).join("") : '<div class="empty">Say hello -- no messages yet.</div>';
+    threadBody.scrollTop = threadBody.scrollHeight;
+  }
+  function sendDirectMessage(){
+    var ta = document.getElementById("msgCompose"), text = ta && ta.value.trim();
+    var convo = convoById(state.activeConversation), me = myMsgKey();
+    if (!text || !convo || convo.participants.indexOf(me) < 0) return;
+    directMessages.push({ id:"dm-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), convoId:convo.id, from:me, text:text, at:new Date().toISOString() });
+    ta.value = "";
+    saveMessages(); renderMessages(); cloudSchedule();
+  }
+  var MSG_KEY = "partnerWAV_messages";
+  function saveMessages(){ lsSet(MSG_KEY, JSON.stringify({ conversations:conversations, messages:directMessages })); }
+  function loadMessages(){
+    try {
+      var d = JSON.parse(lsGet(MSG_KEY) || "null");
+      if (d && Array.isArray(d.conversations)){ conversations.length = 0; d.conversations.forEach(function(c){ conversations.push(c); }); }
+      if (d && Array.isArray(d.messages)){ directMessages.length = 0; d.messages.forEach(function(m){ directMessages.push(m); }); }
+      var lr = JSON.parse(lsGet("partnerWAV_msgLastRead") || "null"); if (lr) state.msgLastRead = lr;
+    } catch(e){ console.log("Could not load messages:", e); }
   }
 
   function renderCommissionTable(filter){
@@ -4994,8 +5068,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '</div>'
         + '<p style="margin:0;font-size:.88rem;color:var(--ink);line-height:1.45;">'+esc(r.summary)+'</p>'
         + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-          + '<button class="btn secondary sm">Download</button>'
-          + (r.type === "webinar" ? '<button class="btn secondary sm">Watch webinar</button>' : '')
+          + ((r.fileData || r.filePath || r.fileUrl) ? '<button class="btn secondary sm" data-open-resource="'+esc(r.id)+'">Open</button>' : '<span class="field-note">No file attached yet</span>')
           + (r.transcription && r.transcription !== "" ? '<button class="btn ghost sm">View transcript →</button>' : '')
         + '</div>'
       + '</div>';
@@ -5039,7 +5112,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<span class="badge '+statusBadgeClass+'">'+statusText+'</span>'
         + '</div>'
         + '<p style="margin:0;font-size:.88rem;color:var(--ink);line-height:1.45;">'+esc((r.status === "pending" && r.previewText) ? r.previewText : (r.summary || r.previewText || ""))+'</p>'
-        + (r.status === "pending" ? '<div class="field-note" style="font-size:.8rem;">'+(r.fileData ? '📎 File attached: '+esc(r.fileName || "file") : (r.fileUrl ? '🔗 Link attached' : '<span style="color:var(--bad);">⚠ Nothing attached -- no material to review</span>'))+'</div>' : '')
+        + (r.status === "pending" ? '<div class="field-note" style="font-size:.8rem;">'+((r.fileData || r.filePath || r.fileUploading) ? '📎 File attached: '+esc(r.fileName || "file")+(r.fileUploading ? " (uploading…)" : "") : (r.fileUrl ? '🔗 Link attached' : '<span style="color:var(--bad);">⚠ Nothing attached -- no material to review</span>'))+'</div>' : '')
         + (r.status === "pending" ? '<div style="padding:10px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line);"><div style="font-size:.76rem;font-weight:600;color:var(--ink-soft);">AI-Generated Summary</div><div style="font-size:.84rem;color:var(--ink);margin-top:6px;font-style:italic;">'+esc(r.summary)+'</div></div>' : '')
         + rejectionNote
         + ((r.status === "published" && r.approvalComment) ? '<div style="margin-top:4px;padding:10px;background:var(--good-soft);border-radius:8px;border-left:3px solid var(--good);"><div style="font-size:.76rem;font-weight:600;color:var(--good);">Approval note</div><div style="font-size:.85rem;margin-top:4px;">'+esc(r.approvalComment)+'</div></div>' : '')
@@ -7551,6 +7624,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       levelRules = draft; saveLevels(); toast("Level requirements saved"); renderOperatorPartners(); return;
     }
   });
+  document.addEventListener("change", function(ev){ if (ev.target.id === "msgNewTo" && ev.target.value){ openConversationWith(ev.target.value); } });
   document.addEventListener("input", function(ev){
     var t = ev.target;
     if (t.id === "opPartnerQ"){ state.opPartnerQ = t.value; renderOperatorPartners(); var el = document.getElementById("opPartnerQ"); if (el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } return; }
@@ -7630,9 +7704,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(){ return { readers:EVERYONE, writers:[] }; } },
     { name:"enrollments", mode:"replace", get:function(){ return enrollments; }, set:function(a){ enrollments = a; },
       access:function(r){ return { readers:["partner:" + r.partnerId, "vendor:" + r.programId], writers:[] }; } },
+    { name:"conversations", mode:"replace", get:function(){ return conversations; }, set:function(a){ conversations.length = 0; a.forEach(function(x){ conversations.push(x); }); },
+      access:function(r){ return { readers:r.participants.slice(), writers:r.participants.slice() }; } },
+    { name:"messages", mode:"replace", get:function(){ return directMessages; }, set:function(a){ directMessages.length = 0; a.forEach(function(x){ directMessages.push(x); }); },
+      access:function(r){ var c = convoById(r.convoId); return { readers: c ? c.participants.slice() : [r.from], writers:[r.from] }; } },
     // Per-user settings that used to live in the browser: joined groups, collaboration interest, enrolled affiliate tools
-    { name:"prefs", mode:"replace", get:function(){ var k = myKey(); return k ? [{ id:k, joinedGroups: state.joinedGroups || [], collabInterests: state.collabInterests || [], affiliateEnrolled: state.affiliateEnrolled || [], seenLevelNotices: state.seenLevelNotices || [] }] : []; },
-      set:function(a){ var k = myKey(), mine = a.filter(function(x){ return x.id === k; })[0]; if (mine){ state.joinedGroups = mine.joinedGroups || []; state.collabInterests = mine.collabInterests || []; state.affiliateEnrolled = mine.affiliateEnrolled || []; state.seenLevelNotices = mine.seenLevelNotices || []; } else { state.joinedGroups = []; state.collabInterests = []; state.affiliateEnrolled = []; state.seenLevelNotices = []; } },
+    { name:"prefs", mode:"replace", get:function(){ var k = myKey(); return k ? [{ id:k, joinedGroups: state.joinedGroups || [], collabInterests: state.collabInterests || [], affiliateEnrolled: state.affiliateEnrolled || [], seenLevelNotices: state.seenLevelNotices || [], msgLastRead: state.msgLastRead || {} }] : []; },
+      set:function(a){ var k = myKey(), mine = a.filter(function(x){ return x.id === k; })[0]; if (mine){ state.joinedGroups = mine.joinedGroups || []; state.collabInterests = mine.collabInterests || []; state.affiliateEnrolled = mine.affiliateEnrolled || []; state.seenLevelNotices = mine.seenLevelNotices || []; state.msgLastRead = mine.msgLastRead || {}; } else { state.joinedGroups = []; state.collabInterests = []; state.affiliateEnrolled = []; state.seenLevelNotices = []; state.msgLastRead = {}; } },
       access:function(r){ return { readers:[r.id], writers:[r.id] }; } }
   ];
   var shopAccess = [];
@@ -7796,6 +7874,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   // For status checks (and automated tests): is anything still waiting to be saved?
   window.CLOUD_PENDING = function(){ if (!CLOUD.loaded) return false; if (CLOUD.busy) return true; var d = cloudDiff(); return d.ups.length + d.dels.length > 0; };
+  async function cloudFlushNow(){ clearTimeout(CLOUD.timer); for (var i = 0; i < 40 && CLOUD.busy; i++) await new Promise(function(r){ setTimeout(r, 100); }); await cloudFlush(); }
   function applySnap(x){ var s = CLOUD.snap[x[0]] || (CLOUD.snap[x[0]] = {}); if (x[2] == null) delete s[x[1]]; else s[x[1]] = x[2]; }
 
   // Operator: put the real starter records (vendors, shop, prospects, levels...) into Supabase
@@ -7843,6 +7922,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   });
   window.addEventListener("focus", function(){ if (CLOUD.loaded) cloudRefreshSoon(); });
   setInterval(function(){ if (CLOUD.loaded) cloudFlush(); }, 4000);
+  // live updates normally arrive over realtime; this is a fallback while a conversation is open
+  setInterval(function(){ if (CLOUD.loaded && state.screen === "partner-messages") cloudRefresh(); }, 15000);
 
   // Public landing pages (?lp=) are read straight from Supabase when it's reachable
   async function cloudLoadPublicLanding(id){
@@ -8651,7 +8732,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("resourceDuration").value = resource ? (resource.duration || "") : "";
     document.getElementById("resourceFileUrl").value = resource ? (resource.fileUrl || "") : "";
     document.getElementById("resourceFileInput").value = "";
-    state.resourceUpload = resource && resource.fileData ? { name: resource.fileName, mime: resource.fileMime, data: resource.fileData, size: resource.fileSize } : null;
+    state.resourceUpload = resource && (resource.fileData || resource.filePath) ? { name: resource.fileName, mime: resource.fileMime, data: resource.fileData, path: resource.filePath, size: resource.fileSize } : null;
     document.getElementById("resourceFileStatus").textContent = state.resourceUpload ? "Attached: " + state.resourceUpload.name : "";
     var deleteBtn = document.getElementById("deleteResourceBtn");
     deleteBtn.style.display = resource ? "block" : "none";
@@ -8675,7 +8756,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (fileUrl && !/^https?:\/\/\S+\.\S+/i.test(fileUrl)){ toast("Enter a full link starting with https://"); return; }
     var up = state.resourceUpload;
     if (!fileUrl && !up){ toast("Attach the file or add a link so the operator can review it"); return; }
-    var fileFields = { fileUrl: fileUrl, fileName: up ? up.name : "", fileMime: up ? up.mime : "", fileData: up ? up.data : "" };
+    var fileFields = { fileUrl: fileUrl, fileName: up ? up.name : "", fileMime: up ? up.mime : "", fileData: up && up.data ? up.data : "" };
+    if (up && up.path){ fileFields.filePath = up.path; } // unchanged stored file
     if (up && !fileSize) fileSize = up.size;
 
     if (state.editingResourceId){
@@ -8696,7 +8778,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         fileUrl: fileFields.fileUrl, fileName: fileFields.fileName, fileMime: fileFields.fileMime, fileData: fileFields.fileData
       });
       toast("Resource submitted for operator review");
+      if (up && up.file && CLOUD.on) uploadResourceFile(pendingResources[pendingResources.length - 1], up);
     }
+    if (state.editingResourceId && up && up.file && CLOUD.on){ var er = resources.filter(function(r){ return r.id === state.editingResourceId; })[0]; if (er) uploadResourceFile(er, up); }
     state.editingResourceId = null;
     state.resourceUpload = null;
     state.screen = "resource-browse";
@@ -8705,7 +8789,43 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
 
   // ===== RESOURCE PREVIEW (what the operator reviews before approving) =====
-  var MAX_UPLOAD_BYTES = 3 * 1024 * 1024; // browser storage limit in this prototype
+  var MAX_UPLOAD_BYTES = 3 * 1024 * 1024; // demo mode: files are kept in this browser
+  var CLOUD_MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // signed in: Supabase Storage (bucket portal-files)
+  var STORAGE_BUCKET = "portal-files";
+  var signedUrlCache = {};
+  function safeFileName(n){ return String(n || "file").replace(/[^\w.\-]+/g, "_").slice(-120); }
+  // Get a short-lived link to a stored file; re-renders the review screen once it arrives
+  function storageUrl(path){
+    var c = signedUrlCache[path];
+    if (c && c.exp > Date.now()) return c.url;
+    if (c && c.pending) return "";
+    signedUrlCache[path] = { pending:true };
+    supabase.storage.from(STORAGE_BUCKET).createSignedUrl(path, 3600).then(function(res){
+      if (res.error || !res.data){ signedUrlCache[path] = { error: (res.error && res.error.message) || "unavailable", exp: Date.now() + 30000 }; }
+      else signedUrlCache[path] = { url: res.data.signedUrl, exp: Date.now() + 3500 * 1000 };
+      var slot = document.getElementById("resPreviewSlot"), rid = slot && slot.getAttribute("data-res-id");
+      var rec = rid ? (pendingResources.filter(function(x){ return x.id === rid; })[0] || resources.filter(function(x){ return x.id === rid; })[0]) : null;
+      if (slot && rec) slot.innerHTML = resourcePreviewHtml(rec);
+    });
+    return "";
+  }
+  async function uploadResourceFile(rec, up){
+    var path = "resources/" + rec.id + "/" + safeFileName(up.name);
+    rec.fileUploading = true; render();
+    try {
+      await cloudFlushNow(); // the record must exist before its file (storage policy checks it)
+      var bytes = await up.file.arrayBuffer();
+      var r = await supabase.storage.from(STORAGE_BUCKET).upload(path, bytes, { upsert:true, contentType: up.mime || "application/octet-stream" });
+      if (r.error) throw r.error;
+      rec.filePath = path; delete rec.fileUploading; delete rec.uploadError;
+      toast("File uploaded");
+    } catch(e){
+      console.error("Upload failed:", e);
+      rec.uploadError = (e && e.message) || String(e); delete rec.fileUploading;
+      toast("The file didn't upload: " + rec.uploadError);
+    }
+    saveResourceData(); render();
+  }
   function humanSize(n){ return n >= 1048576 ? (n/1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n/1024)) + "KB"; }
   function dataUrlToBlobUrl(dataUrl){
     try {
@@ -8728,9 +8848,21 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function resourcePreviewHtml(r){
     var bar = function(inner){ return '<div class="res-preview-bar">'+inner+'</div>'; };
+    if (r.fileUploading) return '<div class="res-preview"><div class="res-preview-empty">Uploading '+esc(r.fileName || "the file")+'…</div></div>';
+    if (r.filePath && !r.fileData){
+      var su = storageUrl(r.filePath), cached = signedUrlCache[r.filePath] || {};
+      if (!su) return '<div class="res-preview"><div class="res-preview-empty">'+(cached.error ? "Couldn't open the stored file: " + esc(cached.error) : "Loading "+esc(r.fileName || "file")+"…")+'</div></div>';
+      return filePreviewHtml(r, su);
+    }
     if (r.fileData){
+      return filePreviewHtml(r, dataUrlToBlobUrl(r.fileData));
+    }
+    return linkPreviewHtml(r);
+  }
+  function filePreviewHtml(r, blobUrl){
+    var bar = function(inner){ return '<div class="res-preview-bar">'+inner+'</div>'; };
+    {
       var mime = r.fileMime || "";
-      var blobUrl = dataUrlToBlobUrl(r.fileData);
       var open = '<a class="btn secondary sm" href="'+esc(blobUrl)+'" target="_blank" rel="noopener" download="'+esc(r.fileName || "file")+'">Open file</a>';
       var label = '<span>📎 <b>'+esc(r.fileName || "Uploaded file")+'</b>'+(r.fileSize ? ' · '+esc(r.fileSize) : '')+'</span>';
       if (mime === "application/pdf") return '<div class="res-preview"><iframe title="Preview of '+esc(r.title)+'" src="'+esc(blobUrl)+'"></iframe>'+bar(label+open)+'</div>';
@@ -8738,6 +8870,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (/^video\//.test(mime)) return '<div class="res-preview"><video controls src="'+esc(blobUrl)+'"></video>'+bar(label+open)+'</div>';
       return '<div class="res-preview"><div class="res-preview-empty">This file type can\'t be previewed in the browser -- open it to review.</div>'+bar(label+open)+'</div>';
     }
+  }
+  function linkPreviewHtml(r){
+    var bar = function(inner){ return '<div class="res-preview-bar">'+inner+'</div>'; };
     if (r.fileUrl && /^https?:\/\//i.test(r.fileUrl)){
       var emb = embedUrlFor(r.fileUrl);
       var openL = '<a class="btn secondary sm" href="'+esc(r.fileUrl)+'" target="_blank" rel="noopener noreferrer">Open in new tab</a>';
@@ -8773,7 +8908,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         (detail ? '<div style="margin-top:8px;font-size:.85rem;line-height:1.5;">' + esc(detail) + '</div>' : '') +
         (resource.revisionComments ? '<div style="font-size:.82rem;color:var(--warn);">Previously requested: ' + esc(resource.revisionComments) + '</div>' : '') +
         '</div>' +
-        '<div><div class="aff-section-title" style="margin-bottom:8px;">Material submitted</div>' + resourcePreviewHtml(resource) + '</div>';
+        '<div><div class="aff-section-title" style="margin-bottom:8px;">Material submitted</div><div id="resPreviewSlot" data-res-id="'+esc(resource.id)+'">' + resourcePreviewHtml(resource) + '</div></div>';
     } else {
       content.innerHTML = '<div class="empty">This submission is no longer pending.</div>';
     }
@@ -9424,24 +9559,21 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var backNetworkBtn = e.target.closest("[data-back-network]");
     if (backNetworkBtn){ state.screen = "partner-network"; render(); return; }
 
+    var openResBtn = e.target.closest("[data-open-resource]");
+    if (openResBtn){
+      var orr = resources.filter(function(x){ return x.id === openResBtn.getAttribute("data-open-resource"); })[0];
+      if (orr) openModal('<div class="modal-head"><h2>'+esc(orr.title)+'</h2><button class="modal-close" aria-label="Close">×</button></div><div id="resPreviewSlot" data-res-id="'+esc(orr.id)+'">'+resourcePreviewHtml(orr)+'</div>');
+      return;
+    }
+
     var msgPartnerBtn = e.target.closest("[data-message-partner]");
     if (msgPartnerBtn){ openConversationWith(msgPartnerBtn.getAttribute("data-message-partner")); return; }
 
     var openConvoBtn = e.target.closest("[data-open-convo]");
-    if (openConvoBtn){ state.activeConversation = openConvoBtn.getAttribute("data-open-convo"); renderMessages(); return; }
+    if (openConvoBtn){ state.activeConversation = openConvoBtn.getAttribute("data-open-convo"); renderMessages(); saveMessages(); return; }
 
     var sendBtn = e.target.closest("#msgSendBtn");
-    if (sendBtn){
-      var ta = document.getElementById("msgCompose");
-      var text = ta && ta.value.trim();
-      var convo = conversations.filter(function(c){ return c.id === state.activeConversation; })[0];
-      if (text && convo){
-        convo.messages.push({ from:"You", time:"just now", text:text });
-        ta.value = "";
-        renderMessages();
-      }
-      return;
-    }
+    if (sendBtn){ sendDirectMessage(); return; }
 
     var tabBtn = e.target.closest("[data-tab]");
     if (tabBtn){
@@ -10622,9 +10754,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (e.target.id !== "resourceFileInput") return;
     var f = e.target.files && e.target.files[0], status = document.getElementById("resourceFileStatus");
     if (!f){ state.resourceUpload = null; status.textContent = ""; return; }
-    if (f.size > MAX_UPLOAD_BYTES){
+    var maxBytes = CLOUD.on ? CLOUD_MAX_UPLOAD_BYTES : MAX_UPLOAD_BYTES;
+    if (f.size > maxBytes){
       state.resourceUpload = null; e.target.value = "";
-      status.textContent = f.name + " is " + humanSize(f.size) + " -- too large to store in this prototype (max " + humanSize(MAX_UPLOAD_BYTES) + "). Upload it to Google Drive, Loom or YouTube and paste the link instead.";
+      status.textContent = f.name + " is " + humanSize(f.size) + " -- too large (max " + humanSize(maxBytes) + "). Upload it to Google Drive, Loom or YouTube and paste the link instead.";
+      return;
+    }
+    if (CLOUD.on){
+      // signed in: the file goes to Supabase Storage when the resource is submitted
+      state.resourceUpload = { name: f.name, mime: f.type || "", file: f, size: humanSize(f.size) };
+      status.textContent = "Attached: " + f.name + " (" + humanSize(f.size) + ")";
+      var sz0 = document.getElementById("resourceFileSize"); if (sz0 && !sz0.value) sz0.value = humanSize(f.size);
       return;
     }
     var reader = new FileReader();
@@ -10679,6 +10819,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadMspProspects();
   loadIncentives();
   loadFlyers();
+  loadMessages();
   loadShop();
   loadLevels();
   loadEngagementsAndPages();

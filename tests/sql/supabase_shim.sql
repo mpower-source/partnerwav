@@ -15,3 +15,16 @@ insert into auth.users values
  ('00000000-0000-0000-0000-000000000004','partner@gulfcoast.test'),
  ('00000000-0000-0000-0000-000000000005','vendor@botnoi.test'),
  ('00000000-0000-0000-0000-000000000006','norole@example.test');
+
+-- Storage stand-in: buckets, objects (RLS on), storage.foldername()
+create schema storage;
+create table storage.buckets (id text primary key, name text, public boolean default false, file_size_limit bigint);
+create table storage.objects (id uuid default gen_random_uuid() primary key, bucket_id text references storage.buckets(id), name text, owner uuid default auth.uid(), created_at timestamptz default now(), unique (bucket_id, name));
+alter table storage.objects enable row level security;
+create function storage.foldername(name text) returns text[] language sql immutable as $$
+  select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1]
+$$;
+grant usage on schema storage to anon, authenticated;
+grant select, insert, update, delete on storage.objects to anon, authenticated;
+grant select on storage.buckets to anon, authenticated;
+grant execute on function storage.foldername(text) to anon, authenticated;
