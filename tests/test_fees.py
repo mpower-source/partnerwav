@@ -1,0 +1,109 @@
+from harness import *
+
+with sync_playwright() as p:
+    b, pg = open_page(p)
+
+    # ===== Configure program: CloudWAV platform fee section with recommended defaults
+    role(pg, "operator"); nav(pg, "operator-programs")
+    pg.click('[data-configure="intelsense"]'); pg.wait_for_timeout(250)
+    sec = pg.locator("#cfgFeeSection")
+    ok(sec.count() == 1 and "CLOUDWAV PLATFORM FEE" in sec.inner_text().upper(), "Configure program has a CloudWAV platform fee section")
+    ok(pg.input_value("#cfgFeeBase") == "3" and pg.input_value("#cfgFeeSourced") == "6" and pg.input_value("#cfgFeeThreshold") == "1000000"
+       and pg.input_value("#cfgFeeLargeBase") == "1.5" and pg.input_value("#cfgFeeLargeSourced") == "3", "Recommended defaults: 3% / 6%, 1.5% / 3% above 1,000,000")
+    ok("on top of" in sec.inner_text() and "never deducted" in sec.inner_text(), "Explains the vendor pays it on top of partner commission")
+    ok("recommended defaults" in sec.inner_text(), "Flags that defaults aren't confirmed yet")
+    prev = pg.inner_text("#cfgFeePreview")
+    ok("$50,000 deal" in prev and "$1,500" in prev and "$3,000" in prev, "Preview: $50,000 deal -> $1,500 base, $3,000 sourced")
+    ok("$2,000,000 deal" in prev and "$45,000" in prev and "2.25% overall" in prev, "Large deals: only the part above the threshold gets the lower rate ($2M -> $45,000)")
+    # validation
+    pg.fill("#cfgFeeBase", "25"); pg.wait_for_timeout(100)
+    pg.click("[data-config-save]"); pg.wait_for_timeout(200)
+    ok("far outside the norm" in pg.inner_text("#cfgError"), "Blocks an out-of-norm fee")
+    pg.fill("#cfgFeeBase", "120"); pg.click("[data-config-save]"); pg.wait_for_timeout(200)
+    ok("between 0 and 100" in pg.inner_text("#cfgError"), "Percentages must be 0-100")
+    # live preview follows the inputs
+    pg.fill("#cfgFeeBase", "4"); pg.wait_for_timeout(150)
+    ok("$2,000" in pg.inner_text("#cfgFeePreview"), "Preview updates live (4% of $50,000 = $2,000)")
+    # other config edits keep the fee draft (re-render on add tier)
+    pg.click("[data-cfg-add-tier]"); pg.wait_for_timeout(200)
+    ok(pg.input_value("#cfgFeeBase") == "4", "Fee inputs survive a form re-render")
+    pg.locator("[data-cfg-remove-tier]").last.click(); pg.wait_for_timeout(200)
+    pg.fill("#cfgFeeBase", "3"); pg.click("[data-config-save]"); pg.wait_for_timeout(300)
+    ok(visible_screen(pg) == ["scr-operator-programs"], "Saved")
+    fees = pg.evaluate("JSON.parse(localStorage.getItem('partnerWAV_programFees'))")
+    ok(len(fees) == 1 and fees[0]["id"] == "intelsense" and fees[0]["basePct"] == 3 and fees[0]["sourcedPct"] == 6, "Fee saved per program")
+    prog = pg.evaluate("JSON.stringify(JSON.parse(localStorage.getItem('partnerWAV_programTerms') || '{}'))")
+    ok("sourcedPct" not in prog and "basePct" not in prog, "Fee is NOT stored on the public program record")
+    pg.click('[data-configure="intelsense"]'); pg.wait_for_timeout(250)
+    ok("recommended defaults" not in pg.inner_text("#cfgFeeSection"), "Saved rates are shown as confirmed")
+    pg.click("[data-config-cancel]"); pg.wait_for_timeout(150)
+
+    # ===== Partners & Tiers: who sourced the partner
+    nav(pg, "operator-partners"); pg.click('[data-en-view="en-siam-botnoi"]'); pg.wait_for_timeout(250)
+    ok(pg.input_value("#enSource") == "vendor", "Partner detail shows how the partner joined (default: vendor's own)")
+    pg.select_option("#enSource", "cloudwav"); pg.wait_for_timeout(150)
+    en = pg.evaluate("JSON.parse(localStorage.getItem('partnerWAV_enrollments')).filter(e => e.id === 'en-siam-botnoi')[0].source")
+    ok(en == "cloudwav", "Source saved on the enrollment")
+    calc = pg.evaluate("PW_FEES.forDeal({ programId:'botnoi', partnerId:'siam-digital', value:'$10,000' })")
+    ok(calc and round(calc["amount"]) == 600 and calc["sourced"], "Sourced partner -> 6% ($10,000 -> $600)")
+    calc = pg.evaluate("PW_FEES.forDeal({ programId:'botnoi', partnerId:'portonics', value:'$10,000' })")
+    ok(calc and round(calc["amount"]) == 300 and not calc["sourced"], "Vendor's own / no enrollment -> 3% ($300)")
+    calc = pg.evaluate("PW_FEES.forDeal({ programId:'botnoi', partnerId:'portonics', value:'฿3,000,000' })")
+    ok(calc and round(calc["amount"]) == 60000 and calc["text"] == "฿60,000", "Large THB deal: 3% of 1M + 1.5% of 2M = ฿60,000, in the deal's currency")
+
+    # ===== Deal review: fee card, recorded on approval
+    nav(pg, "operator-approvals"); pg.click('[data-review-deal="deal-bkk-bank"]'); pg.wait_for_timeout(250)
+    card = pg.inner_text("#dealFeeCard")
+    ok("$2,520" in card and "CloudWAV sourced this partner" in card, "Deal review shows the fee: Siam Digital was CloudWAV-sourced for Intelsense -> 6% of $42,000 = $2,520")
+    ok("$6,300" in pg.inner_text("#dealReviewContent"), "Partner commission is unchanged ($6,300)")
+    pg.click('[data-deal-action="approve"]'); pg.wait_for_timeout(300)
+    pf = pg.evaluate("JSON.parse(localStorage.getItem('partnerWAV_platformFees'))")
+    ok(len(pf) == 1 and pf[0]["id"] == "deal-bkk-bank" and pf[0]["amount"] == 2520 and pf[0]["status"] == "due" and pf[0]["rate"] == 6 and pf[0]["sourced"], "Approval records a $2,520 fee, due")
+    # a later rate change doesn't rewrite the recorded fee
+    nav(pg, "operator-programs"); pg.click('[data-configure="intelsense"]'); pg.wait_for_timeout(250)
+    pg.fill("#cfgFeeSourced", "5"); pg.click("[data-config-save]"); pg.wait_for_timeout(300)
+    nav(pg, "operator-approvals"); pg.click('[data-deal-tab="approved"]'); pg.wait_for_timeout(150)
+    pg.click('[data-review-deal="deal-bkk-bank"]'); pg.wait_for_timeout(250)
+    ok("$2,520" in pg.inner_text("#dealFeeCard") and "DUE" in pg.inner_text("#dealFeeCard").upper(), "Approved deal keeps the fee recorded at approval, with its status")
+
+    # ===== CloudWAV Revenue
+    ok(pg.locator('[data-screen="operator-revenue"]:visible').count() == 1, "CloudWAV Revenue in the Operator menu")
+    nav(pg, "operator-revenue")
+    txt = pg.inner_text("#operatorRevenueContent")
+    ok("$2,520" in txt and "Bangkok Bank branch rollout" in txt and "CloudWAV-sourced" in txt, "Revenue lists the platform fee")
+    ok("฿24,000" in txt and "Riverside Boutique Hotels" in txt, "Software referral share: 30% of the ฿80,000 fee = ฿24,000")
+    pg.click('[data-fee-status="invoiced"]'); pg.wait_for_timeout(200)
+    ok(pg.locator("#revFeeRows [data-fee-row]").count() == 1 and "INVOICED" in pg.inner_text("#revFeeRows").upper(), "Mark invoiced")
+    pg.click('[data-fee-status="paid"]'); pg.wait_for_timeout(200)
+    ok(pg.locator("#revFeeRows [data-fee-row]").count() == 0, "Paid fee leaves the Open list")
+    pg.click('[data-rev-filter="paid"]'); pg.wait_for_timeout(150)
+    ok("$2,520" in pg.inner_text("#revFeeRows") and "PAID" in pg.inner_text("#revFeeRows").upper(), "Paid tab shows it")
+    tiles = pg.inner_text("#operatorRevenueContent .stat-row")
+    ok("PLATFORM FEES PAID\n$2,520" in tiles.upper() or ("$2,520" in tiles and "1 deal" in tiles), "Paid total tile")
+    with pg.expect_download() as dl:
+        pg.click("[data-rev-export]")
+    csv = open(dl.value.path(), encoding="utf-8").read()
+    ok("Platform fee,Bangkok Bank branch rollout" in csv and "Software referral,Riverside Boutique Hotels" in csv and ",2520,paid" in csv, "CSV export")
+
+    # ===== Vendor sees what they owe; partner doesn't see the fee
+    role(pg, "vendor"); nav(pg, "vendor-overview")
+    vc = pg.inner_text("#vendorFeeCard")
+    ok("CLOUDWAV PLATFORM FEE" in vc.upper() and "Bangkok Bank branch rollout" in vc and "$2,520" in vc and "never reduces" in vc, "Vendor overview shows the platform fee on their deals")
+    role(pg, "partner"); nav(pg, "partner-commissions")
+    pg.locator("#myDealsList [data-view-deal]").first.click(); pg.wait_for_timeout(250)
+    ok("platform fee" not in pg.inner_text("body").lower() and "2,520" not in pg.inner_text("body"), "Partners never see CloudWAV's fee")
+
+    # ===== persists across reload
+    pg.reload(); pg.wait_for_timeout(800)
+    rec = pg.evaluate("PW_FEES.recorded()")
+    ok(len(rec) == 1 and rec[0]["status"] == "paid" and pg.evaluate("PW_FEES.forProgram('intelsense').sourcedPct") == 5, "Fees persist")
+
+    # ===== disabled fee
+    role(pg, "operator"); nav(pg, "operator-programs"); pg.click('[data-configure="botnoi"]'); pg.wait_for_timeout(250)
+    pg.uncheck("#cfgFeeEnabled"); pg.wait_for_timeout(100)
+    ok("No platform fee" in pg.inner_text("#cfgFeePreview"), "Fee can be switched off per program")
+    pg.click("[data-config-save]"); pg.wait_for_timeout(300)
+    ok(pg.evaluate("PW_FEES.forDeal({ programId:'botnoi', partnerId:'siam-digital', value:'$10,000' }).off") is True, "Switched off -> no fee")
+    b.close()
+
+report()

@@ -129,7 +129,8 @@ on conflict (collection, field) do update set allowed = excluded.allowed;
 create or replace function public.portal_operator_only(c text)
 returns boolean language sql immutable as $$
   select c = any (array['affiliatePrograms','mspProspects','mspEngagements','landingPages',
-                        'shopProducts','shopAccess','levelRules','enrollments','softwareHouses'])
+                        'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
+                        'programFees','platformFees'])
 $$;
 
 -- ---------------------------------------------------------------------------

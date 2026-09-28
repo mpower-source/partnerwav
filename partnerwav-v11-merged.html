@@ -686,6 +686,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
       <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
       <button class="navlink" data-screen="operator-agreements"><span class="ic">📝</span>Agreements</button>
+      <button class="navlink" data-screen="operator-revenue"><span class="ic">💰</span>CloudWAV Revenue</button>
       <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
       <button class="navlink" data-screen="operator-shop"><span class="ic">🛒</span>Shop Manager</button>
       <button class="navlink" data-screen="operator-data"><span class="ic">☁️</span>Cloud Data</button>
@@ -1028,6 +1029,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <div style="height:12px"></div>
           <div class="directory-grid" id="vendorOwnProgramGrid"></div>
         </div>
+        <div id="vendorFeeCard"></div>
       </section>
 
       <!-- ===== VENDOR: MY PROGRAM LISTING ===== -->
@@ -1948,6 +1950,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div class="section-head"><h2>Agreements</h2><span class="hint">Vendor, partner and software-referral agreements, and their signatures</span></div>
         <div style="height:14px"></div>
         <div id="operatorAgreementsContent"></div>
+      </section>
+
+      <section id="scr-operator-revenue" hidden>
+        <div class="section-head"><h2>CloudWAV Revenue</h2><span class="hint">Platform fees on approved deals, CloudWAV's share of software referral fees, and Shop sales</span></div>
+        <div style="height:14px"></div>
+        <div id="operatorRevenueContent"></div>
       </section>
 
       <section id="scr-referrals" hidden>
@@ -3052,6 +3060,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-shop":"Shop Manager",
     "operator-data":"Cloud Data",
     "operator-agreements":"Agreements",
+    "operator-revenue":"CloudWAV Revenue",
     "referrals":"Software Referrals",
     "referral-view":"Software Referral",
     "operator-shop-editor":"Shop Product",
@@ -3529,6 +3538,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     // ---- vendor screens ----
     renderVendorOverview();
+    renderVendorFeeCard();
     populateVendorListingForm();
     renderVendorPartners();
     renderVendorNetwork();
@@ -3591,6 +3601,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderFlyerReview();
     renderAgreements();
     renderOperatorAgreements();
+    renderOperatorRevenue();
     renderReferrals();
     renderReferralView();
     renderShop();
@@ -5555,6 +5566,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
               + '<span class="field-note">'+esc(est.tierName)+' rate '+esc(fmtPct(est.rate))+' of '+esc(est.base)+(est.renewalAmount ? ' · then '+esc(est.renewalAmount)+'/yr at '+esc(fmtPct(est.renewal))+' renewal' : '')+'. From the program\'s configured terms.</span>'
             : '<span class="field-note">Can\'t estimate -- the deal value or the program\'s commission rate isn\'t a plain number.</span>')
         + '</div>'
+        + dealFeeCardHtml(d)
         + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;">'
           + '<div class="aff-section-title">Pricing check</div>'
           + '<p class="field-note" style="margin:0;">Your read on whether this price will land well with the customer and keep everyone happy. Saved on the deal; the partner doesn\'t see it unless you message them.</p>'
@@ -5595,7 +5607,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((action === "message" || action === "changes") && !text) return fail(action === "message" ? "Write a message first." : "Tell the partner what needs adjusting -- your message is sent with the request.");
     if (action === "decline" && !text) return fail("Add a reason for declining -- it's sent to the partner.");
     if (text) d.thread.push({ from:"operator", name:me, time:nowStamp(), text:text });
-    if (action === "approve"){ d.status = "approved"; d.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV approved this deal" }); }
+    if (action === "approve"){ d.status = "approved"; d.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV approved this deal" }); recordPlatformFee(d); }
     if (action === "changes"){ d.status = "changes"; d.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV requested changes" }); }
     if (action === "decline"){ d.status = "declined"; d.thread.push({ from:"system", time:nowStamp(), text:"CloudWAV declined this deal" }); }
     d.unreadPartner = true;
@@ -5760,6 +5772,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!p || state.role !== "operator") return;
     state.configProgramId = id;
     state.cfgDraft = termsFor(p);
+    state.cfgFeeDraft = feeFor(id);
     state.screen = "operator-program-config";
     render();
     window.scrollTo(0, 0);
@@ -5846,6 +5859,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + cfgInput("cfgInstallerMargin","Installer Network margin %",d.installerMargin,"number",'min="0" max="100" step="0.5" placeholder="n/a"')
       + '</div></div>'
 
+      + feeConfigHtml(p)
+
       + '<div class="card card-pad cfg-section"><h3>Deal registration<span class="cfg-ref">Agreement §6</span></h3><div class="cfg-grid">'
         + cfgInput("cfgProtectionDays","Protection window (days)",d.dealProtectionDays,"number",'min="0" step="1"')
         + cfgInput("cfgApprovalSla","Approval deadline (business days)",d.approvalSlaDays,"number",'min="0" step="1"')
@@ -5888,6 +5903,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     [].forEach.call(f.querySelectorAll("[data-cfg-product]"), function(row){
       d.productOverrides[row.getAttribute("data-cfg-product")] = { firstYear:num(row.querySelector(".cfg-p-fy").value), renewal:num(row.querySelector(".cfg-p-ren").value) };
     });
+    readFeeForm();
   }
 
   function updateConfigPreview(){
@@ -5908,6 +5924,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     });
     lines.push('<span class="field-note">Renewal paid for: '+esc(d.renewalDuration)+' · Payouts: '+esc(d.payoutSchedule)+' in '+esc(d.currency)+'</span>');
     box.innerHTML = lines.join("");
+    updateFeePreview();
   }
 
   function validateConfig(d){
@@ -5938,7 +5955,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (state.role !== "operator") return;
     readConfigForm();
     var p = programById(state.configProgramId), d = state.cfgDraft;
-    var errs = validateConfig(d), box = document.getElementById("cfgError");
+    var errs = validateConfig(d).concat(validateFee(state.cfgFeeDraft)), box = document.getElementById("cfgError");
     if (errs.length){ box.innerHTML = errs.map(esc).join("<br>"); box.hidden = false; box.scrollIntoView({ block:"center" }); return; }
     d.updatedAt = nowStamp();
     d.updatedBy = state.account ? state.account.name : "Program Operator";
@@ -5947,6 +5964,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     p.agreement = Object.assign({}, p.agreement || {}, { type:d.agreementType, status:d.agreementStatus });
     p.status = d.programStatus;
     saveProgramTerms();
+    saveFeeConfig(p);
     toast("Saved -- " + p.name + " now matches the agreement terms");
     state.cfgDraft = null; state.configProgramId = null;
     state.screen = "operator-programs";
@@ -7434,7 +7452,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Enrollments: a partner in a program. revenue12m / dealsClosed are the recorded history; approved deals
   // from Deal Approvals and completed Shop courses are added live.
   var enrollments = [
-    { id:"en-siam-intelsense", partnerId:"siam-digital", partner:"Siam Digital MSP", country:"Thailand", programId:"intelsense", tier:"Reseller", level:"Gold", status:"active", joined:"2025-11-04", revenue12m:182000, dealsClosed:9, coursesBefore:3, lastActivity:"2026-09-25", history:[] },
+    { id:"en-siam-intelsense", partnerId:"siam-digital", partner:"Siam Digital MSP", country:"Thailand", programId:"intelsense", tier:"Reseller", level:"Gold", status:"active", source:"cloudwav", joined:"2025-11-04", revenue12m:182000, dealsClosed:9, coursesBefore:3, lastActivity:"2026-09-25", history:[] },
     { id:"en-siam-botnoi", partnerId:"siam-digital", partner:"Siam Digital MSP", country:"Thailand", programId:"botnoi", tier:"Channel Manager", level:"Bronze", status:"active", joined:"2026-06-12", revenue12m:14500, dealsClosed:2, coursesBefore:1, lastActivity:"2026-09-18", history:[] },
     { id:"en-gulf-cross", partnerId:"gulf-coast", partner:"Gulf Coast VAR", country:"USA", programId:"crossconnect", tier:"Affiliate", level:"Registered", status:"pending", joined:"2026-09-20", revenue12m:0, dealsClosed:0, lastActivity:"2026-09-26", history:[] },
     { id:"en-portonics-intelsense", partnerId:"portonics", partner:"Portonics Ltd.", country:"Bangladesh", programId:"intelsense", tier:"Reseller", level:"Silver", status:"active", joined:"2025-08-19", revenue12m:61000, dealsClosed:4, coursesBefore:2, lastActivity:"2026-07-02", history:[] },
@@ -7545,6 +7563,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
         + '<div class="profile-header">'+(prof ? logoOrFallback(prof, 56) : '')+'<div><h2 style="font-size:1.2rem;margin:0;">'+esc(e.partner)+'</h2><div class="thread-meta">'+esc(enProgramName(e))+' · '+esc(e.tier)+' · joined '+esc(e.joined)+' · '+esc(e.country)+'</div></div><div style="margin-left:auto;">'+statusPill(e.status)+'</div></div>'
         + '<div class="map-stats"><div class="map-stat"><b>'+money(s.revenue)+'</b>revenue 12 mo</div><div class="map-stat"><b>'+s.deals+'</b>closed deals</div><div class="map-stat"><b>'+s.courses+'</b>courses</div><div class="map-stat"><b>'+esc(e.lastActivity)+'</b>last activity</div></div>'
+        + '<div class="field-row"><label for="enSource">How this partner joined '+esc(enProgramName(e))+'</label><select id="enSource"><option value="vendor"'+(e.source !== "cloudwav" ? " selected" : "")+'>Vendor brought them -- base platform fee</option><option value="cloudwav"'+(e.source === "cloudwav" ? " selected" : "")+'>CloudWAV sourced them -- sourced platform fee</option></select></div>'
         + '<div class="cfg-actions" style="flex-wrap:wrap;">'+statusBtns+'<button type="button" class="btn secondary sm" data-message-partner="'+attr(e.partner)+'">Message</button>'+(prof ? '<button type="button" class="btn ghost sm" data-view-profile="'+attr(prof.id)+'">View profile</button>' : '')+'</div>'
       + '</div>'
       + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;">'
@@ -7578,8 +7597,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderPartnerDetail();
   }
   function exportPartnersCsv(){
-    var rows = [["Partner","Country","Program","Commission tier","Level","Status","Revenue 12mo (USD)","Closed deals","Courses completed","Joined","Last activity"]];
-    enrollments.forEach(function(e){ var s = enStats(e); rows.push([e.partner, e.country, enProgramName(e), e.tier, e.level, e.status, Math.round(s.revenue), s.deals, s.courses, e.joined, e.lastActivity]); });
+    var rows = [["Partner","Country","Program","Commission tier","Level","Status","Sourced by","Revenue 12mo (USD)","Closed deals","Courses completed","Joined","Last activity"]];
+    enrollments.forEach(function(e){ var s = enStats(e); rows.push([e.partner, e.country, enProgramName(e), e.tier, e.level, e.status, e.source === "cloudwav" ? "CloudWAV" : "Vendor", Math.round(s.revenue), s.deals, s.courses, e.joined, e.lastActivity]); });
     var csv = rows.map(function(r){ return r.map(function(v){ v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }).join("\n");
     var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" })); a.download = "partnerwav-partners.csv"; document.body.appendChild(a); a.click(); a.remove();
   }
@@ -7727,6 +7746,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ var rd = [r.partyKey]; if (r.kind === "partner" && r.programId) rd.push("vendor:" + r.programId); return { readers:rd, writers: r.kind === "partner" ? [r.partyKey] : [] }; } },
     { name:"softwareHouses", mode:"replace", get:function(){ return softwareHouses; }, set:function(a){ softwareHouses = a; },
       access:function(r){ return { readers: r.status === "active" ? EVERYONE : [], writers:[] }; } },
+    { name:"programFees", mode:"replace", get:function(){ return programFees; }, set:function(a){ programFees = a; },
+      access:function(r){ return { readers:["vendor:" + r.id], writers:[] }; } },
+    { name:"platformFees", mode:"replace", get:function(){ return platformFees; }, set:function(a){ platformFees = a; },
+      access:function(r){ return { readers:["vendor:" + r.programId], writers:[] }; } },
     { name:"projectReferrals", mode:"replace", get:function(){ return projectReferrals; }, set:function(a){ projectReferrals = a; },
       access:function(r){ return { readers:[r.referrerKey], writers:[r.referrerKey] }; } },
     // Per-user settings that used to live in the browser: joined groups, collaboration interest, enrolled affiliate tools
@@ -8542,6 +8565,233 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-house-edit]"))){ showHouseEditor(b.getAttribute("data-house-edit") || null); return; }
     if ((b = t.closest("[data-house-doc]"))){ showAgreementDocument(houseById(b.getAttribute("data-house-doc"))); return; }
     if ((b = t.closest("[data-msp-house]"))){ var ex = softwareHouses.filter(function(h){ return h.prospectId === b.getAttribute("data-msp-house"); })[0]; showHouseEditor(ex ? ex.id : null, ex ? null : b.getAttribute("data-msp-house")); return; }
+  });
+
+  // ===== CLOUDWAV PLATFORM FEE =====
+  // What CloudWAV earns for running the portal. Paid by the vendor ON TOP of partner commission (never
+  // deducted from it). Set per program in Configure program; kept in its own collection (programFees)
+  // because program records are public. Each approved deal gets a platformFees record, snapshotted at
+  // approval so later rate changes don't rewrite history.
+  var PROGRAM_FEES_KEY = "partnerWAV_programFees", PLATFORM_FEES_KEY = "partnerWAV_platformFees";
+  var DEFAULT_PROGRAM_FEE = { enabled:true, basePct:3, sourcedPct:6, largeDealThreshold:1000000, largeBasePct:1.5, largeSourcedPct:3, basis:"collected" };
+  var FEE_BASIS = { collected:"As vendor collects", contract:"On approval, full value" };
+  var FEE_STATUS = { due:{ label:"Due", cls:"warn" }, invoiced:{ label:"Invoiced", cls:"accent" }, paid:{ label:"Paid", cls:"good" }, waived:{ label:"Waived", cls:"neutral" } };
+  var programFees = [];   // { id: programId, enabled, basePct, sourcedPct, largeDealThreshold, largeBasePct, largeSourcedPct, basis, updatedAt, updatedBy }
+  var platformFees = [];  // { id: dealId, dealId, programId, partnerId, partner, deal, customer, value, dealAmount, sym, rate, largeRate, threshold, sourced, amount, basis, status, approvedAt, invoicedAt, paidAt, note }
+  function saveProgramFees(){ try { lsSet(PROGRAM_FEES_KEY, JSON.stringify(programFees)); lsSet(PLATFORM_FEES_KEY, JSON.stringify(platformFees)); } catch(e){ console.log("Could not save fees:", e); } }
+  function loadProgramFees(){
+    try {
+      var a = JSON.parse(lsGet(PROGRAM_FEES_KEY) || "null"); if (Array.isArray(a)) programFees = a;
+      var b = JSON.parse(lsGet(PLATFORM_FEES_KEY) || "null"); if (Array.isArray(b)) platformFees = b;
+    } catch(e){ console.log("Could not load fees:", e); }
+  }
+  function feeFor(programId){
+    var saved = programFees.filter(function(x){ return x.id === programId; })[0], out = JSON.parse(JSON.stringify(DEFAULT_PROGRAM_FEE));
+    if (saved) Object.keys(saved).forEach(function(k){ out[k] = saved[k]; });
+    out.id = programId; out.configured = !!saved;
+    return out;
+  }
+  function enrollmentFor(programId, partnerId, partnerName){
+    return enrollments.filter(function(e){ return e.programId === programId && (e.partnerId === partnerId || (partnerName && e.partner === partnerName)); })[0] || null;
+  }
+  function partnerSourcedByCloudwav(programId, partnerId, partnerName){ var e = enrollmentFor(programId, partnerId, partnerName); return !!(e && e.source === "cloudwav"); }
+  // Marginal: the part of the deal above the threshold is charged at the large-deal rate
+  function feeOnAmount(f, amt, sourced){
+    var rate = Number(sourced ? f.sourcedPct : f.basePct) || 0, large = Number(sourced ? f.largeSourcedPct : f.largeBasePct) || 0, th = Number(f.largeDealThreshold) || 0;
+    var fee = th > 0 && amt > th ? th * rate / 100 + (amt - th) * large / 100 : amt * rate / 100;
+    return { amount:fee, rate:rate, largeRate:large, threshold:th, effective: amt ? fee / amt * 100 : rate };
+  }
+  function operatorFeeForDeal(d){
+    var amt = dealAmount(d.value); if (amt === null) return null;
+    var f = feeFor(d.programId), sourced = partnerSourcedByCloudwav(d.programId, d.partnerId, d.partner);
+    var sym = dealCurrencySymbol(d.value);
+    if (!f.enabled) return { off:true, amount:0, text:fmtAmount(sym, 0), sym:sym, sourced:sourced, f:f, dealAmount:amt };
+    var r = feeOnAmount(f, amt, sourced);
+    return { amount:r.amount, text:fmtAmount(sym, r.amount), sym:sym, rate:r.rate, largeRate:r.largeRate, threshold:r.threshold, effective:r.effective, sourced:sourced, f:f, dealAmount:amt };
+  }
+  function platformFeeById(id){ return platformFees.filter(function(x){ return x.id === id; })[0] || null; }
+  // Called when CloudWAV approves a deal
+  function recordPlatformFee(d){
+    var est = operatorFeeForDeal(d); if (!est || est.off || platformFeeById(d.id)) return null;
+    var rec = { id:d.id, dealId:d.id, programId:d.programId, partnerId:d.partnerId || "", partner:d.partner, deal:d.deal, customer:d.customer || "", value:d.value,
+      dealAmount:est.dealAmount, sym:est.sym, rate:est.rate, largeRate:est.largeRate, threshold:est.threshold, sourced:est.sourced,
+      amount:Math.round(est.amount * 100) / 100, basis:est.f.basis, status:"due", approvedAt:nowStamp(), invoicedAt:"", paidAt:"", note:"" };
+    platformFees.push(rec); saveProgramFees();
+    return rec;
+  }
+  function feeRateText(f, sourced){
+    var r = sourced ? f.sourcedPct : f.basePct, l = sourced ? f.largeSourcedPct : f.largeBasePct, th = Number(f.largeDealThreshold) || 0;
+    return fmtPct(r) + (th > 0 && l !== r ? " (" + fmtPct(l) + " above " + th.toLocaleString("en-US") + ")" : "");
+  }
+  function feeStatusBadge(s){ var st = FEE_STATUS[s] || FEE_STATUS.due; return '<span class="badge '+st.cls+'">'+esc(st.label)+'</span>'; }
+  // Sum amounts per currency symbol -> "$1,200 + ฿40,000"
+  function sumBySym(list, symOf, amtOf){
+    var t = {}; list.forEach(function(x){ var s = symOf(x) || ""; t[s] = (t[s] || 0) + (Number(amtOf(x)) || 0); });
+    var keys = Object.keys(t); return keys.length ? keys.map(function(s){ return fmtAmount(s, t[s]); }).join(" + ") : fmtAmount("$", 0);
+  }
+  var CUR_SYM = { USD:"$", THB:"฿" };
+
+  // ----- Configure program: fee section -----
+  function feeConfigHtml(p){
+    var f = state.cfgFeeDraft || feeFor(p.id);
+    var n = function(v){ return v === "" || v == null ? "" : v; };
+    return '<div class="card card-pad cfg-section" id="cfgFeeSection"><h3>CloudWAV platform fee<span class="cfg-ref">Vendor agreement -- platform fee</span></h3>'
+      + '<p class="field-note" style="margin:0;">What CloudWAV earns for running the portal on each approved deal. The vendor pays it <b>on top of</b> partner commission -- it is never deducted from what partners earn. Partners don\'t see it; the vendor sees it on their Overview.</p>'
+      + '<label class="cfg-check"><input type="checkbox" id="cfgFeeEnabled"'+(f.enabled ? " checked" : "")+'> Charge a platform fee on deals in this program</label>'
+      + '<div class="cfg-grid">'
+        + cfgInput("cfgFeeBase","Base fee % (vendor brought the partner)",n(f.basePct),"number",'min="0" max="100" step="0.1"')
+        + cfgInput("cfgFeeSourced","Sourced fee % (CloudWAV brought the partner)",n(f.sourcedPct),"number",'min="0" max="100" step="0.1"')
+        + cfgInput("cfgFeeThreshold","Large-deal threshold (deal value, 0 = none)",n(f.largeDealThreshold),"number",'min="0" step="1000"')
+        + cfgInput("cfgFeeLargeBase","Base fee % above the threshold",n(f.largeBasePct),"number",'min="0" max="100" step="0.1"')
+        + cfgInput("cfgFeeLargeSourced","Sourced fee % above the threshold",n(f.largeSourcedPct),"number",'min="0" max="100" step="0.1"')
+        + '<div><label for="cfgFeeBasis">Invoiced</label><select id="cfgFeeBasis">'+Object.keys(FEE_BASIS).map(function(k){ return '<option value="'+k+'"'+(f.basis === k ? " selected" : "")+'>'+esc(FEE_BASIS[k])+'</option>'; }).join("")+'</select></div>'
+      + '</div>'
+      + '<p class="field-note" style="margin:0;">Only the part of a deal above the threshold gets the lower rate. Whether a partner was sourced by CloudWAV is set per partner in Partners &amp; Tiers.</p>'
+      + '<div><label>Examples</label><div class="cfg-preview" id="cfgFeePreview"></div></div>'
+      + (f.configured ? '' : '<span class="field-note">Using the recommended defaults -- save to confirm them for this program.</span>')
+    + '</div>';
+  }
+  function readFeeForm(){
+    var f = state.cfgFeeDraft; if (!f || !document.getElementById("cfgFeeBase")) return;
+    var v = function(id){ return document.getElementById(id).value.trim(); };
+    f.enabled = document.getElementById("cfgFeeEnabled").checked;
+    f.basePct = num(v("cfgFeeBase")); f.sourcedPct = num(v("cfgFeeSourced")); f.largeDealThreshold = num(v("cfgFeeThreshold"));
+    f.largeBasePct = num(v("cfgFeeLargeBase")); f.largeSourcedPct = num(v("cfgFeeLargeSourced")); f.basis = v("cfgFeeBasis");
+  }
+  function updateFeePreview(){
+    var box = document.getElementById("cfgFeePreview"), f = state.cfgFeeDraft; if (!box || !f) return;
+    if (!f.enabled){ box.innerHTML = '<span class="field-note">No platform fee on this program.</span>'; return; }
+    var cur = (state.cfgDraft && state.cfgDraft.currency) || "USD", sym = CUR_SYM[cur] || "";
+    var th = Number(f.largeDealThreshold) || 0, big = th > 0 ? th * 2 : 2000000;
+    var line = function(amt, sourced){ var r = feeOnAmount(f, amt, sourced); return '<div class="tier-line"><span>'+fmtAmount(sym, amt)+' deal <span style="color:var(--ink-faint)">· '+(sourced ? "CloudWAV-sourced partner" : "vendor\'s own partner")+'</span></span><b>'+fmtAmount(sym, r.amount)+(th > 0 && amt > th ? ' <span style="font-weight:400;color:var(--ink-soft);">('+fmtPct(r.effective)+' overall)</span>' : '')+'</b></div>'; };
+    box.innerHTML = line(50000, false) + line(50000, true) + line(big, false) + line(big, true);
+  }
+  function validateFee(f){
+    var errs = [], pct = function(x){ return x !== "" && x >= 0 && x <= 100; };
+    if (!f || !f.enabled) return errs;
+    if (!pct(f.basePct) || !pct(f.sourcedPct) || !pct(f.largeBasePct) || !pct(f.largeSourcedPct)) errs.push("Platform fee percentages must be between 0 and 100.");
+    if (f.largeDealThreshold === "" || f.largeDealThreshold < 0) errs.push("Large-deal threshold must be 0 or more.");
+    if (Number(f.basePct) > 15 || Number(f.sourcedPct) > 15) errs.push("A platform fee above 15% is far outside the norm (marketplaces charge about 2-10%) -- lower it, or confirm it with the vendor in writing first.");
+    return errs;
+  }
+  function saveFeeConfig(p){
+    var f = state.cfgFeeDraft; if (!f) return;
+    var rec = { id:p.id, enabled:f.enabled, basePct:f.basePct, sourcedPct:f.sourcedPct, largeDealThreshold:f.largeDealThreshold, largeBasePct:f.largeBasePct, largeSourcedPct:f.largeSourcedPct, basis:f.basis,
+      updatedAt:nowStamp(), updatedBy: state.account ? state.account.name : "Program Operator" };
+    var i = programFees.map(function(x){ return x.id; }).indexOf(p.id);
+    if (i > -1) programFees[i] = rec; else programFees.push(rec);
+    saveProgramFees();
+    state.cfgFeeDraft = null;
+  }
+
+  // ----- Deal review: fee card -----
+  function dealFeeCardHtml(d){
+    var rec = platformFeeById(d.id), est = operatorFeeForDeal(d);
+    var head = '<div class="aff-section-title">CloudWAV platform fee</div>';
+    if (rec) return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:8px;" id="dealFeeCard">'+head
+      + '<div style="font-size:1.25rem;font-weight:700;font-family:\'IBM Plex Mono\',monospace;">'+esc(fmtAmount(rec.sym, rec.amount))+' '+feeStatusBadge(rec.status)+'</div>'
+      + '<span class="field-note">Recorded at approval: '+esc(fmtPct(rec.rate))+(rec.sourced ? ' (CloudWAV-sourced partner)' : '')+'. Track it in CloudWAV Revenue.</span></div>';
+    if (!est) return '<div class="card card-pad" id="dealFeeCard">'+head+'<span class="field-note">Can\'t estimate -- the deal value isn\'t a plain number.</span></div>';
+    if (est.off) return '<div class="card card-pad" id="dealFeeCard">'+head+'<span class="field-note">No platform fee on this program (Configure program).</span></div>';
+    return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:8px;" id="dealFeeCard">'+head
+      + '<div style="font-size:1.25rem;font-weight:700;font-family:\'IBM Plex Mono\',monospace;">'+esc(est.text)+'</div>'
+      + '<span class="field-note">'+esc(feeRateText(est.f, est.sourced))+' of the deal value -- '+(est.sourced ? 'CloudWAV sourced this partner' : 'the vendor\'s own partner')+'. Paid by the vendor on top of partner commission'+(est.f.configured ? '' : ' (default rates -- confirm them in Configure program)')+'. Recorded when you approve.</span></div>';
+  }
+
+  // ----- Vendor overview: what they owe CloudWAV -----
+  function renderVendorFeeCard(){
+    var box = document.getElementById("vendorFeeCard"); if (!box) return;
+    if (state.role !== "vendor" || !state.myVendorId){ box.innerHTML = ""; return; }
+    var f = feeFor(state.myVendorId), mine = platformFees.filter(function(x){ return x.programId === state.myVendorId; });
+    var open = mine.filter(function(x){ return x.status === "due" || x.status === "invoiced"; });
+    box.innerHTML = '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">'
+      + '<div class="section-head"><h2 style="font-size:.95rem;">CloudWAV platform fee</h2><span class="hint">'+(f.enabled ? esc(feeRateText(f, false))+' on approved deals · '+esc(feeRateText(f, true))+' when CloudWAV brought the partner' : 'No platform fee on your program')+'</span></div>'
+      + '<p class="field-note" style="margin:0;">Paid by you on top of partner commission -- it never reduces what your partners earn. '+(f.basis === "contract" ? "Invoiced when CloudWAV approves the deal, on the full deal value." : "Invoiced as you collect from the customer.")+'</p>'
+      + (mine.length ? '<div class="table-scroll"><table class="ref-fee-table"><thead><tr><th>Deal</th><th>Partner</th><th style="text-align:right">Deal value</th><th style="text-align:right">Fee</th><th>Status</th></tr></thead><tbody>'
+          + mine.map(function(x){ return '<tr><td>'+esc(x.deal)+'</td><td>'+esc(x.partner)+'</td><td class="mono-num" style="text-align:right">'+esc(x.value)+'</td><td class="mono-num" style="text-align:right">'+esc(fmtAmount(x.sym, x.amount))+'</td><td>'+feeStatusBadge(x.status)+'</td></tr>'; }).join("")
+          + '</tbody></table></div><div class="field-note">Open: <b>'+esc(open.length ? sumBySym(open, function(x){ return x.sym; }, function(x){ return x.amount; }) : "nothing")+'</b></div>'
+        : '<div class="empty" style="padding:12px;">No fees yet -- they appear here when CloudWAV approves a deal in your program.</div>')
+    + '</div>';
+  }
+
+  // ----- Operator: CloudWAV Revenue -----
+  function revenueData(){
+    var refs = projectReferrals.map(function(r){ var f = referralFees(r); return { r:r, f:f, house:(softwareHouses.filter(function(h){ return h.id === r.houseId; })[0] || {}).name || r.houseId, cur:(f.t && f.t.currency) || r.currency || "THB" }; }).filter(function(x){ return x.f.fee > 0; });
+    var shop = shopOrders.filter(function(o){ return o.status === "paid" && Number(o.price) > 0; });
+    return { fees:platformFees.slice(), refs:refs, shop:shop };
+  }
+  function renderOperatorRevenue(){
+    var box = document.getElementById("operatorRevenueContent");
+    if (!box || state.screen !== "operator-revenue") return;
+    var R = revenueData(), tab = state.revFilter || "open";
+    var sym = function(x){ return x.sym; }, amt = function(x){ return x.amount; };
+    var by = function(s){ return R.fees.filter(function(x){ return x.status === s; }); };
+    var refSym = function(x){ return CUR_SYM[x.cur] || x.cur + " "; };
+    var tile = function(label, val, note){ return '<div class="stat-tile"><span class="stat-label">'+esc(label)+'</span><span class="stat-value" style="font-size:1.15rem;">'+esc(val)+'</span><span class="stat-trend">'+esc(note)+'</span></div>'; };
+    var list = R.fees.filter(function(x){ return tab === "all" || (tab === "open" ? (x.status === "due" || x.status === "invoiced") : x.status === tab); })
+      .sort(function(a, b){ return a.approvedAt < b.approvedAt ? 1 : -1; });
+    var chips = [["open","Open"],["due","Due"],["invoiced","Invoiced"],["paid","Paid"],["waived","Waived"],["all","All"]].map(function(c){
+      var n = c[0] === "all" ? R.fees.length : c[0] === "open" ? by("due").length + by("invoiced").length : by(c[0]).length;
+      return '<button type="button" class="filter-chip" data-rev-filter="'+c[0]+'" aria-pressed="'+(tab === c[0])+'">'+c[1]+' ('+n+')</button>'; }).join("");
+    var feeRows = list.length ? list.map(function(x){
+      var p = programById(x.programId), acts = x.status === "due" ? '<button type="button" class="btn secondary sm" data-fee-status="invoiced" data-fee-id="'+attr(x.id)+'">Mark invoiced</button><button type="button" class="btn ghost sm" data-fee-status="waived" data-fee-id="'+attr(x.id)+'">Waive</button>'
+        : x.status === "invoiced" ? '<button type="button" class="btn primary sm" data-fee-status="paid" data-fee-id="'+attr(x.id)+'">Mark paid</button>'
+        : '<button type="button" class="btn ghost sm" data-fee-status="due" data-fee-id="'+attr(x.id)+'">Reopen</button>';
+      return '<tr data-fee-row="'+attr(x.id)+'"><td>'+esc(x.deal)+'<div class="field-note">'+esc(x.partner)+(x.sourced ? ' · CloudWAV-sourced' : '')+' · approved '+esc(x.approvedAt)+'</div></td><td>'+esc(p ? p.name : x.programId)+'</td>'
+        + '<td class="mono-num" style="text-align:right">'+esc(x.value)+'</td><td class="mono-num" style="text-align:right">'+esc(fmtAmount(x.sym, x.amount))+'<div class="field-note">'+esc(fmtPct(x.rate))+'</div></td>'
+        + '<td>'+feeStatusBadge(x.status)+(x.paidAt ? '<div class="field-note">'+esc(x.paidAt)+'</div>' : x.invoicedAt ? '<div class="field-note">'+esc(x.invoicedAt)+'</div>' : '')+'</td><td class="row-actions">'+acts+'</td></tr>';
+    }).join("") : '<tr><td colspan="6"><div class="empty">No platform fees here yet -- they\'re recorded automatically when you approve a deal in Deal Approvals.</div></td></tr>';
+    var refRows = R.refs.length ? R.refs.map(function(x){
+      return '<tr><td>'+esc(x.r.client && x.r.client.company || x.r.id)+'<div class="field-note">'+esc(x.house)+' · '+esc(keyName(x.r.referrerKey))+'</div></td>'
+        + '<td class="mono-num" style="text-align:right">'+esc(fmtMoney(x.f.collected, x.cur))+'</td><td class="mono-num" style="text-align:right">'+esc(fmtMoney(x.f.fee, x.cur))+'</td>'
+        + '<td class="mono-num" style="text-align:right"><b>'+esc(fmtMoney(x.f.cloudwavFee, x.cur))+'</b><div class="field-note">'+(100 - x.f.partnerPct)+'%</div></td></tr>';
+    }).join("") : '<tr><td colspan="4"><div class="empty">No referral fees collected yet.</div></td></tr>';
+    var shopTotal = R.shop.reduce(function(a, o){ return a + Number(o.price); }, 0);
+    box.innerHTML = '<div class="stat-row">'
+        + tile("Platform fees open", by("due").length + by("invoiced").length ? sumBySym(by("due").concat(by("invoiced")), sym, amt) : fmtAmount("$", 0), by("due").length + " due · " + by("invoiced").length + " invoiced")
+        + tile("Platform fees paid", sumBySym(by("paid"), sym, amt), by("paid").length + " deal" + (by("paid").length === 1 ? "" : "s"))
+        + tile("Software referral share", R.refs.length ? sumBySym(R.refs, refSym, function(x){ return x.f.cloudwavFee; }) : fmtAmount("฿", 0), R.refs.length + " referral" + (R.refs.length === 1 ? "" : "s") + " with fees")
+        + tile("Shop sales", fmtAmount("$", shopTotal), R.shop.length + " paid order" + (R.shop.length === 1 ? "" : "s"))
+      + '</div>'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">'
+        + '<div class="section-head"><h2 style="font-size:.95rem;">Platform fees on approved deals</h2><span class="hint">Paid by the vendor on top of partner commission. Rates are set per program in Manage Programs → Configure.</span></div>'
+        + '<div class="filter-row">'+chips+'</div>'
+        + '<div class="table-scroll"><table class="ref-fee-table"><thead><tr><th>Deal</th><th>Program</th><th style="text-align:right">Deal value</th><th style="text-align:right">Fee</th><th>Status</th><th></th></tr></thead><tbody id="revFeeRows">'+feeRows+'</tbody></table></div>'
+      + '</div>'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">'
+        + '<div class="section-head"><h2 style="font-size:.95rem;">Software referral fees -- CloudWAV\'s share</h2><span class="hint">From Software Referrals: fees the software houses have paid on collected invoices, less the referring partner\'s share</span></div>'
+        + '<div class="table-scroll"><table class="ref-fee-table"><thead><tr><th>Referral</th><th style="text-align:right">Collected</th><th style="text-align:right">Total fee</th><th style="text-align:right">CloudWAV share</th></tr></thead><tbody>'+refRows+'</tbody></table></div>'
+      + '</div>'
+      + '<div class="cfg-actions" style="margin-top:16px;"><button type="button" class="btn secondary sm" data-rev-export>Export CSV</button></div>';
+  }
+  function setFeeStatus(id, st){
+    var x = platformFeeById(id); if (!x || state.role !== "operator" || !FEE_STATUS[st]) return;
+    x.status = st;
+    if (st === "invoiced") x.invoicedAt = nowStamp();
+    if (st === "paid"){ x.paidAt = nowStamp(); if (!x.invoicedAt) x.invoicedAt = x.paidAt; }
+    if (st === "due"){ x.invoicedAt = ""; x.paidAt = ""; }
+    saveProgramFees();
+    toast(x.deal + ": fee " + FEE_STATUS[st].label.toLowerCase());
+    renderOperatorRevenue();
+  }
+  function exportRevenueCsv(){
+    var R = revenueData(), rows = [["Source","Item","Counterparty","Program / software house","Date","Deal or collected value","Currency","Rate %","CloudWAV amount","Status"]];
+    R.fees.forEach(function(x){ var p = programById(x.programId); rows.push(["Platform fee", x.deal, x.partner, p ? p.name : x.programId, x.approvedAt, x.dealAmount, x.sym, x.rate, x.amount, x.status]); });
+    R.refs.forEach(function(x){ rows.push(["Software referral", x.r.client && x.r.client.company || x.r.id, keyName(x.r.referrerKey), x.house, x.r.wonAt || x.r.registeredAt || "", x.f.collected, x.cur, 100 - x.f.partnerPct, Math.round(x.f.cloudwavFee * 100) / 100, "collected"]); });
+    R.shop.forEach(function(o){ var p = shopById(o.productId); rows.push(["Shop sale", p ? p.title : o.productId, keyName(o.buyer), "", o.paidAt || o.created, o.price, "$", 100, o.price, "paid"]); });
+    var csv = rows.map(function(r){ return r.map(function(v){ v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }).join("\n");
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" })); a.download = "cloudwav-revenue.csv"; document.body.appendChild(a); a.click(); a.remove();
+  }
+  document.addEventListener("click", function(ev){
+    var t = ev.target, b;
+    if ((b = t.closest("[data-rev-filter]"))){ state.revFilter = b.getAttribute("data-rev-filter"); renderOperatorRevenue(); return; }
+    if ((b = t.closest("[data-fee-status]"))){ setFeeStatus(b.getAttribute("data-fee-id"), b.getAttribute("data-fee-status")); return; }
+    if (t.closest("[data-rev-export]")){ exportRevenueCsv(); return; }
+  });
+  // read-only hook for automated checks
+  window.PW_FEES = { forDeal:function(d){ return operatorFeeForDeal(d); }, forProgram:function(id){ return feeFor(id); }, recorded:function(){ return JSON.parse(JSON.stringify(platformFees)); } };
+  document.addEventListener("change", function(ev){
+    if (ev.target.id === "enSource"){ var e = enById(state.enViewId); if (e && state.role === "operator"){ e.source = ev.target.value; saveLevels(); toast(e.partner + (e.source === "cloudwav" ? ": sourced by CloudWAV -- sourced platform fee applies" : ": vendor's own partner -- base platform fee applies")); } }
   });
 
   // ===== HARDWARE OFFERINGS =====
@@ -11429,6 +11679,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadFlyers();
   loadMessages();
   loadReferrals();
+  loadProgramFees();
   loadShop();
   loadLevels();
   loadEngagementsAndPages();
