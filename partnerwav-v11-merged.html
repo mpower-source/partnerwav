@@ -255,6 +255,11 @@ html.auth-locked .shell{ display:none; }
 html.auth-locked #loginScreen{ display:flex; }
 html.public-apply .sidebar, html.public-apply .topbar-right, html.public-apply #topEyebrow{ display:none; }
 html:not(.demo-mode) .role-switch{ display:none; }
+html.op-preview .role-switch{ display:grid; }
+.preview-banner{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:10px 14px; border-radius:10px;
+  background:var(--accent-soft, #ede9fe); color:var(--ink); border:1px solid var(--accent); font-size:.85rem; }
+.preview-banner b{ font-weight:700; }
+.preview-banner .btn{ margin-left:auto; }
 .login-wrap{ min-height:100vh; align-items:center; justify-content:center; padding:24px 16px; background:var(--bg); box-sizing:border-box; }
 .login-card{ width:100%; max-width:380px; background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:28px 26px; box-sizing:border-box; }
 .login-card label{ display:block; font-size:.8rem; font-weight:600; color:var(--ink-soft); margin:14px 0 6px; }
@@ -723,6 +728,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     </div>
 
     <div class="content">
+      <div id="previewBanner" class="preview-banner" role="status" hidden></div>
 
       <!-- ===== PARTNER: OVERVIEW ===== -->
       <section id="scr-partner-overview">
@@ -4941,7 +4947,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // ----- direct messages -----
   function myMsgKey(){
-    if (state.account) return state.account.role + ":" + (state.account.entityId || "");
+    if (state.account && !isPreviewing()) return state.account.role + ":" + (state.account.entityId || "");
     var id = state.role === "partner" ? state.myProfileId : state.role === "vendor" ? state.myVendorId : state.role === "affiliate" ? myAffiliateProfileId() : "";
     return state.role + ":" + (id || "");
   }
@@ -5039,6 +5045,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function sendDirectMessage(){
     var ta = document.getElementById("msgCompose"), text = ta && ta.value.trim();
     var convo = convoById(state.activeConversation), me = myMsgKey();
+    if (isPreviewing()){ toast("You're previewing as " + keyName(me) + " -- switch back to Operator to send messages, so nobody receives a message you didn't write as yourself"); return; }
     if (!text || !convo || convo.participants.indexOf(me) < 0) return;
     directMessages.push({ id:"dm-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), convoId:convo.id, from:me, text:text, at:new Date().toISOString() });
     ta.value = "";
@@ -9966,7 +9973,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("click", function(e){
     console.log("Click detected on:", e.target.tagName, e.target.className);
     var roleBtn = e.target.closest(".role-btn");
-    if (roleBtn && !DEMO_MODE) return; // roles come from your account when signed in
+    if (roleBtn && !DEMO_MODE){ if (canPreview()) previewPick(roleBtn.getAttribute("data-role")); return; } // roles come from your account when signed in (operators can preview)
     if (roleBtn){
       console.log("Role button clicked");
       state.role = roleBtn.getAttribute("data-role");
@@ -11742,6 +11749,70 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return e ? e.name : (role === "operator" ? "CloudWAV" : "");
   }
 
+  // ----- Operator preview: CloudWAV operators can open the Vendor, Partner and Affiliate workspaces
+  // as any company, to build and test while those companies don't have their own logins yet.
+  // The sign-in stays the operator's (the database sees CloudWAV), so this is safe to leave on;
+  // set OPERATOR_PREVIEW = false to turn it off once every company has its own login.
+  var OPERATOR_PREVIEW = true;
+  var PREVIEW_KNOWN = { partner:["siam-digital","gulf-coast","portonics","riverside"], affiliate:["techbridge-aff","asian-connect-aff"] };
+  function canPreview(){ return OPERATOR_PREVIEW && !!state.account && state.account.role === "operator"; }
+  function isPreviewing(){ return canPreview() && state.role !== "operator"; }
+  function previewChoices(role){
+    var out = [], seen = {};
+    var add = function(id, name){ if (!id || seen[id]) return; seen[id] = true; out.push({ id:id, name:name || id }); };
+    if (role === "vendor") programs.forEach(function(p){ add(p.id, p.name); });
+    if (role === "partner"){ partnerProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
+      enrollments.forEach(function(e){ add(e.partnerId, e.partner); }); PREVIEW_KNOWN.partner.forEach(function(id){ add(id); }); }
+    if (role === "affiliate"){ affiliateProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); }); PREVIEW_KNOWN.affiliate.forEach(function(id){ add(id); }); }
+    return out;
+  }
+  function previewCurrentId(role){ return role === "vendor" ? state.myVendorId : role === "partner" ? state.myProfileId : role === "affiliate" ? state.myAffiliateId : null; }
+  function previewPick(role){
+    if (role === "operator"){ startPreview("operator"); return; }
+    var list = previewChoices(role), cur = previewCurrentId(role) || (state.previewLast || {})[role] || (list[0] || {}).id;
+    var back = openModal('<div class="modal-head"><h2>Preview as a '+esc(ROLE_NAMES[role])+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="modal-body" style="display:flex;flex-direction:column;gap:12px;">'
+        + '<p class="field-note" style="margin:0;">See and use the '+esc(ROLE_NAMES[role])+' workspace as this company would. You stay signed in as CloudWAV, so everything you save is saved as the operator.</p>'
+        + '<div class="field-row"><label for="previewEntity">Company</label><select id="previewEntity">'
+          + list.map(function(x){ return '<option value="'+attr(x.id)+'"'+(x.id === cur ? " selected" : "")+'>'+esc(x.name)+(x.name !== x.id ? ' ('+esc(x.id)+')' : '')+'</option>'; }).join("")
+        + '</select></div>'
+        + '<div class="field-row"><label for="previewOther">Or type a company id</label><input type="text" id="previewOther" placeholder="e.g. new-partner-co"></div>'
+      + '</div>'
+      + '<div class="modal-actions"><button type="button" class="btn secondary" id="previewCancel">Cancel</button><button type="button" class="btn primary" id="previewGo">Open '+esc(ROLE_NAMES[role])+' workspace</button></div>');
+    back.querySelector("#previewCancel").addEventListener("click", closeModal);
+    back.querySelector("#previewGo").addEventListener("click", function(){
+      var other = back.querySelector("#previewOther").value.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
+      var id = other || back.querySelector("#previewEntity").value;
+      if (!id) return;
+      closeModal(); startPreview(role, id);
+    });
+  }
+  function startPreview(role, id){
+    if (!canPreview()) return;
+    state.role = role;
+    if (role === "vendor") state.myVendorId = id;
+    if (role === "partner") state.myProfileId = id;
+    if (role === "affiliate") state.myAffiliateId = id;
+    if (id){ state.previewLast = state.previewLast || {}; state.previewLast[role] = id; }
+    state.activeConversation = null;
+    state.screen = HOME_SCREEN[role];
+    render(); window.scrollTo(0, 0);
+    if (role !== "operator") toast("Previewing as " + (entityNameFor(role, id) || id));
+  }
+  function renderPreviewBanner(){
+    var el = document.getElementById("previewBanner"); if (!el) return;
+    if (!isPreviewing()){ el.hidden = true; el.innerHTML = ""; return; }
+    var id = previewCurrentId(state.role), name = entityNameFor(state.role, id) || id || "no company picked";
+    el.hidden = false;
+    el.innerHTML = '<span>👁 Previewing the <b>'+esc(ROLE_NAMES[state.role])+'</b> workspace as <b>'+esc(name)+'</b>. You\'re signed in as CloudWAV -- changes are saved as the operator; messages can\'t be sent from here.</span>'
+      + '<button type="button" class="btn secondary sm" data-preview-switch="'+attr(state.role)+'">Switch company</button>'
+      + '<button type="button" class="btn primary sm" data-preview-exit style="margin-left:0;">Back to Operator</button>';
+  }
+  document.addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-preview-switch]"); if (b){ previewPick(b.getAttribute("data-preview-switch")); return; }
+    if (ev.target.closest("[data-preview-exit]")) startPreview("operator");
+  });
+
   function applyAccount(user, acct){
     state.account = { id:user.id, email:user.email, role:acct.role, entityId:acct.entity_id || null,
       name: acct.display_name || user.email, entityName: entityNameFor(acct.role, acct.entity_id) };
@@ -11750,6 +11821,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (acct.role === "partner") state.myProfileId = acct.entity_id || null;
     if (acct.role === "affiliate") state.myAffiliateId = acct.entity_id || null;
     state.screen = HOME_SCREEN[acct.role];
+    document.documentElement.classList.toggle("op-preview", canPreview());
     setAuthLocked(false);
     updateAccountMenu();
     render();
@@ -11759,7 +11831,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var sessionUserId = null;
   async function handleSession(session){
     if (!session){
-      sessionUserId = null; state.account = null;
+      sessionUserId = null; state.account = null; document.documentElement.classList.remove("op-preview");
       showLoginPanel("SignIn"); setAuthLocked(true); return;
     }
     if (sessionUserId === session.user.id && state.account) return; // token refresh / tab refocus
@@ -11884,7 +11956,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // Every screen update also checks for data to save to Supabase (signed-in sessions)
   var renderScreens = render;
-  render = function(){ renderScreens.apply(this, arguments); renderCloudData(); cloudSchedule(); };
+  render = function(){ renderScreens.apply(this, arguments); renderPreviewBanner(); renderCloudData(); cloudSchedule(); };
 
   initAuth(); // after the sign-in settings above are defined
 
