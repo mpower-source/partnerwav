@@ -1,6 +1,8 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}  .map-tiles-dark{ filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
 
 
+  .aff-qr{ display:flex; align-items:center; gap:12px; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); }
+  .aff-qr img{ background:#fff; border-radius:6px; image-rendering:pixelated; flex-shrink:0; }
   /* ===== Shop + partner levels ===== */
   .shop-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:14px; }
   .shop-card{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); display:flex; flex-direction:column; }
@@ -2516,6 +2518,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" } },
     // Direct offering: CloudWAV's own Lovable invite link -- everyone shares the same link.
     { id:"lovable", name:"Lovable", category:"AI App Builder", direct:true, directLink:"https://lovable.dev/invite/DTIM5CC",
+      // QR code for the invite link (same link as the one on Lovable's invite screen, verified by decoding)
+      qr:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhAAAAIQAQAAAAD4e2okAAACgUlEQVR4nO3dQY7DIAxAUTPK/a/MLAjYJmTVuHLKjzTTJkVPYVGLGENLlU+Pv48FCAgICAgIiJ8iDhGR4i5VKeZvPua2WToCAQERThztReNCEY0Y87XWzrfN0hEICIhw4uhv2nd/Hk/4uLFum6MjEBAQ4cSxuljMaKLHhn4echcQEBBvIJbxQrMU/UnkPlpk6QgEBEQ4MeKFjwbtrJz/2zhDs5++bY6OQEBAhBNnvFjlKFpuU+dJ6ogcj98FBATEG4hDZPWk4WdSq8lwXtvm6AgEBEQ4cdZf9OePavKbfSxRRpywI4s6PsnREQgIiHCizJUXIneVWtpKD+IFBMRGxMhfVDfG0LghorOpc40G9VoQEFsRZj61xYQ6ztq7KjJFC60Wf+wuICAg3kCM/IV9GplrOq/jC40lWToCAQERTpzzIz1i2BoLrb7wc6p6kO+EgNiKGOvNbEWnzo+0K35k0VtW8hcQEHsRZj5VnzPmmZIyroqIiSOP3QUEBMQbiGK//VV8rPBXfbWnPrvk6AgEBEQ4UXwdll03Mp/7zzRDmqMjEBAQ4YSrB9d1qNcZEVvp6Z9TcnQEAgIinLjUX/jZ1R4zruvRqL+AgNiOKJql8Htp2RzFal0q60cgILYjzPoRc1FE/MzpnMOwrzk6AgEBEU4s9wdfZS764edNHroLCAiINxA3+4OLO28t7AhDn0aydAQCAiKcWO4PbivBxVy3+3pWxhcQELsRy/1+598audu5k/wFBMRWxM3+4H48Me+65TMeOToCAQERTtzsDy5iV7bPNeJ+3VmOjkBAQIQTy/3BNed5/dWzeQ/PLB2BgIAIJ5b1F1+/CwgICAgICIhfIv4B2mm2PKYwDfQAAAAASUVORK5CYII=",
       desc:"Build websites, landing pages, client portals and internal tools just by describing them to AI -- no coding needed. Useful for MSPs and VARs who want to ship quick apps for customers or their own business.",
       note:"Sign up with this link and get an extra 10 credits. CloudWAV earns referral credits when a referred user moves to a Pro plan.",
       apiIntegration:false, logo:"", website:"https://lovable.dev", social:{ linkedin:"", twitter:"", facebook:"" } }
@@ -3246,6 +3250,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     + '</div>';
   }
 
+  function affQrHtml(a){
+    var file = (a.name || "invite").toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-invite-qr.png";
+    return '<div class="aff-qr" data-aff-qr="'+esc(a.id)+'"><img src="'+esc(a.qr)+'" alt="QR code for the '+esc(a.name)+' invite link" width="84" height="84">'
+      + '<div><div class="field-note" style="margin:0 0 6px;">Scan to sign up -- handy for slides, flyers and events.</div>'
+      + '<a class="btn secondary sm" href="'+esc(a.qr)+'" download="'+esc(file)+'" style="text-decoration:none;">Download QR code</a></div></div>';
+  }
   function affiliateCard(a, showOps){
     var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
     var isOperator = state.role === "operator";
@@ -3259,6 +3269,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ? '<div class="aff-link-row" data-direct-link="'+esc(a.id)+'"><input type="text" class="aff-link-input" readonly value="'+esc(a.directLink).replace(/"/g,"&quot;")+'" aria-label="'+esc(a.name)+' invite link">'
         + '<button type="button" class="btn primary sm" data-copy-direct="'+esc(a.directLink).replace(/"/g,"&quot;")+'">Copy link</button>'
         + '<a class="btn secondary sm" href="'+esc(a.directLink).replace(/"/g,"&quot;")+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open</a></div>'
+        + (a.qr ? affQrHtml(a) : '')
       : '';
     return '<div class="program-card"'+(a.direct ? ' data-direct-offer="'+esc(a.id)+'"' : '')+'>'
       + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(a)+'<span class="program-name">'+esc(a.name)+'</span></div><span class="badge neutral">'+esc(a.category)+'</span></div>'
@@ -3284,6 +3295,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<p class="program-desc">'+esc(a.desc)+'</p>'
       + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
+      + (a.direct && a.qr ? affQrHtml(a) : '')
       + affiliateManagePanel(a)
     + '</div>';
   }
