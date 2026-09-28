@@ -8,6 +8,11 @@
   .cloud-status.error{ color:var(--bad); border-color:var(--bad); }
   @media (max-width:640px){ .cloud-status{ display:none; } }
   .msg-new{ padding:8px; border-bottom:1px solid var(--line); } .msg-new select{ width:100%; }
+  .ref-fee-table{ min-width:0; width:100%; } .ref-fee-table th, .ref-fee-table td{ padding:6px 8px !important; font-size:.84rem; white-space:nowrap; }
+  .agr-doc-wrap{ max-height:62vh; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:4px 18px; background:var(--surface); }
+  .agr-doc h1{ font-size:1.25rem; } .agr-doc h2{ font-size:.98rem; margin:18px 0 6px; } .agr-doc p{ font-size:.9rem; line-height:1.5; margin:6px 0; }
+  .agr-note{ background:var(--warn-soft); color:var(--warn); padding:8px 10px; border-radius:6px; font-size:.82rem; }
+  .agr-table{ width:100%; border-collapse:collapse; font-size:.86rem; } .agr-table th, .agr-table td{ border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; } .agr-table th{ width:36%; }
   /* ===== Shop + partner levels ===== */
   .shop-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:14px; }
   .shop-card{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); display:flex; flex-direction:column; }
@@ -635,6 +640,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="training"><span class="ic">🎓</span>Training</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+      <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
     </nav>
 
     <nav class="navgroup" id="navVendor" hidden>
@@ -650,6 +656,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+      <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
     </nav>
 
     <nav class="navgroup" id="navAffiliate" hidden>
@@ -661,6 +668,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+      <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
     </nav>
 
     <nav class="navgroup" id="navOperator" hidden>
@@ -677,6 +685,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
       <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
       <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
+      <button class="navlink" data-screen="operator-agreements"><span class="ic">📝</span>Agreements</button>
+      <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
       <button class="navlink" data-screen="operator-shop"><span class="ic">🛒</span>Shop Manager</button>
       <button class="navlink" data-screen="operator-data"><span class="ic">☁️</span>Cloud Data</button>
     </nav>
@@ -850,19 +860,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
       <!-- ===== PARTNER: AGREEMENTS ===== -->
       <section id="scr-partner-agreements" hidden>
-        <div class="section-head"><h2>My agreements</h2><span class="hint">One template shape per relationship type</span></div>
+        <div class="section-head"><h2>Agreements</h2><span class="hint">Your agreements with CloudWAV and their signature status</span></div>
         <div style="height:8px"></div>
-        <div style="display:flex;gap:10px;margin-bottom:14px;">
-          <button class="btn primary sm" data-goto-screen="agreements-editor">+ Create Agreement</button>
-        </div>
-        <div class="card">
-          <div class="table-scroll">
-            <table>
-              <thead><tr><th>Program</th><th>Agreement type</th><th>Status</th><th>Template</th><th>E-signature</th></tr></thead>
-              <tbody id="agreementRows"></tbody>
-            </table>
-          </div>
-        </div>
+        <div id="agreementsContent"></div>
       </section>
 
       <!-- ===== PARTNER: COMMISSIONS ===== -->
@@ -1942,6 +1942,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-operator-partner-detail" hidden>
         <button class="btn ghost sm" data-en-back>← Back to Partners &amp; Tiers</button>
         <div id="partnerDetailContent" style="margin-top:14px;"></div>
+      </section>
+
+      <section id="scr-operator-agreements" hidden>
+        <div class="section-head"><h2>Agreements</h2><span class="hint">Vendor, partner and software-referral agreements, and their signatures</span></div>
+        <div style="height:14px"></div>
+        <div id="operatorAgreementsContent"></div>
+      </section>
+
+      <section id="scr-referrals" hidden>
+        <div class="section-head"><h2>Software referrals</h2><span class="hint">Refer clients who need custom software to CloudWAV's software-house partners and earn a share of the fees</span></div>
+        <div style="height:14px"></div>
+        <div id="referralsContent"></div>
+      </section>
+
+      <section id="scr-referral-view" hidden>
+        <button class="btn ghost sm" data-ref-back>← Back to Software referrals</button>
+        <div id="referralViewContent" style="margin-top:14px;"></div>
       </section>
 
       <section id="scr-operator-data" hidden>
@@ -3034,6 +3051,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-partner-detail":"Partner",
     "operator-shop":"Shop Manager",
     "operator-data":"Cloud Data",
+    "operator-agreements":"Agreements",
+    "referrals":"Software Referrals",
+    "referral-view":"Software Referral",
     "operator-shop-editor":"Shop Product",
     "shop":"Training & Shop",
     "shop-product":"Training & Shop",
@@ -3485,15 +3505,6 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         : '<div class="empty">No programs match that relationship type yet.</div>';
     }
 
-    // ---- partner agreements ----
-    var agRows = document.getElementById("agreementRows");
-    if (agRows){
-      agRows.innerHTML = programs.map(function(p){
-        return "<tr><td>"+esc(p.name)+"</td><td>"+esc(p.agreement.type)+"</td><td>"+statusPill(p.agreement.status)+"</td>"
-          + "<td><button class='btn ghost sm' data-view-agreement='"+p.id+"'>.docx template →</button></td>"
-          + "<td>"+esignCellHtml(p)+"</td></tr>";
-      }).join("");
-    }
 
     // ---- partner commissions ----
     renderCommissionTable(document.getElementById("commissionFilter") ? document.getElementById("commissionFilter").value : "all");
@@ -3578,6 +3589,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderFlyerEditor();
     renderOperatorFlyers();
     renderFlyerReview();
+    renderAgreements();
+    renderOperatorAgreements();
+    renderReferrals();
+    renderReferralView();
     renderShop();
     renderShopProduct();
     renderOperatorShop();
@@ -7708,6 +7723,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ return { readers:r.participants.slice(), writers:r.participants.slice() }; } },
     { name:"messages", mode:"replace", get:function(){ return directMessages; }, set:function(a){ directMessages.length = 0; a.forEach(function(x){ directMessages.push(x); }); },
       access:function(r){ var c = convoById(r.convoId); return { readers: c ? c.participants.slice() : [r.from], writers:[r.from] }; } },
+    { name:"agreements", mode:"replace", get:function(){ return agreementsList; }, set:function(a){ agreementsList = a; },
+      access:function(r){ var rd = [r.partyKey]; if (r.kind === "partner" && r.programId) rd.push("vendor:" + r.programId); return { readers:rd, writers: r.kind === "partner" ? [r.partyKey] : [] }; } },
+    { name:"softwareHouses", mode:"replace", get:function(){ return softwareHouses; }, set:function(a){ softwareHouses = a; },
+      access:function(r){ return { readers: r.status === "active" ? EVERYONE : [], writers:[] }; } },
+    { name:"projectReferrals", mode:"replace", get:function(){ return projectReferrals; }, set:function(a){ projectReferrals = a; },
+      access:function(r){ return { readers:[r.referrerKey], writers:[r.referrerKey] }; } },
     // Per-user settings that used to live in the browser: joined groups, collaboration interest, enrolled affiliate tools
     { name:"prefs", mode:"replace", get:function(){ var k = myKey(); return k ? [{ id:k, joinedGroups: state.joinedGroups || [], collabInterests: state.collabInterests || [], affiliateEnrolled: state.affiliateEnrolled || [], seenLevelNotices: state.seenLevelNotices || [], msgLastRead: state.msgLastRead || {} }] : []; },
       set:function(a){ var k = myKey(), mine = a.filter(function(x){ return x.id === k; })[0]; if (mine){ state.joinedGroups = mine.joinedGroups || []; state.collabInterests = mine.collabInterests || []; state.affiliateEnrolled = mine.affiliateEnrolled || []; state.seenLevelNotices = mine.seenLevelNotices || []; state.msgLastRead = mine.msgLastRead || {}; } else { state.joinedGroups = []; state.collabInterests = []; state.affiliateEnrolled = []; state.seenLevelNotices = []; state.msgLastRead = {}; } },
@@ -7936,6 +7957,592 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return true;
     } catch(e){ return false; }
   }
+
+  /*SRA-START*/
+  // Software Project Referral Agreement -- template text. {{placeholders}} are filled from the software
+  // house's terms (Schedule A). Also used by tools/build_referral_agreement_docx.js for the Word version.
+  var SRA_TEMPLATE = {
+    title: "Software Project Referral Agreement",
+    note: "Template for discussion. Have Thai counsel review before signing, and confirm which CloudWAV company is the contracting party (this decides Thai withholding tax and Foreign Business Act treatment).",
+    parties: [
+      "This Software Project Referral Agreement (the \"Agreement\") is made on {{effectiveDate}} between:",
+      "(1) {{cloudwavEntity}} (\"CloudWAV\"); and",
+      "(2) {{houseName}}{{houseAddressText}} (the \"Developer\").",
+      "CloudWAV operates the PartnerWAV partner program and introduces clients who need custom software to trusted development firms. The Developer designs and builds custom software. The parties agree as follows."
+    ],
+    sections: [
+      { title: "Definitions", clauses: [
+        "\"Client\" means a business or organisation introduced to the Developer by CloudWAV or a Sub-Referrer under this Agreement.",
+        "\"Referral\" means an introduction of a Client registered through the PartnerWAV portal (or in writing to the Developer) and accepted or deemed accepted under clause 3.",
+        "\"Sub-Referrer\" means a partner of CloudWAV (for example a managed service provider or reseller) that originates a Referral through CloudWAV.",
+        "\"Project\" means any engagement between the Developer (or any of its affiliates) and a Client for software design, development, integration, AI or voice-AI implementation, websites, apps, maintenance, support or related services, including change orders and later phases.",
+        "\"Collected Fees\" means the professional-services fees the Developer or its affiliates actually receive from a Client for Projects, excluding VAT, withholding tax, other government charges, refunds and credits actually given, and Pass-Through Costs.",
+        "\"Pass-Through Costs\" means third-party costs invoiced to the Client at cost or with a handling margin of no more than 10%, such as cloud hosting, software licences, app-store fees and usage-based AI, telephony or messaging charges.",
+        "\"Protection Period\" and \"Commission Period\" have the meanings in Schedule A."
+      ]},
+      { title: "Appointment", clauses: [
+        "The Developer appoints CloudWAV as a non-exclusive referral partner. Nothing in this Agreement stops either party from working with others.",
+        "CloudWAV and its Sub-Referrers are independent contractors. They may not bind the Developer, make promises about price, scope or timelines on its behalf, or receive payments from Clients for the Developer except under a Resell arrangement (clause 4.3)."
+      ]},
+      { title: "Registering and accepting Referrals", clauses: [
+        "CloudWAV registers each Referral through the PartnerWAV portal with the Client's name, contact, a short description of the need and the Referral Level (clause 4). Registration time is recorded by the portal.",
+        "The Developer will accept or reject each Referral within {{acceptDays}} business days. It may reject a Referral only if the Client is an existing client of the Developer or has been in documented, active discussions with the Developer during the previous 6 months, and it must share reasonable written evidence. A Referral not rejected in time is deemed accepted.",
+        "An accepted Referral is protected for {{protectionMonths}} months from acceptance (the \"Protection Period\"). The Protection Period extends while there is documented active engagement with the Client, such as meetings, proposals or statements of work in negotiation.",
+        "If two referrers introduce the same Client, the Referral registered first and accepted takes priority."
+      ]},
+      { title: "Referral Levels", clauses: [
+        "Referral Only: CloudWAV or the Sub-Referrer makes a warm introduction and registers the Client. The Developer sells, contracts and delivers.",
+        "Co-Sell: in addition, CloudWAV or the Sub-Referrer takes an active part in selling and account management, such as discovery and scoping, solution design (for example integrating AI or voice-AI with the Client's systems), joining the commercial close, and acting as the Client's named relationship contact. The Referral Level is agreed when the Referral is registered and may be upgraded by written agreement.",
+        "Resell: CloudWAV or a Sub-Referrer contracts with and invoices the Client itself and subcontracts the work to the Developer. The Developer gives a discount of {{resellDiscount}}% off its standard rates, and the parties agree a separate statement of work for each Project. Clause 5 does not apply to Resell Projects."
+      ]},
+      { title: "Referral fee", clauses: [
+        "For each Referral, the Developer pays CloudWAV a referral fee on the Collected Fees from that Client as set out in Schedule A, for the applicable Commission Period.",
+        "The fee applies to all Projects with the Client during the Commission Period, including change orders, later phases and additional Projects. Maintenance, support and retainer fees are included at {{maintenanceText}}.",
+        "{{minFeeText}}{{capText}}",
+        "The fee is earned when the Client signs any contract with the Developer during the Protection Period or the tail in clause 10, and becomes payable only as and when the Developer collects the related fees.",
+        "No fee is payable to CloudWAV by the Client. CloudWAV will not accept payment from a Client for the same introduction without telling the Developer in writing."
+      ]},
+      { title: "Reporting and payment", clauses: [
+        "Within 10 business days after the end of each month, the Developer sends CloudWAV a statement for each Client with a Referral, listing invoices issued, amounts collected, the fee base, any exclusions and the fee due.",
+        "The Developer pays the fee within {{paymentDays}} days after the end of the month in which it collected the related fees, by bank transfer to the account CloudWAV nominates, in {{currency}} unless the parties agree otherwise.",
+        "If the Developer refunds or credits a Client within {{clawbackDays}} days of collection, the related fee may be deducted from the next payment. No other set-off or clawback applies.",
+        "Late payments carry interest at the rate permitted by law or 1% per month, whichever is lower."
+      ]},
+      { title: "Taxes", clauses: [
+        "Fees are exclusive of VAT, which is added where it applies.",
+        "Where Thai law requires the Developer to withhold tax, it will do so, pay it to the Revenue Department on time and give CloudWAV the withholding tax certificate within 30 days. The parties will cooperate to apply any available double-tax-treaty relief, including accepting a certificate of residence.",
+        "Each party is responsible for its own income taxes."
+      ]},
+      { title: "Records and audit", clauses: [
+        "The Developer keeps accurate records of contracts, invoices and collections for each Client with a Referral for at least 3 years.",
+        "Once a year, on 30 days' notice, CloudWAV may have an independent accountant review those records. If the review shows an underpayment of more than 5%, the Developer pays the underpayment and the reasonable cost of the review."
+      ]},
+      { title: "Sub-Referrers", clauses: [
+        "CloudWAV may register Referrals originated by its Sub-Referrers. All fees are payable to CloudWAV only; CloudWAV is responsible for paying its Sub-Referrers under its own partner terms.",
+        "The Developer's obligations in clause 10 also protect Clients introduced by Sub-Referrers."
+      ]},
+      { title: "Non-circumvention and non-solicitation", clauses: [
+        "The Developer will not, directly or through an affiliate, avoid or reduce a fee due under this Agreement, including by contracting with a Client through another entity, renaming or splitting contracts, or asking a Client to delay signing.",
+        "If a Client introduced under this Agreement signs a contract with the Developer or its affiliates within {{tailMonths}} months after the introduction, or within the Protection Period if longer, the fee applies as if the Referral had been accepted.",
+        "During this Agreement and for 12 months after it ends, neither party will solicit the other's employees for employment, except through general job advertisements."
+      ]},
+      { title: "Clients and delivery", clauses: [
+        "The Developer alone is responsible for its proposals, contracts, delivery, warranties, support and pricing to Clients. CloudWAV and Sub-Referrers make no promise that a Referral will result in a Project.",
+        "Where a Sub-Referrer acts as the Client's IT adviser, CloudWAV will require it to tell the Client that it may receive a referral fee.",
+        "The Developer will tell CloudWAV promptly if a Referral is won or lost, and will not disparage CloudWAV or its partners to Clients."
+      ]},
+      { title: "Confidentiality and personal data", clauses: [
+        "Each party keeps the other's confidential information, including Client details and commercial terms, confidential and uses it only for this Agreement, during this Agreement and for 3 years after it ends.",
+        "Each party complies with the Thai Personal Data Protection Act B.E. 2562 and other applicable privacy laws when sharing Client contact details, and shares only what is needed to make and follow up the introduction."
+      ]},
+      { title: "Names and logos", clauses: [
+        "Each party may use the other's name and logo to describe the referral relationship (for example on the PartnerWAV portal or a partner directory), in line with any brand guidelines the other party provides, and will stop on request."
+      ]},
+      { title: "Term and termination", clauses: [
+        "This Agreement starts on the date above and continues for {{termMonths}} months, then renews automatically for further 12-month periods unless either party gives notice.",
+        "Either party may end this Agreement on {{noticeDays}} days' written notice, or immediately if the other party materially breaches it and does not fix the breach within 30 days of notice.",
+        "Fees remain payable after termination for Referrals registered before termination, for the rest of their Commission Period, and clauses 6 to 10, 12 and 16 continue to apply."
+      ]},
+      { title: "Liability", clauses: [
+        "Referrals are made in good faith without any warranty about the Client's needs, budget or creditworthiness.",
+        "Neither party is liable for indirect or consequential loss or loss of profit. Each party's total liability under this Agreement is limited to the fees paid or payable under it in the 12 months before the claim, except for unpaid fees, breach of confidentiality, or fraud."
+      ]},
+      { title: "General", clauses: [
+        "This Agreement is the entire agreement about its subject and replaces earlier discussions. Changes must be in writing and signed (including electronically) by both parties.",
+        "Neither party may assign this Agreement without the other's written consent, except to a successor of its whole business.",
+        "Notices are sent by email to the contacts in Schedule A and are effective on the next business day.",
+        "This Agreement is governed by {{governingLaw}}. The parties will first try to settle any dispute through senior management within 30 days; failing that, {{disputeText}}",
+        "This Agreement may be signed electronically and in counterparts. It is written in English; if it is translated, the English version prevails."
+      ]}
+    ],
+    schedule: [
+      ["Referral Only fee", "{{referralRate}}% of Collected Fees for {{windowMonths}} months from the first invoice to the Client, then {{stepDownRate}}% for the next {{stepDownMonths}} months"],
+      ["Co-Sell fee", "{{cosellRate}}% of Collected Fees for {{cosellMonths}} months from the first invoice to the Client"],
+      ["Resell discount", "{{resellDiscount}}% off the Developer's standard rates"],
+      ["Maintenance, support and retainers", "{{maintenanceText}}"],
+      ["Minimum fee per won Project", "{{minFeeSchedule}}"],
+      ["Cap", "{{capSchedule}}"],
+      ["Acceptance deadline", "{{acceptDays}} business days after registration"],
+      ["Protection Period", "{{protectionMonths}} months after acceptance, extended while there is active engagement"],
+      ["Non-circumvention tail", "{{tailMonths}} months after the introduction"],
+      ["Payment", "Within {{paymentDays}} days after the end of the month in which fees are collected, in {{currency}}"],
+      ["Refund clawback window", "{{clawbackDays}} days"],
+      ["Term and notice", "{{termMonths}} months, renewing yearly; {{noticeDays}} days' notice"],
+      ["Developer contact", "{{houseContact}}"],
+      ["CloudWAV contact", "{{cloudwavContact}}"]
+    ]
+  };
+  /*SRA-END*/
+  // ===== AGREEMENTS + SOFTWARE PROJECT REFERRALS =====
+  // Agreements are records of their own (who signs, status, e-signature), for three kinds:
+  //   vendor   -- CloudWAV <-> a vendor, for its program (terms come from Configure program)
+  //   partner  -- CloudWAV <-> a partner, for a program the partner resells
+  //   referral -- CloudWAV <-> a software house: the Software Project Referral Agreement
+  // Software project referrals: CloudWAV and its partners refer clients who need custom software
+  // to software houses and earn a fee on what the software house collects (see Schedule A terms).
+  var DEFAULT_REFERRAL_TERMS = {
+    referralRate:10, windowMonths:12, stepDownRate:5, stepDownMonths:12,
+    cosellRate:15, cosellMonths:24, resellDiscount:20, maintenanceHalf:true,
+    minFee:0, capPerYear:0, acceptDays:5, protectionMonths:6, tailMonths:12,
+    paymentDays:30, clawbackDays:90, currency:"THB", termMonths:12, noticeDays:60,
+    // CloudWAV <-> partner payout (not part of the software house agreement)
+    partnerShare:70, cosellPartnerLeadShare:80, cosellCloudwavLeadShare:60
+  };
+  var REF_LEVELS = { referral:"Referral only", cosell:"Co-sell", resell:"Resell" };
+  var REF_STATUS = {
+    registered:{ label:"Awaiting software house", cls:"warn" }, accepted:{ label:"Accepted", cls:"accent" },
+    proposal:{ label:"Proposal sent", cls:"accent" }, won:{ label:"Won", cls:"good" },
+    lost:{ label:"Lost", cls:"neutral" }, rejected:{ label:"Not accepted", cls:"bad" }
+  };
+  var AGR_STATUS = {
+    requested:{ label:"Requested", cls:"warn" }, draft:{ label:"Draft", cls:"neutral" }, sent:{ label:"Out for signature", cls:"accent" },
+    signed:{ label:"Signed", cls:"good" }, terminated:{ label:"Ended", cls:"neutral" }
+  };
+  var AGR_KIND = { vendor:"Vendor program", partner:"Partner", referral:"Software referral" };
+
+  function daysFrom(iso, days){ var d = new Date(iso); d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); }
+  function monthsFrom(iso, m){ var d = new Date(iso); d.setMonth(d.getMonth() + m); return d.toISOString().slice(0, 10); }
+  function businessDaysFrom(iso, n){ var d = new Date(iso); while (n > 0){ d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) n--; } return d.toISOString().slice(0, 10); }
+  function todayIso(){ return new Date().toISOString().slice(0, 10); }
+  function fmtMoney(n, cur){ n = Number(n) || 0; return (cur === "USD" ? "$" : cur === "THB" ? "฿" : (cur || "") + " ") + n.toLocaleString("en-US", { maximumFractionDigits: 0 }); }
+
+  // ----- demo data (fictional software house; signed-in sessions start empty) -----
+  var softwareHouses = [
+    { id:"sh-demo", name:"Demo Software House Co.", website:"", city:"Bangkok", specialties:"Custom apps, AI and voice-AI integration, LINE chatbots",
+      contactName:"Partnerships team", contactEmail:"partners@demo-softwarehouse.example", status:"active", prospectId:"",
+      terms: JSON.parse(JSON.stringify(DEFAULT_REFERRAL_TERMS)) }
+  ];
+  var projectReferrals = [
+    { id:"ref-demo-1", houseId:"sh-demo", referrerKey:"partner:siam-digital", level:"referral", cosellLead:"partner",
+      client:{ company:"Riverside Boutique Hotels", contact:"Operations manager", email:"", phone:"" },
+      need:"Guest app with LINE booking and a Thai voice assistant for the front desk", budget:1200000, currency:"THB", timeline:"Q4 2026", disclosed:true,
+      status:"won", registeredAt:"2026-07-01", respondBy:"2026-07-08", acceptedAt:"2026-07-03", protectedUntil:"2027-01-03", contractValue:1200000, wonAt:"2026-08-01",
+      payments:[ { id:"pay-1", date:"2026-08-15", amount:400000, maintenance:false, note:"Deposit" }, { id:"pay-2", date:"2026-09-15", amount:400000, maintenance:false, note:"Milestone 2" } ],
+      payouts:[ { id:"po-1", date:"2026-09-30", amount:28000, note:"August" } ], thread:[], termsSnapshot: JSON.parse(JSON.stringify(DEFAULT_REFERRAL_TERMS)) }
+  ];
+  var agreementsList = [];
+  (function seedAgreements(){
+    var map = { active:"signed", pending:"sent", draft:"draft" };
+    programs.forEach(function(p){
+      var st = map[(p.agreement || {}).status] || "draft";
+      agreementsList.push({ id:"agr-vendor-" + p.id, kind:"vendor", type:(p.agreement || {}).type || "Vendor Program Agreement", partyKey:"vendor:" + p.id, programId:p.id,
+        status:st, createdAt:"2026-09-01", sentAt: st !== "draft" ? "2026-09-05" : "", signedAt: st === "signed" ? "2026-09-10" : "",
+        signers:[{ name:"CloudWAV", signed: st === "signed" }, { name:p.name, signed: st === "signed" }], history:[] });
+    });
+    agreementsList.push({ id:"agr-partner-siam-digital-intelsense", kind:"partner", type:"Partner Reseller Agreement", partyKey:"partner:siam-digital", programId:"intelsense", status:"signed", createdAt:"2025-11-01", sentAt:"2025-11-02", signedAt:"2025-11-04", signers:[{ name:"CloudWAV", signed:true }, { name:"Siam Digital MSP", signed:true }], history:[] });
+    agreementsList.push({ id:"agr-partner-siam-digital-botnoi", kind:"partner", type:"Partner Reseller Agreement", partyKey:"partner:siam-digital", programId:"botnoi", status:"sent", createdAt:"2026-06-10", sentAt:"2026-06-12", signedAt:"", signers:[{ name:"CloudWAV", signed:true }, { name:"Siam Digital MSP", signed:false }], history:[] });
+    agreementsList.push({ id:"agr-referral-sh-demo", kind:"referral", type:"Software Project Referral Agreement", partyKey:"house:sh-demo", houseId:"sh-demo", status:"signed", createdAt:"2026-06-20", sentAt:"2026-06-21", signedAt:"2026-06-25", signers:[{ name:"CloudWAV", signed:true }, { name:"Demo Software House Co.", signed:true }], history:[] });
+  })();
+  var REFERRALS_KEY = "partnerWAV_softwareReferrals";
+  function saveReferrals(){ lsSet(REFERRALS_KEY, JSON.stringify({ houses:softwareHouses, referrals:projectReferrals, agreements:agreementsList })); }
+  function loadReferrals(){
+    try {
+      var d = JSON.parse(lsGet(REFERRALS_KEY) || "null"); if (!d) return;
+      if (Array.isArray(d.houses)) softwareHouses = d.houses;
+      if (Array.isArray(d.referrals)) projectReferrals = d.referrals;
+      if (Array.isArray(d.agreements)) agreementsList = d.agreements;
+    } catch(e){ console.log("Could not load referrals:", e); }
+  }
+  function houseById(id){ return softwareHouses.filter(function(h){ return h.id === id; })[0] || null; }
+  function refById(id){ return projectReferrals.filter(function(r){ return r.id === id; })[0] || null; }
+  function agrById(id){ return agreementsList.filter(function(a){ return a.id === id; })[0] || null; }
+  function termsOf(h){ var t = JSON.parse(JSON.stringify(DEFAULT_REFERRAL_TERMS)); if (h && h.terms) Object.keys(h.terms).forEach(function(k){ t[k] = h.terms[k]; }); return t; }
+  function refTerms(r){ return r.termsSnapshot || termsOf(houseById(r.houseId)); }
+  function refStatus(r){ return r.status === "registered" && r.respondBy && todayIso() > r.respondBy ? "accepted" : r.status; } // deemed accepted after the deadline
+  function refBadge(r){ var st = REF_STATUS[refStatus(r)] || REF_STATUS.registered; return '<span class="badge '+st.cls+'">'+esc(st.label)+(r.status === "registered" && refStatus(r) === "accepted" ? " (deemed)" : "")+'</span>'; }
+
+  // ----- the fee engine -----
+  function monthsBetween(a, b){ var x = new Date(a), y = new Date(b); return (y.getFullYear() - x.getFullYear()) * 12 + (y.getMonth() - x.getMonth()) - (y.getDate() < x.getDate() ? 1 : 0); }
+  function partnerSharePct(r, t){
+    if (!/^(partner|affiliate):/.test(String(r.referrerKey))) return 0;  // CloudWAV's own referrals: no partner share
+    if (r.level === "cosell") return r.cosellLead === "cloudwav" ? t.cosellCloudwavLeadShare : t.cosellPartnerLeadShare;
+    return t.partnerShare;
+  }
+  function referralFees(r){
+    var t = refTerms(r), out = { rows:[], fee:0, collected:0, resell: r.level === "resell", t:t };
+    if (out.resell) return out;
+    var pays = (r.payments || []).slice().sort(function(a, b){ return a.date < b.date ? -1 : 1; });
+    var start = pays.length ? pays[0].date : (r.wonAt || r.acceptedAt || r.registeredAt);
+    var main = r.level === "cosell" ? t.cosellMonths : t.windowMonths, mainRate = r.level === "cosell" ? t.cosellRate : t.referralRate;
+    var stepRate = r.level === "cosell" ? 0 : t.stepDownRate, stepMonths = r.level === "cosell" ? 0 : t.stepDownMonths;
+    pays.forEach(function(p){
+      var m = monthsBetween(start, p.date), rate = m < main ? mainRate : (m < main + stepMonths ? stepRate : 0);
+      if (p.maintenance && t.maintenanceHalf) rate = rate / 2;
+      var fee = (Number(p.amount) || 0) * rate / 100;
+      out.collected += Number(p.amount) || 0; out.fee += fee;
+      out.rows.push({ date:p.date, amount:Number(p.amount) || 0, rate:rate, fee:fee, note:p.note || "", maintenance:!!p.maintenance, id:p.id });
+    });
+    if (t.minFee && refStatus(r) === "won" && out.fee > 0 && out.fee < t.minFee){ out.minApplied = true; out.fee = Number(t.minFee); }
+    if (t.capPerYear){ var yrs = Math.max(1, Math.ceil((monthsBetween(start, pays.length ? pays[pays.length - 1].date : start) + 1) / 12)); if (out.fee > t.capPerYear * yrs){ out.capApplied = true; out.fee = t.capPerYear * yrs; } }
+    var share = partnerSharePct(r, t);
+    out.partnerPct = share; out.partnerFee = out.fee * share / 100; out.cloudwavFee = out.fee - out.partnerFee;
+    out.paidOut = (r.payouts || []).reduce(function(a, p){ return a + (Number(p.amount) || 0); }, 0);
+    out.estimate = (Number(r.budget) || 0) * mainRate / 100;
+    out.mainRate = mainRate;
+    return out;
+  }
+
+  // ----- the agreement document -----
+  function sraValues(h){
+    var t = termsOf(h), cur = t.currency;
+    return {
+      effectiveDate: "____________", cloudwavEntity: "CloudWAV [legal entity name, registration no., address]",
+      houseName: h ? h.name : "[Software house]", houseAddressText: h && h.city ? " of " + h.city + ", Thailand" : "",
+      referralRate: t.referralRate, windowMonths: t.windowMonths, stepDownRate: t.stepDownRate, stepDownMonths: t.stepDownMonths,
+      cosellRate: t.cosellRate, cosellMonths: t.cosellMonths, resellDiscount: t.resellDiscount,
+      maintenanceText: t.maintenanceHalf ? "half the applicable rate" : "the full applicable rate",
+      minFeeText: t.minFee ? "The minimum fee for each won Project is " + fmtMoney(t.minFee, cur) + ". " : "",
+      capText: t.capPerYear ? "Fees for any one Client are capped at " + fmtMoney(t.capPerYear, cur) + " per 12 months." : (t.minFee ? "" : "There is no minimum fee and no cap."),
+      minFeeSchedule: t.minFee ? fmtMoney(t.minFee, cur) : "None", capSchedule: t.capPerYear ? fmtMoney(t.capPerYear, cur) + " per Client per 12 months" : "None",
+      acceptDays: t.acceptDays, protectionMonths: t.protectionMonths, tailMonths: t.tailMonths, paymentDays: t.paymentDays, clawbackDays: t.clawbackDays,
+      currency: cur, termMonths: t.termMonths, noticeDays: t.noticeDays,
+      governingLaw: "the laws of Thailand", disputeText: "the dispute will be settled by arbitration in Bangkok under the Arbitration Rules of the Thai Arbitration Institute, in English.",
+      houseContact: h && (h.contactName || h.contactEmail) ? [h.contactName, h.contactEmail].filter(Boolean).join(", ") : "____________",
+      cloudwavContact: "partners@cloudwav.com (to be confirmed)"
+    };
+  }
+  function sraFill(text, v){ return String(text).replace(/\{\{(\w+)\}\}/g, function(_, k){ return v[k] != null ? v[k] : "{{" + k + "}}"; }); }
+  function sraHtml(h){
+    var v = sraValues(h), T = SRA_TEMPLATE;
+    return '<article class="agr-doc">'
+      + '<h1>'+esc(T.title)+'</h1>'
+      + '<p class="agr-note">'+esc(T.note)+'</p>'
+      + T.parties.map(function(x){ return '<p>'+esc(sraFill(x, v))+'</p>'; }).join("")
+      + T.sections.map(function(s, i){
+          return '<h2>'+(i + 1)+'. '+esc(s.title)+'</h2>' + s.clauses.map(function(c, j){ var txt = sraFill(c, v).trim(); return txt ? '<p><b>'+(i + 1)+'.'+(j + 1)+'</b> '+esc(txt)+'</p>' : ''; }).join("");
+        }).join("")
+      + '<h2>Schedule A -- Commercial terms</h2><table class="agr-table"><tbody>' + T.schedule.map(function(r){ return '<tr><th>'+esc(r[0])+'</th><td>'+esc(sraFill(r[1], v))+'</td></tr>'; }).join("") + '</tbody></table>'
+      + '<h2>Signatures</h2><table class="agr-table"><tbody><tr><th>For CloudWAV</th><td>Name / title / date: ______________________</td></tr><tr><th>For '+esc(v.houseName)+'</th><td>Name / title / date: ______________________</td></tr></tbody></table>'
+      + '</article>';
+  }
+  function showAgreementDocument(house){
+    var back = openModal('<div class="modal-head"><h2>Software Project Referral Agreement</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="cfg-actions" style="margin-bottom:10px;"><button type="button" class="btn secondary sm" data-agr-print>Print / save as PDF</button><button type="button" class="btn ghost sm" data-agr-word>Download for Word</button></div>'
+      + '<div class="agr-doc-wrap">'+sraHtml(house)+'</div>');
+    back.querySelector("[data-agr-print]").addEventListener("click", function(){
+      var w = window.open("", "_blank"); if (!w){ toast("Allow pop-ups to print"); return; }
+      w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Software Project Referral Agreement</title><style>body{font-family:Georgia,serif;max-width:760px;margin:30px auto;line-height:1.5;color:#111} h1{font-size:22px} h2{font-size:15px;margin-top:22px} .agr-note{background:#fff7e0;padding:8px 10px;font-size:12px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top;font-size:13px} th{width:34%}</style></head><body>'+sraHtml(house)+'<script>setTimeout(function(){print()},300)<\/script></body></html>');
+      w.document.close();
+    });
+    back.querySelector("[data-agr-word]").addEventListener("click", function(){
+      var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Software Project Referral Agreement</title></head><body>'+sraHtml(house)+'</body></html>';
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿", html], { type:"application/msword" }));
+      a.download = "Software-Project-Referral-Agreement-" + String(house ? house.name : "template").replace(/[^a-z0-9]+/gi, "-") + ".doc"; document.body.appendChild(a); a.click(); a.remove();
+    });
+  }
+
+  // ----- partner / vendor / operator: agreements list -----
+  function agrParty(a){ return a.kind === "referral" ? ((houseById(a.houseId) || {}).name || a.houseId) : keyName(a.partyKey); }
+  function agrSubject(a){ return a.kind === "referral" ? "Software project referrals" : ((programById(a.programId) || {}).name || a.programId || ""); }
+  function agrBadge(a){ var s = AGR_STATUS[a.status] || AGR_STATUS.draft; return '<span class="badge '+s.cls+'">'+esc(s.label)+'</span>'; }
+  function renderAgreements(){
+    var box = document.getElementById("agreementsContent");
+    if (!box || state.screen !== "partner-agreements") return;
+    var me = myMsgKey(), vendorId = state.role === "vendor" ? state.myVendorId : null;
+    var list = agreementsList.filter(function(a){ return a.partyKey === me || (vendorId && a.kind === "partner" && a.programId === vendorId); });
+    var reqable = state.role === "partner" ? programs.filter(function(p){ return !list.some(function(a){ return a.kind === "partner" && a.programId === p.id && a.status !== "terminated"; }); }) : [];
+    box.innerHTML = (state.role === "partner" ? '<div class="cfg-actions" style="margin-bottom:12px;flex-wrap:wrap;"><select id="agrReqProgram" aria-label="Program"><option value="">Request an agreement for…</option>'
+        + reqable.map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'; }).join("") + '</select><button type="button" class="btn primary sm" data-agr-request>Request agreement</button></div>' : '')
+      + (list.length ? '<div class="card"><div class="table-scroll"><table><thead><tr><th>With</th><th>For</th><th>Agreement</th><th>Status</th><th>Signatures</th><th></th></tr></thead><tbody>'
+        + list.map(function(a){
+            var signed = (a.signers || []).filter(function(s){ return s.signed; }).length;
+            return '<tr data-agr-row="'+esc(a.id)+'"><td>'+esc(a.partyKey === me ? "CloudWAV" : agrParty(a))+'</td><td>'+esc(agrSubject(a))+'</td><td>'+esc(a.type)+'</td><td>'+agrBadge(a)+'</td>'
+              + '<td>'+(a.status === "signed" ? "Signed "+esc(a.signedAt || "") : a.status === "sent" ? "Out for signature ("+signed+"/"+(a.signers || []).length+")" : a.status === "requested" ? "Waiting for CloudWAV" : "--")+'</td>'
+              + '<td class="row-actions"><button type="button" class="btn ghost sm" data-agr-view="'+esc(a.id)+'">View</button></td></tr>';
+          }).join("") + '</tbody></table></div></div>'
+        : '<div class="empty">No agreements yet.'+(state.role === "partner" ? " Request one for a program above." : "")+'</div>');
+  }
+  function renderOperatorAgreements(){
+    var box = document.getElementById("operatorAgreementsContent");
+    if (!box || state.screen !== "operator-agreements") return;
+    var f = state.agrFilter || "";
+    var list = agreementsList.filter(function(a){ return !f || a.status === f || a.kind === f; });
+    var cnt = function(st){ return agreementsList.filter(function(a){ return a.status === st; }).length; };
+    var partyOpts = []
+      .concat(partnerProfiles.filter(function(p){ return !p.archivedAt; }).map(function(p){ return ["partner|partner:" + p.id, p.name + " · Partner"]; }))
+      .concat(programs.map(function(p){ return ["vendor|vendor:" + p.id, p.name + " · Vendor"]; }))
+      .concat(softwareHouses.map(function(h){ return ["referral|house:" + h.id, h.name + " · Software house"]; }));
+    box.innerHTML = '<div class="map-stats" style="margin-bottom:12px;">'
+        + '<button type="button" class="map-stat stat-btn" data-agr-filter="requested"><b>'+cnt("requested")+'</b>requested</button>'
+        + '<button type="button" class="map-stat stat-btn" data-agr-filter="sent"><b>'+cnt("sent")+'</b>out for signature</button>'
+        + '<button type="button" class="map-stat stat-btn" data-agr-filter="signed"><b>'+cnt("signed")+'</b>signed</button>'
+        + '<button type="button" class="map-stat stat-btn" data-agr-filter=""><b>'+agreementsList.length+'</b>all</button></div>'
+      + '<div class="card card-pad" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">'
+        + '<div class="field-row" style="flex:1;min-width:220px;"><label for="agrNewParty">New agreement with</label><select id="agrNewParty"><option value="">Choose…</option>'+partyOpts.map(function(o){ return '<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row" style="flex:1;min-width:180px;"><label for="agrNewProgram">Program (partners)</label><select id="agrNewProgram"><option value="">--</option>'+programs.map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'; }).join("")+'</select></div>'
+        + '<button type="button" class="btn primary sm" data-agr-create>Create draft</button></div>'
+      + '<div class="card"><div class="table-scroll"><table><thead><tr><th>With</th><th>Kind</th><th>For</th><th>Agreement</th><th>Status</th><th></th></tr></thead><tbody>'
+      + (list.length ? list.map(function(a){
+          return '<tr data-agr-row="'+esc(a.id)+'"><td>'+esc(agrParty(a))+'</td><td>'+esc(AGR_KIND[a.kind] || a.kind)+'</td><td>'+esc(agrSubject(a))+'</td><td>'+esc(a.type)+'</td><td>'+agrBadge(a)+'</td>'
+            + '<td class="row-actions">'
+            + '<button type="button" class="btn ghost sm" data-agr-view="'+esc(a.id)+'">View</button>'
+            + ((a.status === "draft" || a.status === "requested") ? '<button type="button" class="btn secondary sm" data-agr-act="sent" data-agr-id="'+esc(a.id)+'">Send for signature</button>' : '')
+            + (a.status === "sent" ? '<button type="button" class="btn primary sm" data-agr-act="signed" data-agr-id="'+esc(a.id)+'">Mark signed</button>' : '')
+            + (a.status === "signed" ? '<button type="button" class="btn ghost sm" data-agr-act="terminated" data-agr-id="'+esc(a.id)+'">End</button>' : '')
+            + '</td></tr>'; }).join("") : '<tr><td colspan="6"><div class="empty">No agreements match.</div></td></tr>')
+      + '</tbody></table></div></div>'
+      + '<p class="field-note">E-signature isn\'t connected yet: "Send for signature" records that it went out (e.g. by SignWell or email); "Mark signed" once the signed copy is back.</p>';
+  }
+  function agreementAction(id, act){
+    var a = agrById(id); if (!a || state.role !== "operator") return;
+    var now = todayIso();
+    if (act === "sent"){ a.status = "sent"; a.sentAt = now; if (!a.signers || !a.signers.length) a.signers = [{ name:"CloudWAV", signed:false }, { name:agrParty(a), signed:false }]; }
+    if (act === "signed"){ a.status = "signed"; a.signedAt = now; (a.signers || []).forEach(function(s){ s.signed = true; s.signedAt = s.signedAt || now; }); }
+    if (act === "terminated"){ a.status = "terminated"; a.endedAt = now; }
+    a.history = a.history || []; a.history.push({ at:now, text:(AGR_STATUS[a.status] || {}).label || a.status });
+    saveReferrals(); toast(a.type + ": " + ((AGR_STATUS[a.status] || {}).label || a.status)); render();
+  }
+  function viewAgreement(id){
+    var a = agrById(id); if (!a) return;
+    if (a.kind === "referral"){ showAgreementDocument(houseById(a.houseId)); return; }
+    if (a.programId && programById(a.programId)){ showAgreementDetail(a.programId); return; }
+  }
+
+  // ----- software referrals: partner side -----
+  function renderReferrals(){
+    var box = document.getElementById("referralsContent");
+    if (!box || state.screen !== "referrals") return;
+    var me = myMsgKey(), isOp = state.role === "operator";
+    var tab = isOp ? (state.refTab || "referrals") : "referrals";
+    var head = isOp ? '<div class="filter-chip-row" style="margin-bottom:12px;"><button type="button" class="filter-chip" data-ref-tab="referrals" aria-pressed="'+(tab==="referrals")+'">Referrals</button><button type="button" class="filter-chip" data-ref-tab="houses" aria-pressed="'+(tab==="houses")+'">Software houses</button></div>' : '';
+    if (tab === "houses"){ box.innerHTML = head + housesHtml(); return; }
+    var list = projectReferrals.filter(function(r){ return isOp || r.referrerKey === me; }).sort(function(a, b){ return a.registeredAt < b.registeredAt ? 1 : -1; });
+    var totals = list.reduce(function(acc, r){ var f = referralFees(r); acc.fee += isOp ? f.cloudwavFee + f.partnerFee : f.partnerFee; acc.paid += f.paidOut; return acc; }, { fee:0, paid:0 });
+    var active = softwareHouses.filter(function(h){ return h.status === "active"; });
+    box.innerHTML = head
+      + '<div class="map-stats" style="margin-bottom:12px;"><div class="map-stat"><b>'+list.length+'</b>referrals</div><div class="map-stat"><b>'+list.filter(function(r){ return refStatus(r) === "won"; }).length+'</b>won</div>'
+        + '<div class="map-stat"><b>'+fmtMoney(totals.fee, "THB")+'</b>'+(isOp ? "fees earned" : "your share earned")+'</div><div class="map-stat"><b>'+fmtMoney(totals.paid, "THB")+'</b>paid out</div></div>'
+      + '<div class="cfg-actions" style="margin-bottom:12px;">'+(active.length ? '<button type="button" class="btn primary sm" data-ref-new>+ Refer a software project</button>' : '<span class="field-note">No software houses are set up yet'+(isOp ? ' -- add one under Software houses.' : '.')+'</span>')+'</div>'
+      + (list.length ? '<div style="display:flex;flex-direction:column;gap:10px;">' + list.map(function(r){
+          var h = houseById(r.houseId) || { name:r.houseId }, f = referralFees(r);
+          return '<div class="deal-row" data-ref-row="'+esc(r.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(r.client.company)
+            + '<span class="field-note" style="display:block;font-weight:400;">'+esc(h.name)+' · '+esc(REF_LEVELS[r.level] || r.level)+(isOp ? ' · from '+esc(keyName(r.referrerKey)) : '')+' · registered '+esc(r.registeredAt)+'</span>'
+            + '<span class="field-note" style="display:block;font-weight:400;">'+(f.resell ? 'Resell -- '+esc(f.t.resellDiscount)+'% partner discount' : (f.collected ? 'Collected '+fmtMoney(f.collected, r.currency)+' · '+(isOp ? 'fee '+fmtMoney(f.fee, r.currency) : 'your share '+fmtMoney(f.partnerFee, r.currency)) : 'Estimated fee '+fmtMoney(isOp ? f.estimate : f.estimate * f.partnerPct / 100, r.currency)+' on the stated budget'))+'</span></span>'
+            + refBadge(r) + '<button type="button" class="btn secondary sm" data-ref-view="'+esc(r.id)+'">Open</button></div>';
+        }).join("") + '</div>' : '<div class="empty">No referrals yet.</div>');
+  }
+  function housesHtml(){
+    return '<div class="cfg-actions" style="margin-bottom:12px;"><button type="button" class="btn primary sm" data-house-edit="">+ Add software house</button><span class="field-note">Or use "Make referral partner" on a software house in MSP Prospecting.</span></div>'
+      + (softwareHouses.length ? '<div style="display:flex;flex-direction:column;gap:10px;">' + softwareHouses.map(function(h){
+          var t = termsOf(h), ag = agreementsList.filter(function(a){ return a.kind === "referral" && a.houseId === h.id; })[0];
+          return '<div class="deal-row" data-house-row="'+esc(h.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(h.name)
+            + '<span class="field-note" style="display:block;font-weight:400;">Referral '+t.referralRate+'% / '+t.windowMonths+' mo (then '+t.stepDownRate+'%) · Co-sell '+t.cosellRate+'% / '+t.cosellMonths+' mo · Resell '+t.resellDiscount+'% discount · partners get '+t.partnerShare+'%</span></span>'
+            + '<span class="badge '+(h.status === "active" ? "good" : "neutral")+'">'+(h.status === "active" ? "Active" : h.status === "paused" ? "Paused" : "Negotiating")+'</span>'
+            + (ag ? agrBadge(ag) : '<span class="badge neutral">No agreement</span>')
+            + '<button type="button" class="btn ghost sm" data-house-doc="'+esc(h.id)+'">Agreement</button>'
+            + '<button type="button" class="btn secondary sm" data-house-edit="'+esc(h.id)+'">Edit</button></div>';
+        }).join("") + '</div>' : '<div class="empty">No software houses yet.</div>');
+  }
+
+  function showReferralForm(){
+    var active = softwareHouses.filter(function(h){ return h.status === "active"; });
+    var back = openModal('<div class="modal-head"><h2>Refer a software project</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="field-row"><label for="rfHouse">Software house</label><select id="rfHouse">'+active.map(function(h){ return '<option value="'+esc(h.id)+'">'+esc(h.name)+(h.specialties ? ' -- '+esc(h.specialties) : '')+'</option>'; }).join("")+'</select></div>'
+      + '<div class="field-row"><label for="rfLevel">Your involvement</label><select id="rfLevel"><option value="referral">Referral only -- introduce and step back</option><option value="cosell">Co-sell -- help scope, design and manage the client</option><option value="resell">Resell -- you contract with the client</option></select></div>'
+      + '<div class="field-row" id="rfLeadRow" hidden><label for="rfLead">Who leads the co-sell work?</label><select id="rfLead"><option value="partner">We do (scoping, design, account management)</option><option value="cloudwav">CloudWAV does the solution design</option></select></div>'
+      + '<div id="rfRate" class="field-note"></div>'
+      + '<div class="vp-grid"><div class="field-row"><label for="rfCompany">Client company *</label><input id="rfCompany" type="text"></div><div class="field-row"><label for="rfContact">Contact name *</label><input id="rfContact" type="text"></div>'
+      + '<div class="field-row"><label for="rfEmail">Contact email</label><input id="rfEmail" type="email"></div><div class="field-row"><label for="rfPhone">Phone</label><input id="rfPhone" type="text"></div></div>'
+      + '<div class="field-row"><label for="rfNeed">What do they need built? *</label><textarea id="rfNeed" rows="3" placeholder="e.g. customer app with LINE login and a Thai voice assistant"></textarea></div>'
+      + '<div class="vp-grid"><div class="field-row"><label for="rfBudget">Estimated budget</label><input id="rfBudget" type="number" min="0" placeholder="e.g. 800000"></div><div class="field-row"><label for="rfCurrency">Currency</label><select id="rfCurrency"><option>THB</option><option>USD</option></select></div>'
+      + '<div class="field-row"><label for="rfTimeline">Timeline</label><input id="rfTimeline" type="text" placeholder="e.g. start in November"></div></div>'
+      + '<label class="cfg-check"><input type="checkbox" id="rfDisclosed"> The client knows about this introduction and that I may receive a referral fee</label>'
+      + '<div id="rfError" class="login-msg bad" hidden></div>'
+      + '<div class="modal-actions"><button class="btn secondary" data-modal-close>Cancel</button><button class="btn primary" id="rfSubmit">Register referral</button></div>');
+    function rateNote(){
+      var h = houseById(back.querySelector("#rfHouse").value), t = termsOf(h), lvl = back.querySelector("#rfLevel").value, lead = back.querySelector("#rfLead").value;
+      back.querySelector("#rfLeadRow").hidden = lvl !== "cosell";
+      var fake = { referrerKey: myMsgKey(), level: lvl, cosellLead: lead }, share = partnerSharePct(fake, t);
+      back.querySelector("#rfRate").textContent = lvl === "resell" ? "You buy the work at " + t.resellDiscount + "% off " + (h ? h.name : "") + "'s standard rates and set your own client price."
+        : (lvl === "cosell" ? t.cosellRate + "% of what " + (h ? h.name : "the software house") + " collects for " + t.cosellMonths + " months"
+          : t.referralRate + "% of what " + (h ? h.name : "the software house") + " collects for " + t.windowMonths + " months, then " + t.stepDownRate + "% for " + t.stepDownMonths + " more")
+          + (share ? " -- you receive " + share + "% of that fee, CloudWAV " + (100 - share) + "%." : ".")
+          + " Your introduction is protected for " + t.protectionMonths + " months once accepted.";
+    }
+    ["#rfHouse", "#rfLevel", "#rfLead"].forEach(function(s){ back.querySelector(s).addEventListener("change", rateNote); }); rateNote();
+    back.querySelector("[data-modal-close]").addEventListener("click", closeModal);
+    back.querySelector("#rfSubmit").addEventListener("click", function(){
+      var g = function(s){ return back.querySelector(s).value.trim(); }, err = back.querySelector("#rfError"), probs = [];
+      if (!g("#rfCompany")) probs.push("Add the client company."); if (!g("#rfContact")) probs.push("Add a contact name."); if (!g("#rfNeed")) probs.push("Describe what they need.");
+      if (g("#rfEmail") && !validEmail(g("#rfEmail"))) probs.push("Check the email address.");
+      var dup = projectReferrals.filter(function(r){ return r.houseId === g("#rfHouse") && r.client.company.toLowerCase() === g("#rfCompany").toLowerCase() && ["rejected", "lost"].indexOf(r.status) < 0; })[0];
+      if (dup) probs.push("This client is already registered with this software house (" + dup.registeredAt + ").");
+      if (!back.querySelector("#rfDisclosed").checked) probs.push("Please confirm the client knows about the introduction and the referral fee.");
+      if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+      var h = houseById(g("#rfHouse")), t = termsOf(h), now = todayIso();
+      projectReferrals.unshift({ id:"ref-" + Date.now().toString(36), houseId:h.id, referrerKey:myMsgKey(), level:g("#rfLevel"), cosellLead:g("#rfLead"),
+        client:{ company:g("#rfCompany"), contact:g("#rfContact"), email:g("#rfEmail"), phone:g("#rfPhone") }, need:g("#rfNeed"),
+        budget: Number(g("#rfBudget")) || 0, currency:g("#rfCurrency"), timeline:g("#rfTimeline"), disclosed:true,
+        status:"registered", registeredAt:now, respondBy:businessDaysFrom(now, t.acceptDays), acceptedAt:"", protectedUntil:"", contractValue:null, wonAt:"",
+        payments:[], payouts:[], thread:[], termsSnapshot:null });
+      saveReferrals(); closeModal(); toast("Referral registered -- " + h.name + " has " + t.acceptDays + " business days to respond"); render();
+    });
+  }
+
+  function renderReferralView(){
+    var box = document.getElementById("referralViewContent");
+    if (!box || state.screen !== "referral-view") return;
+    var r = refById(state.refViewId); if (!r){ box.innerHTML = '<div class="empty">Referral not found.</div>'; return; }
+    var h = houseById(r.houseId) || { name:r.houseId }, f = referralFees(r), isOp = state.role === "operator", st = refStatus(r), cur = r.currency;
+    var fact = function(l, v){ return '<div class="deal-fact"><span>'+l+'</span><span>'+(v !== "" && v != null ? esc(v) : '<span style="color:var(--ink-faint)">--</span>')+'</span></div>'; };
+    var ops = !isOp ? '' : '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;"><div class="aff-section-title">Update (CloudWAV)</div>'
+      + '<p class="field-note" style="margin:0;">Record what the software house tells you. Software houses don\'t log in to the portal yet.</p>'
+      + '<div class="cfg-actions" style="flex-wrap:wrap;">'
+        + (r.status === "registered" ? '<button type="button" class="btn primary sm" data-ref-act="accepted">Accepted</button><button type="button" class="btn ghost sm" data-ref-act="rejected">Not accepted…</button>' : '')
+        + (["accepted", "registered"].indexOf(r.status) > -1 ? '<button type="button" class="btn secondary sm" data-ref-act="proposal">Proposal sent</button>' : '')
+        + (["accepted", "proposal", "registered"].indexOf(r.status) > -1 ? '<button type="button" class="btn secondary sm" data-ref-act="won">Won…</button><button type="button" class="btn ghost sm" data-ref-act="lost">Lost…</button>' : '')
+      + '</div>'
+      + (r.status === "won" && !f.resell ? '<div class="vp-grid"><div class="field-row"><label for="rpDate">Payment collected on</label><input id="rpDate" type="date" value="'+todayIso()+'"></div><div class="field-row"><label for="rpAmount">Amount collected ('+esc(cur)+')</label><input id="rpAmount" type="number" min="0"></div></div>'
+        + '<label class="cfg-check"><input type="checkbox" id="rpMaint"> Maintenance / support / retainer</label><div class="cfg-actions"><button type="button" class="btn secondary sm" data-ref-pay>Record collected payment</button></div>'
+        + (f.partnerFee - f.paidOut > 0.5 && f.partnerPct ? '<div class="cfg-actions"><button type="button" class="btn primary sm" data-ref-payout>Record payout to '+esc(keyName(r.referrerKey))+': '+fmtMoney(f.partnerFee - f.paidOut, cur)+'</button></div>' : '') : '')
+      + '<div id="refError" class="login-msg bad" hidden></div></div>';
+    box.innerHTML = '<div class="deal-layout"><div style="display:flex;flex-direction:column;gap:16px;">'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+        + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><h2 style="font-size:1.15rem;margin:0;margin-right:auto;">'+esc(r.client.company)+'</h2>'+refBadge(r)+'</div>'
+        + '<div class="deal-facts">'+fact("Software house", h.name)+fact("Involvement", (REF_LEVELS[r.level] || r.level) + (r.level === "cosell" ? " (" + (r.cosellLead === "cloudwav" ? "CloudWAV leads" : "partner leads") + ")" : ""))+fact("Referred by", keyName(r.referrerKey))
+          + fact("Contact", [r.client.contact, r.client.email, r.client.phone].filter(Boolean).join(" · "))+fact("Budget", r.budget ? fmtMoney(r.budget, cur) : "")+fact("Timeline", r.timeline)
+          + fact("Registered", r.registeredAt)+fact("Respond by", r.respondBy)+fact("Protected until", r.protectedUntil || (st === "registered" ? "after acceptance" : ""))
+          + (r.contractValue ? fact("Contract value", fmtMoney(r.contractValue, cur)) : '')+(r.rejectReason ? fact("Reason", r.rejectReason) : '')+(r.lostReason ? fact("Lost because", r.lostReason) : '')+'</div>'
+        + '<div><div class="aff-section-title" style="margin-bottom:6px;">What they need</div><p class="program-desc" style="margin:0;white-space:pre-wrap;">'+esc(r.need)+'</p></div>'
+      + '</div>'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;"><div class="aff-section-title">Referral fee</div>'
+        + (f.resell ? '<p style="margin:0;">Resell: you contract with the client and buy the work at <b>'+esc(f.t.resellDiscount)+'%</b> off the software house\'s standard rates.</p>'
+          : '<p class="field-note" style="margin:0;">'+esc(f.mainRate)+'% of collected fees'+(r.level === "referral" ? ' for '+f.t.windowMonths+' months, then '+f.t.stepDownRate+'% for '+f.t.stepDownMonths+' months' : ' for '+f.t.cosellMonths+' months')+(f.t.maintenanceHalf ? '; maintenance at half rate' : '')+'. '+(f.partnerPct ? keyName(r.referrerKey)+' receives '+f.partnerPct+'%, CloudWAV '+(100 - f.partnerPct)+'%.' : 'CloudWAV referral -- no partner share.')+(r.termsSnapshot ? '' : ' Terms are fixed when the referral is accepted.')+'</p>'
+          + (f.rows.length ? '<div class="table-scroll"><table class="ref-fee-table"><thead><tr><th>Collected</th><th style="text-align:right">Amount</th><th style="text-align:right">Rate</th><th style="text-align:right">Fee</th></tr></thead><tbody>'
+            + f.rows.map(function(x){ return '<tr><td>'+esc(x.date)+(x.note ? ' · '+esc(x.note) : '')+(x.maintenance ? ' · maintenance' : '')+'</td><td style="text-align:right">'+fmtMoney(x.amount, cur)+'</td><td style="text-align:right">'+x.rate+'%</td><td style="text-align:right">'+fmtMoney(x.fee, cur)+'</td></tr>'; }).join("")
+            + '</tbody></table></div>' : '<div class="field-note">No payments collected yet. Estimated fee on the stated budget: '+fmtMoney(f.estimate, cur)+'.</div>')
+          + '<div class="map-stats"><div class="map-stat"><b>'+fmtMoney(f.fee, cur)+'</b>total fee'+(f.minApplied ? ' (minimum)' : '')+(f.capApplied ? ' (capped)' : '')+'</div>'
+          + (f.partnerPct ? '<div class="map-stat"><b>'+fmtMoney(f.partnerFee, cur)+'</b>'+esc(keyName(r.referrerKey))+'</div><div class="map-stat"><b>'+fmtMoney(f.cloudwavFee, cur)+'</b>CloudWAV</div><div class="map-stat"><b>'+fmtMoney(f.paidOut, cur)+'</b>paid out</div>' : '')+'</div>')
+      + '</div></div>'
+      + '<div style="display:flex;flex-direction:column;gap:16px;">' + ops
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;"><div class="aff-section-title">Notes between '+esc(keyName(r.referrerKey))+' and CloudWAV</div>'
+          + '<div class="deal-thread">'+((r.thread || []).length ? r.thread.map(function(m){ var mine = m.from === myMsgKey(); return '<div class="msg-bubble-row'+(mine ? " mine" : "")+'"><div class="msg-bubble">'+(mine ? "" : '<span class="post-author" style="display:block;font-size:.72rem;">'+esc(keyName(m.from))+'</span>')+'<p class="post-text" style="white-space:pre-wrap;">'+esc(m.text)+'</p><span class="post-time">'+esc(timeAgo(m.at))+'</span></div></div>'; }).join("") : '<div class="empty" style="padding:10px;">No notes yet.</div>')+'</div>'
+          + '<textarea id="refNote" rows="2" placeholder="Add a note…"></textarea><div class="cfg-actions"><button type="button" class="btn secondary sm" data-ref-note>Add note</button></div></div>'
+      + '</div></div>';
+  }
+  // small input dialog (instead of window.prompt)
+  function askValue(title, label, opts, cb){
+    opts = opts || {};
+    var back = openModal('<div class="modal-head"><h2>'+esc(title)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="field-row"><label for="askInput">'+esc(label)+'</label>'+(opts.number ? '<input id="askInput" type="number" min="0">' : '<textarea id="askInput" rows="3"></textarea>')+'</div>'
+      + '<div id="askError" class="login-msg bad" hidden></div>'
+      + '<div class="modal-actions"><button class="btn secondary" data-modal-close>Cancel</button><button class="btn primary" id="askOk">Save</button></div>');
+    back.querySelector("[data-modal-close]").addEventListener("click", closeModal);
+    back.querySelector("#askOk").addEventListener("click", function(){
+      var v = back.querySelector("#askInput").value.trim();
+      if (opts.required && !v){ var e = back.querySelector("#askError"); e.textContent = opts.required; e.hidden = false; return; }
+      closeModal(); cb(v);
+    });
+    setTimeout(function(){ var i = back.querySelector("#askInput"); if (i) i.focus(); }, 30);
+  }
+  function referralAction(act){
+    var r = refById(state.refViewId); if (!r || state.role !== "operator") return;
+    var t = termsOf(houseById(r.houseId)), now = todayIso();
+    var finish = function(){
+      r.status = act;
+      r.thread = r.thread || []; r.thread.push({ from:"operator:", text:"Status: " + REF_STATUS[act].label + (act === "won" && r.contractValue ? " (" + fmtMoney(r.contractValue, r.currency) + ")" : "") + (act === "rejected" && r.rejectReason ? " -- " + r.rejectReason : ""), at:new Date().toISOString() });
+      saveReferrals(); toast(r.client.company + ": " + REF_STATUS[act].label); renderReferralView();
+    };
+    var accept = function(){ r.acceptedAt = r.acceptedAt || now; r.protectedUntil = monthsFrom(r.acceptedAt, t.protectionMonths); if (!r.termsSnapshot) r.termsSnapshot = t; };
+    if (act === "accepted" || act === "proposal"){ accept(); return finish(); }
+    if (act === "rejected") return askValue("Not accepted", "Why? The software house must show a prior relationship (existing client, or active talks in the last 6 months).", { required:"Add the reason and evidence." }, function(v){ r.rejectReason = v; finish(); });
+    if (act === "won") return askValue("Won", "Contract value (" + r.currency + ")", { number:true, required:"Enter the contract value." }, function(v){ r.contractValue = Number(v) || null; r.wonAt = now; accept(); finish(); });
+    if (act === "lost") return askValue("Lost", "What happened? (optional)", {}, function(v){ r.lostReason = v; finish(); });
+  }
+
+  // ----- operator: software house editor -----
+  function showHouseEditor(id, fromProspect){
+    var h = id ? houseById(id) : null, px = fromProspect ? mspById(fromProspect) : null;
+    var d = h ? JSON.parse(JSON.stringify(h)) : { id:"", name: px ? px.name : "", website: px ? px.website : "", city: px ? px.city : "", specialties: px ? px.specialties : "", contactName:"", contactEmail: px ? px.email : "", status:"negotiating", prospectId: px ? px.id : "", terms: JSON.parse(JSON.stringify(DEFAULT_REFERRAL_TERMS)) };
+    var t = termsOf(d);
+    var n = function(k, label, suffix){ return '<div class="field-row"><label for="ht_'+k+'">'+label+'</label><input id="ht_'+k+'" type="number" min="0" step="0.5" value="'+esc(t[k])+'">'+(suffix ? '<span class="field-note">'+suffix+'</span>' : '')+'</div>'; };
+    var tx = function(k, label, v){ return '<div class="field-row"><label for="hf_'+k+'">'+label+'</label><input id="hf_'+k+'" type="text" value="'+esc(v || "").replace(/"/g, "&quot;")+'"></div>'; };
+    var back = openModal('<div class="modal-head"><h2>'+(h ? "Edit software house" : "Add software house")+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="vp-grid">'+tx("name", "Company name *", d.name)+tx("website", "Website", d.website)+tx("city", "City", d.city)+tx("contactName", "Partnership contact", d.contactName)+tx("contactEmail", "Contact email", d.contactEmail)
+        + '<div class="field-row"><label for="hf_status">Status</label><select id="hf_status"><option value="negotiating">Negotiating</option><option value="active">Active -- partners can refer</option><option value="paused">Paused</option></select></div></div>'
+      + tx("specialties", "What they build", d.specialties)
+      + '<div class="aff-section-title" style="margin-top:6px;">Referral fees (Schedule A)</div>'
+      + '<div class="vp-grid">'+n("referralRate", "Referral only, % of collected fees")+n("windowMonths", "…for months")+n("stepDownRate", "then %")+n("stepDownMonths", "…for months")
+        + n("cosellRate", "Co-sell %")+n("cosellMonths", "…for months")+n("resellDiscount", "Resell discount %")+n("minFee", "Minimum fee per won project", "0 = none")+n("capPerYear", "Cap per client per year", "0 = none")+'</div>'
+      + '<label class="cfg-check"><input type="checkbox" id="ht_maintenanceHalf"'+(t.maintenanceHalf ? " checked" : "")+'> Maintenance, support and retainers at half rate</label>'
+      + '<div class="aff-section-title" style="margin-top:6px;">Rules</div>'
+      + '<div class="vp-grid">'+n("acceptDays", "Accept / reject within (business days)")+n("protectionMonths", "Protection after acceptance (months)")+n("tailMonths", "Non-circumvention tail (months)")+n("paymentDays", "Pay within days after month end")+n("clawbackDays", "Refund clawback window (days)")+n("termMonths", "Term (months)")+n("noticeDays", "Notice to end (days)")
+        + '<div class="field-row"><label for="ht_currency">Currency</label><select id="ht_currency"><option>THB</option><option>USD</option></select></div></div>'
+      + '<div class="aff-section-title" style="margin-top:6px;">Partner payout (CloudWAV ↔ partner, not in this agreement)</div>'
+      + '<div class="vp-grid">'+n("partnerShare", "Partner share of referral fees %")+n("cosellPartnerLeadShare", "Co-sell, partner leads %")+n("cosellCloudwavLeadShare", "Co-sell, CloudWAV leads %")+'</div>'
+      + '<div id="hfError" class="login-msg bad" hidden></div>'
+      + '<div class="modal-actions"><button class="btn ghost" id="hfDoc">Preview agreement</button><button class="btn secondary" data-modal-close>Cancel</button><button class="btn primary" id="hfSave">Save</button></div>');
+    back.querySelector("#hf_status").value = d.status || "negotiating"; back.querySelector("#ht_currency").value = t.currency || "THB";
+    function read(){
+      var o = JSON.parse(JSON.stringify(d)); ["name","website","city","contactName","contactEmail","specialties"].forEach(function(k){ o[k] = back.querySelector("#hf_"+k).value.trim(); });
+      o.status = back.querySelector("#hf_status").value; o.terms = o.terms || {};
+      Object.keys(DEFAULT_REFERRAL_TERMS).forEach(function(k){ var el = back.querySelector("#ht_"+k); if (!el) return; o.terms[k] = el.type === "checkbox" ? el.checked : (k === "currency" ? el.value : Math.max(0, Number(el.value) || 0)); });
+      return o;
+    }
+    back.querySelector("[data-modal-close]").addEventListener("click", closeModal);
+    back.querySelector("#hfDoc").addEventListener("click", function(){ var o = read(); closeModal(); showAgreementDocument(o); });
+    back.querySelector("#hfSave").addEventListener("click", function(){
+      var o = read(), err = back.querySelector("#hfError"), probs = [];
+      if (!o.name) probs.push("Add the company name.");
+      if (o.contactEmail && !validEmail(o.contactEmail)) probs.push("Check the contact email.");
+      ["referralRate","stepDownRate","cosellRate","resellDiscount","partnerShare","cosellPartnerLeadShare","cosellCloudwavLeadShare"].forEach(function(k){ if (o.terms[k] > 100) probs.push(k + " can't be more than 100%."); });
+      if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+      if (!o.id){ o.id = "sh-" + (o.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || Date.now().toString(36)); if (houseById(o.id)) o.id += "-" + Date.now().toString(36).slice(-4); softwareHouses.push(o); }
+      else { var i = softwareHouses.map(function(x){ return x.id; }).indexOf(o.id); softwareHouses[i] = o; }
+      if (!agreementsList.some(function(a){ return a.kind === "referral" && a.houseId === o.id; }))
+        agreementsList.push({ id:"agr-referral-" + o.id, kind:"referral", type:"Software Project Referral Agreement", partyKey:"house:" + o.id, houseId:o.id, status:"draft", createdAt:todayIso(), sentAt:"", signedAt:"", signers:[], history:[] });
+      saveReferrals(); closeModal(); toast("Saved " + o.name); state.refTab = "houses"; render();
+    });
+  }
+
+  // ----- events -----
+  document.addEventListener("click", function(ev){
+    var t = ev.target, b;
+    if ((b = t.closest("[data-agr-view]"))){ viewAgreement(b.getAttribute("data-agr-view")); return; }
+    if ((b = t.closest("[data-agr-act]"))){ agreementAction(b.getAttribute("data-agr-id"), b.getAttribute("data-agr-act")); return; }
+    if ((b = t.closest("[data-agr-filter]"))){ state.agrFilter = b.getAttribute("data-agr-filter"); renderOperatorAgreements(); return; }
+    if (t.closest("[data-agr-request]")){
+      var pid = (document.getElementById("agrReqProgram") || {}).value; if (!pid){ toast("Choose a program first"); return; }
+      agreementsList.push({ id:"agr-partner-" + String(myMsgKey()).split(":")[1] + "-" + pid, kind:"partner", type:"Partner Reseller Agreement", partyKey:myMsgKey(), programId:pid, status:"requested", createdAt:todayIso(), sentAt:"", signedAt:"", signers:[], history:[] });
+      saveReferrals(); toast("Requested -- CloudWAV will send the agreement for signature"); renderAgreements(); return;
+    }
+    if (t.closest("[data-agr-create]")){
+      var pv = (document.getElementById("agrNewParty") || {}).value || "", prog = (document.getElementById("agrNewProgram") || {}).value || "";
+      if (!pv){ toast("Choose who the agreement is with"); return; }
+      var kind = pv.split("|")[0], key = pv.split("|")[1];
+      if (kind === "partner" && !prog){ toast("Choose the program for a partner agreement"); return; }
+      var rec = { id:"agr-" + kind + "-" + Date.now().toString(36), kind:kind, partyKey:key, status:"draft", createdAt:todayIso(), sentAt:"", signedAt:"", signers:[], history:[] };
+      if (kind === "partner"){ rec.type = "Partner Reseller Agreement"; rec.programId = prog; }
+      if (kind === "vendor"){ rec.programId = key.split(":")[1]; rec.type = ((programById(rec.programId) || {}).agreement || {}).type || "Vendor Program Agreement"; }
+      if (kind === "referral"){ rec.houseId = key.split(":")[1]; rec.type = "Software Project Referral Agreement"; }
+      agreementsList.push(rec); saveReferrals(); toast("Draft agreement created"); renderOperatorAgreements(); return;
+    }
+    if ((b = t.closest("[data-ref-tab]"))){ state.refTab = b.getAttribute("data-ref-tab"); renderReferrals(); return; }
+    if (t.closest("[data-ref-new]")){ showReferralForm(); return; }
+    if ((b = t.closest("[data-ref-view]"))){ state.refViewId = b.getAttribute("data-ref-view"); state.screen = "referral-view"; render(); window.scrollTo(0,0); return; }
+    if ((b = t.closest("[data-ref-act]"))){ referralAction(b.getAttribute("data-ref-act")); return; }
+    if (t.closest("[data-ref-back]")){ state.screen = "referrals"; render(); return; }
+    if (t.closest("[data-ref-pay]")){
+      var r = refById(state.refViewId); if (!r) return;
+      var amt = Number((document.getElementById("rpAmount") || {}).value), dt = (document.getElementById("rpDate") || {}).value, err = document.getElementById("refError");
+      if (!amt || amt <= 0 || !dt){ err.textContent = "Enter the date and amount collected."; err.hidden = false; return; }
+      r.payments = r.payments || []; r.payments.push({ id:"pay-" + Date.now().toString(36), date:dt, amount:amt, maintenance: !!(document.getElementById("rpMaint") || {}).checked, note:"" });
+      saveReferrals(); toast("Payment recorded"); renderReferralView(); return;
+    }
+    if (t.closest("[data-ref-payout]")){
+      var r2 = refById(state.refViewId); if (!r2) return; var f2 = referralFees(r2), due = Math.round(f2.partnerFee - f2.paidOut);
+      r2.payouts = r2.payouts || []; r2.payouts.push({ id:"po-" + Date.now().toString(36), date:todayIso(), amount:due, note:"" });
+      saveReferrals(); toast("Payout recorded: " + fmtMoney(due, r2.currency)); renderReferralView(); return;
+    }
+    if (t.closest("[data-ref-note]")){
+      var r3 = refById(state.refViewId), ta = document.getElementById("refNote"); if (!r3 || !ta || !ta.value.trim()) return;
+      r3.thread = r3.thread || []; r3.thread.push({ from:myMsgKey(), text:ta.value.trim(), at:new Date().toISOString() });
+      saveReferrals(); renderReferralView(); return;
+    }
+    if ((b = t.closest("[data-house-edit]"))){ showHouseEditor(b.getAttribute("data-house-edit") || null); return; }
+    if ((b = t.closest("[data-house-doc]"))){ showAgreementDocument(houseById(b.getAttribute("data-house-doc"))); return; }
+    if ((b = t.closest("[data-msp-house]"))){ var ex = softwareHouses.filter(function(h){ return h.prospectId === b.getAttribute("data-msp-house"); })[0]; showHouseEditor(ex ? ex.id : null, ex ? null : b.getAttribute("data-msp-house")); return; }
+  });
 
   // ===== HARDWARE OFFERINGS =====
   function renderHardwareOfferingsList(){
@@ -10186,6 +10793,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<button type="button" class="btn secondary sm" data-msp-log="'+esc(x.id)+'">Log activity</button>'
           + (site ? '<a class="btn secondary sm" href="'+esc(site)+'" target="_blank" rel="noopener noreferrer" style="text-align:center;text-decoration:none;">Visit website</a>' : '')
           + (x.sample ? '' : '<button type="button" class="btn ghost sm" data-msp-edit="'+esc(x.id)+'">Edit details</button>')
+          + (x.type === "Software house" ? '<button type="button" class="btn ghost sm" data-msp-house="'+esc(x.id)+'">'+(softwareHouses.some(function(h){ return h.prospectId === x.id; }) ? "Referral partner ✓" : "Make referral partner")+'</button>' : '')
         + '</div>'
       + '</div>';
     }).join("");
@@ -10820,6 +11428,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadIncentives();
   loadFlyers();
   loadMessages();
+  loadReferrals();
   loadShop();
   loadLevels();
   loadEngagementsAndPages();

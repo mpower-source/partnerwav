@@ -154,4 +154,35 @@ set role anon;
 select t('anonymous visitors cannot open files', (select count(*) from storage.objects) = 0);
 reset role;
 
+-- ===== software project referrals + agreements
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('softwareHouses','sh-1','{"id":"sh-1","status":"active"}','{*}','{}');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+select t('partner sees active software houses', (select count(*) from portal_records where collection='softwareHouses') = 1);
+select t('partner cannot add a software house', fails($$insert into portal_records(collection,id,data,readers,writers) values ('softwareHouses','sh-2','{}','{*}','{partner:siam-digital}')$$));
+insert into portal_records(collection,id,data,readers,writers) values ('projectReferrals','r1','{"id":"r1","houseId":"sh-1","referrerKey":"partner:siam-digital","status":"registered","payments":[],"payouts":[],"contractValue":null,"termsSnapshot":null,"acceptedAt":""}','{partner:siam-digital}','{partner:siam-digital}');
+select t('partner registers a referral', (select count(*) from portal_records where collection='projectReferrals') = 1);
+select t('partner cannot mark own referral won', fails($$update portal_records set data = jsonb_set(data,'{status}','"won"') where id='r1'$$));
+select t('partner cannot add collected payments', fails($$update portal_records set data = jsonb_set(data,'{payments}','[{"amount":1000000}]') where id='r1'$$));
+select t('partner cannot change the fee terms', fails($$update portal_records set data = jsonb_set(data,'{termsSnapshot}','{"referralRate":50}') where id='r1'$$));
+update portal_records set data = jsonb_set(data,'{thread}','[{"text":"client wants a demo"}]') where id='r1';
+select t('partner can add notes', (select data->'thread'->0->>'text' from portal_records where id='r1') = 'client wants a demo');
+insert into portal_records(collection,id,data,readers,writers) values ('agreements','a1','{"id":"a1","kind":"partner","status":"requested","signers":[]}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital}');
+select t('partner requests an agreement', (select count(*) from portal_records where collection='agreements') = 1);
+select t('partner cannot mark an agreement signed', fails($$update portal_records set data = jsonb_set(jsonb_set(data,'{status}','"signed"'),'{signedAt}','"2026-10-01"') where id='a1'$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+select t('other partners cannot see the referral or agreement', (select count(*) from portal_records where collection in ('projectReferrals','agreements')) = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+update portal_records set data = data || '{"status":"won","contractValue":1000000,"payments":[{"amount":500000}],"termsSnapshot":{"referralRate":10}}'::jsonb where id='r1';
+update portal_records set data = data || '{"status":"signed","signedAt":"2026-10-01"}'::jsonb where id='a1';
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+select t('partner sees CloudWAV''s updates', (select data->>'status' from portal_records where id='r1') = 'won' and (select data->>'status' from portal_records where id='a1') = 'signed');
+update portal_records set data = jsonb_set(data,'{thread}','[{"text":"thanks"}]') where id='r1';
+select t('partner can still add notes after it is won', (select data->'thread'->0->>'text' from portal_records where id='r1') = 'thanks');
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

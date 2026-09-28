@@ -106,14 +106,30 @@ insert into public.portal_field_rules (collection, field, allowed) values
   ('programs',         'relationships','[]'),
   ('programs',         'agreement',    '[]'),
   ('programs',         'status',       '[]'),
-  ('programs',         'terms',        '[]')
+  ('programs',         'terms',        '[]'),
+  -- agreements: partners can only request one; CloudWAV sends it and records signatures
+  ('agreements',       'status',       '["requested"]'),
+  ('agreements',       'signers',      '[[], null]'),
+  ('agreements',       'sentAt',       '["", null]'),
+  ('agreements',       'signedAt',     '["", null]'),
+  -- software project referrals: partners register; CloudWAV records the software house's
+  -- answer, the contract, collected payments and payouts (these drive the fee)
+  ('projectReferrals', 'status',       '["registered"]'),
+  ('projectReferrals', 'acceptedAt',   '["", null]'),
+  ('projectReferrals', 'protectedUntil','["", null]'),
+  ('projectReferrals', 'contractValue','[null]'),
+  ('projectReferrals', 'wonAt',        '["", null]'),
+  ('projectReferrals', 'payments',     '[[], null]'),
+  ('projectReferrals', 'payouts',      '[[], null]'),
+  ('projectReferrals', 'termsSnapshot','[null]'),
+  ('projectReferrals', 'rejectReason', '[null, ""]')
 on conflict (collection, field) do update set allowed = excluded.allowed;
 
 -- Collections only CloudWAV can add records to (members may still edit where they're a writer)
 create or replace function public.portal_operator_only(c text)
 returns boolean language sql immutable as $$
   select c = any (array['affiliatePrograms','mspProspects','mspEngagements','landingPages',
-                        'shopProducts','shopAccess','levelRules','enrollments'])
+                        'shopProducts','shopAccess','levelRules','enrollments','softwareHouses'])
 $$;
 
 -- ---------------------------------------------------------------------------
