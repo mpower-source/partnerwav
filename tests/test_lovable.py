@@ -15,6 +15,8 @@ with sync_playwright() as p:
         ok(tile.locator('a:has-text("Open")').get_attribute("href") == "https://lovable.dev/invite/DTIM5CC", r + ": Open link")
     role(pg, "partner"); nav(pg, "affiliate-marketplace")
     tile = pg.locator('#affiliateMarketplaceGrid [data-direct-offer="lovable"]')
+    lg = tile.locator("img.entity-logo-img")
+    ok(lg.count() == 1 and lg.evaluate("i => i.naturalWidth") == 256, "Lovable logo on the tile")
     qr = tile.locator("[data-aff-qr] img")
     ok(qr.count() == 1 and qr.evaluate("i => i.naturalWidth") > 0, "QR code shown on the tile")
     with pg.expect_download() as dl:
