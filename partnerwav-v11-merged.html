@@ -1637,6 +1637,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             <div><label>Offer Name</label><input type="text" id="aoName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
             <div><label>Category</label><input type="text" id="aoCategory" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., Analytics, Automation, Support" required /></div>
             <div><label>Description</label><textarea id="aoDesc" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
+            <div><label>Direct link (optional)</label><input type="url" id="aoDirectLink" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g. https://lovable.dev/invite/…  -- CloudWAV's own referral link, shown on the tile for everyone" /></div>
             <div><label>Affiliate Commission Rate (%)</label><input type="number" id="aoCommission" min="0" max="100" step="0.5" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., 15" required /></div>
             <div style="display:flex;gap:8px;">
               <button type="submit" class="btn primary">Save Offer</button>
@@ -2512,7 +2513,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"northstar-psa", name:"Northstar PSA", category:"Professional Services Automation", desc:"Ticketing, time tracking, and client billing built for MSPs -- the back-office system most Reseller-tier Partners run their own service delivery through.", note:"PartnerWAV rate: 15% off standard pricing for the first year.", apiIntegration:false,
       logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" } },
     { id:"msp-learning-hub", name:"MSP Learning Hub", category:"Training & Certification", desc:"On-demand certification tracks for MSP and VAR technical staff -- sales, security, and vendor-specific product training in one subscription.", note:"PartnerWAV rate: bundled seat pricing for teams of 5 or more.", apiIntegration:false,
-      logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" } }
+      logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" } },
+    // Direct offering: CloudWAV's own Lovable invite link -- everyone shares the same link.
+    { id:"lovable", name:"Lovable", category:"AI App Builder", direct:true, directLink:"https://lovable.dev/invite/DTIM5CC",
+      desc:"Build websites, landing pages, client portals and internal tools just by describing them to AI -- no coding needed. Useful for MSPs and VARs who want to ship quick apps for customers or their own business.",
+      note:"Sign up with this link and get an extra 10 credits. CloudWAV earns referral credits when a referred user moves to a Pro plan.",
+      apiIntegration:false, logo:"", website:"https://lovable.dev", social:{ linkedin:"", twitter:"", facebook:"" } }
   ];
 
   var partnerRows = [
@@ -3173,7 +3179,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         affiliateId: affiliateId,
         partnerId: partnerId,
         enrolledDate: new Date().toISOString().split("T")[0],
-        affiliateLink: generateAffiliateLink(affiliateId, partnerId),
+        affiliateLink: (affiliateById(affiliateId) || {}).directLink || generateAffiliateLink(affiliateId, partnerId),
         commissionRate: "Per program terms",
         status: "active",
         servicesOffered: [],
@@ -3249,10 +3255,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var opsButtons = (isOperator && showOps)
       ? '<button class="btn secondary sm" data-edit-affiliate-offer="'+a.id+'">Edit</button> <button class="btn secondary sm" data-delete-affiliate-offer="'+a.id+'">Delete</button>'
       : '';
-    return '<div class="program-card">'
+    var directHtml = a.direct && a.directLink
+      ? '<div class="aff-link-row" data-direct-link="'+esc(a.id)+'"><input type="text" class="aff-link-input" readonly value="'+esc(a.directLink).replace(/"/g,"&quot;")+'" aria-label="'+esc(a.name)+' invite link">'
+        + '<button type="button" class="btn primary sm" data-copy-direct="'+esc(a.directLink).replace(/"/g,"&quot;")+'">Copy link</button>'
+        + '<a class="btn secondary sm" href="'+esc(a.directLink).replace(/"/g,"&quot;")+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open</a></div>'
+      : '';
+    return '<div class="program-card"'+(a.direct ? ' data-direct-offer="'+esc(a.id)+'"' : '')+'>'
       + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(a)+'<span class="program-name">'+esc(a.name)+'</span></div><span class="badge neutral">'+esc(a.category)+'</span></div>'
+      + (a.direct ? '<span class="badge good" style="align-self:flex-start;">Direct offer from CloudWAV</span>' : '')
       + '<p class="program-desc">'+esc(a.desc)+'</p>'
       + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
+      + directHtml
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
       + '<div class="program-actions">'+(opsButtons || actionBtn)+'</div>'
     + '</div>';
@@ -6083,6 +6096,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("aoCategory").value = offer ? offer.category : "";
     document.getElementById("aoDesc").value = offer ? offer.desc : "";
     document.getElementById("aoCommission").value = offer ? (offer.commission || 0) : "";
+    document.getElementById("aoDirectLink").value = offer && offer.directLink ? offer.directLink : "";
     var deleteBtn = document.getElementById("deleteAffiliateOfferBtn");
     deleteBtn.style.display = offer ? "block" : "none";
     if (offer) deleteBtn.setAttribute("data-offer-id", offerId);
@@ -6095,6 +6109,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var category = document.getElementById("aoCategory").value.trim();
     var desc = document.getElementById("aoDesc").value.trim();
     var commission = parseFloat(document.getElementById("aoCommission").value);
+    var directLink = document.getElementById("aoDirectLink").value.trim();
+    if (directLink && !/^https?:\/\/\S+\.\S+/i.test(directLink)){ toast("The direct link needs to be a full web address (https://...)"); return; }
 
     if (!name || !category || !desc || isNaN(commission)){
       toast("Please fill in all required fields");
@@ -6108,13 +6124,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         affiliatePrograms[idx].category = category;
         affiliatePrograms[idx].desc = desc;
         affiliatePrograms[idx].commission = commission;
+        affiliatePrograms[idx].directLink = directLink; affiliatePrograms[idx].direct = !!directLink;
         toast("Affiliate offer updated");
       }
     } else {
       var newId = "affiliate-offer-" + Date.now();
       affiliatePrograms.push({
         id: newId, name: name, category: category, desc: desc, note: "",
-        commission: commission, apiIntegration: false, status: "active", archivedAt: null
+        commission: commission, apiIntegration: false, status: "active", archivedAt: null, directLink: directLink, direct: !!directLink
       });
       toast("Affiliate offer created");
     }
@@ -9576,6 +9593,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
 
+    var copyDirectBtn = e.target.closest("[data-copy-direct]");
+    if (copyDirectBtn){ copyText(copyDirectBtn.getAttribute("data-copy-direct"), "Invite link copied"); return; }
     var copyAffiliateLinkBtn = e.target.closest("[data-copy-affiliate-link]");
     if (copyAffiliateLinkBtn){
       var enrollment = getAffiliateEnrollment(copyAffiliateLinkBtn.getAttribute("data-copy-affiliate-link"), false);
