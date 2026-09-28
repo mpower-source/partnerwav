@@ -3,6 +3,10 @@
 
   .aff-qr{ display:flex; align-items:center; gap:12px; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); }
   .aff-qr img{ background:#fff; border-radius:6px; image-rendering:pixelated; flex-shrink:0; }
+  .cloud-status{ font-size:.78rem; font-weight:600; padding:4px 10px; border-radius:99px; border:1px solid var(--line); color:var(--ink-soft); white-space:nowrap; }
+  .cloud-status.saved{ color:var(--good); border-color:var(--good-soft); background:var(--good-soft); }
+  .cloud-status.error{ color:var(--bad); border-color:var(--bad); }
+  @media (max-width:640px){ .cloud-status{ display:none; } }
   /* ===== Shop + partner levels ===== */
   .shop-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:14px; }
   .shop-card{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); display:flex; flex-direction:column; }
@@ -671,6 +675,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
       <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
       <button class="navlink" data-screen="operator-shop"><span class="ic">🛒</span>Shop Manager</button>
+      <button class="navlink" data-screen="operator-data"><span class="ic">☁️</span>Cloud Data</button>
     </nav>
 
     <div class="sidebar-foot">
@@ -690,6 +695,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <h1 class="page-title" id="topTitle">Overview</h1>
         <div class="topbar-right">
           <input class="search" placeholder="Search…" disabled>
+          <span id="cloudStatus" class="cloud-status" hidden role="status" aria-live="polite"></span>
           <div class="account-menu">
             <button type="button" class="avatar" id="accountBtn" aria-haspopup="true" aria-expanded="false" aria-label="Account">PP</button>
             <div class="account-pop" id="accountPop" hidden>
@@ -1935,6 +1941,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="partnerDetailContent" style="margin-top:14px;"></div>
       </section>
 
+      <section id="scr-operator-data" hidden>
+        <div class="section-head"><h2>Cloud data</h2><span class="hint">Where the portal's data is stored and whether it's in sync</span></div>
+        <div style="height:14px"></div>
+        <div id="cloudDataContent"></div>
+      </section>
+
       <section id="scr-operator-shop" hidden>
         <div class="section-head"><h2>Shop Manager</h2><span class="hint">CloudWAV courses, templates and toolkits for partners, vendors and affiliates</span></div>
         <div style="height:14px"></div>
@@ -2088,6 +2100,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 <script>
 (function(){
   console.log("=== PartnerWAV Script Starting ===");
+
+  // Browser storage is only used in demo mode and on the public pages. Signed-in sessions keep
+  // their data in Supabase (see CLOUD DATA below), so nothing real is left behind in a shared browser.
+  var LOCAL_CACHE = (function(){ try { var q = new URLSearchParams(window.location.search); return q.get("demo") === "1" || q.has("apply") || q.has("lp"); } catch(e){ return true; } })();
+  function lsGet(k){ if (!LOCAL_CACHE) return null; try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function lsSet(k, v){ if (!LOCAL_CACHE) return; try { localStorage.setItem(k, v); } catch(e){ console.log("Could not save " + k + ":", e); } }
 
   // ===== SUPABASE INITIALIZATION =====
   const SUPABASE_URL = 'https://lnawgyaapcpyrvdtkarp.supabase.co';
@@ -2877,7 +2895,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Load data from localStorage
   function loadSavedData(){
     try {
-      var saved = localStorage.getItem("partnerWAV_vendorReferralData");
+      var saved = lsGet("partnerWAV_vendorReferralData");
       if (saved){
         var data = JSON.parse(saved);
         if (data.referralPartners){
@@ -2893,7 +2911,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       console.log("Could not load saved data:", e);
     }
     try {
-      var savedProfiles = JSON.parse(localStorage.getItem("partnerWAV_partnerProfiles") || "null");
+      var savedProfiles = JSON.parse(lsGet("partnerWAV_partnerProfiles") || "null");
       if (Array.isArray(savedProfiles) && savedProfiles.length){
         partnerProfiles.length = 0;
         savedProfiles.forEach(function(pp){ partnerProfiles.push(pp); });
@@ -2902,7 +2920,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       console.log("Could not load saved partner profiles:", e);
     }
     try {
-      var savedAff = JSON.parse(localStorage.getItem("partnerWAV_affiliateProfiles") || "null");
+      var savedAff = JSON.parse(lsGet("partnerWAV_affiliateProfiles") || "null");
       if (Array.isArray(savedAff) && savedAff.length){ affiliateProfiles.length = 0; savedAff.forEach(function(a){ affiliateProfiles.push(a); }); }
     } catch (e) {
       console.log("Could not load saved affiliate profiles:", e);
@@ -2918,9 +2936,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           referralPartners[p.id] = p.referralPartners;
         }
       });
-      localStorage.setItem("partnerWAV_vendorReferralData", JSON.stringify({ referralPartners: referralPartners }));
-      localStorage.setItem("partnerWAV_partnerProfiles", JSON.stringify(partnerProfiles));
-      localStorage.setItem("partnerWAV_affiliateProfiles", JSON.stringify(affiliateProfiles));
+      lsSet("partnerWAV_vendorReferralData", JSON.stringify({ referralPartners: referralPartners }));
+      lsSet("partnerWAV_partnerProfiles", JSON.stringify(partnerProfiles));
+      lsSet("partnerWAV_affiliateProfiles", JSON.stringify(affiliateProfiles));
     } catch (e) {
       console.log("Could not save data:", e);
     }
@@ -3010,6 +3028,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-incentive-review":"Review Incentive",
     "operator-partner-detail":"Partner",
     "operator-shop":"Shop Manager",
+    "operator-data":"Cloud Data",
     "operator-shop-editor":"Shop Product",
     "shop":"Training & Shop",
     "shop-product":"Training & Shop",
@@ -3141,7 +3160,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function saveAffiliateData(){
     try {
-      localStorage.setItem(AFFILIATE_STORAGE_KEY, JSON.stringify({
+      lsSet(AFFILIATE_STORAGE_KEY, JSON.stringify({
         affiliateEnrolled: state.affiliateEnrolled,
         enrollments: partnerAffiliateEnrollments
       }));
@@ -3150,7 +3169,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function loadAffiliateData(){
     try {
-      var saved = localStorage.getItem(AFFILIATE_STORAGE_KEY);
+      var saved = lsGet(AFFILIATE_STORAGE_KEY);
       if (!saved) return;
       var data = JSON.parse(saved);
       if (Array.isArray(data.affiliateEnrolled)) state.affiliateEnrolled = data.affiliateEnrolled;
@@ -4077,12 +4096,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         var o = {}; VENDOR_EDITABLE.forEach(function(k){ if (pg[k] !== undefined) o[k] = pg[k]; });
         out[pg.id] = o;
       });
-      localStorage.setItem(VENDOR_EDITS_KEY, JSON.stringify(out));
+      lsSet(VENDOR_EDITS_KEY, JSON.stringify(out));
     } catch(e){ console.log("Could not save vendor profile edits:", e); }
   }
   function loadVendorEdits(){
     try {
-      var saved = JSON.parse(localStorage.getItem(VENDOR_EDITS_KEY) || "null");
+      var saved = JSON.parse(lsGet(VENDOR_EDITS_KEY) || "null");
       if (!saved) return;
       Object.keys(saved).forEach(function(id){
         var pg = programById(id); if (!pg) return;
@@ -5321,10 +5340,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var d = new Date(), z = function(n){ return (n < 10 ? "0" : "") + n; };
     return d.getFullYear() + "-" + z(d.getMonth()+1) + "-" + z(d.getDate()) + " " + z(d.getHours()) + ":" + z(d.getMinutes());
   }
-  function saveDeals(){ try { localStorage.setItem(DEALS_KEY, JSON.stringify(state.approvals)); } catch(e){ console.log("Could not save deals:", e); } }
+  function saveDeals(){ try { lsSet(DEALS_KEY, JSON.stringify(state.approvals)); } catch(e){ console.log("Could not save deals:", e); } }
   function loadDeals(){
     try {
-      var saved = JSON.parse(localStorage.getItem(DEALS_KEY) || "null");
+      var saved = JSON.parse(lsGet(DEALS_KEY) || "null");
       if (Array.isArray(saved)) state.approvals = saved;
     } catch(e){ console.log("Could not load deals:", e); }
     state.approvals.forEach(normalizeDeal);
@@ -5624,12 +5643,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     try {
       var out = {};
       programs.forEach(function(pg){ if (pg.terms) out[pg.id] = { terms: pg.terms, tiers: pg.tiers, agreement: pg.agreement, status: pg.status }; });
-      localStorage.setItem(PROGRAM_TERMS_KEY, JSON.stringify(out));
+      lsSet(PROGRAM_TERMS_KEY, JSON.stringify(out));
     } catch(e){ console.log("Could not save program terms:", e); }
   }
   function loadProgramTerms(){
     try {
-      var saved = JSON.parse(localStorage.getItem(PROGRAM_TERMS_KEY) || "null");
+      var saved = JSON.parse(lsGet(PROGRAM_TERMS_KEY) || "null");
       if (!saved) return;
       Object.keys(saved).forEach(function(id){
         var pg = programById(id); if (!pg) return;
@@ -6417,10 +6436,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     giveaway: [["criteria","Winning criteria are objective and measurable"],["prizes","Prizes and their values are listed"],["contestlaw","Contest/sweepstakes rules checked for each country it runs in (e.g. Thailand, US)"],["tax","Who pays any tax on prizes is stated"]]
   };
   var INCENTIVES_KEY = "partnerWAV_incentives";
-  function saveIncentives(){ try { localStorage.setItem(INCENTIVES_KEY, JSON.stringify(vendorIncentiveOffers)); } catch(e){ console.log("Could not save incentives:", e); } }
+  function saveIncentives(){ try { lsSet(INCENTIVES_KEY, JSON.stringify(vendorIncentiveOffers)); } catch(e){ console.log("Could not save incentives:", e); } }
   function loadIncentives(){
     try {
-      var saved = JSON.parse(localStorage.getItem(INCENTIVES_KEY) || "null");
+      var saved = JSON.parse(lsGet(INCENTIVES_KEY) || "null");
       if (Array.isArray(saved)){ vendorIncentiveOffers.length = 0; saved.forEach(function(x){ vendorIncentiveOffers.push(x); }); }
     } catch(e){ console.log("Could not load incentives:", e); }
     vendorIncentiveOffers.forEach(function(o){
@@ -6570,9 +6589,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var JSPDF = { url:"https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js", sri:"sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" };
 
   function attr(s){ return esc(s == null ? "" : s).replace(/"/g,"&quot;"); }
-  function saveFlyers(){ try { localStorage.setItem(FLYERS_KEY, JSON.stringify(incentiveFlyers)); } catch(e){ console.log("Could not save flyers:", e); } }
+  function saveFlyers(){ try { lsSet(FLYERS_KEY, JSON.stringify(incentiveFlyers)); } catch(e){ console.log("Could not save flyers:", e); } }
   function loadFlyers(){
-    try { var saved = JSON.parse(localStorage.getItem(FLYERS_KEY) || "null"); if (Array.isArray(saved)) incentiveFlyers = saved; } catch(e){ console.log("Could not load flyers:", e); }
+    try { var saved = JSON.parse(lsGet(FLYERS_KEY) || "null"); if (Array.isArray(saved)) incentiveFlyers = saved; } catch(e){ console.log("Could not load flyers:", e); }
     incentiveFlyers.forEach(function(f){ if (!FLY_STATUS[f.status]) f.status = "draft"; if (!Array.isArray(f.thread)) f.thread = []; if (!f.checks) f.checks = {}; if (!f.copy) f.copy = {}; });
   }
   function flyById(id){ return incentiveFlyers.filter(function(f){ return f.id === id; })[0] || null; }
@@ -7113,12 +7132,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       duration:"3 live sessions · 90 minutes each", paymentLink:"", accessLink:"", status:"draft", created:"2026-09-27" }
   ];
   var shopOrders = [], shopWaitlist = [];
-  function saveShop(){ try { localStorage.setItem(SHOP_KEY, JSON.stringify(shopProducts)); localStorage.setItem(ORDERS_KEY, JSON.stringify(shopOrders)); localStorage.setItem(WAIT_KEY, JSON.stringify(shopWaitlist)); } catch(e){ console.log("Could not save shop:", e); } }
+  function saveShop(){ try { lsSet(SHOP_KEY, JSON.stringify(shopProducts)); lsSet(ORDERS_KEY, JSON.stringify(shopOrders)); lsSet(WAIT_KEY, JSON.stringify(shopWaitlist)); } catch(e){ console.log("Could not save shop:", e); } }
   function loadShop(){
     try {
-      var sp = JSON.parse(localStorage.getItem(SHOP_KEY) || "null"); if (Array.isArray(sp) && sp.length) shopProducts = sp;
-      var so = JSON.parse(localStorage.getItem(ORDERS_KEY) || "null"); if (Array.isArray(so)) shopOrders = so;
-      var sw = JSON.parse(localStorage.getItem(WAIT_KEY) || "null"); if (Array.isArray(sw)) shopWaitlist = sw;
+      var sp = JSON.parse(lsGet(SHOP_KEY) || "null"); if (Array.isArray(sp) && sp.length) shopProducts = sp;
+      var so = JSON.parse(lsGet(ORDERS_KEY) || "null"); if (Array.isArray(so)) shopOrders = so;
+      var sw = JSON.parse(lsGet(WAIT_KEY) || "null"); if (Array.isArray(sw)) shopWaitlist = sw;
     } catch(e){ console.log("Could not load shop:", e); }
   }
   function shopById(id){ return shopProducts.filter(function(x){ return x.id === id; })[0] || null; }
@@ -7304,6 +7323,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     p.status = status;
     if (!p.id){ p.id = "shop-" + Date.now().toString(36); p.created = nowStamp(); shopProducts.unshift(p); }
     else { var i = shopProducts.map(function(x){ return x.id; }).indexOf(p.id); if (i > -1) shopProducts[i] = p; else shopProducts.unshift(p); }
+    // paid products: the access link is stored separately so only paying buyers can read it
+    var acc = shopAccess.filter(function(a){ return a.id === p.id; })[0];
+    if (p.price && p.accessLink){ if (acc) acc.link = p.accessLink; else shopAccess.push({ id:p.id, link:p.accessLink, buyers: shopOrders.filter(function(o){ return o.productId === p.id && o.status === "paid"; }).map(function(o){ return o.buyer; }) }); }
     saveShop(); state.shopDraft = null;
     toast(status === "published" ? "Published -- \"" + p.title + "\" is in the shop" : "Saved as a draft");
     state.screen = "operator-shop"; render();
@@ -7331,11 +7353,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"en-riverside-botnoi", partnerId:"riverside", partner:"Riverside Telco", country:"USA", programId:"botnoi", tier:"Channel Manager", level:"Registered", status:"draft", joined:"2026-09-10", revenue12m:0, dealsClosed:0, lastActivity:"2026-09-10", history:[] },
     { id:"en-portonics-unisense", partnerId:"portonics", partner:"Portonics Ltd.", country:"Bangladesh", programId:"unisense", tier:"Reseller", level:"Bronze", status:"active", joined:"2026-02-01", revenue12m:52000, dealsClosed:3, coursesBefore:2, lastActivity:"2026-09-21", history:[] }
   ];
-  function saveLevels(){ try { localStorage.setItem(LEVELS_KEY, JSON.stringify(levelRules)); localStorage.setItem(ENROLL_KEY, JSON.stringify(enrollments)); } catch(e){ console.log("Could not save levels:", e); } }
+  function saveLevels(){ try { lsSet(LEVELS_KEY, JSON.stringify(levelRules)); lsSet(ENROLL_KEY, JSON.stringify(enrollments)); } catch(e){ console.log("Could not save levels:", e); } }
   function loadLevels(){
     try {
-      var lr = JSON.parse(localStorage.getItem(LEVELS_KEY) || "null"); if (Array.isArray(lr) && lr.length) levelRules = lr;
-      var en = JSON.parse(localStorage.getItem(ENROLL_KEY) || "null"); if (Array.isArray(en) && en.length) enrollments = en;
+      var lr = JSON.parse(lsGet(LEVELS_KEY) || "null"); if (Array.isArray(lr) && lr.length) levelRules = lr;
+      var en = JSON.parse(lsGet(ENROLL_KEY) || "null"); if (Array.isArray(en) && en.length) enrollments = en;
+      var sn = JSON.parse(lsGet("partnerWAV_seenLevelNotices") || "null"); if (Array.isArray(sn)) state.seenLevelNotices = sn;
     } catch(e){ console.log("Could not load levels:", e); }
   }
   function levelIndex(name){ for (var i=0;i<levelRules.length;i++) if (levelRules[i].level === name) return i; return 0; }
@@ -7485,12 +7508,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           return '<div class="deal-row" data-my-level="'+attr(e.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(enProgramName(e))+' '+levelBadge(e.level)
             + '<span class="field-note" style="display:block;font-weight:400;">'+esc(levelRules[i].benefits)+'</span>'
             + (next ? '<span class="field-note" style="display:block;font-weight:400;">Next: <b>'+esc(next.level)+'</b> -- '+money(Math.max(0, next.minRevenue - s.revenue))+' more revenue, '+Math.max(0, next.minDeals - s.deals)+' more deals, '+Math.max(0, next.minCourses - s.courses)+' more courses</span>' : '')
-            + (e.levelNotice && last ? '<span class="field-note" style="display:block;font-weight:400;color:var(--accent-strong);">CloudWAV moved you to '+esc(last.to)+' on '+esc(last.date)+(last.reason ? ': '+esc(last.reason) : '')+'</span>' : '')
+            + (e.levelNotice && last && (state.seenLevelNotices || []).indexOf(e.id + "|" + last.date) < 0 ? '<span class="field-note" style="display:block;font-weight:400;color:var(--accent-strong);">CloudWAV moved you to '+esc(last.to)+' on '+esc(last.date)+(last.reason ? ': '+esc(last.reason) : '')+'</span>' : '')
             + '</span><div style="min-width:140px;">'+progressHtml(e)+'</div></div>';
         }).join("")
       + '<div><button type="button" class="btn secondary sm" data-screen-go="shop">Browse training in the Shop</button></div></div>';
-    mine.forEach(function(e){ if (e.levelNotice){ e.levelNotice = false; } });
-    saveLevels();
+    // remember which level-change notices this partner has seen (saved with their settings, not on the enrollment)
+    state.seenLevelNotices = state.seenLevelNotices || [];
+    mine.forEach(function(e){ var last = (e.history || []).slice(-1)[0]; if (e.levelNotice && last){ var k = e.id + "|" + last.date; if (state.seenLevelNotices.indexOf(k) < 0){ state.seenLevelNotices.push(k); lsSet("partnerWAV_seenLevelNotices", JSON.stringify(state.seenLevelNotices)); } } });
   }
 
   // ----- events -----
@@ -7510,7 +7534,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       state.screen = "operator-shop-editor"; render(); window.scrollTo(0,0); return; }
     if ((b = t.closest("[data-shop-color]"))){ if (state.shopDraft){ state.shopDraft.cover = b.getAttribute("data-shop-color"); document.querySelectorAll("[data-shop-color]").forEach(function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); refreshShopPreview(); } return; }
     if ((b = t.closest("[data-shop-save]"))){ saveShopProduct(b.getAttribute("data-shop-save")); return; }
-    if ((b = t.closest("[data-order-act]"))){ var od = shopOrders.filter(function(x){ return x.id === b.getAttribute("data-order-id"); })[0]; if (od && state.role === "operator"){ od.status = b.getAttribute("data-order-act"); if (od.status === "paid") od.paidAt = nowStamp(); saveShop(); toast(od.status === "paid" ? "Payment confirmed -- unlocked for " + buyerName(od.buyer) : "Order " + ORDER_STATUS[od.status].label.toLowerCase()); renderOperatorShop(); } return; }
+    if ((b = t.closest("[data-order-act]"))){ var od = shopOrders.filter(function(x){ return x.id === b.getAttribute("data-order-id"); })[0]; if (od && state.role === "operator"){ od.status = b.getAttribute("data-order-act"); if (od.status === "paid"){ od.paidAt = nowStamp(); var sa = shopAccess.filter(function(a){ return a.id === od.productId; })[0]; if (sa && sa.buyers.indexOf(od.buyer) < 0) sa.buyers.push(od.buyer); } saveShop(); toast(od.status === "paid" ? "Payment confirmed -- unlocked for " + buyerName(od.buyer) : "Order " + ORDER_STATUS[od.status].label.toLowerCase()); renderOperatorShop(); } return; }
     if ((b = t.closest("[data-oppart-tab]"))){ state.opPartnersTab = b.getAttribute("data-oppart-tab"); renderOperatorPartners(); return; }
     if ((b = t.closest("[data-oppart-flag]"))){ var fg = b.getAttribute("data-oppart-flag"); state.opPartnerStatus = fg === "pending-status" ? "pending" : ""; state.opPartnerFlag = fg === "pending-status" ? "" : fg; renderOperatorPartners(); return; }
     if (t.closest("[data-oppart-reset]")){ state.opPartnerQ = state.opPartnerProgram = state.opPartnerLevel = state.opPartnerStatus = state.opPartnerFlag = ""; renderOperatorPartners(); return; }
@@ -7538,6 +7562,299 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (map[t.id]){ state[map[t.id]] = t.value; renderOperatorPartners(); return; }
     if (t.id && t.id.indexOf("shp_") === 0 && state.shopDraft) refreshShopPreview();
   });
+
+  // ===== CLOUD DATA (Supabase) =====
+  // Signed-in sessions keep all portal data in one Supabase table, portal_records (see
+  // supabase/portal_records.sql). Each row is one record of one collection plus who may read
+  // and edit it ("role:entity" keys; operators can do everything). Row-level security and a
+  // guard trigger enforce this on the server; the client mirrors the rules so it never tries
+  // a write that would be refused. Demo mode (?demo=1) keeps using this browser only.
+  //
+  // mode "merge":   starter records in the code are real (vendors, shop, prospects...). Cloud
+  //                 rows override them by id; deleting leaves a tombstone.
+  // mode "replace": starter records are demo data. Cloud rows are the whole list.
+  var CLOUD = { on:false, loaded:false, snap:{}, inCloud:{}, timer:null, busy:false, status:"idle", error:"", key:null, lastSync:"", unloading:false };
+  window.addEventListener("pagehide", function(){ CLOUD.unloading = true; });
+  function markInCloud(col, id, yes){ var m = CLOUD.inCloud[col] || (CLOUD.inCloud[col] = {}); if (yes) m[id] = true; else delete m[id]; }
+  function myKey(){ if (!state.account) return null; return state.account.role + ":" + (state.account.entityId || ""); }
+  function isOp(){ return state.account && state.account.role === "operator"; }
+  var EVERYONE = ["*"];
+  var CLOUD_COLLECTIONS = [
+    { name:"programs", mode:"merge", get:function(){ return programs; }, set:function(a){ programs.length = 0; a.forEach(function(x){ programs.push(x); }); },
+      access:function(r){ return { readers:EVERYONE, writers:["vendor:" + r.id], pub:true }; } },
+    { name:"affiliatePrograms", mode:"merge", get:function(){ return affiliatePrograms; }, set:function(a){ affiliatePrograms.length = 0; a.forEach(function(x){ affiliatePrograms.push(x); }); },
+      access:function(){ return { readers:EVERYONE, writers:[] }; } },
+    { name:"partnerProfiles", mode:"replace", get:function(){ return partnerProfiles; }, set:function(a){ partnerProfiles.length = 0; a.forEach(function(x){ partnerProfiles.push(x); }); },
+      access:function(r){ return { readers:EVERYONE, writers:["partner:" + r.id] }; } },
+    { name:"affiliateProfiles", mode:"replace", get:function(){ return affiliateProfiles; }, set:function(a){ affiliateProfiles.length = 0; a.forEach(function(x){ affiliateProfiles.push(x); }); },
+      access:function(r){ return { readers:EVERYONE, writers:["affiliate:" + r.id] }; } },
+    { name:"affiliateEnrollments", mode:"replace", get:function(){ return partnerAffiliateEnrollments; }, set:function(a){ partnerAffiliateEnrollments.length = 0; a.forEach(function(x){ partnerAffiliateEnrollments.push(x); }); },
+      access:function(r){ return { readers:["partner:" + r.partnerId], writers:["partner:" + r.partnerId] }; } },
+    { name:"deals", mode:"replace", get:function(){ return state.approvals; }, set:function(a){ state.approvals = a; },
+      access:function(r){ return { readers:["partner:" + r.partnerId, "vendor:" + r.programId], writers:["partner:" + r.partnerId] }; } },
+    { name:"leads", mode:"replace", get:function(){ return leads; }, set:function(a){ leads.length = 0; a.forEach(function(x){ leads.push(x); }); },
+      access:function(r){ return { readers:["partner:" + r.partnerId], writers:["partner:" + r.partnerId] }; } },
+    { name:"incentives", mode:"replace", get:function(){ return vendorIncentiveOffers; }, set:function(a){ vendorIncentiveOffers.length = 0; a.forEach(function(x){ vendorIncentiveOffers.push(x); }); },
+      access:function(r){ return { readers: r.status === "approved" ? EVERYONE : ["vendor:" + r.vendorId], writers:["vendor:" + r.vendorId] }; } },
+    { name:"flyers", mode:"replace", get:function(){ return incentiveFlyers; }, set:function(a){ incentiveFlyers = a; },
+      access:function(r){ return { readers: r.status === "approved" ? EVERYONE : ["vendor:" + r.vendorId], writers:["vendor:" + r.vendorId] }; } },
+    { name:"hardwareOfferings", mode:"replace", get:function(){ return hardwareOfferings; }, set:function(a){ hardwareOfferings.length = 0; a.forEach(function(x){ hardwareOfferings.push(x); }); },
+      access:function(r){ return { readers:EVERYONE, writers:["vendor:" + r.vendorId] }; } },
+    { name:"resources", mode:"replace", get:function(){ return resources; }, set:function(a){ resources.length = 0; a.forEach(function(x){ resources.push(x); }); },
+      access:function(r){ return { readers:EVERYONE, writers: r.ownerKey ? [r.ownerKey] : [] }; } },
+    { name:"pendingResources", mode:"replace", get:function(){ return pendingResources; }, set:function(a){ pendingResources.length = 0; a.forEach(function(x){ pendingResources.push(x); }); },
+      access:function(r){ return { readers: r.ownerKey ? [r.ownerKey] : [], writers: r.ownerKey ? [r.ownerKey] : [] }; } },
+    { name:"threads", mode:"replace", get:function(){ return projectThreads; }, set:function(a){ projectThreads.length = 0; a.forEach(function(x){ projectThreads.push(x); }); },
+      access:function(){ return { readers:EVERYONE, writers:EVERYONE }; } },
+    { name:"groups", mode:"replace", get:function(){ return groups; }, set:function(a){ groups.length = 0; a.forEach(function(x){ groups.push(x); }); },
+      access:function(){ return { readers:EVERYONE, writers:EVERYONE }; } },
+    { name:"partnerProjects", mode:"replace", get:function(){ return partnerProjects; }, set:function(a){ partnerProjects = a; },
+      access:function(r){ return { readers:EVERYONE, writers:["partner:" + r.partnerId] }; } },
+    { name:"mspProspects", mode:"merge", get:function(){ return mspProspects; }, set:function(a){ mspProspects.length = 0; a.forEach(function(x){ mspProspects.push(x); }); },
+      access:function(){ return { readers:[], writers:[] }; } },
+    { name:"mspEngagements", mode:"replace", get:function(){ return mspEngagements; }, set:function(a){ mspEngagements.length = 0; a.forEach(function(x){ mspEngagements.push(x); }); },
+      access:function(){ return { readers:[], writers:[] }; } },
+    { name:"landingPages", mode:"merge", get:function(){ return landingPages; }, set:function(a){ landingPages.length = 0; a.forEach(function(x){ landingPages.push(x); }); },
+      access:function(r){ return { readers:["vendor:" + r.vendorId], writers:[], pub: r.status === "published" }; } },
+    { name:"shopProducts", mode:"merge", get:function(){ return shopProducts; }, set:function(a){ shopProducts = a; },
+      // paid products' access links live in shopAccess, readable only by paying buyers
+      toData:function(r){ if (!r.price) return r; var c = JSON.parse(JSON.stringify(r)); c.accessLink = ""; return c; },
+      access:function(r){ return { readers: r.status === "published" ? EVERYONE : [], writers:[] }; } },
+    { name:"shopAccess", mode:"replace", get:function(){ return shopAccess; }, set:function(a){ shopAccess = a; },
+      access:function(r){ return { readers:(r.buyers || []).slice(), writers:[] }; } },
+    { name:"shopOrders", mode:"replace", get:function(){ return shopOrders; }, set:function(a){ shopOrders = a; },
+      access:function(r){ return { readers:[r.buyer], writers:[r.buyer] }; } },
+    { name:"shopWaitlist", mode:"replace", get:function(){ return shopWaitlist; }, set:function(a){ shopWaitlist = a; },
+      access:function(r){ return { readers:[r.buyer], writers:[r.buyer] }; } },
+    { name:"levelRules", mode:"merge", idOf:function(r){ return r.level; }, get:function(){ return levelRules; }, set:function(a){ levelRules = a; },
+      access:function(){ return { readers:EVERYONE, writers:[] }; } },
+    { name:"enrollments", mode:"replace", get:function(){ return enrollments; }, set:function(a){ enrollments = a; },
+      access:function(r){ return { readers:["partner:" + r.partnerId, "vendor:" + r.programId], writers:[] }; } },
+    // Per-user settings that used to live in the browser: joined groups, collaboration interest, enrolled affiliate tools
+    { name:"prefs", mode:"replace", get:function(){ var k = myKey(); return k ? [{ id:k, joinedGroups: state.joinedGroups || [], collabInterests: state.collabInterests || [], affiliateEnrolled: state.affiliateEnrolled || [], seenLevelNotices: state.seenLevelNotices || [] }] : []; },
+      set:function(a){ var k = myKey(), mine = a.filter(function(x){ return x.id === k; })[0]; if (mine){ state.joinedGroups = mine.joinedGroups || []; state.collabInterests = mine.collabInterests || []; state.affiliateEnrolled = mine.affiliateEnrolled || []; state.seenLevelNotices = mine.seenLevelNotices || []; } else { state.joinedGroups = []; state.collabInterests = []; state.affiliateEnrolled = []; state.seenLevelNotices = []; } },
+      access:function(r){ return { readers:[r.id], writers:[r.id] }; } }
+  ];
+  var shopAccess = [];
+  function colByName(n){ for (var i=0;i<CLOUD_COLLECTIONS.length;i++) if (CLOUD_COLLECTIONS[i].name === n) return CLOUD_COLLECTIONS[i]; return null; }
+  function recId(c, r){ return c.idOf ? c.idOf(r) : (r.id != null ? String(r.id) : (c.name === "shopWaitlist" ? r.productId + "|" + r.buyer : null)); }
+  function canWrite(access){ var k = myKey(); return isOp() || (!!k && (access.writers.indexOf(k) > -1 || access.writers.indexOf("*") > -1)); }
+  function stableJson(c, r){ return JSON.stringify(c.toData ? c.toData(r) : r); }
+
+  function cloudSetStatus(st, msg){
+    CLOUD.status = st; CLOUD.error = msg || "";
+    var el = document.getElementById("cloudStatus"); if (!el) return;
+    el.hidden = !CLOUD.on;
+    el.className = "cloud-status " + st;
+    el.textContent = st === "saving" ? "Saving…" : st === "saved" ? "☁ Saved" : st === "loading" ? "Loading your data…" : st === "error" ? "⚠ Not saved -- retrying" : st === "readonly" ? "☁ View only" : "☁ Cloud";
+    el.title = st === "error" ? CLOUD.error : (CLOUD.lastSync ? "Last saved " + CLOUD.lastSync : "");
+  }
+
+  async function cloudFetchAll(){
+    var out = [], from = 0, page = 1000;
+    for (;;){
+      var res = await supabase.from("portal_records").select("collection,id,data,readers,writers,is_public,updated_at").order("collection").order("id").range(from, from + page - 1);
+      if (res.error) throw res.error;
+      out = out.concat(res.data || []);
+      if (!res.data || res.data.length < page) break;
+      from += page;
+    }
+    return out;
+  }
+
+  // Put cloud rows into the in-memory lists. Records edited locally since the last sync are kept.
+  function cloudApply(rows, firstLoad){
+    var byCol = {};
+    CLOUD.inCloud = {};
+    rows.forEach(function(r){ (byCol[r.collection] = byCol[r.collection] || []).push(r); markInCloud(r.collection, r.id, true); });
+    CLOUD_COLLECTIONS.forEach(function(c){
+      var incoming = byCol[c.name] || [], snap = CLOUD.snap[c.name] || (CLOUD.snap[c.name] = {});
+      var local = c.get() || [], localById = {};
+      local.forEach(function(r){ var id = recId(c, r); if (id != null) localById[id] = r; });
+      var dirty = {};
+      if (!firstLoad) Object.keys(localById).forEach(function(id){ if (snap[id] !== stableJson(c, localById[id])) dirty[id] = true; });
+      var result = [], seen = {};
+      if (c.mode === "merge"){
+        var cloudById = {}; incoming.forEach(function(row){ cloudById[row.id] = row; });
+        local.forEach(function(r){
+          var id = recId(c, r); seen[id] = true;
+          var row = cloudById[id];
+          if (dirty[id] || !row){ result.push(r); if (!row && !dirty[id]) snap[id] = stableJson(c, r); return; }
+          if (row.data && row.data._deleted){ snap[id] = JSON.stringify(row.data); return; }
+          var merged = row.data;
+          if (c.name === "shopProducts" && r.accessLink && !merged.accessLink) merged.accessLink = r.accessLink;
+          result.push(merged); snap[id] = stableJson(c, merged);
+        });
+        incoming.forEach(function(row){ if (seen[row.id]) return; if (row.data && row.data._deleted){ snap[row.id] = JSON.stringify(row.data); return; } result.push(row.data); snap[row.id] = stableJson(c, row.data); });
+      } else {
+        incoming.forEach(function(row){ seen[row.id] = true; if (dirty[row.id]) result.push(localById[row.id]); else { result.push(row.data); snap[row.id] = stableJson(c, row.data); } });
+        Object.keys(dirty).forEach(function(id){ if (!seen[id]) result.push(localById[id]); });
+        Object.keys(snap).forEach(function(id){ if (!seen[id] && !dirty[id]) delete snap[id]; });
+      }
+      c.set(result);
+      if (firstLoad){ CLOUD.snap[c.name] = {}; (c.get() || []).forEach(function(r){ var id = recId(c, r); if (id != null) CLOUD.snap[c.name][id] = stableJson(c, r); }); }
+    });
+    // paid-product access links come from shopAccess
+    shopAccess.forEach(function(a){ var p = shopById(a.id); if (p && a.link) p.accessLink = a.link; });
+    // re-run each list's clean-up (status defaults etc.) on the new data -- storage reads are off here
+    [loadIncentives, loadFlyers, loadDeals].forEach(function(fn){ try { fn(); } catch(e){ console.warn(e); } });
+  }
+
+  var cloudSubscribed = false;
+  async function cloudStart(){
+    if (!supabase || !state.account) return;
+    CLOUD.on = true; CLOUD.key = myKey();
+    // demo records never show in a signed-in session, even for a moment
+    if (!CLOUD.loaded) CLOUD_COLLECTIONS.forEach(function(c){ if (c.mode === "replace" && c.name !== "prefs") c.set([]); });
+    cloudSetStatus("loading");
+    try {
+      var rows = await cloudFetchAll();
+      cloudApply(rows, true);
+      CLOUD.loaded = true; CLOUD.lastSync = nowStamp();
+      cloudSetStatus("saved");
+      // First time CloudWAV signs in: share the real starter records (vendors, shop, levels...) with everyone
+      var missing = CLOUD_COLLECTIONS.some(function(c){ return c.mode === "merge" && !Object.keys(CLOUD.inCloud[c.name] || {}).length; });
+      if (isOp() && missing) await cloudSeed(true);
+    } catch(e){
+      console.error("Cloud load failed:", e);
+      cloudSetStatus("error", "Couldn't load portal data: " + (e.message || e) + " -- retrying");
+      setTimeout(function(){ if (!CLOUD.loaded) cloudStart(); }, 8000);
+    }
+    render();
+    if (cloudSubscribed || !CLOUD.loaded) return;
+    cloudSubscribed = true;
+    try {
+      supabase.channel("portal_records").on("postgres_changes", { event:"*", schema:"public", table:"portal_records" }, function(){ cloudRefreshSoon(); }).subscribe();
+    } catch(e){ console.warn("Realtime unavailable:", e); }
+  }
+  var refreshTimer = null;
+  function cloudRefreshSoon(){ clearTimeout(refreshTimer); refreshTimer = setTimeout(cloudRefresh, 700); }
+  async function cloudRefresh(){
+    if (!CLOUD.loaded || CLOUD.busy) return;
+    try { var rows = await cloudFetchAll(); cloudApply(rows, false); render(); } catch(e){ console.warn("Cloud refresh failed:", e); }
+  }
+
+  // Find what changed since the last sync and send it
+  function cloudDiff(){
+    var ups = [], dels = [], snapUpdates = [], pendingSetup = [];
+    CLOUD_COLLECTIONS.forEach(function(c){
+      var snap = CLOUD.snap[c.name] || (CLOUD.snap[c.name] = {}), seen = {};
+      (c.get() || []).forEach(function(r){
+        var id = recId(c, r); if (id == null) return; seen[id] = true;
+        var j = stableJson(c, r); if (snap[id] === j) return;
+        if (c.name === "resources" || c.name === "pendingResources"){ if (!r.ownerKey && !isOp() && !snap[id]) r.ownerKey = myKey(); j = stableJson(c, r); }
+        var acc = c.access(r);
+        if (!canWrite(acc)){ snapUpdates.push([c.name, id, j]); return; } // not ours to save -- the server would refuse it
+        if (c.mode === "merge" && !isOp() && !(CLOUD.inCloud[c.name] || {})[id]){ pendingSetup.push(c.name); return; }
+        ups.push({ collection:c.name, id:id, data: c.toData ? c.toData(r) : r, readers:acc.readers, writers:acc.writers, is_public:!!acc.pub });
+        snapUpdates.push([c.name, id, j]);
+      });
+      Object.keys(snap).forEach(function(id){
+        if (seen[id]) return;
+        try { if (JSON.parse(snap[id])._deleted) return; } catch(e){}
+        var prev; try { prev = JSON.parse(snap[id]); } catch(e){ prev = {}; }
+        var acc = c.access(prev);
+        if (!canWrite(acc)){ snapUpdates.push([c.name, id, null]); return; }
+        if (c.mode === "merge"){ var tomb = { id:id, _deleted:true }; ups.push({ collection:c.name, id:id, data:tomb, readers:acc.readers, writers:acc.writers, is_public:false }); snapUpdates.push([c.name, id, JSON.stringify(tomb)]); }
+        else { dels.push([c.name, id]); snapUpdates.push([c.name, id, null]); }
+      });
+    });
+    return { ups:ups, dels:dels, snap:snapUpdates, setup:pendingSetup };
+  }
+  function cloudSchedule(){ if (!CLOUD.loaded) return; clearTimeout(CLOUD.timer); CLOUD.timer = setTimeout(cloudFlush, 250); }
+  // Leaving while something is still saving: ask first, so nothing is lost
+  window.addEventListener("beforeunload", function(e){ if (CLOUD.loaded && window.CLOUD_PENDING()){ cloudFlush(); e.preventDefault(); e.returnValue = ""; } });
+  async function cloudFlush(){
+    if (!CLOUD.loaded || !supabase) return;
+    if (CLOUD.busy){ cloudSchedule(); return; }
+    var d = cloudDiff();
+    if (!d.ups.length && !d.dels.length){
+      d.snap.forEach(applySnap);
+      if (d.setup.length) cloudSetStatus("error", "This change can't be saved yet: CloudWAV still has to set up the shared portal data. It will save automatically once that's done.");
+      return;
+    }
+    CLOUD.busy = true; cloudSetStatus("saving");
+    try {
+      for (var i = 0; i < d.ups.length; i += 200){
+        var r = await supabase.from("portal_records").upsert(d.ups.slice(i, i + 200), { onConflict:"collection,id" });
+        if (r.error) throw r.error;
+      }
+      var byCol = {}; d.dels.forEach(function(x){ (byCol[x[0]] = byCol[x[0]] || []).push(x[1]); });
+      for (var col in byCol){
+        var rd = await supabase.from("portal_records").delete().eq("collection", col).in("id", byCol[col]);
+        if (rd.error) throw rd.error;
+      }
+      d.snap.forEach(applySnap);
+      d.ups.forEach(function(u){ markInCloud(u.collection, u.id, true); }); d.dels.forEach(function(x){ markInCloud(x[0], x[1], false); });
+      CLOUD.lastSync = nowStamp(); cloudSetStatus("saved");
+    } catch(e){
+      if (CLOUD.unloading) return;
+      console.error("Cloud save failed:", e);
+      cloudSetStatus("error", (e.message || String(e)));
+      clearTimeout(CLOUD.timer); CLOUD.timer = setTimeout(cloudFlush, 5000);
+    } finally { CLOUD.busy = false; }
+  }
+  // For status checks (and automated tests): is anything still waiting to be saved?
+  window.CLOUD_PENDING = function(){ if (!CLOUD.loaded) return false; if (CLOUD.busy) return true; var d = cloudDiff(); return d.ups.length + d.dels.length > 0; };
+  function applySnap(x){ var s = CLOUD.snap[x[0]] || (CLOUD.snap[x[0]] = {}); if (x[2] == null) delete s[x[1]]; else s[x[1]] = x[2]; }
+
+  // Operator: put the real starter records (vendors, shop, prospects, levels...) into Supabase
+  // so they're shared, and see what's stored.
+  function renderCloudData(){
+    var box = document.getElementById("cloudDataContent");
+    if (!box || state.screen !== "operator-data") return;
+    if (!CLOUD.on){ box.innerHTML = '<div class="card card-pad"><p style="margin:0;">You\'re in demo mode, so data stays in this browser. Sign in to work with the shared Supabase data.</p></div>'; return; }
+    var rowsHtml = CLOUD_COLLECTIONS.filter(function(c){ return c.name !== "prefs"; }).map(function(c){
+      var n = (c.get() || []).length, stored = Object.keys(CLOUD.snap[c.name] || {}).length;
+      return '<tr><td>'+esc(c.name)+'</td><td>'+(c.mode === "merge" ? "Real starter data" : "Starts empty")+'</td><td style="text-align:right">'+n+'</td></tr>';
+    }).join("");
+    box.innerHTML = '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
+      + '<div class="map-stats"><div class="map-stat"><b>'+esc(CLOUD.status === "saved" ? "Up to date" : CLOUD.status)+'</b>sync</div><div class="map-stat"><b>'+esc(CLOUD.lastSync || "--")+'</b>last saved</div></div>'
+      + (CLOUD.error ? '<div class="login-msg bad" style="margin:0;">'+esc(CLOUD.error)+'</div>' : '')
+      + '<p class="field-note" style="margin:0;">Everything is stored in Supabase (table <code>portal_records</code>). Vendors, affiliate offers, shop products, partner levels, MSP prospects and landing pages start from the real records built into the portal; partner activity (deals, incentives, community, orders...) starts empty.</p>'
+      + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-cloud-seed>Save all starter records to Supabase</button><button type="button" class="btn secondary sm" data-cloud-refresh>Refresh from Supabase</button></div>'
+      + '<span class="field-note">Saving starter records once makes them shared and editable by vendors (their own profile). Safe to repeat -- it only adds what isn\'t stored yet.</span>'
+      + '<div class="table-scroll"><table><thead><tr><th>Collection</th><th>Starts with</th><th style="text-align:right">Records</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>'
+      + '</div>';
+  }
+  async function cloudSeed(quiet){
+    if (!isOp() || !CLOUD.loaded) return;
+    var rows = [];
+    CLOUD_COLLECTIONS.forEach(function(c){
+      if (c.mode !== "merge") return;
+      (c.get() || []).forEach(function(r){ var id = recId(c, r), acc = c.access(r); rows.push({ collection:c.name, id:id, data:c.toData ? c.toData(r) : r, readers:acc.readers, writers:acc.writers, is_public:!!acc.pub }); });
+    });
+    if (!rows.length) return;
+    cloudSetStatus("saving");
+    try {
+      for (var i = 0; i < rows.length; i += 200){
+        var r = await supabase.from("portal_records").upsert(rows.slice(i, i + 200), { onConflict:"collection,id", ignoreDuplicates:true });
+        if (r.error) throw r.error;
+      }
+      rows.forEach(function(x){ markInCloud(x.collection, x.id, true); });
+      CLOUD.lastSync = nowStamp(); cloudSetStatus("saved");
+      if (!quiet) toast("Starter records saved to Supabase (" + rows.length + ")");
+    } catch(e){ cloudSetStatus("error", e.message || String(e)); if (!quiet) toast("Couldn't save starter records: " + (e.message || e)); }
+    renderCloudData();
+  }
+  document.addEventListener("click", function(ev){
+    if (ev.target.closest("[data-cloud-seed]")){ cloudSeed(false); return; }
+    if (ev.target.closest("[data-cloud-refresh]")){ cloudRefresh().then(function(){ toast("Refreshed from Supabase"); }); return; }
+  });
+  window.addEventListener("focus", function(){ if (CLOUD.loaded) cloudRefreshSoon(); });
+  setInterval(function(){ if (CLOUD.loaded) cloudFlush(); }, 4000);
+
+  // Public landing pages (?lp=) are read straight from Supabase when it's reachable
+  async function cloudLoadPublicLanding(id){
+    if (!supabase) return false;
+    try {
+      var r = await supabase.from("portal_records").select("data").eq("collection", "landingPages").eq("id", id).maybeSingle();
+      if (r.error || !r.data) return false;
+      var d = r.data.data, i = landingPages.map(function(x){ return x.id; }).indexOf(d.id);
+      if (i > -1) landingPages[i] = d; else landingPages.push(d);
+      return true;
+    } catch(e){ return false; }
+  }
 
   // ===== HARDWARE OFFERINGS =====
   function renderHardwareOfferingsList(){
@@ -7988,13 +8305,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function savePartnerData(){
     try {
-      localStorage.setItem("partnerProjects", JSON.stringify(partnerProjects));
+      lsSet("partnerProjects", JSON.stringify(partnerProjects));
     } catch(e){}
   }
 
   function loadPartnerData(){
     try {
-      var saved = localStorage.getItem("partnerProjects");
+      var saved = lsGet("partnerProjects");
       if (saved) partnerProjects = JSON.parse(saved);
     } catch(e){}
   }
@@ -8201,14 +8518,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var COMMUNITY_STORAGE_KEY = "partnerWAV_communityData";
   function saveCommunityData(){
     try {
-      localStorage.setItem(COMMUNITY_STORAGE_KEY, JSON.stringify({
+      lsSet(COMMUNITY_STORAGE_KEY, JSON.stringify({
         threads: projectThreads, groups: groups, joinedGroups: state.joinedGroups
       }));
     } catch(e){ console.log("Could not save community data:", e); }
   }
   function loadCommunityData(){
     try {
-      var saved = localStorage.getItem(COMMUNITY_STORAGE_KEY);
+      var saved = lsGet(COMMUNITY_STORAGE_KEY);
       if (!saved) return;
       var data = JSON.parse(saved);
       if (Array.isArray(data.threads)){ projectThreads.length = 0; data.threads.forEach(function(t){ projectThreads.push(t); }); }
@@ -8220,12 +8537,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ===== RESOURCE PERSISTENCE (published library + review queue) =====
   var RESOURCE_STORAGE_KEY = "partnerWAV_resourceData";
   function saveResourceData(){
-    try { localStorage.setItem(RESOURCE_STORAGE_KEY, JSON.stringify({ resources: resources, pending: pendingResources })); }
+    try { lsSet(RESOURCE_STORAGE_KEY, JSON.stringify({ resources: resources, pending: pendingResources })); }
     catch(e){ console.log("Could not save resource data:", e); }
   }
   function loadResourceData(){
     try {
-      var data = JSON.parse(localStorage.getItem(RESOURCE_STORAGE_KEY) || "null");
+      var data = JSON.parse(lsGet(RESOURCE_STORAGE_KEY) || "null");
       if (!data) return;
       if (Array.isArray(data.resources)){ resources.length = 0; data.resources.forEach(function(r){ resources.push(r); }); }
       if (Array.isArray(data.pending)){ pendingResources.length = 0; data.pending.forEach(function(r){ pendingResources.push(r); }); }
@@ -9246,7 +9563,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (!state.collabInterests) state.collabInterests = [];
       if (state.collabInterests.indexOf(collabId) === -1){
         state.collabInterests.push(collabId);
-        try { localStorage.setItem(COLLAB_KEY, JSON.stringify(state.collabInterests)); } catch(err){}
+        try { lsSet(COLLAB_KEY, JSON.stringify(state.collabInterests)); } catch(err){}
         toast("Interest sent -- the posting partner will be notified");
         renderPartnerCollaborations();
       }
@@ -9644,10 +9961,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // ===== MSP PROSPECTING (Operator) =====
   var MSP_KEY = "partnerWAV_mspProspects", COLLAB_KEY = "partnerWAV_collabInterests";
-  function saveMspProspects(){ try { localStorage.setItem(MSP_KEY, JSON.stringify(mspProspects)); } catch(e){ console.log("Could not save prospects:", e); } }
+  function saveMspProspects(){ try { lsSet(MSP_KEY, JSON.stringify(mspProspects)); } catch(e){ console.log("Could not save prospects:", e); } }
   function loadMspProspects(){
     try {
-      var saved = JSON.parse(localStorage.getItem(MSP_KEY) || "null");
+      var saved = JSON.parse(lsGet(MSP_KEY) || "null");
       if (Array.isArray(saved)){
         // removed from the list: the 5 placeholder records and 3 poor-fit companies
         var RETIRED = ["msp-th-1","msp-th-2","msp-th-3","msp-th-4","msp-th-5","apl-tnds","apl-ata-it-th","apl-magmatechsolution"];
@@ -9663,7 +9980,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         });
         mspProspects.length = 0; saved.forEach(function(x){ mspProspects.push(x); }); fresh.forEach(function(x){ mspProspects.push(x); });
       }
-      var ci = JSON.parse(localStorage.getItem(COLLAB_KEY) || "null");
+      var ci = JSON.parse(lsGet(COLLAB_KEY) || "null");
       if (Array.isArray(ci)) state.collabInterests = ci;
     } catch(e){ console.log("Could not load prospects:", e); }
   }
@@ -9833,12 +10150,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // ===== MSP ENGAGEMENT TRACKER =====
   var ENG_KEY = "partnerWAV_mspEngagements", LP_KEY = "partnerWAV_landingPages";
-  function saveEngagements(){ try { localStorage.setItem(ENG_KEY, JSON.stringify(mspEngagements)); } catch(e){ console.log("Could not save engagements:", e); } }
-  function saveLandingPages(){ try { localStorage.setItem(LP_KEY, JSON.stringify(landingPages)); } catch(e){ console.log("Could not save landing pages:", e); } }
+  function saveEngagements(){ try { lsSet(ENG_KEY, JSON.stringify(mspEngagements)); } catch(e){ console.log("Could not save engagements:", e); } }
+  function saveLandingPages(){ try { lsSet(LP_KEY, JSON.stringify(landingPages)); } catch(e){ console.log("Could not save landing pages:", e); } }
   function loadEngagementsAndPages(){
     try {
-      var e1 = JSON.parse(localStorage.getItem(ENG_KEY) || "null"); if (Array.isArray(e1)){ mspEngagements.length = 0; e1.forEach(function(x){ mspEngagements.push(x); }); }
-      var l1 = JSON.parse(localStorage.getItem(LP_KEY) || "null"); if (Array.isArray(l1)){ landingPages.length = 0; l1.forEach(function(x){ landingPages.push(x); }); }
+      var e1 = JSON.parse(lsGet(ENG_KEY) || "null"); if (Array.isArray(e1)){ mspEngagements.length = 0; e1.forEach(function(x){ mspEngagements.push(x); }); }
+      var l1 = JSON.parse(lsGet(LP_KEY) || "null"); if (Array.isArray(l1)){ landingPages.length = 0; l1.forEach(function(x){ landingPages.push(x); }); }
     } catch(e){ console.log("Could not load engagements/pages:", e); }
   }
   function outcomeLabel(k){ for (var i=0;i<ENG_OUTCOMES.length;i++) if (ENG_OUTCOMES[i][0]===k) return ENG_OUTCOMES[i][1]; return k; }
@@ -10021,6 +10338,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var box = document.getElementById("publicLandingContent");
     if (!box || state.screen !== "public-landing") return;
     var lp = lpById(state.publicLpId);
+    if ((!lp || lp.status !== "published") && !state.publicLpTried && supabase){
+      state.publicLpTried = true;
+      box.innerHTML = '<div class="empty" style="padding:40px;text-align:center;">Loading…</div>';
+      cloudLoadPublicLanding(state.publicLpId).then(function(){ renderPublicLanding(); });
+      return;
+    }
     box.innerHTML = '<div class="lp-public-wrap">' + (lp && lp.status === "published" ? lpPageHtml(lp, false)
       : '<div class="empty" style="padding:40px;text-align:center;">This page isn\'t available. It may have been unpublished.</div>') + '</div>';
     if (lp) document.title = lp.title + " · PartnerWAV";
@@ -10429,6 +10752,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     setAuthLocked(false);
     updateAccountMenu();
     render();
+    cloudStart();
   }
 
   var sessionUserId = null;
@@ -10556,6 +10880,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // A few generated buttons still use inline onclick="..."; those need global access
   window.closeModal = closeModal;
   window.updateSOWItem = updateSOWItem;
+
+  // Every screen update also checks for data to save to Supabase (signed-in sessions)
+  var renderScreens = render;
+  render = function(){ renderScreens.apply(this, arguments); renderCloudData(); cloudSchedule(); };
 
   initAuth(); // after the sign-in settings above are defined
 

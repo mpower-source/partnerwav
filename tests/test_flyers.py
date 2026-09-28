@@ -143,7 +143,15 @@ for fail in (False, True):
         mock = FnMock({"vendor@intelsense.test": {"password": "vend-pass-123", "id": UID}}, {UID: {"role": "vendor", "entity_id": "intelsense", "display_name": "Intelsense Admin"}}, fail=fail)
         b, ctx, pg = open_page_supabase(p, mock)
         pg.fill("#loginEmail", "vendor@intelsense.test"); pg.fill("#loginPassword", "vend-pass-123"); pg.click("#loginSubmit"); pg.wait_for_timeout(900)
-        nav(pg, "vendor-incentives"); pg.click('[data-flyer-new="inc-1"]'); pg.wait_for_timeout(300)
+        # signed-in sessions start with no demo incentives: create the SPIF first
+        nav(pg, "vendor-incentives"); pg.locator('[data-goto-screen="vendor-incentive-editor"]:visible').first.click(); pg.wait_for_timeout(250)
+        pg.select_option("#incType", "spif"); pg.fill("#incTitle", "Q4 Sales Acceleration SPIF"); pg.fill("#incDesc", "Earn extra commissions based on monthly sales volume")
+        pg.click("[data-inc-add-tier]"); pg.click("[data-inc-add-tier]"); pg.wait_for_timeout(100)
+        for i, (th, bo) in enumerate([("$0-10k", "5%"), ("$10k-25k", "10%"), ("$25k+", "15%")]):
+            pg.locator("#spifTiersContainer .spifThreshold").nth(i).fill(th); pg.locator("#spifTiersContainer .spifBonus").nth(i).fill(bo)
+        pg.fill("#incValidFrom", "2026-10-01"); pg.fill("#incValidUntil", "2026-12-31"); pg.fill("#incClaimProcess", "Register deals in the portal; bonus paid on the tier reached.")
+        pg.click('#vendorIncentiveForm button[type=submit]'); pg.wait_for_timeout(300)
+        pg.locator("[data-flyer-new]").first.click(); pg.wait_for_timeout(300)
         pg.select_option("#flyTone", "friendly"); pg.fill("#flyNotes", "aimed at hotel IT teams"); pg.click("[data-fly-ai]"); pg.wait_for_timeout(1200)
         if not fail:
             body, auth = mock.fn_bodies[0]

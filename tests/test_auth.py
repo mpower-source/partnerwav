@@ -19,7 +19,15 @@ def login(pg, email, pw):
     pg.click("#loginSubmit"); pg.wait_for_timeout(700)
 
 with sync_playwright() as p:
-    mock = MockSupabase(USERS, PORTAL)
+    # Supabase data calls go to a real local Postgres with the portal's SQL (if installed), so saved edits truly persist
+    if os.path.exists("/usr/lib/postgresql/16/bin/initdb"):
+        from pgmock import start_pg, stop_pg, PgSupabase
+        mock = PgSupabase(USERS, PORTAL, start_pg())
+    else:
+        mock = MockSupabase(USERS, PORTAL)
+    if isinstance(mock, MockSupabase) and hasattr(mock, "dsn"):
+        # CloudWAV signs in once first: that shares the starter records (vendor profiles etc.) in Supabase
+        b0, ctx0, pg0 = open_page_supabase(p, mock); login(pg0, "ops@cloudwav.test", "op-pass-123"); pg0.wait_for_timeout(2500); b0.close()
     b, ctx, pg = open_page_supabase(p, mock)
 
     # --- locked until signed in
@@ -73,10 +81,13 @@ with sync_playwright() as p:
     ok("SHOULD NOT SAVE" not in vp.inner_text() and "South and Southeast Asia" in vp.inner_text(), "Cancel discards changes")
 
     # --- session persists on reload; edits persist
-    pg.reload(); pg.wait_for_timeout(1000)
+    for _ in range(40):
+        if not pg.evaluate("CLOUD_PENDING()"): break
+        pg.wait_for_timeout(150)
+    pg.reload(); pg.wait_for_timeout(1500)
     ok(pg.locator(".shell").is_visible() and visible_screen(pg) == ["scr-vendor-overview"], "Still signed in after reload")
     nav(pg, "vendor-network"); pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(200)
-    ok("South and Southeast Asia" in pg.inner_text("#vendorProfileContent"), "Profile edits persist after reload")
+    ok("South and Southeast Asia" in pg.inner_text("#vendorProfileContent"), "Profile edits persist after reload (saved in Supabase)")
 
     # --- sign out
     pg.click("#accountBtn"); pg.click("#signOutBtn"); pg.wait_for_timeout(1000)
@@ -87,6 +98,10 @@ with sync_playwright() as p:
     # --- partner / operator / affiliate
     login(pg, "partner@siamdigital.test", "part-pass-123")
     ok(visible_screen(pg) == ["scr-partner-overview"], "Partner lands on partner overview")
+    # signed-in data starts without the demo profiles: the partner creates theirs, saved under their account's company id
+    nav(pg, "partner-profile-editor"); pg.wait_for_timeout(300)
+    pg.fill("#mpCompanyName", "Siam Digital MSP"); pg.fill("#mpCountry", "Thailand"); pg.fill("#mpTagline", "Managed IT")
+    pg.click("#mpSaveBtn"); pg.wait_for_timeout(1500)
     nav(pg, "partner-network")
     mine = pg.locator("#networkGrid .program-card").filter(has_text="You")
     ok(mine.count() == 1 and "Siam Digital MSP" in mine.inner_text(), "Partner account linked to Siam Digital profile")
@@ -127,4 +142,6 @@ with sync_playwright() as p:
     pg.goto(URL); pg.wait_for_timeout(800)
     ok(pg.locator("#loginScreen").is_visible() and "Can't reach the sign-in service" in pg.inner_text("#loginError"), "Clear message when sign-in service is unreachable")
     b.close()
+try: stop_pg()
+except NameError: pass
 report()

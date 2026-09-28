@@ -11,4 +11,6 @@ for t in test_*.py; do
   [ "$f" -gt 0 ] && fail=1
   echo "$out" | grep -q 'JS ERRORS: \[\]' || fail=1
 done
+# Supabase SQL (row-level security + guard trigger) against a local PostgreSQL, if installed
+out=$(./test_sql.sh 2>&1 | tail -1); echo "$out"; echo "$out" | grep -q ' 0 failed' || echo "$out" | grep -q SKIP || fail=1
 exit $fail

@@ -27,7 +27,7 @@ def supabase_umd():
 errs = []; R = []
 def ok(c, m): R.append(("PASS " if c else "FAIL ") + m)
 
-IGNORED_ERRORS = ("Failed to load resource",)
+IGNORED_ERRORS = ("Failed to load resource", "realtime/v1/websocket")
 
 def _wire(pg):
     pg.on("pageerror", lambda e: errs.append(str(e)))
