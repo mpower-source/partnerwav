@@ -74,6 +74,11 @@ with sync_playwright() as p:
     # ----- back to operator
     pg.click("[data-preview-exit]"); pg.wait_for_timeout(300)
     ok(visible_screen(pg) == ["scr-operator-overview"] and pg.locator("#navOperator").is_visible() and not pg.locator("#previewBanner").is_visible(), "Back to Operator")
+    # operator: "Manage as" straight from a company's profile
+    nav(pg, "vendor-network"); pg.locator('[data-view-vendor="botnoi"]:visible').first.click(); pg.wait_for_timeout(300)
+    pg.click('[data-admin-manage="vendor"][data-admin-id="botnoi"]'); pg.wait_for_timeout(400)
+    ok(visible_screen(pg) == ["scr-vendor-overview"] and "Botnoi" in pg.inner_text("#previewBanner"), "'Manage as' on a vendor profile opens that vendor's workspace")
+    pg.click("[data-preview-exit]"); pg.wait_for_timeout(300)
     nav(pg, "operator-revenue")
     ok(visible_screen(pg) == ["scr-operator-revenue"], "Operator screens work again")
     b.close()

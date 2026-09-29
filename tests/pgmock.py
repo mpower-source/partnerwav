@@ -100,9 +100,25 @@ class PgSupabase(MockSupabase):
             return js({"statusCode": "403", "error": "Unauthorized", "message": msg}, 400)
         return js({"message": "not mocked"}, 404)
 
+    def handle_rpc(self, route, fn):
+        req = route.request
+        hdr = {"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*", "access-control-expose-headers": "*"}
+        if req.method == "OPTIONS": return route.fulfill(status=200, headers=hdr)
+        uid = self.uid_from_auth(req.headers.get("authorization", ""))
+        body = json.loads(req.post_data or "{}") or {}
+        if not fn.replace("_", "").isalnum(): return route.fulfill(status=404, headers=hdr, body="")
+        try:
+            args = ", ".join(f"{k} => %s" for k in body)
+            r = self.sql(f"select public.{fn}({args}) as v", tuple(body.values()), uid=uid)
+            return route.fulfill(status=200, content_type="application/json", body=json.dumps(r[0]["v"], default=str), headers=hdr)
+        except psycopg2.Error as e:
+            msg = (e.pgerror or str(e)).strip().split("\n")[0].replace("ERROR:  ", "")
+            return route.fulfill(status=404, content_type="application/json", body=json.dumps({"code": e.pgcode, "message": msg}), headers=hdr)
+
     def handle(self, route):
         req = route.request; u = urllib.parse.urlparse(req.url)
         if u.path.startswith("/storage/v1/object/"): return self.handle_storage(route)
+        if u.path.startswith("/rest/v1/rpc/"): return self.handle_rpc(route, u.path[len("/rest/v1/rpc/"):])
         if u.path != "/rest/v1/portal_records": return super().handle(route)
         hdr = {"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*", "access-control-expose-headers": "*"}
         if req.method == "OPTIONS": return route.fulfill(status=200, headers=hdr)
@@ -117,6 +133,9 @@ class PgSupabase(MockSupabase):
         wsql = (" where " + " and ".join(where)) if where else ""
         def ok_json(body, status=200): route.fulfill(status=status, content_type="application/json", body=json.dumps(body, default=str), headers=hdr)
         try:
+            if req.method == "HEAD":
+                n = self.sql(f"select count(*) as n from portal_records{wsql}", args, uid=uid)[0]["n"]
+                return route.fulfill(status=200, headers={**hdr, "content-range": f"0-{max(n-1,0)}/{n}"}, body="")
             if req.method == "GET":
                 cols = (qs.get("select") or ["*"])[0]
                 cols = ",".join(c for c in cols.split(",") if c in ("collection", "id", "data", "readers", "writers", "is_public", "updated_at")) or "*"

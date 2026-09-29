@@ -8,7 +8,7 @@ with sync_playwright() as p:
     ok(g.locator('[data-manage-affiliate="xero"]').count()==1,"Pre-enrolled Xero shows 'Enrolled ✓ · Manage →'")
 
     # Enroll takes you straight to the manage screen
-    btn=g.locator('[data-enroll-affiliate]').first; aid=btn.get_attribute("data-enroll-affiliate")
+    btn=g.locator('.program-card:not([data-offer="lovable"]) [data-enroll-affiliate]').first; aid=btn.get_attribute("data-enroll-affiliate")
     btn.click(); pg.wait_for_timeout(250)
     ok(visible_screen(pg)==["scr-affiliate-manage"],f"Enrolling {aid} opens the manage screen")
     m=pg.locator("#affiliateManageContent")

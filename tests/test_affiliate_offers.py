@@ -9,6 +9,7 @@ with sync_playwright() as p:
     txt = g.inner_text()
     ok(all(n in txt for n in ["Xero", "Zoho", "HubSpot", "FreshBooks", "Lovable"]), "Xero, Zoho, HubSpot, FreshBooks and Lovable tiles")
     ok("Northstar" not in txt and "MSP Learning Hub" not in txt, "Northstar PSA and MSP Learning Hub removed")
+    ok(g.locator(".program-card").first.get_attribute("data-offer") == "lovable", "Lovable (link + QR ready) is first")
     ok(g.locator("[data-aff-terms]").count() == 0 and "180 days" not in txt and "Impact" not in txt and "15% - 20%" not in txt, "Commission terms are NOT shown on the tiles")
     ok(g.locator("[data-edit-affiliate-offer]").count() == 0, "Partners can't edit offers")
     ok(all(g.locator(f'[data-direct-offer="{i}"] img.entity-logo-img').count() == 1 for i in ["xero", "zoho", "hubspot", "freshbooks"]), "All four have logos")
@@ -33,6 +34,8 @@ with sync_playwright() as p:
     hs = pg.locator('#affiliateMarketplaceGrid [data-direct-offer="hubspot"]')
     ok(hs.locator(".aff-link-input").input_value() == "https://hubspot.sjv.io/example-cloudwav" and hs.locator("[data-aff-qr] img").count() == 1, "HubSpot tile now shows the link and QR code")
     ok(hs.locator("[data-link-pending]").count() == 0, "'Coming soon' badge gone")
+    order = [c.get_attribute("data-offer") for c in pg.locator("#affiliateMarketplaceGrid .program-card").all()]
+    ok(order[:2] == ["lovable", "hubspot"], "Offers with a ready link move to the front: " + ",".join(order))
 
     # ----- vendor adds their own affiliate program
     role(pg, "vendor"); nav(pg, "affiliate-marketplace")
