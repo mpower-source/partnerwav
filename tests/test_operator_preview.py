@@ -74,6 +74,20 @@ with sync_playwright() as p:
     # ----- back to operator
     pg.click("[data-preview-exit]"); pg.wait_for_timeout(300)
     ok(visible_screen(pg) == ["scr-operator-overview"] and pg.locator("#navOperator").is_visible() and not pg.locator("#previewBanner").is_visible(), "Back to Operator")
+    # CloudWAV is also a partner: its own partner account under the same login
+    pg.click('.navlink[data-own-partner]'); pg.wait_for_timeout(600); settle(pg)
+    ok(visible_screen(pg) == ["scr-partner-overview"] and "CloudWAV Consulting" in pg.inner_text("#previewBanner") and "own partner account" in pg.inner_text("#previewBanner"), "'CloudWAV as Partner' opens CloudWAV Consulting's partner workspace")
+    pp = [r for r in db("partnerProfiles") if r["id"] == "cloudwav-consulting"]
+    en = [r for r in db("enrollments") if r["data"].get("partnerId") == "cloudwav-consulting"]
+    ok(len(pp) == 1 and pp[0]["data"]["name"] == "CloudWAV Consulting" and pp[0]["writers"] == ["partner:cloudwav-consulting"], "CloudWAV Consulting partner profile created")
+    ok(len(en) == 1 and en[0]["data"]["programId"] == "intelsense" and "20% first year + 5% renewal" in en[0]["data"]["notes"], "Enrolled in Intelsense with the 20% + 5% rate noted")
+    nav(pg, "partner-messages"); pg.select_option("#msgNewTo", "vendor:intelsense"); pg.wait_for_timeout(250)
+    pg.fill("#msgCompose", "CloudWAV here as a partner -- can we get a demo tenant?"); pg.click("#msgSendBtn"); pg.wait_for_timeout(400); settle(pg)
+    ok(any(r["data"]["from"] == "partner:cloudwav-consulting" for r in db("messages")), "CloudWAV can message as its own partner account")
+    pg.click("[data-preview-exit]"); pg.wait_for_timeout(300)
+    pg.click('.role-btn[data-role="partner"]'); pg.wait_for_timeout(250)
+    ok(pg.locator("#previewEntity option").first.inner_text().startswith("CloudWAV Consulting"), "CloudWAV Consulting is first in the partner picker")
+    pg.click("#previewCancel"); pg.wait_for_timeout(150)
     # operator: "Manage as" straight from a company's profile
     nav(pg, "vendor-network"); pg.locator('[data-view-vendor="botnoi"]:visible').first.click(); pg.wait_for_timeout(300)
     pg.click('[data-admin-manage="vendor"][data-admin-id="botnoi"]'); pg.wait_for_timeout(400)

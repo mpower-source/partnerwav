@@ -706,6 +706,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
       <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
       <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
+      <button class="navlink" data-own-partner><span class="ic">🤝</span>CloudWAV as Partner</button>
       <button class="navlink" data-screen="operator-agreements"><span class="ic">📝</span>Agreements</button>
       <button class="navlink" data-screen="operator-revenue"><span class="ic">💰</span>CloudWAV Revenue</button>
       <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
@@ -5313,7 +5314,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function sendDirectMessage(){
     var ta = document.getElementById("msgCompose"), text = ta && ta.value.trim();
     var convo = convoById(state.activeConversation), me = myMsgKey();
-    if (isPreviewing()){ toast("You're previewing as " + keyName(me) + " -- switch back to Operator to send messages, so nobody receives a message you didn't write as yourself"); return; }
+    if (isPreviewing() && !isOwnPartner()){ toast("You're previewing as " + keyName(me) + " -- switch back to Operator to send messages, so nobody receives a message you didn't write as yourself"); return; }
     if (!text || !convo || convo.participants.indexOf(me) < 0) return;
     directMessages.push({ id:"dm-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), convoId:convo.id, from:me, text:text, at:new Date().toISOString() });
     ta.value = "";
@@ -10731,6 +10732,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
     var navBtn = e.target.closest(".navlink");
+    if (navBtn && navBtn.hasAttribute("data-own-partner")){ openOwnPartner(); return; }
     if (navBtn){
       console.log("Nav button clicked, going to:", navBtn.getAttribute("data-screen"));
       state.screen = navBtn.getAttribute("data-screen");
@@ -12524,14 +12526,35 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // The sign-in stays the operator's (the database sees CloudWAV), so this is safe to leave on;
   // set OPERATOR_PREVIEW = false to turn it off once every company has its own login.
   var OPERATOR_PREVIEW = true;
-  var PREVIEW_KNOWN = { partner:["siam-digital","gulf-coast","portonics","riverside"], affiliate:["techbridge-aff","asian-connect-aff"] };
+  var PREVIEW_KNOWN = { partner:["cloudwav-consulting","siam-digital","gulf-coast","portonics","riverside"], affiliate:["techbridge-aff","asian-connect-aff"] };
+  // CloudWAV Consulting is also a partner (reselling Intelsense and others) -- same login as the operator.
+  var OWN_PARTNER_ID = "cloudwav-consulting", OWN_PARTNER_NAME = "CloudWAV Consulting";
+  function isOwnPartner(){ return canPreview() && state.role === "partner" && state.myProfileId === OWN_PARTNER_ID; }
+  function ensureOwnPartner(){
+    if (!partnerById(OWN_PARTNER_ID)){
+      partnerProfiles.push({ id:OWN_PARTNER_ID, name:OWN_PARTNER_NAME, init:"CW", country:"", tagline:"CloudWAV's own partner practice -- reselling and implementing the programs on PartnerWAV.",
+        specialties:[], credentials:[], services:[], pastProjects:[], logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" } });
+      saveVendorData();
+    }
+    // CloudWAV's Intelsense rate from the Intelsense pricing doc: 20% first year + 5% renewal on all four products
+    if (!enrollments.some(function(e){ return e.partnerId === OWN_PARTNER_ID && e.programId === "intelsense"; })){
+      enrollments.push({ id:"en-cloudwav-intelsense", partnerId:OWN_PARTNER_ID, partner:OWN_PARTNER_NAME, country:"", programId:"intelsense", tier:"Reseller", level:"Registered", status:"active", source:"vendor",
+        joined:todayIso(), revenue12m:0, dealsClosed:0, coursesBefore:0, lastActivity:todayIso(), history:[],
+        notes:"Commission override: 20% first year + 5% renewal on Unisense AI, Finsense AI, AI Hubspot and AlterCrew (effective 2026-10-01; standard partners get 15% + 5%)." });
+      saveLevels();
+    }
+    if (state.enrolled.indexOf("intelsense") < 0) state.enrolled.push("intelsense");
+  }
+  function openOwnPartner(){
+    if (!canPreview()){ if (DEMO_MODE){ ensureOwnPartner(); state.role = "partner"; state.myProfileId = OWN_PARTNER_ID; state.screen = "partner-overview"; render(); } return; }
+    ensureOwnPartner(); if (typeof cloudSchedule === "function") cloudSchedule(); startPreview("partner", OWN_PARTNER_ID); }
   function canPreview(){ return OPERATOR_PREVIEW && !!state.account && state.account.role === "operator"; }
   function isPreviewing(){ return canPreview() && state.role !== "operator"; }
   function previewChoices(role){
     var out = [], seen = {};
     var add = function(id, name){ if (!id || seen[id]) return; seen[id] = true; out.push({ id:id, name:name || id }); };
     if (role === "vendor") programs.forEach(function(p){ add(p.id, p.name); });
-    if (role === "partner"){ partnerProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
+    if (role === "partner"){ add("cloudwav-consulting", "CloudWAV Consulting (your partner account)"); partnerProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
       enrollments.forEach(function(e){ add(e.partnerId, e.partner); }); PREVIEW_KNOWN.partner.forEach(function(id){ add(id); }); }
     if (role === "affiliate"){ affiliateProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); }); PREVIEW_KNOWN.affiliate.forEach(function(id){ add(id); }); }
     return out;
@@ -12559,6 +12582,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function startPreview(role, id){
     if (!canPreview()) return;
+    if (role === "partner" && id === OWN_PARTNER_ID) ensureOwnPartner();
     state.role = role;
     if (role === "vendor") state.myVendorId = id;
     if (role === "partner") state.myProfileId = id;
@@ -12574,6 +12598,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!isPreviewing()){ el.hidden = true; el.innerHTML = ""; return; }
     var id = previewCurrentId(state.role), name = entityNameFor(state.role, id) || id || "no company picked";
     el.hidden = false;
+    if (isOwnPartner()){
+      el.innerHTML = '<span>🤝 Working as <b>'+esc(OWN_PARTNER_NAME)+'</b> -- CloudWAV\'s own partner account. Deals, leads and messages here are CloudWAV\'s as a partner.</span>'
+        + '<button type="button" class="btn primary sm" data-preview-exit style="margin-left:auto;">Back to Operator</button>';
+      return;
+    }
     el.innerHTML = '<span>👁 Previewing the <b>'+esc(ROLE_NAMES[state.role])+'</b> workspace as <b>'+esc(name)+'</b>. You\'re signed in as CloudWAV -- changes are saved as the operator; messages can\'t be sent from here.</span>'
       + '<button type="button" class="btn secondary sm" data-preview-switch="'+attr(state.role)+'">Switch company</button>'
       + '<button type="button" class="btn primary sm" data-preview-exit style="margin-left:0;">Back to Operator</button>';
