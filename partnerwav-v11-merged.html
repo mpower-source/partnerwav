@@ -1,6 +1,11 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}  .map-tiles-dark{ filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
 
 
+  #channelsContent a.btn, .ch-contact a.btn, #vendorAffiliateOffers a.btn{ text-decoration:none; }
+  #chText, #chTemplate, #chDirSearch{ width:100%; box-sizing:border-box; padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font:inherit; font-size:.9rem; }
+  #chText{ resize:vertical; line-height:1.45; }
+  .ch-contact{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .msg-thread-head .ch-contact{ margin:0 0 0 auto; }
   .aff-terms{ display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); }
   .aff-term{ display:flex; flex-direction:column; gap:1px; min-width:0; }
   .aff-term span{ font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); font-weight:600; }
@@ -650,6 +655,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="training"><span class="ic">🎓</span>Training</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+      <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
       <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
     </nav>
 
@@ -666,6 +672,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+      <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
       <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
     </nav>
 
@@ -678,6 +685,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+      <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
       <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
     </nav>
 
@@ -685,6 +693,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <div class="navgroup-label">Program Operator</div>
       <button class="navlink" data-screen="operator-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+      <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
       <button class="navlink" data-screen="operator-programs"><span class="ic">⚙️</span>Manage Programs</button>
       <button class="navlink" data-screen="operator-partners"><span class="ic">👨‍💼</span>Partners &amp; Tiers</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
@@ -1978,6 +1987,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="operatorAgreementsContent"></div>
       </section>
 
+      <section id="scr-channels" hidden>
+        <div class="section-head"><h2>WhatsApp &amp; LINE</h2><span class="hint">Reach your groups and contacts where they already are -- event updates, announcements and one-to-one chats</span></div>
+        <div style="height:14px"></div>
+        <div id="channelsContent"></div>
+      </section>
+
       <section id="scr-operator-revenue" hidden>
         <div class="section-head"><h2>CloudWAV Revenue</h2><span class="hint">Platform fees on approved deals, CloudWAV's share of software referral fees, and Shop sales</span></div>
         <div style="height:14px"></div>
@@ -3115,6 +3130,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-data":"Cloud Data",
     "operator-agreements":"Agreements",
     "operator-revenue":"CloudWAV Revenue",
+    "channels":"WhatsApp & LINE",
     "referrals":"Software Referrals",
     "referral-view":"Software Referral",
     "operator-shop-editor":"Shop Product",
@@ -3704,6 +3720,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderAgreements();
     renderOperatorAgreements();
     renderOperatorRevenue();
+    renderChannels();
     renderReferrals();
     renderReferralView();
     renderShop();
@@ -4072,7 +4089,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       '<button class="btn ghost sm" data-back-network>← Back to Partner Network</button>'
       + '<div class="card card-pad" style="margin-top:14px; display:flex; flex-direction:column; gap:16px;">'
         + '<div class="profile-header">'+logoOrFallback(p, 104)
-          + '<div><h2 style="font-size:1.3rem;">'+esc(p.name)+'</h2><div class="thread-meta">'+esc(p.country)+'</div></div>'
+          + '<div><h2 style="font-size:1.3rem;">'+esc(p.name)+'</h2><div class="thread-meta">'+esc(p.country)+'</div>'+(mine ? '' : contactButtonsHtml("partner:" + p.id))+'</div>'
           + (mine
               ? '<div style="margin-left:auto;display:flex;gap:8px;"><button class="btn primary sm" data-edit-partner-profile="'+esc(p.id)+'">Edit profile</button>'
                 + '<button class="btn ghost sm" data-delete-partner-profile="'+esc(p.id)+'">Delete</button></div>'
@@ -4427,12 +4444,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       '<button class="btn ghost sm" data-back-vendor-network>← Back to Vendor Network</button>'
       + '<div class="card card-pad" style="margin-top:14px; display:flex; flex-direction:column; gap:16px;">'
         + '<div class="profile-header">'+logoOrFallback(p, 104)
-          + '<div><h2 style="font-size:1.3rem;">'+esc(p.name)+'</h2><div class="thread-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div></div>'
+          + '<div><h2 style="font-size:1.3rem;">'+esc(p.name)+'</h2><div class="thread-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'+(mine ? '' : contactButtonsHtml("vendor:" + p.id))+'</div>'
           + (mine
               ? '<button class="btn primary sm" style="margin-left:auto;" data-edit-vendor-profile="'+esc(p.id)+'">Edit profile</button>'
               : '<button class="btn primary sm" style="margin-left:auto;" data-message-vendor="'+esc(p.name)+'">Message</button>')
             + '</div>'
         + '<p class="program-desc" style="font-size:.92rem;">'+esc(p.desc)+'</p>'
+        + vendorGroupsHtml(p)
         + (p.partnerProfileId ? '<div class="card-pad" style="background:var(--surface-2);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
             + '<span style="font-size:.86rem;">'+esc(p.name)+' is also listed as a <b>Partner</b> in the Partner Network.</span>'
             + '<button class="btn secondary sm" style="margin-left:auto;" data-view-profile="'+esc(p.partnerProfileId)+'">View Partner profile →</button>'
@@ -5130,7 +5148,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (msgs.length){ state.msgLastRead = state.msgLastRead || {}; var la = msgs[msgs.length - 1].at; if (state.msgLastRead[convo.id] !== la){ state.msgLastRead[convo.id] = la; lsSet("partnerWAV_msgLastRead", JSON.stringify(state.msgLastRead)); } }
     header.innerHTML = '<span class="p-avatar">'+esc(initials(keyName(other)))+'</span><div><div class="thread-title">'+esc(keyName(other))
       + (other.indexOf("partner:") === 0 ? "" : '<span class="badge neutral" style="margin-left:8px;">'+esc(keyRoleLabel(other))+'</span>')+'</div>'
-      + (convo.subject ? '<div class="thread-meta">Re: '+esc(convo.subject)+'</div>' : '')+'</div>';
+      + (convo.subject ? '<div class="thread-meta">Re: '+esc(convo.subject)+'</div>' : '')+'</div>'
+      + contactButtonsHtml(other);
     threadBody.innerHTML = msgs.length ? msgs.map(function(m){
       var mineMsg = m.from === me;
       return '<div class="msg-bubble-row'+(mineMsg?" mine":"")+'" data-msg="'+esc(m.id)+'"><div class="msg-bubble">'
@@ -7465,7 +7484,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<h2 style="margin:0;font-size:1.4rem;">'+esc(p.title)+'</h2>'
         + '<p style="margin:0;color:var(--ink-soft);">'+esc(p.summary)+'</p>'
         + '<div class="shop-price" style="font-size:1.4rem;">'+shopPrice(p)+'</div>'
-        + '<div class="cfg-actions" style="flex-wrap:wrap;">'+action+'</div>'
+        + '<div class="cfg-actions" style="flex-wrap:wrap;">'+action+'<button type="button" class="btn ghost sm" data-share-channels="'+attr("🎓 " + p.title + "\n" + (p.summary || "") + "\nOn the PartnerWAV Shop: " + location.href.split("?")[0])+'">Share on WhatsApp / LINE</button></div>'
         + (p.certifies ? '<div class="field-note">🎖 Completing this counts toward your partner level.</div>' : '')
         + (lines(p.learn).length ? '<div><div class="aff-section-title">What you\'ll learn</div><ul class="shop-list">'+list(p.learn)+'</ul></div>' : '')
         + (lines(p.outline).length ? '<div><div class="aff-section-title">What\'s inside</div><ol class="shop-list">'+list(p.outline)+'</ol></div>' : '')
@@ -7891,6 +7910,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ var rd = [r.partyKey]; if (r.kind === "partner" && r.programId) rd.push("vendor:" + r.programId); return { readers:rd, writers: r.kind === "partner" ? [r.partyKey] : [] }; } },
     { name:"softwareHouses", mode:"replace", get:function(){ return softwareHouses; }, set:function(a){ softwareHouses = a; },
       access:function(r){ return { readers: r.status === "active" ? EVERYONE : [], writers:[] }; } },
+    { name:"contactChannels", mode:"replace", get:function(){ return contactChannels; }, set:function(a){ contactChannels = a; },
+      access:function(r){ return { readers: r.show ? EVERYONE : [r.id], writers:[r.id] }; } },
+    { name:"socialGroups", mode:"replace", get:function(){ return socialGroups; }, set:function(a){ socialGroups = a; },
+      access:function(r){ return { readers: r.listed !== false ? EVERYONE : [r.ownerKey], writers:[r.ownerKey] }; } },
+    { name:"broadcasts", mode:"replace", get:function(){ return broadcasts; }, set:function(a){ broadcasts = a; },
+      access:function(r){ return { readers:[r.ownerKey], writers:[r.ownerKey] }; } },
     { name:"programFees", mode:"replace", get:function(){ return programFees; }, set:function(a){ programFees = a; },
       access:function(r){ return { readers:["vendor:" + r.id], writers:[] }; } },
     { name:"platformFees", mode:"replace", get:function(){ return platformFees; }, set:function(a){ platformFees = a; },
@@ -9016,6 +9041,268 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   window.PW_FEES = { forDeal:function(d){ return operatorFeeForDeal(d); }, forProgram:function(id){ return feeFor(id); }, recorded:function(){ return JSON.parse(JSON.stringify(platformFees)); } };
   document.addEventListener("change", function(ev){
     if (ev.target.id === "enSource"){ var e = enById(state.enViewId); if (e && state.role === "operator"){ e.source = ev.target.value; saveLevels(); toast(e.partner + (e.source === "cloudwav" ? ": sourced by CloudWAV -- sourced platform fee applies" : ": vendor's own partner -- base platform fee applies")); } }
+  });
+
+  // ===== WHATSAPP & LINE (all four roles) =====
+  // Reach people and groups where they already are. Everything here works through the official share and
+  // chat links of WhatsApp and LINE, so it needs no API keys and nothing is sent without the user pressing send
+  // in their own app. Contact details: contactChannels (one per user key). Groups: socialGroups. Log: broadcasts.
+  var CHANNELS_KEY = "partnerWAV_channels";
+  var GROUP_PLATFORMS = {
+    "whatsapp-group":   { label:"WhatsApp group",   app:"whatsapp", icon:"🟢" },
+    "whatsapp-channel": { label:"WhatsApp Channel", app:"whatsapp", icon:"🟢" },
+    "line-group":       { label:"LINE group",       app:"line",     icon:"💚" },
+    "line-openchat":    { label:"LINE OpenChat",    app:"line",     icon:"💚" },
+    "line-oa":          { label:"LINE Official Account", app:"line", icon:"💚" },
+    "telegram":         { label:"Telegram group",   app:"other",    icon:"✈️" }
+  };
+  var GROUP_PURPOSES = ["Meetup / events", "Marketing & announcements", "Partner community", "Customer support", "Training"];
+  var contactChannels = [
+    { id:"partner:siam-digital", whatsapp:"+66812345678", line:"siamdigital", preferred:"line", show:true },
+    { id:"vendor:intelsense", whatsapp:"+8801711000000", line:"@intelsense", preferred:"whatsapp", show:true }
+  ];
+  var socialGroups = [
+    { id:"grp-demo-bkk-meetup", ownerKey:"partner:siam-digital", platform:"whatsapp-group", name:"Bangkok MSP Meetup (demo)", purpose:"Meetup / events",
+      link:"https://chat.whatsapp.com/DEMO-INVITE-LINK", qr:"", members:"~300", city:"Bangkok", listed:true, desc:"Monthly meetup for MSPs and IT service providers -- event updates, speakers and job posts.", createdAt:"2026-09-01" },
+    { id:"grp-demo-intelsense-line", ownerKey:"vendor:intelsense", platform:"line-openchat", name:"Intelsense Partners TH (demo)", purpose:"Partner community",
+      link:"https://line.me/ti/g2/DEMO-OPENCHAT", qr:"", members:"~80", city:"Thailand", listed:true, desc:"Product news, training dates and deal support for Intelsense resellers.", createdAt:"2026-09-05" }
+  ];
+  var broadcasts = [];
+  function saveChannels(){ lsSet(CHANNELS_KEY, JSON.stringify({ contacts:contactChannels, groups:socialGroups, broadcasts:broadcasts })); }
+  function loadChannels(){
+    try { var d = JSON.parse(lsGet(CHANNELS_KEY) || "null"); if (!d) return;
+      if (Array.isArray(d.contacts)) contactChannels = d.contacts; if (Array.isArray(d.groups)) socialGroups = d.groups; if (Array.isArray(d.broadcasts)) broadcasts = d.broadcasts;
+    } catch(e){ console.log("Could not load channels:", e); }
+  }
+  function chMe(){ var k = myMsgKey(); return k && !/:$/.test(k) || k === "operator:" ? k : null; }
+  function contactFor(key){ return contactChannels.filter(function(c){ return c.id === key; })[0] || null; }
+  function waDigits(n){ return String(n || "").replace(/[^\d]/g, ""); }
+  function validWhatsApp(n){ return !n || (/^\+/.test(String(n).trim()) && waDigits(n).length >= 8 && waDigits(n).length <= 15); }
+  // Official link formats: wa.me click-to-chat and LINE URL schemes
+  function waChatUrl(n, text){ return "https://wa.me/" + waDigits(n) + (text ? "?text=" + encodeURIComponent(text) : ""); }
+  function waShareUrl(text){ return "https://wa.me/?text=" + encodeURIComponent(text || ""); }
+  function lineShareUrl(text){ return "https://line.me/R/share?text=" + encodeURIComponent(text || ""); }
+  function lineChatUrl(id){ id = String(id || "").trim(); return id.charAt(0) === "@" ? "https://line.me/R/ti/p/" + encodeURIComponent(id) : "https://line.me/R/ti/p/~" + encodeURIComponent(id); }
+  function safeLink(u){ return /^https:\/\//i.test(String(u || "")) ? u : ""; }
+  // Buttons to reach someone outside the portal (used on profiles and in Messages)
+  function contactButtonsHtml(key, text){
+    var c = contactFor(key); if (!c || !c.show || (!c.whatsapp && !c.line)) return "";
+    var b = [];
+    if (c.whatsapp) b.push('<a class="btn secondary sm ch-wa" href="'+attr(waChatUrl(c.whatsapp, text || ""))+'" target="_blank" rel="noopener noreferrer" data-contact-wa="'+attr(key)+'">WhatsApp</a>');
+    if (c.line) b.push('<a class="btn secondary sm ch-line" href="'+attr(lineChatUrl(c.line))+'" target="_blank" rel="noopener noreferrer" data-contact-line="'+attr(key)+'">LINE</a>');
+    return '<div class="ch-contact" data-contact-buttons="'+attr(key)+'"><span class="field-note">Also on:</span>'+b.join("")+(c.preferred ? '<span class="field-note">prefers '+esc(c.preferred === "line" ? "LINE" : "WhatsApp")+'</span>' : '')+'</div>';
+  }
+  function groupById(id){ return socialGroups.filter(function(g){ return g.id === id; })[0] || null; }
+  function myGroups(){ var k = chMe(); return socialGroups.filter(function(g){ return g.ownerKey === k; }); }
+  function channelTemplates(){
+    var me = chMe(), who = me ? keyName(me) : "our team";
+    var t = [
+      ["", "Start from a template…"],
+      ["event", "📅 Event update\nWhat: [event name]\nWhen: [date, time]\nWhere: [venue / online link]\nRSVP: [link]\nSee you there! -- " + who],
+      ["reminder", "⏰ Reminder: [event name] is tomorrow at [time], [venue]. Bring a friend -- reply here if you're coming. -- " + who],
+      ["news", "📣 News from " + who + "\n[One-line headline]\n[Two lines on why it matters]\nMore: [link]"],
+      ["intro", "Hi [name], this is " + who + " from the PartnerWAV network. I'd love to connect about [topic]. Is WhatsApp/LINE OK for a quick chat this week?"]
+    ];
+    if (state.role === "vendor") t.push(["incentive", "🎁 New partner incentive from " + who + "\n[Offer, e.g. $200 SPIF per closed deal]\nValid: [dates]\nDetails and how to claim: [link]"]);
+    if (state.role === "operator") t.push(["course", "🎓 New in the PartnerWAV Shop: [course name]\n[What you'll learn in one line]\nStart here: [link]"]);
+    return t;
+  }
+  function logBroadcast(groupId, app, target){
+    var me = chMe(); if (!me) return;
+    var text = (document.getElementById("chText") || {}).value || state.channelsDraft || "";
+    broadcasts.unshift({ id:"bc-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), ownerKey:me, groupId:groupId || "", target:target || "", app:app, text:text.slice(0, 1000), at:new Date().toISOString() });
+    if (broadcasts.length > 300) broadcasts.length = 300;
+    saveChannels(); cloudSchedule && cloudSchedule();
+  }
+
+  // Vendor profile: the vendor's listed WhatsApp / LINE groups ("Join our community")
+  function vendorGroupsHtml(p){
+    var list = socialGroups.filter(function(g){ return g.ownerKey === "vendor:" + p.id && g.listed !== false && safeLink(g.link); });
+    if (!list.length) return "";
+    return '<div class="ch-contact" data-vendor-groups="'+attr(p.id)+'"><span class="field-note">Join the community:</span>'
+      + list.map(function(g){ var pf = GROUP_PLATFORMS[g.platform] || {}; return '<a class="btn secondary sm" href="'+attr(g.link)+'" target="_blank" rel="noopener noreferrer">'+esc(pf.icon || "")+' '+esc(g.name)+'</a>'; }).join("") + '</div>';
+  }
+  function renderChannels(){
+    var box = document.getElementById("channelsContent");
+    if (!box || state.screen !== "channels") return;
+    var me = chMe(), tab = state.chTab || "share";
+    var tabs = [["share", "Share & broadcast"], ["groups", "My groups"], ["directory", "Group directory"], ["contact", "My WhatsApp & LINE"]].map(function(t){
+      return '<button type="button" class="filter-chip" data-ch-tab="'+t[0]+'" aria-pressed="'+(tab === t[0])+'">'+t[1]+'</button>'; }).join("");
+    var html = '<div class="filter-row" style="margin-bottom:14px;">'+tabs+'</div>';
+    if (!me){ box.innerHTML = html + '<div class="empty">Create your profile first -- then you can add your WhatsApp and LINE details and groups.</div>'; return; }
+    if (tab === "share") html += channelsShareHtml(me);
+    else if (tab === "groups") html += channelsGroupsHtml(me);
+    else if (tab === "directory") html += channelsDirectoryHtml(me);
+    else html += channelsContactHtml(me);
+    box.innerHTML = html;
+  }
+  function channelsShareHtml(me){
+    var draft = state.channelsDraft || "", groups = myGroups();
+    var people = contactChannels.filter(function(c){ return c.show && c.id !== me && (c.whatsapp || c.line); });
+    var groupRows = groups.length ? groups.map(function(g){
+      var pf = GROUP_PLATFORMS[g.platform] || GROUP_PLATFORMS["whatsapp-group"];
+      var shareBtn = pf.app === "whatsapp" ? '<a class="btn primary sm" href="'+attr(waShareUrl(draft))+'" target="_blank" rel="noopener noreferrer" data-ch-send="'+attr(g.id)+'" data-ch-app="whatsapp">Share in WhatsApp</a>'
+        : pf.app === "line" ? '<a class="btn primary sm" href="'+attr(lineShareUrl(draft))+'" target="_blank" rel="noopener noreferrer" data-ch-send="'+attr(g.id)+'" data-ch-app="line">Share in LINE</a>'
+        : '<button type="button" class="btn primary sm" data-ch-copy data-ch-send="'+attr(g.id)+'" data-ch-app="other">Copy message</button>';
+      var sent = broadcasts.filter(function(b){ return b.groupId === g.id && b.ownerKey === me; })[0];
+      return '<div class="deal-row" data-ch-group-row="'+attr(g.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(pf.icon)+' '+esc(g.name)
+        + '<span class="field-note" style="display:block;font-weight:400;">'+esc(pf.label)+(g.members ? ' · '+esc(g.members)+' members' : '')+(sent ? ' · last shared '+esc(timeAgo(sent.at)) : '')+'</span></span>'
+        + '<div class="cfg-actions">'+shareBtn+(safeLink(g.link) ? '<a class="btn ghost sm" href="'+attr(g.link)+'" target="_blank" rel="noopener noreferrer">Open group</a>' : '')+'</div></div>';
+    }).join("") : '<div class="empty" style="padding:12px;">No groups yet -- add your WhatsApp and LINE groups in <b>My groups</b>.</div>';
+    var hist = broadcasts.filter(function(b){ return b.ownerKey === me; }).slice(0, 8);
+    return '<div class="deal-layout"><div style="display:flex;flex-direction:column;gap:16px;">'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;">'
+        + '<div class="aff-section-title">Your message</div>'
+        + '<select id="chTemplate" aria-label="Template">'+channelTemplates().map(function(t){ return '<option value="'+attr(t[0])+'">'+esc(t[0] ? t[1].split("\n")[0].slice(0, 60) : t[1])+'</option>'; }).join("")+'</select>'
+        + '<textarea id="chText" rows="7" placeholder="Write an event update, announcement or note…">'+esc(draft)+'</textarea>'
+        + '<div class="cfg-actions"><span class="field-note" id="chCount">'+draft.length+' characters</span><button type="button" class="btn secondary sm" data-ch-copy>Copy</button>'
+          + '<a class="btn secondary sm" href="'+attr(waShareUrl(draft))+'" target="_blank" rel="noopener noreferrer" data-ch-send="" data-ch-app="whatsapp" id="chWaAny">WhatsApp…</a>'
+          + '<a class="btn secondary sm" href="'+attr(lineShareUrl(draft))+'" target="_blank" rel="noopener noreferrer" data-ch-send="" data-ch-app="line" id="chLineAny">LINE…</a></div>'
+        + '<p class="field-note" style="margin:0;">Sharing opens WhatsApp or LINE with your message filled in -- you pick the group or person and press send there. Nothing is sent automatically.</p>'
+      + '</div>'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:8px;"><div class="aff-section-title">Send to your groups</div>'+groupRows+'</div>'
+    + '</div><div style="display:flex;flex-direction:column;gap:16px;">'
+      + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:8px;"><div class="aff-section-title">Send to a person</div>'
+        + (people.length ? people.map(function(c){ return '<div class="deal-row" data-ch-person="'+attr(c.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(keyName(c.id))+'<span class="field-note" style="display:block;font-weight:400;">'+esc(keyRoleLabel(c.id))+'</span></span><div class="cfg-actions">'
+            + (c.whatsapp ? '<a class="btn secondary sm" href="'+attr(waChatUrl(c.whatsapp, draft))+'" target="_blank" rel="noopener noreferrer" data-ch-send="" data-ch-target="'+attr(c.id)+'" data-ch-app="whatsapp">WhatsApp</a>' : '')
+            + (c.line ? '<a class="btn secondary sm" href="'+attr(lineChatUrl(c.line))+'" target="_blank" rel="noopener noreferrer" data-ch-send="" data-ch-target="'+attr(c.id)+'" data-ch-app="line" data-ch-copyfirst>LINE</a>' : '')
+            + '</div></div>'; }).join("") + '<p class="field-note" style="margin:0;">WhatsApp opens a chat with your message filled in. LINE opens the chat and copies your message so you can paste it.</p>'
+          : '<div class="empty" style="padding:12px;">Nobody has shared their WhatsApp or LINE yet.</div>')
+      + '</div>'
+      + '<div class="card card-pad"><div class="aff-section-title">Recently shared</div>'+(hist.length ? '<ul class="shop-list">'+hist.map(function(b){ var g = groupById(b.groupId); return '<li>'+esc(b.app === "line" ? "LINE" : b.app === "whatsapp" ? "WhatsApp" : "Copied")+' · '+esc(g ? g.name : b.target ? keyName(b.target) : "chosen in app")+'<span class="field-note" style="display:block;">'+esc(timeAgo(b.at))+' -- '+esc(b.text.split("\n")[0].slice(0, 70))+'</span></li>'; }).join("")+'</ul>' : '<div class="field-note">Nothing yet.</div>')+'</div>'
+    + '</div></div>';
+  }
+  function groupFormHtml(g){
+    g = g || {};
+    return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;" id="chGroupForm" data-editing="'+attr(g.id || "")+'">'
+      + '<div class="aff-section-title">'+(g.id ? "Edit group" : "Add a group")+'</div>'
+      + '<div class="form-grid">'
+        + '<div class="field-row"><label for="gName">Group name</label><input id="gName" type="text" value="'+attr(g.name)+'" placeholder="e.g. Bangkok MSP Meetup"></div>'
+        + '<div class="field-row"><label for="gPlatform">Platform</label><select id="gPlatform">'+Object.keys(GROUP_PLATFORMS).map(function(k){ return '<option value="'+k+'"'+(g.platform === k ? " selected" : "")+'>'+esc(GROUP_PLATFORMS[k].label)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="gPurpose">Used for</label><select id="gPurpose">'+GROUP_PURPOSES.map(function(x){ return '<option'+(g.purpose === x ? " selected" : "")+'>'+esc(x)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="gMembers">Members (approx.)</label><input id="gMembers" type="text" value="'+attr(g.members)+'" placeholder="e.g. ~250"></div>'
+        + '<div class="field-row"><label for="gLink">Invite link</label><input id="gLink" type="url" value="'+attr(g.link)+'" placeholder="https://chat.whatsapp.com/… or https://line.me/…"></div>'
+        + '<div class="field-row"><label for="gCity">City / area</label><input id="gCity" type="text" value="'+attr(g.city)+'" placeholder="e.g. Bangkok"></div>'
+      + '</div>'
+      + '<div class="field-row"><label for="gDesc">What the group is about</label><textarea id="gDesc" rows="2">'+esc(g.desc || "")+'</textarea></div>'
+      + '<div class="field-row"><label>QR code (optional)</label><div class="logo-upload-row"><div class="logo-preview" id="gQrPreview">'+(g.qr ? '<img src="'+attr(g.qr)+'" alt="QR code">' : '<span class="logo-preview-empty">No QR</span>')+'</div>'
+        + '<div class="logo-upload-actions"><button type="button" class="btn secondary sm" data-g-qr-browse>'+(g.qr ? "Change…" : "Upload…")+'</button></div></div><input type="file" id="gQrFile" accept="image/png,image/jpeg,image/webp" hidden><input type="hidden" id="gQr" value="'+attr(g.qr)+'"></div>'
+      + '<label class="cfg-check"><input type="checkbox" id="gListed"'+(g.listed !== false ? " checked" : "")+'> List it in the Group directory so other PartnerWAV members can join</label>'
+      + '<div id="gError" class="login-msg bad" hidden></div>'
+      + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-g-save>Save group</button><button type="button" class="btn ghost sm" data-g-cancel>Cancel</button>'+(g.id ? '<button type="button" class="btn ghost sm" data-g-delete="'+attr(g.id)+'" style="margin-left:auto;">Remove</button>' : '')+'</div>'
+    + '</div>';
+  }
+  function groupCardHtml(g, own){
+    var pf = GROUP_PLATFORMS[g.platform] || GROUP_PLATFORMS["whatsapp-group"];
+    return '<div class="program-card" data-ch-group="'+attr(g.id)+'">'
+      + '<div class="program-top"><span class="program-name">'+esc(pf.icon)+' '+esc(g.name)+'</span><span class="badge neutral">'+esc(pf.label)+'</span></div>'
+      + '<div class="program-meta">'+esc(g.purpose || "")+(g.city ? ' · '+esc(g.city) : '')+(g.members ? ' · '+esc(g.members)+' members' : '')+(own ? '' : ' · by '+esc(keyName(g.ownerKey)))+'</div>'
+      + (g.desc ? '<p class="program-desc">'+esc(g.desc)+'</p>' : '')
+      + (g.qr ? '<div class="aff-qr"><img src="'+attr(g.qr)+'" alt="QR code to join '+attr(g.name)+'" width="84" height="84"><div class="field-note" style="margin:0;">Scan to join</div></div>' : '')
+      + '<div class="program-actions">'
+        + (safeLink(g.link) ? '<a class="btn '+(own ? "secondary" : "primary")+' sm" href="'+attr(g.link)+'" target="_blank" rel="noopener noreferrer">'+(own ? "Open" : "Join group")+'</a>' : '')
+        + (own ? '<button type="button" class="btn secondary sm" data-g-edit="'+attr(g.id)+'">Edit</button>'+(g.listed === false ? '<span class="badge neutral">Not listed</span>' : '<span class="badge good">Listed</span>') : '')
+      + '</div></div>';
+  }
+  function channelsGroupsHtml(me){
+    var editing = state.chGroupEdit, list = myGroups();
+    return (editing !== undefined && editing !== null ? groupFormHtml(editing ? groupById(editing) : null) : '<div><button type="button" class="btn primary sm" data-g-new>+ Add a WhatsApp or LINE group</button></div>')
+      + '<p class="field-note">Add the groups you run -- a Meetup group, your customer community, your partner group. Then share event updates and announcements to them from <b>Share &amp; broadcast</b>.</p>'
+      + '<div class="directory-grid" style="margin-top:8px;">'+(list.length ? list.map(function(g){ return groupCardHtml(g, true); }).join("") : '<div class="empty">No groups yet.</div>')+'</div>';
+  }
+  function channelsDirectoryHtml(me){
+    var q = (state.chDirQuery || "").toLowerCase(), app = state.chDirApp || "";
+    var list = socialGroups.filter(function(g){ return g.listed !== false && g.ownerKey !== me; })
+      .filter(function(g){ var pf = GROUP_PLATFORMS[g.platform] || {}; return (!app || pf.app === app) && (!q || (g.name + " " + (g.desc || "") + " " + (g.city || "") + " " + (g.purpose || "")).toLowerCase().indexOf(q) > -1); });
+    return '<div class="cfg-actions" style="flex-wrap:wrap;margin-bottom:10px;"><input type="search" id="chDirSearch" placeholder="Search groups, cities, topics…" value="'+attr(state.chDirQuery || "")+'" style="max-width:320px;">'
+      + ['', 'whatsapp', 'line'].map(function(a){ return '<button type="button" class="filter-chip" data-ch-dir-app="'+a+'" aria-pressed="'+(app === a)+'">'+(a === "" ? "All" : a === "line" ? "LINE" : "WhatsApp")+'</button>'; }).join("")+'</div>'
+      + '<div class="directory-grid" id="chDirectoryGrid">'+(list.length ? list.map(function(g){ return groupCardHtml(g, false); }).join("") : '<div class="empty">No groups listed yet.</div>')+'</div>';
+  }
+  function channelsContactHtml(me){
+    var c = contactFor(me) || {};
+    return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;max-width:640px;" id="chContactForm">'
+      + '<p class="field-note" style="margin:0;">Let partners, vendors and CloudWAV reach you directly. These show as WhatsApp and LINE buttons on your profile and in Messages.</p>'
+      + '<div class="form-grid">'
+        + '<div class="field-row"><label for="cWhatsApp">WhatsApp number (with country code)</label><input id="cWhatsApp" type="tel" value="'+attr(c.whatsapp)+'" placeholder="+66 81 234 5678"></div>'
+        + '<div class="field-row"><label for="cLine">LINE ID</label><input id="cLine" type="text" value="'+attr(c.line)+'" placeholder="your LINE ID, or @ID for an Official Account"></div>'
+        + '<div class="field-row"><label for="cPreferred">Preferred</label><select id="cPreferred"><option value="">No preference</option><option value="whatsapp"'+(c.preferred === "whatsapp" ? " selected" : "")+'>WhatsApp</option><option value="line"'+(c.preferred === "line" ? " selected" : "")+'>LINE</option></select></div>'
+      + '</div>'
+      + '<label class="cfg-check"><input type="checkbox" id="cShow"'+(c.show !== false ? " checked" : "")+'> Show these to signed-in PartnerWAV members</label>'
+      + '<div id="cError" class="login-msg bad" hidden></div>'
+      + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-c-save>Save</button>'+(c.id ? '<span class="field-note">Preview:</span>'+(contactButtonsHtml(me) || '<span class="field-note">hidden</span>') : '')+'</div>'
+    + '</div>';
+  }
+  function saveContact(){
+    var me = chMe(); if (!me) return;
+    var v = function(id){ return document.getElementById(id).value.trim(); }, err = document.getElementById("cError");
+    var wa = v("cWhatsApp"), line = v("cLine").replace(/^https?:\/\/\S+\/~?/i, "");
+    if (!validWhatsApp(wa)){ err.textContent = "Enter the WhatsApp number with its country code, e.g. +66 81 234 5678."; err.hidden = false; return; }
+    if (line && !/^@?[A-Za-z0-9._-]{2,40}$/.test(line)){ err.textContent = "A LINE ID is letters, numbers, dots, dashes or underscores (add @ for an Official Account)."; err.hidden = false; return; }
+    var rec = contactFor(me);
+    if (!rec){ rec = { id:me }; contactChannels.push(rec); }
+    rec.whatsapp = wa ? "+" + waDigits(wa) : ""; rec.line = line; rec.preferred = v("cPreferred"); rec.show = document.getElementById("cShow").checked; rec.updatedAt = nowStamp();
+    saveChannels(); toast("Saved -- your WhatsApp and LINE buttons are "+(rec.show ? "on your profile" : "hidden")); renderChannels();
+  }
+  function saveChannelGroup(){
+    var me = chMe(); if (!me) return;
+    var f = document.getElementById("chGroupForm"), v = function(id){ return document.getElementById(id).value.trim(); }, err = document.getElementById("gError");
+    var name = v("gName"), link = v("gLink"), platform = v("gPlatform");
+    var fail = function(m){ err.textContent = m; err.hidden = false; };
+    if (!name) return fail("Give the group a name.");
+    if (link && !/^https:\/\/\S+\.\S+/i.test(link)) return fail("The invite link needs to be a full https:// address.");
+    var okHost = GROUP_PLATFORMS[platform].app === "whatsapp" ? /(chat\.whatsapp\.com|wa\.me|whatsapp\.com)/i : GROUP_PLATFORMS[platform].app === "line" ? /(line\.me|lin\.ee)/i : /./;
+    if (link && !okHost.test(link)) return fail("That doesn't look like a " + GROUP_PLATFORMS[platform].label + " link -- check the platform or the link.");
+    var id = f.getAttribute("data-editing"), g = id ? groupById(id) : null;
+    if (g && g.ownerKey !== me && state.role !== "operator") return;
+    if (!g){ g = { id:"grp-" + Date.now().toString(36), ownerKey:me, createdAt:todayIso() }; socialGroups.push(g); }
+    g.name = name; g.platform = platform; g.purpose = v("gPurpose"); g.members = v("gMembers"); g.link = link; g.city = v("gCity"); g.desc = v("gDesc"); g.qr = v("gQr"); g.listed = document.getElementById("gListed").checked;
+    saveChannels(); state.chGroupEdit = null; toast("Group saved"); renderChannels();
+  }
+  document.addEventListener("click", function(ev){
+    var t = ev.target, b;
+    if ((b = t.closest("[data-ch-tab]"))){ state.chTab = b.getAttribute("data-ch-tab"); state.chGroupEdit = null; renderChannels(); return; }
+    if ((b = t.closest("[data-ch-dir-app]"))){ state.chDirApp = b.getAttribute("data-ch-dir-app"); renderChannels(); return; }
+    if (t.closest("[data-g-new]")){ state.chGroupEdit = ""; renderChannels(); return; }
+    if ((b = t.closest("[data-g-edit]"))){ state.chGroupEdit = b.getAttribute("data-g-edit"); renderChannels(); return; }
+    if (t.closest("[data-g-cancel]")){ state.chGroupEdit = null; renderChannels(); return; }
+    if (t.closest("[data-g-save]")){ saveChannelGroup(); return; }
+    if ((b = t.closest("[data-g-delete]"))){ var gid = b.getAttribute("data-g-delete"); socialGroups = socialGroups.filter(function(g){ return g.id !== gid; }); saveChannels(); state.chGroupEdit = null; toast("Group removed"); renderChannels(); return; }
+    if (t.closest("[data-g-qr-browse]")){ document.getElementById("gQrFile").click(); return; }
+    if (t.closest("[data-c-save]")){ saveContact(); return; }
+    if ((b = t.closest("[data-share-channels]"))){ state.channelsDraft = b.getAttribute("data-share-channels"); state.chTab = "share"; state.screen = "channels"; render(); window.scrollTo(0, 0); return; }
+    if ((b = t.closest("[data-ch-copy]"))){
+      try { navigator.clipboard.writeText((document.getElementById("chText") || {}).value || ""); } catch(e){}
+      toast("Message copied"); if (b.hasAttribute("data-ch-send")) logBroadcast(b.getAttribute("data-ch-send"), "copy"); return;
+    }
+    if ((b = t.closest("[data-ch-send]")) && b.tagName === "A"){
+      var chTxt = ((document.getElementById("chText") || {}).value || "").trim();
+      if (!chTxt && !b.hasAttribute("data-ch-target")){ ev.preventDefault(); toast("Write a message first"); return; }
+      if (b.hasAttribute("data-ch-copyfirst") && chTxt){ try { navigator.clipboard.writeText(chTxt); } catch(e){} toast("Message copied -- paste it in the LINE chat"); }
+      logBroadcast(b.getAttribute("data-ch-send"), b.getAttribute("data-ch-app"), b.getAttribute("data-ch-target"));
+      setTimeout(renderChannels, 50);
+    }
+  });
+  document.addEventListener("input", function(ev){
+    if (ev.target.id === "chText"){
+      state.channelsDraft = ev.target.value;
+      var c = document.getElementById("chCount"); if (c) c.textContent = ev.target.value.length + " characters";
+      // keep the share links in step with the text
+      document.querySelectorAll('[data-ch-app="whatsapp"][data-ch-send]').forEach(function(a){ var tgt = a.getAttribute("data-ch-target"), cc = tgt ? contactFor(tgt) : null; a.href = cc ? waChatUrl(cc.whatsapp, ev.target.value) : waShareUrl(ev.target.value); });
+      document.querySelectorAll('[data-ch-app="line"][data-ch-send]:not([data-ch-target])').forEach(function(a){ a.href = lineShareUrl(ev.target.value); });
+    }
+    if (ev.target.id === "chDirSearch"){ state.chDirQuery = ev.target.value; var pos = ev.target.selectionStart; renderChannels(); var s = document.getElementById("chDirSearch"); if (s){ s.focus(); try { s.setSelectionRange(pos, pos); } catch(e){} } }
+  });
+  document.addEventListener("change", function(ev){
+    if (ev.target.id === "chTemplate" && ev.target.value){
+      var tpl = channelTemplates().filter(function(x){ return x[0] === ev.target.value; })[0];
+      if (tpl){ state.channelsDraft = tpl[1]; renderChannels(); var ta = document.getElementById("chText"); if (ta) ta.focus(); }
+    }
+    if (ev.target.id === "gQrFile"){
+      var f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
+      if (!/^image\/(png|jpeg|webp)$/.test(f.type)){ toast("Please choose a PNG, JPG or WEBP image"); return; }
+      if (f.size > 1024 * 1024){ toast("That QR image is over 1 MB -- export a smaller one"); return; }
+      var r = new FileReader(); r.onload = function(){ document.getElementById("gQr").value = r.result; document.getElementById("gQrPreview").innerHTML = '<img src="'+attr(r.result)+'" alt="QR code">'; }; r.readAsDataURL(f);
+    }
   });
 
   // ===== HARDWARE OFFERINGS =====
@@ -11909,6 +12196,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadMessages();
   loadReferrals();
   loadProgramFees();
+  loadChannels();
   loadShop();
   loadLevels();
   loadEngagementsAndPages();

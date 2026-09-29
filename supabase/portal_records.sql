@@ -172,6 +172,14 @@ begin
     raise exception 'Only CloudWAV or the owning vendor can save affiliate offers';
   end if;
 
+  -- WhatsApp / LINE: your own contact details, groups and share log only
+  if new.collection = 'contactChannels' and new.id <> k then
+    raise exception 'You can only save your own WhatsApp and LINE details';
+  end if;
+  if new.collection in ('socialGroups', 'broadcasts') and (new.data ->> 'ownerKey') is distinct from k then
+    raise exception 'You can only save your own groups';
+  end if;
+
   -- nobody can post a message as someone else
   if new.collection = 'messages' and (new.data ->> 'from') is distinct from k then
     raise exception 'Messages must be sent as yourself';
