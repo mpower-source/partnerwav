@@ -11,6 +11,13 @@ with sync_playwright() as p:
     role(pg, "partner"); nav(pg, "vendor-network"); pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(300)
     v = pg.inner_text("#vendorProfileContent")
     ok("Unisense AI + AlterCrew Bundle SPIF" in v and "AI Hubspot Launch Co-Marketing Fund" not in v, "Partners see approved samples (marked Sample); the pending one waits for review")
+    # Botnoi sample: free AI credits for Thai SMEs, waiting for review, in baht
+    role(pg, "operator"); nav(pg, "operator-marketing-approvals"); pg.click('[data-tab="incentives"]'); pg.wait_for_timeout(300)
+    row = pg.locator("#incentiveApprovalsContent .deal-row").filter(has_text="Free BOTNOI AI Credits for Thai SMEs")
+    ok(row.count() == 1, "Botnoi's SME AI-credits incentive waits in Marketing Approvals")
+    row.locator("[data-review-incentive]").click(); pg.wait_for_timeout(300)
+    rv = pg.inner_text("#scr-operator-incentive-review")
+    ok("฿5,000" in rv and "600,000 points for BOTNOI Voice" in rv and "2026-09-15" in rv, "Review shows ฿5,000 credits, the two point options and the Sept 15 end date")
     # vendor overview: edit the full profile in place, tile stays
     role(pg, "vendor"); nav(pg, "vendor-overview")
     ok(pg.locator("#vendorOwnProgramGrid .program-card").count() == 5 and pg.locator("#vendorOverviewEditBtn").is_visible(), "Overview shows the Intelsense tile plus its 4 product tiles, with 'Edit full profile'")

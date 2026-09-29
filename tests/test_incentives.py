@@ -36,7 +36,7 @@ with sync_playwright() as p:
     role(pg, "operator"); nav(pg, "operator-marketing-approvals")
     pg.click('[data-tab="incentives"]'); pg.wait_for_timeout(200)
     content = pg.inner_text("#incentiveApprovalsContent")
-    ok("Needs review (3)" in content, "Incentives tab loads (no crash) with 3 needing review (incl. the AI Hubspot sample): " + content.split("\n")[0])
+    ok("Needs review (4)" in content, "Incentives tab loads (no crash) with 4 needing review (incl. the AI Hubspot and Botnoi samples): " + content.split("\n")[0])
     pg.click('#incentiveApprovalsContent [data-review-incentive]:right-of(:text("Q1 Co-marketing MDF"))') if False else pg.locator("#incentiveApprovalsContent .deal-row").filter(has_text="Q1 Co-marketing MDF").locator("[data-review-incentive]").click()
     pg.wait_for_timeout(250)
     ok(visible_screen(pg) == ["scr-operator-incentive-review"], "Review screen opens")
