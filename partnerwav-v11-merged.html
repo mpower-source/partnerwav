@@ -1046,10 +1046,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-vendor-overview" hidden>
         <div class="stat-row" id="vendorStatRow"></div>
         <div class="card card-pad">
-          <div class="section-head"><h2>My Program</h2><span class="hint">Edit it from My Program Listing</span></div>
+          <div class="section-head"><h2>My Program</h2><span class="hint">How partners see your tile</span></div>
           <div style="height:12px"></div>
           <div class="directory-grid" id="vendorOwnProgramGrid"></div>
+          <div class="cfg-actions" style="margin-top:12px;"><button type="button" class="btn primary sm" id="vendorOverviewEditBtn" data-vendor-overview-edit>Edit full profile</button><button type="button" class="btn secondary sm" id="vendorOverviewViewBtn" data-vendor-overview-view>View full profile</button></div>
         </div>
+        <div id="vendorOverviewEdit"></div>
         <div id="vendorFeeCard"></div>
       </section>
 
@@ -2850,19 +2852,45 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"yealink-eur", vendorId:"intelsense", name:"Yealink Europe", regions:["europe"], apiEndpoint:"https://api.yealink-eu.example.com", apiKey:"[configured]", hardware:["phones","video-endpoints"], shippingCountries:["Germany","UK","France","Sweden","Norway"], status:"active", archivedAt:null }
   ];
 
-  var hardwareOfferings = [
-    { id:"hw-offering-1", productIds:["intelsense-chat-prod","unisense-prod"], vendorId:"intelsense", hardwareName:"Yealink IP Phone T54W", distributorId:"yealink-apac", regions:["apac","meaf"], listPrice:450, costPrice:280, commissionRate:0.05, status:"active", archivedAt:null },
-    { id:"hw-offering-2", productIds:["intelsense-chat-prod","unisense-prod"], vendorId:"intelsense", hardwareName:"Yealink Video Phone SIP-T58A", distributorId:"yealink-eur", regions:["europe"], listPrice:680, costPrice:410, commissionRate:0.05, status:"active", archivedAt:null }
+  // Sample: Intelsense will soon offer Yealink phones alongside its software (shown as "Sample -- coming soon")
+  var SAMPLE_INTELSENSE_HARDWARE = [
+    { id:"hw-offering-1", sample:true, availability:"coming-soon", productIds:["intelsense-chat-prod","unisense-prod"], vendorId:"intelsense", hardwareName:"Yealink IP Phone T54W", distributorId:"yealink-apac", regions:["apac","meaf"], listPrice:450, costPrice:280, commissionRate:0.05, status:"active", archivedAt:null },
+    { id:"hw-offering-2", sample:true, availability:"coming-soon", productIds:["intelsense-chat-prod","unisense-prod"], vendorId:"intelsense", hardwareName:"Yealink Video Phone SIP-T58A", distributorId:"yealink-eur", regions:["europe"], listPrice:680, costPrice:410, commissionRate:0.05, status:"active", archivedAt:null }
   ];
+  var hardwareOfferings = SAMPLE_INTELSENSE_HARDWARE.map(function(x){ return JSON.parse(JSON.stringify(x)); });
 
   var hardwareOrders = [];
 
+  // Sample incentives for Intelsense, built around its four products (see project doc INTELSENSE_PRODUCT_PRICING.md:
+  // 15% first-year + 5% renewal commission; Unisense AI bundles with AlterCrew; Finsense AI is for financial services;
+  // AI Hubspot is an add-on for existing HubSpot customers). Shown in demo mode; the operator can add them to
+  // Supabase from Cloud Data -> "Add Intelsense sample incentives".
+  var SAMPLE_INTELSENSE_INCENTIVES = [
+    { id:"inc-intelsense-bundle-spif", sample:true, vendorId:"intelsense", title:"Unisense AI + AlterCrew Bundle SPIF", type:"spif",
+      description:"Close Unisense AI together with AlterCrew -- the recommended support-automation bundle -- and earn a cash bonus per bundle on top of your 15% commission on each product. Aimed at contact centers and support teams that want AI answering customers and AI scheduling the agents behind them.",
+      incentiveType:"per-deal", tiers:[ { threshold:"1st-2nd bundle this quarter", bonus:"$300 per bundle" }, { threshold:"3rd bundle and up this quarter", bonus:"$500 per bundle" } ],
+      validFrom:"2026-10-01", validUntil:"2026-12-31", eligibility:"reseller+", budgetCap:15000, payoutTiming:"With the next commission payout",
+      claimProcess:"Register the deal in PartnerWAV with both Unisense AI and AlterCrew selected. The bonus is earned once the customer has signed a 12-month order for both products and paid the first invoice. Intelsense confirms it in the monthly commission statement; no separate claim form.",
+      status:"approved", approvedBy:"CloudWAV", approvalDate:"2026-09-29", submittedDate:"2026-09-29", submittedBy:"intelsense", archivedAt:null },
+    { id:"inc-intelsense-finsense-pilot", sample:true, vendorId:"intelsense", title:"Finsense AI Banking Pilot Credits", type:"trial-credits",
+      description:"Offer banks, credit unions and fintechs a 60-day Finsense AI pilot on their own reporting and forecasting data, with $1,500 of credits covered by Intelsense. Pilots that convert to a paid subscription earn your normal 15% commission from day one of the contract.",
+      incentiveType:"trial-access", creditValue:1500, trialDays:60, qrCodeFormat:"dynamic",
+      validFrom:"2026-10-01", validUntil:"2027-03-31", eligibility:"reseller+", budgetCap:15000, payoutTiming:"Within 30 days of claim approval",
+      claimProcess:"Request a pilot code from the Intelsense page in PartnerWAV with the customer's name, the use case and a named sponsor at the bank. One pilot per customer; up to 10 pilots in total across all partners. Intelsense issues the credits within 3 business days.",
+      status:"approved", approvedBy:"CloudWAV", approvalDate:"2026-09-29", submittedDate:"2026-09-29", submittedBy:"intelsense", archivedAt:null },
+    { id:"inc-intelsense-hubspot-mdf", sample:true, vendorId:"intelsense", title:"AI Hubspot Launch Co-Marketing Fund", type:"mdf",
+      description:"Intelsense pays half of approved campaigns that reach companies already running HubSpot -- webinars, HubSpot user-group events and LinkedIn ads promoting AI Hubspot. Up to $2,000 per partner per quarter.",
+      incentiveType:"fixed-pool", amount:2000, period:"quarterly", mdfShare:50, mdfClaimDays:60,
+      validFrom:"2026-10-01", validUntil:"2027-06-30", eligibility:"all", budgetCap:20000, payoutTiming:"Within 30 days of claim approval",
+      claimProcess:"Send the campaign plan and budget through PartnerWAV before you spend. After the campaign, claim within 60 days with invoices and proof of performance (event photos and attendee list, or ad screenshots and results). Intelsense reimburses 50% of approved costs.",
+      status:"pending", submittedDate:"2026-09-29", submittedBy:"intelsense", archivedAt:null }
+  ];
   var vendorIncentiveOffers = [
     { id:"inc-1", vendorId:"intelsense", title:"Q4 Sales Acceleration SPIF", type:"spif", description:"Earn extra commissions based on monthly sales volume", incentiveType:"volume-based", tiers:[{threshold:"$0-10k",bonus:"5%"},{threshold:"$10k-25k",bonus:"10%"},{threshold:"$25k+",bonus:"15%"}], validFrom:"2026-10-01", validUntil:"2026-12-31", status:"approved", approvedBy:"operator-1", approvalDate:"2026-09-20", archivedAt:null },
     { id:"inc-2", vendorId:"intelsense", title:"MDF - Marketing Co-op Fund", type:"mdf", description:"Up to $5,000 in MDF per partner per quarter for joint marketing initiatives", incentiveType:"fixed-pool", amount:5000, period:"quarterly", status:"approved", approvedBy:"operator-1", approvalDate:"2026-09-15", archivedAt:null },
     { id:"inc-3", vendorId:"intelsense", title:"Free Trial Credits with QR Code", type:"trial-credits", description:"Generate shareable QR codes for 30-day free trial access", incentiveType:"trial-access", creditValue:500, trialDays:30, status:"approved", approvedBy:"operator-1", approvalDate:"2026-09-10", qrCodeFormat:"dynamic", archivedAt:null },
     { id:"inc-4", vendorId:"intelsense", title:"New Year Giveaway - Licenses", type:"giveaway", description:"Win annual licenses for top 3 partners by Q1 sales", incentiveType:"contest", prizes:["1 year Unisense license (1st place)","6 month Intelsense AI license (2nd place)","$2,000 credit (3rd place)"], winningCriteria:"Highest Q1 sales volume", status:"pending", submittedDate:"2026-09-22", submittedBy:"intelsense", archivedAt:null }
-  ];
+  ].concat(SAMPLE_INTELSENSE_INCENTIVES.map(function(x){ return JSON.parse(JSON.stringify(x)); }));
 
   var partnerProjects = [
     { id:"pp1", partnerId:"siam-digital", title:"AI automation for retail expansion", program:"Intelsense AI", region:"Thailand", type:"Implementation",
@@ -4129,6 +4157,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="stat-tile"><span class="stat-label">Deals awaiting review</span><span class="stat-value">'+pendingForMe.length+'</span><span class="stat-trend'+(pendingForMe.length?" down":"")+'">'+(pendingForMe.length?"Needs Program Operator review":"All clear")+'</span></div>';
     var grid = document.getElementById("vendorOwnProgramGrid");
     if (grid) grid.innerHTML = programCard(v, { hideAction:true });
+    var ed = document.getElementById("vendorOverviewEdit"), editing = state.vendorOverviewEdit === v.id;
+    if (ed && !(editing && ed.querySelector("#vendorOverviewEditForm"))) ed.innerHTML = editing ? vendorEditFormHtml(v, true) : "";
+    var eb = document.getElementById("vendorOverviewEditBtn"); if (eb) eb.hidden = editing;
   }
 
   function populateVendorListingForm(){
@@ -4263,7 +4294,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     } catch(e){ console.log("Could not load vendor profile edits:", e); }
   }
 
-  function vendorEditFormHtml(p){
+  function vendorEditFormHtml(p, inline){
     var soc = p.social || {};
     function field(id, label, val, type){
       return '<div><label for="'+id+'">'+label+'</label><input id="'+id+'" type="'+(type||"text")+'" value="'+esc(val||"").replace(/"/g,"&quot;")+'"></div>';
@@ -4276,11 +4307,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '</div>';
     }).join("");
     var actions = '<div class="vp-actions"><button type="button" class="btn primary sm" data-vendor-edit-save="'+esc(p.id)+'">Save</button>'
-      + '<button type="button" class="btn secondary sm" data-vendor-edit-cancel>Cancel</button></div>';
-    return '<button class="btn ghost sm" data-back-vendor-network>← Back to Vendor Network</button>'
-      + '<div class="card card-pad vp-form" style="margin-top:14px;">'
+      + '<button type="button" class="btn secondary sm" '+(inline ? 'data-vendor-overview-cancel' : 'data-vendor-edit-cancel')+'>Cancel</button></div>';
+    return (inline ? '' : '<button class="btn ghost sm" data-back-vendor-network>← Back to Vendor Network</button>')
+      + '<div class="card card-pad vp-form" style="margin-top:14px;" id="'+(inline ? "vendorOverviewEditForm" : "vendorProfileEditForm")+'">'
         + '<div class="profile-header">'+logoOrFallback(p, 72)
-          + '<div><h2 style="font-size:1.2rem;">Edit profile</h2><div class="thread-meta">Changes show on your Vendor Network profile once saved.</div></div>'
+          + '<div><h2 style="font-size:1.2rem;">Edit '+(inline ? 'full ' : '')+'profile</h2><div class="thread-meta">Changes show on your tile and your Vendor Network profile once saved.</div></div>'
           + '<div style="margin-left:auto;">'+actions+'</div></div>'
         + '<div id="vpError" class="login-msg bad" role="alert" hidden></div>'
         + logoFieldHtml("vp", p.logo, "Company logo")
@@ -4325,7 +4356,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     p.products = products;
     p._edited = true;
     saveVendorEdits();
-    state.vendorEditId = null;
+    state.vendorEditId = null; state.vendorOverviewEdit = null;
+    var ed2 = document.getElementById("vendorOverviewEdit"); if (ed2) ed2.innerHTML = "";
     toast("Profile saved");
     render();
   }
@@ -4464,7 +4496,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             var live = vendorIncentiveOffers.filter(function(o){ return o.vendorId === p.id && o.status === "approved" && !o.archivedAt && (!o.validUntil || o.validUntil >= today); });
             if (!live.length) return "";
             return '<div><div class="section-head"><h2 style="font-size:.9rem;">Current partner incentives</h2></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">'
-              + live.map(function(o){ return '<div class="deal-row"><span class="deal-row-name">'+esc(o.title)+'<span class="field-note" style="display:block;font-weight:400;">'+esc(o.description || "")+(o.validUntil ? ' · Until '+esc(o.validUntil) : '')+'</span></span><span class="badge accent">'+esc(INC_TYPE_LABEL[o.type] || o.type)+'</span>'
+              + live.map(function(o){ return '<div class="deal-row"><span class="deal-row-name">'+esc(o.title)+(o.sample ? ' <span class="badge neutral">Sample</span>' : '')+'<span class="field-note" style="display:block;font-weight:400;">'+esc(o.description || "")+(o.validUntil ? ' · Until '+esc(o.validUntil) : '')+'</span></span><span class="badge accent">'+esc(INC_TYPE_LABEL[o.type] || o.type)+'</span>'
                 + incentiveFlyers.filter(function(f){ return f.incentiveId === o.id && f.status === "approved" && !f.archivedAt; }).slice(0,1).map(function(f){ return '<button type="button" class="btn secondary sm" data-flyer-pdf="'+esc(f.id)+'">Download flyer</button>'; }).join("")
                 + '</div>'; }).join("")
               + '</div></div>';
@@ -7925,8 +7957,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { name:"projectReferrals", mode:"replace", get:function(){ return projectReferrals; }, set:function(a){ projectReferrals = a; },
       access:function(r){ return { readers:[r.referrerKey], writers:[r.referrerKey] }; } },
     // Per-user settings that used to live in the browser: joined groups, collaboration interest, enrolled affiliate tools
-    { name:"prefs", mode:"replace", get:function(){ var k = myKey(); return k ? [{ id:k, joinedGroups: state.joinedGroups || [], collabInterests: state.collabInterests || [], affiliateEnrolled: state.affiliateEnrolled || [], seenLevelNotices: state.seenLevelNotices || [], msgLastRead: state.msgLastRead || {} }] : []; },
-      set:function(a){ var k = myKey(), mine = a.filter(function(x){ return x.id === k; })[0]; if (mine){ state.joinedGroups = mine.joinedGroups || []; state.collabInterests = mine.collabInterests || []; state.affiliateEnrolled = mine.affiliateEnrolled || []; state.seenLevelNotices = mine.seenLevelNotices || []; state.msgLastRead = mine.msgLastRead || {}; } else { state.joinedGroups = []; state.collabInterests = []; state.affiliateEnrolled = []; state.seenLevelNotices = []; state.msgLastRead = {}; } },
+    { name:"prefs", mode:"replace", get:function(){ var k = myKey(); return k ? [{ id:k, joinedGroups: state.joinedGroups || [], collabInterests: state.collabInterests || [], affiliateEnrolled: state.affiliateEnrolled || [], seenLevelNotices: state.seenLevelNotices || [], msgLastRead: state.msgLastRead || {}, samplesAdded: state.samplesAdded || [] }] : []; },
+      set:function(a){ var k = myKey(), mine = a.filter(function(x){ return x.id === k; })[0]; if (mine){ state.joinedGroups = mine.joinedGroups || []; state.collabInterests = mine.collabInterests || []; state.affiliateEnrolled = mine.affiliateEnrolled || []; state.seenLevelNotices = mine.seenLevelNotices || []; state.msgLastRead = mine.msgLastRead || {}; state.samplesAdded = mine.samplesAdded || []; } else { state.joinedGroups = []; state.collabInterests = []; state.affiliateEnrolled = []; state.seenLevelNotices = []; state.msgLastRead = {}; } },
       access:function(r){ return { readers:[r.id], writers:[r.id] }; } }
   ];
   var shopAccess = [];
@@ -8024,6 +8056,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       // First time CloudWAV signs in: share the real starter records (vendors, shop, levels...) with everyone
       var missing = CLOUD_COLLECTIONS.some(function(c){ return c.mode === "merge" && !Object.keys(CLOUD.inCloud[c.name] || {}).length; });
       if (isOp() && missing) await cloudSeed(true);
+      if (isOp() && (state.samplesAdded || []).indexOf(SAMPLES_VERSION) < 0) addIntelsenseSamples();
     } catch(e){
       console.warn("Cloud load failed:", e);
       CLOUD.loadFails = (CLOUD.loadFails || 0) + 1;
@@ -8203,6 +8236,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function setupCheckHtml(list){
     return '<ul class="fly-checks" style="list-style:none;padding:0;margin:0;">' + list.map(function(x){ return '<li class="'+(x.ok ? "ok" : "warn")+'">'+(x.ok ? "✓ " : "✗ ")+esc(x.label)+(x.fix ? '<div class="field-note">'+esc(x.fix)+'</div>' : '')+'</li>'; }).join("") + '</ul>';
   }
+  // Intelsense samples (incentives + Yealink hardware). Added automatically the first time CloudWAV signs in with
+  // Supabase, and again any time from Cloud Data. Only adds what's missing -- edits and deletions are kept.
+  var SAMPLES_VERSION = "intelsense-1";
+  function addIntelsenseSamples(){
+    var n = 0;
+    SAMPLE_INTELSENSE_INCENTIVES.forEach(function(x){ if (!vendorIncentiveOffers.some(function(o){ return o.id === x.id; })){ vendorIncentiveOffers.push(JSON.parse(JSON.stringify(x))); n++; } });
+    SAMPLE_INTELSENSE_HARDWARE.forEach(function(x){ if (!hardwareOfferings.some(function(o){ return o.id === x.id; })){ hardwareOfferings.push(JSON.parse(JSON.stringify(x))); n++; } });
+    state.samplesAdded = (state.samplesAdded || []).concat(state.samplesAdded && state.samplesAdded.indexOf(SAMPLES_VERSION) > -1 ? [] : [SAMPLES_VERSION]);
+    saveIncentives(); if (typeof cloudSchedule === "function") cloudSchedule(); render();
+    return n;
+  }
   function showCloudDetails(){
     if (!CLOUD.on) return;
     var held = Object.keys(CLOUD.held).map(function(k){ return CLOUD.held[k]; });
@@ -8248,7 +8292,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="map-stats"><div class="map-stat"><b>'+esc(CLOUD.status === "saved" ? "Up to date" : CLOUD.status)+'</b>sync</div><div class="map-stat"><b>'+esc(CLOUD.lastSync || "--")+'</b>last saved</div></div>'
       + (CLOUD.status === "error" || Object.keys(CLOUD.held).length ? '<div class="login-msg bad" style="margin:0;">'+esc(cloudErrorHelp(CLOUD.error))+' <button type="button" class="btn secondary sm" data-cloud-details>Details</button></div>' : '')
       + '<p class="field-note" style="margin:0;">Everything is stored in Supabase (table <code>portal_records</code>). Vendors, affiliate offers, shop products, partner levels, MSP prospects and landing pages start from the real records built into the portal; partner activity (deals, incentives, community, orders...) starts empty.</p>'
-      + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-cloud-seed>Save all starter records to Supabase</button><button type="button" class="btn secondary sm" data-cloud-refresh>Refresh from Supabase</button><button type="button" class="btn secondary sm" data-cloud-check>Check setup</button></div>'
+      + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-cloud-seed>Save all starter records to Supabase</button><button type="button" class="btn secondary sm" data-cloud-refresh>Refresh from Supabase</button><button type="button" class="btn secondary sm" data-cloud-check>Check setup</button><button type="button" class="btn secondary sm" data-add-samples="intelsense">Add Intelsense samples</button></div>'
       + '<div id="cloudCheckResult">'+(state.cloudCheck ? setupCheckHtml(state.cloudCheck) : '')+'</div>'
       + '<span class="field-note">Saving starter records once makes them shared and editable by vendors (their own profile). Safe to repeat -- it only adds what isn\'t stored yet.</span>'
       + '<div class="table-scroll"><table><thead><tr><th>Collection</th><th>Starts with</th><th style="text-align:right">Records</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>'
@@ -8277,6 +8321,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("click", function(ev){
     if (ev.target.closest("[data-cloud-seed]")){ cloudSeed(false); return; }
     if (ev.target.closest("[data-cloud-details]")){ showCloudDetails(); return; }
+    if (ev.target.closest("[data-add-samples]")){ var n = addIntelsenseSamples(); toast(n ? "Added " + n + " Intelsense sample" + (n > 1 ? "s" : "") + " (incentives and Yealink hardware)" : "The Intelsense samples are already there"); return; }
     if (ev.target.closest("[data-cloud-check]")){ var cr = document.getElementById("cloudCheckResult"); if (cr) cr.innerHTML = '<div class="field-note">Checking…</div>'; cloudSetupCheck().then(function(list){ state.cloudCheck = list; renderCloudData(); }); return; }
     if (ev.target.closest("[data-cloud-refresh]")){ cloudRefresh().then(function(){ toast("Refreshed from Supabase"); }); return; }
   });
@@ -9405,7 +9450,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           return prod ? prod.name : "Unknown";
         }).join(", ");
         return '<tr style="border-bottom:1px solid var(--line);">'
-          + '<td style="padding:12px;"><strong>'+esc(offering.hardwareName)+'</strong></td>'
+          + '<td style="padding:12px;"><strong>'+esc(offering.hardwareName)+'</strong>'+(offering.availability === "coming-soon" ? ' <span class="badge warn">Sample · coming soon</span>' : '')+'</td>'
           + '<td style="padding:12px;">'+esc(productNames)+'</td>'
           + '<td style="padding:12px;">'+esc(distributorName)+'</td>'
           + '<td style="padding:12px;text-align:center;">$'+offering.listPrice.toFixed(2)+'</td>'
@@ -11044,11 +11089,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (editVendorProfileBtn){
       var evId = editVendorProfileBtn.getAttribute("data-edit-vendor-profile");
       if (state.role === "vendor" && state.myVendorId === evId){
-        state.viewingVendorId = evId; state.vendorEditId = evId; state.screen = "vendor-profile";
+        state.viewingVendorId = evId; state.vendorEditId = evId; state.vendorOverviewEdit = null; state.screen = "vendor-profile";
+        var ed4 = document.getElementById("vendorOverviewEdit"); if (ed4) ed4.innerHTML = "";
         render(); window.scrollTo(0, 0);
       }
       return;
     }
+    if (e.target.closest("[data-vendor-overview-edit]")){
+      state.vendorEditId = null; state.vendorOverviewEdit = state.myVendorId;
+      render(); var f = document.getElementById("vendorOverviewEditForm"); if (f) f.scrollIntoView({ block:"start", behavior:"smooth" });
+      return;
+    }
+    if (e.target.closest("[data-vendor-overview-cancel]")){ state.vendorOverviewEdit = null; var ed3 = document.getElementById("vendorOverviewEdit"); if (ed3) ed3.innerHTML = ""; render(); return; }
+    if (e.target.closest("[data-vendor-overview-view]")){ state.viewingVendorId = state.myVendorId; state.vendorEditId = null; state.screen = "vendor-profile"; render(); window.scrollTo(0, 0); return; }
     var vendorEditSaveBtn = e.target.closest("[data-vendor-edit-save]");
     if (vendorEditSaveBtn){ saveVendorProfileEdit(vendorEditSaveBtn.getAttribute("data-vendor-edit-save")); return; }
     var vendorEditCancelBtn = e.target.closest("[data-vendor-edit-cancel]");

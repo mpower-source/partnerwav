@@ -88,14 +88,15 @@ with sync_playwright() as p:
     ok(wait_saved(pg), "Vendor profile edit saved")
     ok([r for r in db("programs") if r["id"] == "intelsense"][0]["data"]["vertical"] == "Enterprise AI (Thailand)", "Vendor's own profile updated in Supabase")
     nav(pg, "vendor-incentives")
-    ok("No incentives yet" in pg.inner_text("#vendorIncentivesContent"), "Vendor starts with no (demo) incentives")
+    vi = pg.inner_text("#vendorIncentivesContent")
+    ok("Q4 Sales Acceleration SPIF" not in vi and "Unisense AI + AlterCrew Bundle SPIF" in vi, "Vendor sees no demo incentives -- only the Intelsense samples CloudWAV added on first sign-in")
     pg.locator('[data-goto-screen="vendor-incentive-editor"]:visible').first.click(); pg.wait_for_timeout(250)
     pg.select_option("#incType", "mdf"); pg.fill("#incTitle", "Q1 Co-marketing MDF"); pg.fill("#incDesc", "Co-funded events in Thailand")
     pg.fill("#mdfAmount", "3000"); pg.select_option("#mdfPeriod", "quarterly"); pg.fill("#incValidFrom", "2027-01-01"); pg.fill("#incValidUntil", "2027-03-31")
     pg.fill("#incClaimProcess", "Proposal first, claim with invoices."); pg.fill("#incMdfShare", "50"); pg.fill("#incMdfClaimDays", "45"); pg.fill("#incBudget", "30000")
     pg.click('#vendorIncentiveForm button[type=submit]'); pg.wait_for_timeout(300)
     ok(wait_saved(pg), "Incentive saved")
-    inc = db("incentives")
+    inc = [r for r in db("incentives") if not r["data"].get("sample")]
     ok(len(inc) == 1 and inc[0]["data"]["status"] == "pending" and inc[0]["readers"] == ["vendor:intelsense"], "Incentive stored as pending, visible only to the vendor (and CloudWAV)")
     b.close()
 

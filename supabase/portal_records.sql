@@ -286,3 +286,9 @@ create policy "portal-files delete" on storage.objects
 --    Cloud Data -> "Save all starter records to Supabase", this should list the collections.
 -- ---------------------------------------------------------------------------
 -- select collection, count(*) from public.portal_records group by 1 order by 1;
+
+-- ---------------------------------------------------------------------------
+-- 9. Tell the Supabase API about the new table and functions right away
+--    (otherwise the portal can say "Could not find the table 'public.portal_records' in the schema cache")
+-- ---------------------------------------------------------------------------
+notify pgrst, 'reload schema';
