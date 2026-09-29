@@ -3,7 +3,7 @@ with sync_playwright() as p:
     b,pg=open_page(p)
     nav(pg,"affiliate-marketplace")
     g=pg.locator("#affiliateMarketplaceGrid")
-    ok(g.locator(".program-card").count()==4,"4 programs shown (incl. Lovable)")
+    ok(g.locator(".program-card").count()==5,"5 programs shown (Xero, Zoho, HubSpot, FreshBooks, Lovable)")
     ok(g.locator(".aff-panel").count()==0,"Tiles stay compact (no link/services panel on the tile)")
     ok(g.locator('[data-manage-affiliate="xero"]').count()==1,"Pre-enrolled Xero shows 'Enrolled ✓ · Manage →'")
 
