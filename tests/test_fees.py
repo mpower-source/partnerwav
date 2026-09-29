@@ -87,8 +87,16 @@ with sync_playwright() as p:
 
     # ===== Vendor sees what they owe; partner doesn't see the fee
     role(pg, "vendor"); nav(pg, "vendor-overview")
+    ok("platform fee" not in pg.inner_text("#scr-vendor-overview").lower(), "Not on the vendor Overview any more")
+    nav(pg, "partner-agreements"); pg.wait_for_timeout(200)
     vc = pg.inner_text("#vendorFeeCard")
-    ok("CLOUDWAV PLATFORM FEE" in vc.upper() and "Bangkok Bank branch rollout" in vc and "$2,520" in vc and "never reduces" in vc, "Vendor overview shows the platform fee on their deals")
+    ok("CLOUDWAV PLATFORM FEE" in vc.upper() and "Vendor Program Agreement" in vc and "Bangkok Bank branch rollout" in vc and "$2,520" in vc and "never reduces" in vc, "Vendor sees the platform fee under Agreements, as part of the Vendor Program Agreement")
+    pg.locator('[data-agr-row="agr-vendor-intelsense"] [data-agr-view]').click(); pg.wait_for_timeout(250)
+    ok(pg.locator(".modal [data-agr-fee-terms]").count() == 1 and "Partners CloudWAV brought in" in pg.inner_text(".modal"), "The fee is in the vendor agreement's details")
+    pg.click(".modal .modal-close"); pg.wait_for_timeout(150)
+    pg.locator('[data-agr-row="agr-partner-siam-digital-intelsense"] [data-agr-view]').click(); pg.wait_for_timeout(250)
+    ok(pg.locator(".modal [data-agr-fee-terms]").count() == 0, "...but not in a partner's agreement for the same program")
+    pg.click(".modal .modal-close"); pg.wait_for_timeout(150)
     role(pg, "partner"); nav(pg, "partner-commissions")
     pg.locator("#myDealsList [data-view-deal]").first.click(); pg.wait_for_timeout(250)
     ok("platform fee" not in pg.inner_text("body").lower() and "2,520" not in pg.inner_text("body"), "Partners never see CloudWAV's fee")

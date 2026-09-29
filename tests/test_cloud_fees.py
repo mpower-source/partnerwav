@@ -58,7 +58,7 @@ with sync_playwright() as p:
     ok(db("platformFees")[0]["data"]["status"] == "invoiced", "Status change saved")
     b.close()
 
-    b, ctx, pg = session(p, "vendor@intelsense.test"); nav(pg, "vendor-overview"); pg.wait_for_timeout(300)
+    b, ctx, pg = session(p, "vendor@intelsense.test"); nav(pg, "partner-agreements"); pg.wait_for_timeout(300)
     vc = pg.inner_text("#vendorFeeCard")
     ok("Chiang Mai hospital voice bot" in vc and "$2,000" in vc and "2.5%" in vc, "Vendor sees the fee and their rate")
     b.close()

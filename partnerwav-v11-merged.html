@@ -887,6 +887,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div class="section-head"><h2>Agreements</h2><span class="hint">Your agreements with CloudWAV and their signature status</span></div>
         <div style="height:8px"></div>
         <div id="agreementsContent"></div>
+        <div id="vendorFeeCard"></div>
       </section>
 
       <!-- ===== PARTNER: COMMISSIONS ===== -->
@@ -1054,7 +1055,6 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <div class="cfg-actions" style="margin-top:12px;"><button type="button" class="btn primary sm" id="vendorOverviewEditBtn" data-vendor-overview-edit>Edit full profile</button><button type="button" class="btn secondary sm" id="vendorOverviewViewBtn" data-vendor-overview-view>View full profile</button></div>
         </div>
         <div id="vendorOverviewEdit"></div>
-        <div id="vendorFeeCard"></div>
       </section>
 
       <!-- ===== VENDOR: MY PROGRAM LISTING ===== -->
@@ -5624,9 +5624,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + signerRows + footer;
   }
 
-  function showAgreementDetail(id){
+  function showAgreementDetail(id, kind){
     var p = programById(id);
     if (!p) return;
+    // the platform fee is a term between CloudWAV and the vendor -- never shown on partner agreements
+    var showFee = kind !== "partner" && (state.role === "operator" || (state.role === "vendor" && state.myVendorId === p.id));
+    var fee = showFee ? feeFor(p.id) : null;
+    var feeHtml = fee ? '<div class="section-head" style="margin-top:4px;"><h2 style="font-size:.9rem;">CloudWAV platform fee</h2></div>'
+      + (fee.enabled ? '<div class="tier-line"><span>Vendor\'s own partners</span><b>'+esc(feeRateText(fee, false))+'</b></div><div class="tier-line"><span>Partners CloudWAV brought in</span><b>'+esc(feeRateText(fee, true))+'</b></div>'
+          + '<div class="field-note" data-agr-fee-terms>Paid by the vendor on top of partner commission -- it never reduces what partners earn. Invoiced '+(fee.basis === "contract" ? "when CloudWAV approves the deal, on the full deal value" : "as the vendor collects from the customer")+'.'+(fee.configured ? '' : ' Default rates until confirmed in Configure program.')+'</div>'
+        : '<div class="field-note">No platform fee on this program.</div>') : '';
     var tiersHtml = p.tiers.map(function(t){
       return '<div class="tier-line"><span>'+esc(t.tier)+' <span style="color:var(--ink-faint)">· '+esc(t.base)+'</span></span><b>'+esc(t.rate)+'</b></div>';
     }).join("");
@@ -5634,6 +5641,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       '<div class="modal-head"><div><div class="eyebrow" style="margin-bottom:6px;">'+relBadges(p.relationships)+'</div><h2>'+esc(p.name)+' -- '+esc(p.agreement.type)+'</h2></div><button class="modal-close" aria-label="Close">×</button></div>'
       + '<div class="tier-line"><span>Agreement status</span><b>'+statusPill(p.agreement.status)+'</b></div>'
       + '<div style="display:flex;flex-direction:column;gap:8px;">'+tiersHtml+'</div>'
+      + feeHtml
       + '<div class="section-head" style="margin-top:4px;"><h2 style="font-size:.9rem;">Send for e-signature</h2></div>'
       + '<div style="display:flex;flex-direction:column;gap:8px;">'+esignDetailHtml(p)+'</div>'
       + '<div class="modal-actions"><button class="btn secondary" id="modalClose2">Close</button></div>'
@@ -8804,7 +8812,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function viewAgreement(id){
     var a = agrById(id); if (!a) return;
     if (a.kind === "referral"){ showAgreementDocument(houseById(a.houseId)); return; }
-    if (a.programId && programById(a.programId)){ showAgreementDetail(a.programId); return; }
+    if (a.programId && programById(a.programId)){ showAgreementDetail(a.programId, a.kind); return; }
   }
 
   // ----- software referrals: partner side -----
@@ -9191,7 +9199,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var f = feeFor(state.myVendorId), mine = platformFees.filter(function(x){ return x.programId === state.myVendorId; });
     var open = mine.filter(function(x){ return x.status === "due" || x.status === "invoiced"; });
     box.innerHTML = '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">'
-      + '<div class="section-head"><h2 style="font-size:.95rem;">CloudWAV platform fee</h2><span class="hint">'+(f.enabled ? esc(feeRateText(f, false))+' on approved deals · '+esc(feeRateText(f, true))+' when CloudWAV brought the partner' : 'No platform fee on your program')+'</span></div>'
+      + '<div class="section-head"><h2 style="font-size:.95rem;">CloudWAV platform fee <span class="field-note" style="font-weight:400;">· part of your Vendor Program Agreement</span></h2><span class="hint">'+(f.enabled ? esc(feeRateText(f, false))+' on approved deals · '+esc(feeRateText(f, true))+' when CloudWAV brought the partner' : 'No platform fee on your program')+'</span></div>'
       + '<p class="field-note" style="margin:0;">Paid by you on top of partner commission -- it never reduces what your partners earn. '+(f.basis === "contract" ? "Invoiced when CloudWAV approves the deal, on the full deal value." : "Invoiced as you collect from the customer.")+'</p>'
       + (mine.length ? '<div class="table-scroll"><table class="ref-fee-table"><thead><tr><th>Deal</th><th>Partner</th><th style="text-align:right">Deal value</th><th style="text-align:right">Fee</th><th>Status</th></tr></thead><tbody>'
           + mine.map(function(x){ return '<tr><td>'+esc(x.deal)+'</td><td>'+esc(x.partner)+'</td><td class="mono-num" style="text-align:right">'+esc(x.value)+'</td><td class="mono-num" style="text-align:right">'+esc(fmtAmount(x.sym, x.amount))+'</td><td>'+feeStatusBadge(x.status)+'</td></tr>'; }).join("")
