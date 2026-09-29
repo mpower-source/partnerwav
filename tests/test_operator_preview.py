@@ -60,7 +60,7 @@ with sync_playwright() as p:
     nav(pg, "partner-profile-editor"); pg.wait_for_timeout(300)
     pg.fill("#mpCompanyName", "Siam Digital MSP"); pg.fill("#mpCountry", "Thailand"); pg.fill("#mpTagline", "Managed IT for Thai SMEs")
     pg.click("#mpSaveBtn"); pg.wait_for_timeout(400); settle(pg)
-    pp = db("partnerProfiles")
+    pp = [r for r in db("partnerProfiles") if r["id"] != "cloudwav-consulting"]
     ok(len(pp) == 1 and pp[0]["id"] == "siam-digital" and pp[0]["writers"] == ["partner:siam-digital"], "Partner profile created for siam-digital (the real partner can edit it later)")
     # messages can't be sent as the partner
     nav(pg, "partner-messages"); pg.select_option("#msgNewTo", "operator:"); pg.wait_for_timeout(250)

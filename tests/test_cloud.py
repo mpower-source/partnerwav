@@ -118,7 +118,7 @@ with sync_playwright() as p:
     pg.fill("#mpCompanyName", "Siam Digital MSP"); pg.fill("#mpCountry", "Thailand"); pg.fill("#mpTagline", "Managed IT for Thai SMBs")
     pg.click("#mpSaveBtn"); pg.wait_for_timeout(300)
     ok(wait_saved(pg), "Profile saved")
-    pr = db("partnerProfiles")
+    pr = [r for r in db("partnerProfiles") if r["id"] != "cloudwav-consulting"]
     ok(len(pr) == 1 and pr[0]["id"] == "siam-digital" and pr[0]["writers"] == ["partner:siam-digital"], "Partner profile stored under their own id")
     nav(pg, "shop"); pg.click('[data-shop-card="shop-smm-101"] [data-shop-view]'); pg.wait_for_timeout(250)
     pg.click("[data-shop-buy]"); pg.wait_for_timeout(300)

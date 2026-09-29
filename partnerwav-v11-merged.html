@@ -669,13 +669,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="vendor-incentives"><span class="ic">🎁</span>Partner Incentives</button>
       <button class="navlink" data-screen="vendor-partners"><span class="ic">👨‍💼</span>Partners in My Program</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
-      <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
       <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
       <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
       <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
+      <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
     </nav>
 
     <nav class="navgroup" id="navAffiliate" hidden>
@@ -4261,7 +4261,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!row) return;
     var v = programById(state.myVendorId);
     if (!v){ row.innerHTML = ""; return; }
-    var myPartners = partnerRows.filter(function(r){ return r.program === v.name; });
+    var myPartners = vendorPartnerList(v).filter(function(r){ return r.status === "active"; });
     var pendingForMe = state.approvals.filter(function(a){ return a.program === v.name && (a.status || "pending") === "pending"; });
     row.innerHTML =
       '<div class="stat-tile"><span class="stat-label">Partners reselling you</span><span class="stat-value">'+myPartners.length+'</span><span class="stat-trend">Across all tiers</span></div>'
@@ -4305,11 +4305,18 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     render();
   }
 
+  // Partners in a vendor's program come from the enrollments CloudWAV manages (Partners & Tiers)
+  function vendorPartnerList(v){
+    return enrollments.filter(function(e){ return e.programId === v.id && e.status !== "declined"; }).map(function(e){
+      var prof = partnerById(e.partnerId) || {};
+      return { name: prof.name || e.partner, country: prof.country || e.country || "", tier: e.tier, status: e.status, level: e.level, partnerId: e.partnerId };
+    });
+  }
   function renderVendorPartners(){
     var rows = document.getElementById("vendorPartnerRows");
     if (!rows) return;
     var v = programById(state.myVendorId);
-    var mine = v ? partnerRows.filter(function(r){ return r.program === v.name; }) : [];
+    var mine = v ? vendorPartnerList(v) : [];
     rows.innerHTML = mine.length ? mine.map(function(r){
       return "<tr><td>"+esc(r.name)+"</td><td>"+esc(r.country)+"</td><td>"+esc(r.tier)+"</td><td>"+statusPill(r.status)+"</td>"
         + "<td class='row-actions'><button class='btn secondary sm' data-message-partner='"+esc(r.name)+"'>Message</button></td></tr>";
@@ -7773,6 +7780,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Enrollments: a partner in a program. revenue12m / dealsClosed are the recorded history; approved deals
   // from Deal Approvals and completed Shop courses are added live.
   var enrollments = [
+    { id:"en-cloudwav-intelsense", partnerId:"cloudwav-consulting", partner:"CloudWAV Consulting", country:"", programId:"intelsense", tier:"Reseller", level:"Registered", status:"active", source:"vendor", joined:"2026-09-29", revenue12m:0, dealsClosed:0, coursesBefore:0, lastActivity:"2026-09-29", history:[],
+      notes:"Commission override: 20% first year + 5% renewal on Unisense AI, Finsense AI, AI Hubspot and AlterCrew (effective 2026-10-01; standard partners get 15% + 5%)." },
     { id:"en-siam-intelsense", partnerId:"siam-digital", partner:"Siam Digital MSP", country:"Thailand", programId:"intelsense", tier:"Reseller", level:"Gold", status:"active", source:"cloudwav", joined:"2025-11-04", revenue12m:182000, dealsClosed:9, coursesBefore:3, lastActivity:"2026-09-25", history:[] },
     { id:"en-siam-botnoi", partnerId:"siam-digital", partner:"Siam Digital MSP", country:"Thailand", programId:"botnoi", tier:"Channel Manager", level:"Bronze", status:"active", joined:"2026-06-12", revenue12m:14500, dealsClosed:2, coursesBefore:1, lastActivity:"2026-09-18", history:[] },
     { id:"en-gulf-cross", partnerId:"gulf-coast", partner:"Gulf Coast VAR", country:"USA", programId:"crossconnect", tier:"Affiliate", level:"Registered", status:"pending", joined:"2026-09-20", revenue12m:0, dealsClosed:0, lastActivity:"2026-09-26", history:[] },
@@ -8185,6 +8194,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var missing = CLOUD_COLLECTIONS.some(function(c){ return c.mode === "merge" && !Object.keys(CLOUD.inCloud[c.name] || {}).length; });
       if (isOp() && missing) await cloudSeed(true);
       if (isOp()) addIntelsenseSamples(true);
+      if (isOp()){ ensureOwnPartner(); cloudSchedule(); }
     } catch(e){
       console.warn("Cloud load failed:", e);
       CLOUD.loadFails = (CLOUD.loadFails || 0) + 1;

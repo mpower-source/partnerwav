@@ -81,7 +81,7 @@ with sync_playwright() as p:
 
     # ===== Operator: Partners & Tiers =====
     role(pg, "operator"); nav(pg, "operator-partners")
-    ok(pg.locator("[data-en-row]").count() == 6, "6 enrollments listed")
+    ok(pg.locator("[data-en-row]").count() == 7, "7 enrollments listed (incl. CloudWAV Consulting)")
     head = pg.inner_text("#operatorPartnersContent").upper()
     ok("COMMISSION TIER" in head and "LEVEL" in head and "PROGRESS" in head, "Table shows commission tier, level and progress")
     # filters

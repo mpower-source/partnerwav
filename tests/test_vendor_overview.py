@@ -11,6 +11,10 @@ with sync_playwright() as p:
     role(pg, "partner"); nav(pg, "vendor-network"); pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(300)
     v = pg.inner_text("#vendorProfileContent")
     ok("Unisense AI + AlterCrew Bundle SPIF" in v and "AI Hubspot Launch Co-Marketing Fund" not in v, "Partners see approved samples (marked Sample); the pending one waits for review")
+    # Partners in my Program: from the enrollments, incl. CloudWAV Consulting
+    role(pg, "vendor"); nav(pg, "vendor-partners"); pg.wait_for_timeout(200)
+    vp = pg.inner_text("#vendorPartnerRows")
+    ok("CloudWAV Consulting" in vp and "Siam Digital MSP" in vp and "Portonics" in vp and "Gulf Coast" not in vp, "Intelsense's 'Partners in my Program' lists CloudWAV Consulting with its other partners")
     # Botnoi sample: free AI credits for Thai SMEs, waiting for review, in baht
     role(pg, "operator"); nav(pg, "operator-marketing-approvals"); pg.click('[data-tab="incentives"]'); pg.wait_for_timeout(300)
     row = pg.locator("#incentiveApprovalsContent .deal-row").filter(has_text="Free BOTNOI AI Credits for Thai SMEs")
