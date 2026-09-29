@@ -4,7 +4,6 @@
   #channelsContent a.btn, .ch-contact a.btn, #vendorAffiliateOffers a.btn{ text-decoration:none; }
   #chText, #chTemplate, #chDirSearch{ width:100%; box-sizing:border-box; padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font:inherit; font-size:.9rem; }
   #chText{ resize:vertical; line-height:1.45; }
-  .product-card{ border-style:dashed; }
   .flash-highlight{ outline:2px solid var(--accent); outline-offset:2px; transition:outline-color .3s; }
   .ch-contact{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:6px; }
   .msg-thread-head .ch-contact{ margin:0 0 0 auto; }
@@ -4031,21 +4030,38 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   });
 
   function productLogo(prod){ return (prod && prod.logo) || ""; }
-  // A vendor's products as tiles, shown right after the vendor's own tile
+  // A vendor's products as tiles, shown right after the vendor's own tile and styled like program tiles.
+  // Display defaults per product until the vendor fills them in (category; SaaS resale for subscription software).
+  var PRODUCT_META = {
+    "unisense-ai": { vertical:"Sales & Marketing SaaS" }, "finsense-ai": { vertical:"Financial AI" },
+    "ai-hubspot": { vertical:"CRM integration (HubSpot)" }, "altercrew": { vertical:"Workforce management" }
+  };
+  function nameKey(s){ return String(s || "").toLowerCase().replace(/\bai\b/g, "").replace(/[^a-z0-9]/g, ""); }
+  function linkedProgramFor(prod, vendor){
+    var k = nameKey(prod.name); if (!k) return null;
+    return programs.filter(function(q){ return q.id !== vendor.id && nameKey(q.name) === k; })[0] || null;
+  }
   function productCardsHtml(p, opts){
     opts = opts || {};
     var mine = state.role === "vendor" && p.id === state.myVendorId, partner = state.role === "partner" && state.myProfileId;
+    var rf = state.relFilter && state.relFilter !== "all" ? state.relFilter : "";
     return (p.products || []).map(function(prod){
+      var linked = linkedProgramFor(prod, p);
+      if (linked) return opts.linkedCard ? opts.linkedCard(linked) : (opts.overview ? programCard(linked, { hideAction:true }) : "");
+      var meta = PRODUCT_META[prod.product_id] || {}, rels = prod.relationships || meta.relationships || ["SaaS Resale"];
+      if (rf && !opts.overview && rels.indexOf(rf) < 0) return "";
       var actions = '<button class="btn ghost sm" data-view-product="'+attr(p.id)+'" data-product-id="'+attr(prod.product_id)+'">View details →</button>'
         + (mine ? '<button class="btn secondary sm" '+(opts.overview ? 'data-vendor-overview-edit' : 'data-edit-vendor-profile="'+attr(p.id)+'"')+'>Edit</button>'
-          : partner ? '<button class="btn secondary sm" data-apply-reseller="'+attr(p.id)+'" data-product-id="'+attr(prod.product_id)+'">Apply as Reseller →</button>' : '');
-      return '<div class="program-card product-card" data-product-card="'+attr(prod.product_id)+'" data-product-vendor="'+attr(p.id)+'">'
-        + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback({ name: prod.name, logo: productLogo(prod) })+'<span class="program-name">'+esc(prod.name)+'</span></div><span class="badge neutral">Product</span></div>'
-        + '<div class="program-meta">by '+esc(p.name)+'</div>'
+          : partner ? '<button class="btn secondary sm" data-apply-reseller="'+attr(p.id)+'" data-product-id="'+attr(prod.product_id)+'">Apply as Reseller →</button>'
+          : '<button class="btn secondary sm" data-message-vendor="'+esc(p.name)+'">Message</button>');
+      return '<div class="program-card" data-product-card="'+attr(prod.product_id)+'" data-product-vendor="'+attr(p.id)+'">'
+        + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback({ name: prod.name, logo: productLogo(prod) })+'<span class="program-name">'+esc(prod.name)+'</span></div>'+relBadges(rels)+'</div>'
+        + '<div class="program-meta">'+esc(prod.vertical || meta.vertical || "Product")+' · '+esc(p.origin || "")+' (via '+esc(p.name)+')</div>'
         + '<p class="program-desc">'+esc(prod.desc || "")+'</p>'
         + '<div class="program-actions">'+actions+'</div></div>';
     }).join("");
   }
+
 
   // Logo picker for forms drawn by JS (vendor profile, products): same look as the static ones
   function logoFieldHtml(prefix, val, label){
@@ -4294,7 +4310,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!grid) return;
     var netFiltered = filteredPrograms();
     var isLoggedInPartner = state.role === "partner" && state.myProfileId;
-    grid.innerHTML = netFiltered.length ? netFiltered.map(function(p){
+    // a program that is really one of another vendor's products (e.g. Unisense = Intelsense's Unisense AI)
+    // is shown once, in that product's place right after its vendor
+    var shownIds = netFiltered.map(function(q){ return q.id; }), linkedIds = {};
+    programs.forEach(function(v){ (v.products || []).forEach(function(prod){ var q = linkedProgramFor(prod, v); if (q && shownIds.indexOf(v.id) > -1) linkedIds[q.id] = true; }); });
+    var vendorCard = function(p){
       var mine = state.role === "vendor" && p.id === state.myVendorId;
       var actionBtn = mine
         ? '<button class="btn secondary sm" data-edit-vendor-profile="'+esc(p.id)+'">Edit profile</button>'
@@ -4308,8 +4328,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="program-actions">'
           + '<button class="btn ghost sm" data-view-vendor="'+p.id+'">View profile →</button>'
           + actionBtn
-        + '</div></div>'
-        + productCardsHtml(p);
+        + '</div></div>';
+    };
+    grid.innerHTML = netFiltered.length ? netFiltered.filter(function(p){ return !linkedIds[p.id]; }).map(function(p){
+      return vendorCard(p) + productCardsHtml(p, { linkedCard: function(q){ return shownIds.indexOf(q.id) > -1 ? vendorCard(q) : ""; } });
     }).join("") : '<div class="empty">No vendors match that relationship type yet.</div>';
   }
 

@@ -15,17 +15,20 @@ with sync_playwright() as p:
     role(pg, "vendor"); nav(pg, "vendor-overview")
     ok(pg.locator("#vendorOwnProgramGrid .program-card").count() == 5 and pg.locator("#vendorOverviewEditBtn").is_visible(), "Overview shows the Intelsense tile plus its 4 product tiles, with 'Edit full profile'")
     order = [c.get_attribute("data-product-card") for c in pg.locator("#vendorOwnProgramGrid [data-product-card]").all()]
-    ok(order == ["unisense-ai", "finsense-ai", "ai-hubspot", "altercrew"], "Products in order after the Intelsense tile: " + ",".join(order))
+    ok(order == ["finsense-ai", "ai-hubspot", "altercrew"] and "Unisense" in pg.locator("#vendorOwnProgramGrid .program-card").nth(1).inner_text(), "Intelsense, then Unisense (its SaaS Resale program), then Finsense AI, AI Hubspot, AlterCrew")
     # Vendor Network: product tiles right after the Intelsense tile
     nav(pg, "vendor-network"); pg.wait_for_timeout(200)
     cards = pg.locator("#vendorNetworkGrid .program-card")
     names = [c.inner_text().split("\n")[0] for c in cards.all()]
     i = [k for k, n in enumerate(names) if n.startswith("I") and "Intelsense AI" in n][0] if any("Intelsense AI" in n for n in names) else -1
-    seq = [cards.nth(k).get_attribute("data-product-card") for k in range(i + 1, i + 5)]
-    ok(i >= 0 and seq == ["unisense-ai", "finsense-ai", "ai-hubspot", "altercrew"], "Vendor Network: the 4 product tiles follow the Intelsense tile")
+    seq = [cards.nth(k).get_attribute("data-product-card") for k in range(i + 2, i + 5)]
+    ok(i >= 0 and cards.nth(i + 1).inner_text().split("\n")[0].startswith("U") and "SAAS RESALE" in cards.nth(i + 1).inner_text().upper() and seq == ["finsense-ai", "ai-hubspot", "altercrew"], "Vendor Network: Intelsense, Unisense, Finsense AI, AI Hubspot, AlterCrew in order")
+    pnames = pg.locator("#vendorNetworkGrid .program-name").all_inner_texts()
+    ok(sum(1 for n in pnames if "Unisense" in n) == 1, "Unisense listed once: " + str([n for n in pnames if "Unisense" in n]))
+    ok(all("SAAS RESALE" in pg.locator(f'#vendorNetworkGrid [data-product-card="{k}"]').inner_text().upper() for k in ["finsense-ai", "ai-hubspot", "altercrew"]), "Product tiles look like the Unisense tile (SaaS Resale badge)")
     role(pg, "partner"); nav(pg, "vendor-network")
     fin = pg.locator('#vendorNetworkGrid [data-product-card="finsense-ai"]')
-    ok(fin.locator("[data-apply-reseller]").count() == 1 and "by Intelsense AI" in fin.inner_text(), "Partners get 'Apply as Reseller' per product")
+    ok(fin.locator("[data-apply-reseller]").count() == 1 and "(via Intelsense AI)" in fin.inner_text(), "Partners get 'Apply as Reseller' per product")
     fin.locator("[data-view-product]").click(); pg.wait_for_timeout(300)
     ok(visible_screen(pg) == ["scr-vendor-profile"] and pg.locator('[data-product-tile="finsense-ai"]').count() == 1, "'View details' opens the Intelsense profile at that product")
     role(pg, "vendor"); nav(pg, "vendor-overview")
