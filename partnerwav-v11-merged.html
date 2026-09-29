@@ -260,6 +260,7 @@
   .op-rel-top .badge{ white-space:nowrap; font-size:.56rem; letter-spacing:.02em; padding:1px 6px; margin-left:4px; vertical-align:2px; }
   .program-meta{ font-size:.74rem; color:var(--ink-faint); }
   .program-desc{ font-size:.84rem; color:var(--ink-soft); line-height:1.45; margin:0; flex:1; }
+  .directory-grid .program-card .program-desc{ display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; flex:0 1 auto; margin-bottom:auto; }
   .program-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 #loginScreen{ display:none; }
 html.auth-locked .shell{ display:none; }
@@ -2555,13 +2556,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ], agreement:{ type:"Custom Marketing Agreement", status:"draft" }, status:"onboarding",
       logo:"", website:"https://services.zipeventapp.com",
       social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
-    { id:"portonics-dev", name:"Portonics Ltd.", vertical:"Custom Software Development", origin:"Bangladesh (dev team) · Thailand & USA (client-facing)", desc:"Custom software development shop, not a licensed product -- builds and co-owns bespoke platforms with an MSP or VAR entering Thailand or the US market. Structured as a Joint Venture rather than a commission payout or hardware install.", relationships:["Joint Venture"], tiers:[
+    { id:"portonics-dev", _rev:2, name:"Portonics Ltd.", vertical:"Custom Software Development", origin:"Bangladesh (dev team) · Thailand & USA (client-facing)", desc:"Custom software shop that builds and co-owns bespoke platforms with MSPs and VARs entering Thailand or the US -- a Joint Venture, not a commission payout.", relationships:["Joint Venture"], tiers:[
         { tier:"Channel Manager", rate:"Per JV profit-allocation schedule", base:"Per Joint Venture Agreement, Schedule C" }
       ], agreement:{ type:"Joint Venture Agreement", status:"draft" }, status:"onboarding",
       logo:"", website:"",
       social:{ linkedin:"", twitter:"", facebook:"" },
       partnerProfileId:"portonics", referralPartners:[] },
-    { id:"unisense", name:"Unisense", vertical:"Sales & Marketing SaaS", origin:"Bangladesh (via Intelsense AI)", desc:"Intelsense AI's standalone sales-and-marketing SaaS platform -- sold as a recurring subscription to a Partner's own customer base rather than a one-off services engagement or per-client install. The higher-margin resale model alongside Intelsense's core conversational-AI Program.", relationships:["SaaS Resale"], tiers:[
+    { id:"unisense", _rev:2, name:"Unisense", vertical:"Sales & Marketing SaaS", origin:"Bangladesh (via Intelsense AI)", desc:"Intelsense AI's sales-and-marketing SaaS platform, resold as a recurring subscription to your own customers -- the higher-margin model next to Intelsense's core program.", relationships:["SaaS Resale"], tiers:[
         { tier:"Reseller", rate:"25% of subscription value, life of account", base:"Monthly recurring subscription revenue" }
       ], agreement:{ type:"SaaS Reseller Agreement", status:"draft" }, status:"onboarding",
       logo:"", website:"https://intelsense.ai/unisense",
