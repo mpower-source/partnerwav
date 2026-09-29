@@ -102,6 +102,11 @@ insert into public.portal_field_rules (collection, field, allowed) values
   ('pendingResources', 'status',       '["pending"]'),
   ('shopOrders',       'status',       '["awaiting", "cancelled"]'),
   ('shopOrders',       'paidAt',       '["", null]'),
+  -- affiliate offers: vendors add their own affiliate program; CloudWAV reviews it
+  ('affiliatePrograms','status',       '["pending", "withdrawn"]'),
+  ('affiliatePrograms','direct',       '[false, null]'),
+  ('affiliatePrograms','rejectReason', '["", null]'),
+  ('affiliatePrograms','reviewedAt',   '["", null]'),
   ('programs',         'tiers',        '[]'),
   ('programs',         'relationships','[]'),
   ('programs',         'agreement',    '[]'),
@@ -128,7 +133,7 @@ on conflict (collection, field) do update set allowed = excluded.allowed;
 -- Collections only CloudWAV can add records to (members may still edit where they're a writer)
 create or replace function public.portal_operator_only(c text)
 returns boolean language sql immutable as $$
-  select c = any (array['affiliatePrograms','mspProspects','mspEngagements','landingPages',
+  select c = any (array['mspProspects','mspEngagements','landingPages',
                         'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
                         'programFees','platformFees'])
 $$;
@@ -159,6 +164,12 @@ begin
   else
     select * into prev from public.portal_records where collection = new.collection and id = new.id;
     is_new := not found;
+  end if;
+
+  -- affiliate offers (and their private terms) come only from CloudWAV or the vendor that owns them
+  if new.collection in ('affiliatePrograms', 'affiliateTerms')
+     and (k not like 'vendor:%' or 'vendor:' || coalesce(new.data ->> 'vendorId', '') <> k) then
+    raise exception 'Only CloudWAV or the owning vendor can save affiliate offers';
   end if;
 
   -- nobody can post a message as someone else

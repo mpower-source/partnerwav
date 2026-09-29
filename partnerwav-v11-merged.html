@@ -1642,7 +1642,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-affiliate-marketplace" hidden>
         <div class="section-head"><h2>Affiliate Marketplace</h2><span class="hint">Back-office tools CloudWAV resells to Partners and Vendors -- for running your own business, not for resale to your customers</span></div>
         <div style="height:14px"></div>
-        <button class="btn primary" id="createAffiliateOfferBtn" data-goto-screen="affiliate-offer-editor" style="margin-bottom:16px;">+ Create Offer</button>
+        <button class="btn primary" id="createAffiliateOfferBtn" data-goto-screen="affiliate-offer-editor" data-create-new style="margin-bottom:16px;">+ Create Offer</button>
         <div class="directory-grid" id="affiliateMarketplaceGrid"></div>
       </section>
 
@@ -1662,8 +1662,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             <div><label>Offer Name</label><input type="text" id="aoName" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
             <div><label>Category</label><input type="text" id="aoCategory" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., Analytics, Automation, Support" required /></div>
             <div><label>Description</label><textarea id="aoDesc" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
-            <div><label>Direct link (optional)</label><input type="url" id="aoDirectLink" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g. https://lovable.dev/invite/…  -- CloudWAV's own referral link, shown on the tile for everyone" /></div>
+            <div><label for="aoNote">Short note for partners (optional)</label><input type="text" id="aoNote" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g. Free 14-day trial for referred customers"></div>
+            <p class="field-note" id="aoVendorNote" hidden style="margin:0;">Your affiliate program is shown to partners in the Affiliate Marketplace and on your vendor profile after CloudWAV reviews it. Commission terms are only seen by you and CloudWAV.</p>
+            <div><label id="aoDirectLinkLabel">Direct link (optional)</label><input type="url" id="aoDirectLink" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g. https://lovable.dev/invite/…  -- CloudWAV's own referral link, shown on the tile for everyone" /></div>
             <div><label>Affiliate Commission Rate (%) (optional)</label><input type="number" id="aoCommission" min="0" max="100" step="0.5" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., 15" /></div>
+            <div class="aff-section-title" style="margin-top:4px;">Commission terms <span class="field-note" style="text-transform:none;letter-spacing:0;font-weight:400;">-- only CloudWAV and the offer's owner see these, never shown on the tile</span></div>
             <div class="form-grid">
               <div class="field-row"><label for="aoTermType">Commission type</label><input type="text" id="aoTermType" placeholder="e.g. Recurring (12 months)"></div>
               <div class="field-row"><label for="aoTermAmount">Commission amount</label><input type="text" id="aoTermAmount" placeholder="e.g. 30% flat"></div>
@@ -2995,6 +2998,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     } catch (e) {
       console.log("Could not load saved affiliate profiles:", e);
     }
+    try {
+      var retiredOffers = ["northstar-psa", "msp-learning-hub"];
+      var savedOffers = (JSON.parse(lsGet("partnerWAV_affiliateOffers") || "null") || []).filter(function(a){ return a && retiredOffers.indexOf(a.id) < 0; });
+      if (Array.isArray(savedOffers) && savedOffers.length){
+        var seeds = {}; affiliatePrograms.forEach(function(a){ seeds[a.id] = a; });
+        affiliatePrograms.length = 0;
+        savedOffers.forEach(function(a){ var s = seeds[a.id]; affiliatePrograms.push(s && (Number(s._rev) || 0) > (Number(a._rev) || 0) ? s : a); delete seeds[a.id]; });
+        Object.keys(seeds).forEach(function(id){ affiliatePrograms.push(seeds[id]); });
+      }
+    } catch (e) { console.log("Could not load saved affiliate offers:", e); }
   }
 
   // Save vendor referral data to localStorage
@@ -3009,6 +3022,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       lsSet("partnerWAV_vendorReferralData", JSON.stringify({ referralPartners: referralPartners }));
       lsSet("partnerWAV_partnerProfiles", JSON.stringify(partnerProfiles));
       lsSet("partnerWAV_affiliateProfiles", JSON.stringify(affiliateProfiles));
+      lsSet("partnerWAV_affiliateOffers", JSON.stringify(affiliatePrograms));
     } catch (e) {
       console.log("Could not save data:", e);
     }
@@ -3277,7 +3291,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         partnerId: partnerId,
         enrolledDate: new Date().toISOString().split("T")[0],
         affiliateLink: (affiliateById(affiliateId) || {}).directLink || generateAffiliateLink(affiliateId, partnerId),
-        commissionRate: ((affiliateById(affiliateId) || {}).terms || {}).amount || "Per program terms",
+        commissionRate: "Per program terms",
         status: "active",
         servicesOffered: [],
         linkActivity: (AFFILIATE_SAMPLE_ACTIVITY[affiliateId] || []).slice()
@@ -3353,32 +3367,69 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var t = a.terms || {}, row = function(k, v){ return v ? '<div class="aff-term"><span>'+k+'</span><b>'+esc(v)+'</b></div>' : ''; };
     return '<div class="aff-terms" data-aff-terms="'+esc(a.id)+'">' + row("Commission", t.type) + row("Amount", t.amount) + row("Cookie", t.cookie) + row("Network", t.network) + '</div>';
   }
+  // Who can change an affiliate offer: CloudWAV (also while previewing), or the vendor that owns it
+  function canEditOffer(a){
+    if (state.role === "operator" || (state.account && state.account.role === "operator")) return true;
+    return state.role === "vendor" && !!a.vendorId && a.vendorId === state.myVendorId;
+  }
+  function offerLive(a){ return !a.status || a.status === "active" || a.status === "approved"; }
+  function offerVisible(a){
+    if (a.status === "withdrawn") return false;
+    return offerLive(a) || state.role === "operator" || (state.role === "vendor" && a.vendorId && a.vendorId === state.myVendorId);
+  }
+  function offerVendorName(a){ var v = a.vendorId ? programById(a.vendorId) : null; return v ? v.name : (a.vendorName || ""); }
+  var OFFER_STATUS = { pending:{ label:"Waiting for CloudWAV review", cls:"warn" }, rejected:{ label:"Changes needed", cls:"bad" } };
   function affiliateCard(a, showOps){
     var enrolled = state.affiliateEnrolled.indexOf(a.id) > -1;
-    var isOperator = state.role === "operator";
-    var actionBtn = enrolled
-      ? '<button class="btn secondary sm" data-manage-affiliate="'+esc(a.id)+'" title="View your link, services and link activity">Enrolled ✓ · Manage →</button>'
+    var isOperator = state.role === "operator", live = offerLive(a), editable = canEditOffer(a);
+    var joinBtn = !live || isOperator ? ''
+      : enrolled ? '<button class="btn secondary sm" data-manage-affiliate="'+esc(a.id)+'" title="View your link, services and link activity">Enrolled ✓ · Manage →</button>'
+      : (state.role === "vendor" && a.vendorId === state.myVendorId) ? ''
       : '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>';
-    var opsButtons = (isOperator && showOps)
-      ? '<button class="btn secondary sm" data-edit-affiliate-offer="'+a.id+'">Edit</button> <button class="btn secondary sm" data-delete-affiliate-offer="'+a.id+'">Delete</button>'
-      : '';
-    var directHtml = a.direct && a.directLink
-      ? '<div class="aff-link-row" data-direct-link="'+esc(a.id)+'"><input type="text" class="aff-link-input" readonly value="'+esc(a.directLink).replace(/"/g,"&quot;")+'" aria-label="'+esc(a.name)+' invite link">'
+    var reviewBtns = isOperator && a.status === "pending"
+      ? '<button class="btn primary sm" data-offer-review="approve" data-offer-id="'+esc(a.id)+'">Approve</button><button class="btn ghost sm" data-offer-review="reject" data-offer-id="'+esc(a.id)+'">Request changes</button>' : '';
+    var editBtns = editable
+      ? '<button class="btn secondary sm" data-edit-affiliate-offer="'+esc(a.id)+'">Edit offer</button>'
+        + (isOperator && showOps ? '<button class="btn ghost sm" data-delete-affiliate-offer="'+esc(a.id)+'">Delete</button>' : '') : '';
+    var linkLabel = a.direct ? a.name + " invite link" : a.name + " affiliate program sign-up link";
+    var directHtml = a.directLink
+      ? '<div class="aff-link-row" data-direct-link="'+esc(a.id)+'"><input type="text" class="aff-link-input" readonly value="'+esc(a.directLink).replace(/"/g,"&quot;")+'" aria-label="'+esc(linkLabel)+'">'
         + '<button type="button" class="btn primary sm" data-copy-direct="'+esc(a.directLink).replace(/"/g,"&quot;")+'">Copy link</button>'
-        + '<a class="btn secondary sm" href="'+esc(a.directLink).replace(/"/g,"&quot;")+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open</a></div>'
+        + '<a class="btn secondary sm" href="'+esc(a.directLink).replace(/"/g,"&quot;")+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">'+(a.direct ? "Open" : "Join program")+'</a></div>'
         + (a.qr ? affQrHtml(a) : '')
       : '';
-    return '<div class="program-card"'+(a.direct ? ' data-direct-offer="'+esc(a.id)+'"' : '')+'>'
+    var st = OFFER_STATUS[a.status];
+    return '<div class="program-card" data-offer="'+esc(a.id)+'"'+(a.direct ? ' data-direct-offer="'+esc(a.id)+'"' : '')+'>'
       + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(a)+'<span class="program-name">'+esc(a.name)+'</span></div><span class="badge neutral">'+esc(a.category)+'</span></div>'
-      + (a.direct ? '<span class="badge good" style="align-self:flex-start;">Direct offer from CloudWAV</span>' : '')
+      + (a.direct ? '<span class="badge good" style="align-self:flex-start;">Direct offer from CloudWAV</span>'
+          : a.vendorId ? '<span class="badge accent2" style="align-self:flex-start;" data-vendor-offer="'+esc(a.vendorId)+'">Affiliate program · '+esc(offerVendorName(a))+'</span>' : '')
+      + (st && (isOperator || editable) ? '<span class="badge '+st.cls+'" style="align-self:flex-start;" data-offer-status="'+esc(a.status)+'">'+esc(st.label)+'</span>'
+          + (a.status === "rejected" && a.rejectReason ? '<span class="field-note">CloudWAV: '+esc(a.rejectReason)+'</span>' : '') : '')
       + '<p class="program-desc">'+esc(a.desc)+'</p>'
-      + (a.terms ? affTermsHtml(a) : '')
-      + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
+      + (a.note ? '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>' : '')
       + directHtml
       + (a.direct && !a.directLink ? '<span class="badge warn" style="align-self:flex-start;" data-link-pending="'+esc(a.id)+'">Link &amp; QR code coming soon</span>' : '')
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
-      + '<div class="program-actions">'+(opsButtons || actionBtn)+'</div>'
+      + '<div class="program-actions">'+reviewBtns+joinBtn+editBtns+'</div>'
     + '</div>';
+  }
+  function reviewAffiliateOffer(id, decision){
+    var a = affiliateById(id); if (!a || state.role !== "operator") return;
+    var finish = function(reason){
+      a.status = decision === "approve" ? "approved" : "rejected"; a.rejectReason = decision === "approve" ? "" : reason; a.reviewedAt = nowStamp();
+      saveVendorData(); render();
+      toast(decision === "approve" ? a.name + " is live for partners" : "Sent back to " + (offerVendorName(a) || "the vendor"));
+    };
+    if (decision === "approve") return finish("");
+    askValue("Request changes to " + a.name, "What should the vendor change? (they see this)", {}, function(v){ if (!v) return "Tell the vendor what to change."; finish(v); });
+  }
+  // Vendor profile: the vendor's affiliate program(s), next to their reseller program
+  function vendorAffiliateHtml(p){
+    var list = affiliatePrograms.filter(function(a){ return a.vendorId === p.id && offerVisible(a); });
+    if (!list.length) return '';
+    return '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">'
+      + '<div class="section-head"><h2 style="font-size:.9rem;">Affiliate program</h2><span class="hint">Prefer to refer instead of resell? Send customers to '+esc(p.name)+' and earn per sign-up -- no selling, contracting or support on your side.</span></div>'
+      + '<div class="directory-grid" style="margin-top:12px;" id="vendorAffiliateOffers">'+list.map(function(a){ return affiliateCard(a, true); }).join("")+'</div></div>';
   }
 
   function renderAffiliateManage(){
@@ -3394,8 +3445,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<p class="program-desc">'+esc(a.desc)+'</p>'
       + '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>'
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
-      + (a.terms ? affTermsHtml(a) : '')
-      + (a.direct && a.qr ? affQrHtml(a) : '')
+      + (a.qr ? affQrHtml(a) : '')
       + affiliateManagePanel(a)
     + '</div>';
   }
@@ -3421,14 +3471,18 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     var myGrid = document.getElementById("myAffiliateGrid");
     if (myGrid){
-      var mine = affiliatePrograms.filter(function(a){ return state.affiliateEnrolled.indexOf(a.id) > -1; });
+      var mine = affiliatePrograms.filter(function(a){ return state.affiliateEnrolled.indexOf(a.id) > -1 && offerLive(a); });
       myGrid.innerHTML = mine.length
         ? mine.map(function(a){ return affiliateCard(a); }).join("")
         : '<div class="empty">No affiliate tools enrolled yet -- visit the Affiliate Marketplace to add one.</div>';
     }
-    var createOfferBtn = document.getElementById("createAffiliateOfferBtn"); if (createOfferBtn) createOfferBtn.hidden = state.role !== "operator";
+    var createOfferBtn = document.getElementById("createAffiliateOfferBtn");
+    if (createOfferBtn){ createOfferBtn.hidden = state.role !== "operator" && state.role !== "vendor"; createOfferBtn.textContent = state.role === "vendor" ? "+ Add my affiliate program" : "+ Create Offer"; }
     var mktGrid = document.getElementById("affiliateMarketplaceGrid");
-    if (mktGrid){ mktGrid.innerHTML = affiliatePrograms.map(function(a){ return affiliateCard(a, true); }).join(""); }
+    if (mktGrid){
+      var shown = affiliatePrograms.filter(offerVisible).slice().sort(function(x, y){ return (x.status === "pending" ? 0 : 1) - (y.status === "pending" ? 0 : 1); });
+      mktGrid.innerHTML = shown.length ? shown.map(function(a){ return affiliateCard(a, true); }).join("") : '<div class="empty">No affiliate offers yet.</div>';
+    }
   }
 
   function renderLeads(){
@@ -4396,6 +4450,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
               + '</div></div>';
           })()
         + productsHtml
+        + vendorAffiliateHtml(p)
         + referralHtml
       + '</div>';
   }
@@ -6283,6 +6338,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("aoDesc").value = offer ? offer.desc : "";
     document.getElementById("aoCommission").value = offer ? (offer.commission || 0) : "";
     document.getElementById("aoDirectLink").value = offer && offer.directLink ? offer.directLink : "";
+    var isVend = state.role === "vendor";
+    document.getElementById("aoNote").value = offer ? (offer.note || "") : "";
+    document.getElementById("aoVendorNote").hidden = !isVend;
+    document.getElementById("aoDirectLinkLabel").textContent = isVend ? "Affiliate program sign-up link (where partners join your program)" : "Direct link (optional)";
+    if (!offer && isVend){ var vv = programById(state.myVendorId); if (vv){ document.getElementById("aoName").value = vv.name; document.getElementById("aoCategory").value = vv.vertical || ""; } }
     var tt = (offer && offer.terms) || {};
     document.getElementById("aoTermType").value = tt.type || ""; document.getElementById("aoTermAmount").value = tt.amount || "";
     document.getElementById("aoTermCookie").value = tt.cookie || ""; document.getElementById("aoTermNetwork").value = tt.network || "";
@@ -6319,6 +6379,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var directLink = document.getElementById("aoDirectLink").value.trim();
     if (directLink && !/^https?:\/\/\S+\.\S+/i.test(directLink)){ toast("The direct link needs to be a full web address (https://...)"); return; }
 
+    var editingOffer = state.editingAffiliateOfferId ? affiliateById(state.editingAffiliateOfferId) : null;
+    if (editingOffer ? !canEditOffer(editingOffer) : (state.role !== "operator" && state.role !== "vendor")){ toast("Only CloudWAV or the offer's vendor can change this offer"); return; }
+    var note = document.getElementById("aoNote").value.trim();
     var terms = { type:document.getElementById("aoTermType").value.trim(), amount:document.getElementById("aoTermAmount").value.trim(), cookie:document.getElementById("aoTermCookie").value.trim(), network:document.getElementById("aoTermNetwork").value.trim() };
     var logoV = (document.getElementById("aoLogo") || {}).value || "", qrV = document.getElementById("aoQr").value || "";
     if (isNaN(commission)) commission = null;
@@ -6335,17 +6398,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         affiliatePrograms[idx].desc = desc;
         affiliatePrograms[idx].commission = commission;
         affiliatePrograms[idx].directLink = directLink; affiliatePrograms[idx].direct = !!directLink || !!affiliatePrograms[idx].direct;
-        affiliatePrograms[idx].terms = terms; affiliatePrograms[idx].logo = logoV; affiliatePrograms[idx].qr = qrV;
+        affiliatePrograms[idx].terms = terms; affiliatePrograms[idx].logo = logoV; affiliatePrograms[idx].qr = qrV; affiliatePrograms[idx].note = note;
+        if (state.role === "vendor"){ affiliatePrograms[idx].direct = false; affiliatePrograms[idx].status = "pending"; affiliatePrograms[idx].rejectReason = ""; }
         toast("Affiliate offer updated");
       }
     } else {
-      var newId = "affiliate-offer-" + Date.now();
+      var newId = (state.role === "vendor" ? "aff-" + state.myVendorId + "-" : "affiliate-offer-") + Date.now().toString(36);
+      var byVendor = state.role === "vendor";
       affiliatePrograms.push({
-        id: newId, name: name, category: category, desc: desc, note: "",
-        commission: commission, apiIntegration: false, status: "active", archivedAt: null, directLink: directLink, direct: !!directLink,
+        id: newId, name: name, category: category, desc: desc, note: note, vendorId: byVendor ? state.myVendorId : "",
+        commission: commission, apiIntegration: false, status: byVendor ? "pending" : "approved", archivedAt: null, directLink: directLink, direct: !byVendor && !!directLink,
         terms: terms, logo: logoV, qr: qrV
       });
-      toast("Affiliate offer created");
+      toast(byVendor ? "Sent to CloudWAV for review -- partners will see it once it's approved" : "Affiliate offer created");
     }
     state.editingAffiliateOfferId = null;
     state.screen = "affiliate-marketplace";
@@ -7766,7 +7831,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { name:"programs", mode:"merge", get:function(){ return programs; }, set:function(a){ programs.length = 0; a.forEach(function(x){ programs.push(x); }); },
       access:function(r){ return { readers:EVERYONE, writers:["vendor:" + r.id], pub:true }; } },
     { name:"affiliatePrograms", mode:"merge", get:function(){ return affiliatePrograms; }, set:function(a){ affiliatePrograms.length = 0; a.forEach(function(x){ affiliatePrograms.push(x); }); },
-      access:function(){ return { readers:EVERYONE, writers:[] }; } },
+      // commission terms are stored privately in affiliateTerms, never in the shared offer
+      toData:function(r){ if (!r.terms) return r; var c = JSON.parse(JSON.stringify(r)); delete c.terms; return c; },
+      access:function(r){ var owner = r.vendorId ? ["vendor:" + r.vendorId] : []; return { readers: offerLive(r) ? EVERYONE : owner, writers: owner }; } },
+    { name:"affiliateTerms", mode:"replace", get:function(){ return affiliatePrograms.filter(function(a){ return a.terms && (a.terms.type || a.terms.amount || a.terms.cookie || a.terms.network); }).map(function(a){ return { id:a.id, vendorId:a.vendorId || "", terms:a.terms }; }); },
+      set:function(rows){ var by = {}; rows.forEach(function(t){ by[t.id] = t.terms; }); affiliatePrograms.forEach(function(a){ if (by[a.id]) a.terms = by[a.id]; else if (CLOUD.on && !isOp() && (CLOUD.inCloud.affiliatePrograms || {})[a.id]) delete a.terms; }); },
+      access:function(r){ var owner = r.vendorId ? ["vendor:" + r.vendorId] : []; return { readers: owner, writers: owner }; } },
     { name:"partnerProfiles", mode:"replace", get:function(){ return partnerProfiles; }, set:function(a){ partnerProfiles.length = 0; a.forEach(function(x){ partnerProfiles.push(x); }); },
       access:function(r){ return { readers:EVERYONE, writers:["partner:" + r.id] }; } },
     { name:"affiliateProfiles", mode:"replace", get:function(){ return affiliateProfiles; }, set:function(a){ affiliateProfiles.length = 0; a.forEach(function(x){ affiliateProfiles.push(x); }); },
@@ -7896,7 +7966,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         Object.keys(snap).forEach(function(id){ if (!seen[id] && !dirty[id]) delete snap[id]; });
       }
       c.set(result);
-      if (firstLoad){ CLOUD.snap[c.name] = {}; (c.get() || []).forEach(function(r){ var id = recId(c, r); if (id != null) CLOUD.snap[c.name][id] = stableJson(c, r); }); }
+      if (firstLoad){
+        CLOUD.snap[c.name] = {};
+        // replace-mode: what's stored is exactly what came from Supabase (lists derived from other data may hold more, which then gets saved)
+        if (c.mode === "replace") incoming.forEach(function(row){ CLOUD.snap[c.name][row.id] = stableJson(c, row.data); });
+        else (c.get() || []).forEach(function(r){ var id = recId(c, r); if (id != null) CLOUD.snap[c.name][id] = stableJson(c, r); });
+      }
     });
     // operator: starter records that are new or newer in the code get saved to Supabase on the next save
     forceUp.forEach(function(x){ var s = CLOUD.snap[x[0]] = CLOUD.snap[x[0]] || {}; if (x[2] == null) delete s[x[1]]; else s[x[1]] = x[2]; });
@@ -7953,7 +8028,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         if (c.name === "resources" || c.name === "pendingResources"){ if (!r.ownerKey && !isOp() && !snap[id]) r.ownerKey = myKey(); j = stableJson(c, r); }
         var acc = c.access(r);
         if (!canWrite(acc)){ snapUpdates.push([c.name, id, j]); return; } // not ours to save -- the server would refuse it
-        if (c.mode === "merge" && !isOp() && !(CLOUD.inCloud[c.name] || {})[id]){ pendingSetup.push(c.name); return; }
+        if (c.mode === "merge" && !isOp() && !(CLOUD.inCloud[c.name] || {})[id] && !(c.name === "affiliatePrograms" && r.vendorId)){ pendingSetup.push(c.name); return; }
         ups.push({ collection:c.name, id:id, data: c.toData ? c.toData(r) : r, readers:acc.readers, writers:acc.writers, is_public:!!acc.pub });
         snapUpdates.push([c.name, id, j]);
       });
@@ -10168,6 +10243,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         else if (screen === "partner-project-editor") loadPartnerProjectForm(state.editingProjectId);
         else if (screen === "vendor-hardware-offering-editor") loadHardwareOfferingForm(state.editingHardwareOfferingId);
         else if (screen === "vendor-incentive-editor") loadVendorIncentiveForm(state.editingIncentiveId);
+        else if (screen === "affiliate-offer-editor") loadAffiliateOfferForm(state.editingAffiliateOfferId);
         attachFormHandlers();
       }, 0);
       render();
@@ -10913,6 +10989,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
 
+    var offerReviewBtn = e.target.closest("[data-offer-review]");
+    if (offerReviewBtn){ reviewAffiliateOffer(offerReviewBtn.getAttribute("data-offer-id"), offerReviewBtn.getAttribute("data-offer-review")); return; }
     var deleteAffiliateOfferBtn = e.target.closest("[data-delete-affiliate-offer]");
     if (deleteAffiliateOfferBtn){
       var offerId = deleteAffiliateOfferBtn.getAttribute("data-delete-affiliate-offer");
@@ -10931,6 +11009,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var deleteAffiliateOfferFormBtn = e.target.closest("#deleteAffiliateOfferBtn");
     if (deleteAffiliateOfferFormBtn){
       var offerId = deleteAffiliateOfferFormBtn.getAttribute("data-offer-id");
+      var wOffer = affiliateById(offerId);
+      if (wOffer && state.role === "vendor"){ wOffer.status = "withdrawn"; saveVendorData(); toast("Affiliate program removed from the marketplace"); state.screen = "affiliate-marketplace"; render(); return; }
       if (confirm("Delete this affiliate offer?")){
         var idx = affiliatePrograms.findIndex(function(a){ return a.id === offerId; });
         if (idx >= 0){
