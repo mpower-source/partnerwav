@@ -13,6 +13,8 @@ with sync_playwright() as p:
     ok(pg.locator(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"]').count() == 0, "Partners don't see Botnoi's invite-only offer in the marketplace")
     role(pg, "vendor"); nav(pg, "affiliate-marketplace")
     ok(pg.locator(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"]').count() == 0, "Other vendors (Intelsense) don't see it either")
+    menu = [b.get_attribute("data-screen") for b in pg.locator("#navVendor .navlink").all()]
+    ok(menu.index("affiliate-marketplace") == menu.index("partner-projects") + 1, "Vendor menu: Affiliate Marketplace right after Projects")
     ok(pg.locator("#ourAffiliateBtn").is_visible() and pg.inner_text("#ourAffiliateBtn") == "Our affiliate program", "Vendors get an 'Our affiliate program' button")
     pg.click("#ourAffiliateBtn"); pg.wait_for_timeout(200)
     ok(pg.locator("#affiliateMarketplaceGrid .program-card").count() == 0 and "haven't added an affiliate program" in pg.inner_text("#affiliateMarketplaceGrid"), "Intelsense has none yet -- says how to add one")
@@ -25,7 +27,8 @@ with sync_playwright() as p:
     card = pg.locator(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"]')
     ok(card.count() == 1 and card.locator("[data-invite-only]").count() == 1 and "Demo" in card.inner_text(), "Operator sees it, marked Invite only and Demo")
     ok("THB 300" not in card.inner_text() and card.locator("[data-aff-terms]").count() == 0, "Reward terms stay off the tile")
-    ok(card.locator("img.entity-logo-img").count() == 1 and "svg" in card.locator("img.entity-logo-img").get_attribute("src"), "Botnoi robot logo on the offer")
+    src = card.locator("img.entity-logo-img").get_attribute("src") if card.locator("img.entity-logo-img").count() else ""
+    ok("svg" in src and "38b6ff" in src and "070b16" not in src, "Botnoi robot logo on the offer: light blue on white")
     # "Vendor affiliate programs" filter for CloudWAV
     pg.click("#ourAffiliateBtn"); pg.wait_for_timeout(200)
     ids = [c.get_attribute("data-offer") for c in pg.locator("#affiliateMarketplaceGrid .program-card").all()]
@@ -92,6 +95,16 @@ with sync_playwright() as p:
     ok("isn't available" in pg.inner_text("#publicInviteContent"), "Unknown invite handled")
     pg.goto(URL + "?invite=lovable"); pg.wait_for_timeout(600)
     ok("isn't available" in pg.inner_text("#publicInviteContent"), "Marketplace offers have no invite page")
+
+    # a copy saved with the first (dark) version of the logo is switched to the new one; uploaded logos stay
+    pg.goto(URL + "?demo=1"); pg.wait_for_timeout(500)
+    pg.evaluate("""(() => { const a = JSON.parse(localStorage.getItem('partnerWAV_affiliateOffers') || '[]');
+      a.forEach(o => { if (o.id === 'botnoi-sme-ai-invite'){ o.logo = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg><rect fill="#070b16"/></svg>'); o.logoSetup = 1; }
+                       if (o.id === 'xero') o.logoSetup = 0; });
+      localStorage.setItem('partnerWAV_affiliateOffers', JSON.stringify(a)); })()""")
+    pg.reload(); pg.wait_for_timeout(600); role(pg, "operator"); nav(pg, "affiliate-marketplace")
+    src = pg.locator(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"] img.entity-logo-img').get_attribute("src")
+    ok("38b6ff" in src, "Saved copy with the dark logo gets the light blue one")
 
     # ----- back in the portal: the sign-ups are leads
     pg.goto(URL + "?demo=1"); pg.wait_for_timeout(700)
