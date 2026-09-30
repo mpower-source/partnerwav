@@ -2550,6 +2550,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
   }
 
+  // Botnoi's program: reseller first, then channel manager, then the joint venture (rates still to be agreed)
+  var BOTNOI_TIERS = [
+    { tier:"Reseller", rate:"To be agreed with Botnoi", base:"Net revenue" },
+    { tier:"Channel Manager", rate:"To be agreed with Botnoi", base:"Sub-reseller revenue" },
+    { tier:"Joint Venture", rate:"Per JV profit-allocation schedule", base:"Per Joint Venture Agreement, Schedule C" }
+  ];
   var programs = [
     { id:"intelsense", name:"Intelsense AI", vertical:"Technology", origin:"Bangladesh", desc:"Conversational-AI platform for enterprise support automation.", relationships:["Vendor Program"], tiers:[
         { tier:"Reseller", rate:"15% + 5%", base:"Net revenue" },
@@ -2572,9 +2578,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ], agreement:{ type:"Vendor Program Agreement", status:"active" }, status:"active",
       logo:dataLogo("C","#7a9c00"), website:"https://crossconnectapp.com",
       social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
-    { id:"botnoi", name:"Botnoi Voice", vertical:"Conversational AI (voice)", origin:"Thailand", desc:"Thai voice/conversational-AI platform expanding into the US market -- open to a straight Vendor Program relationship or a deeper Joint Venture, depending on the partner.", relationships:["Vendor Program","Joint Venture"], tiers:[
-        { tier:"Channel Manager", rate:"Per JV profit-allocation schedule", base:"Per Joint Venture Agreement, Schedule C" }
-      ], agreement:{ type:"Joint Venture Agreement", status:"pending" }, status:"onboarding",
+    { id:"botnoi", name:"Botnoi Voice", vertical:"Conversational AI (voice)", origin:"Thailand", desc:"Thai voice/conversational-AI platform expanding into the US market -- open to a straight Vendor Program relationship or a deeper Joint Venture, depending on the partner.", relationships:["Vendor Program","Joint Venture"], tiersSetup:1, tiers:BOTNOI_TIERS.map(function(t){ return Object.assign({}, t); }),
+      agreement:{ type:"Joint Venture Agreement", status:"pending" }, status:"onboarding",
       logo:"", website:"https://botnoigroup.com",
       social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
     { id:"zipevent", name:"ZipEvent", vertical:"Events & marketing (Thailand)", origin:"Thailand", desc:"Thailand's largest AI/tech event platform -- a co-marketing relationship, not a reseller program.", relationships:["Custom Marketing"], tiers:[
@@ -4767,6 +4772,86 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     render();
   }
 
+  // ===== VENDOR PROFILE: relationship & tiers (CloudWAV edits them; they come from the vendor's agreement) =====
+  function ensureBotnoiTiers(){
+    var p = programById("botnoi"); if (!p || (p.tiersSetup || 0) >= 1) return false;
+    var jv = (p.tiers || []).filter(function(t){ return /joint venture|jv profit/i.test(t.tier + " " + t.rate + " " + t.base); })[0];
+    var others = (p.tiers || []).filter(function(t){ return t !== jv && ["reseller","channel manager"].indexOf(String(t.tier).toLowerCase()) < 0; });
+    var byName = {}; (p.tiers || []).forEach(function(t){ if (t !== jv) byName[String(t.tier).toLowerCase()] = t; });
+    p.tiers = [byName["reseller"] || BOTNOI_TIERS[0], byName["channel manager"] || BOTNOI_TIERS[1], Object.assign({}, BOTNOI_TIERS[2], jv ? { rate:jv.rate, base:jv.base } : {})].concat(others)
+      .map(function(t){ return Object.assign({}, t); });
+    p.tiersSetup = 1;
+    syncTermsTiers(p); saveProgramTerms();
+    return true;
+  }
+  function syncTermsTiers(p){ if (p.terms) p.terms.tiers = p.tiers.map(parseTierRate); else p.terms = termsFor(p); }
+  function canEditTiers(){ return state.role === "operator" || (typeof canPreview === "function" && canPreview()); }
+  var REL_TYPES = REL_FILTER_OPTIONS.filter(function(r){ return r !== "all"; });
+  function tierViewHtml(p){
+    return p.tiers.map(function(t, i){
+      return '<div class="tier-line" data-tier-row="'+i+'"><span>'+esc(t.tier)+' <span style="color:var(--ink-faint)">· '+esc(t.base)+'</span></span><b>'+esc(t.rate)+'</b></div>';
+    }).join("");
+  }
+  function readTierDraft(){
+    var d = state.tierDraft; if (!d || !document.getElementById("tierEditForm")) return d;
+    d.relationships = REL_TYPES.filter(function(r){ var el = document.querySelector('[data-tier-rel="'+r+'"]'); return el && el.checked; });
+    d.tiers = d.tiers.map(function(t, i){
+      var g = function(k){ var el = document.querySelector('[data-tier-'+k+'="'+i+'"]'); return el ? el.value.trim() : ""; };
+      return { tier:g("name"), rate:g("rate"), base:g("base") };
+    });
+    return d;
+  }
+  function tierEditorHtml(p){
+    var d = state.tierDraft;
+    var inp = function(k, i, v, ph, label){ return '<div class="field-row"><label for="tier-'+k+'-'+i+'">'+label+'</label><input type="text" id="tier-'+k+'-'+i+'" data-tier-'+k+'="'+i+'" value="'+attr(v)+'" placeholder="'+attr(ph)+'"></div>'; };
+    return '<form id="tierEditForm" class="card card-pad" style="display:flex;flex-direction:column;gap:12px;background:var(--surface-2);" onsubmit="return false;">'
+      + '<div class="field-note" style="margin:0;">Relationship types</div>'
+      + '<div style="display:flex;gap:12px;flex-wrap:wrap;">'+REL_TYPES.map(function(r){ return '<label class="cfg-check"><input type="checkbox" data-tier-rel="'+attr(r)+'"'+(d.relationships.indexOf(r) > -1 ? ' checked' : '')+'> '+esc(r)+'</label>'; }).join("")+'</div>'
+      + '<div class="field-note" style="margin:0;">Offerings, in the order partners see them. The first one is what partners enroll as.</div>'
+      + d.tiers.map(function(t, i){
+          return '<div class="tier-edit-row" data-tier-edit="'+i+'" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);">'
+            + inp("name", i, t.tier, "e.g. Reseller", "Offering") + inp("rate", i, t.rate, "e.g. 15% + 5%", "Commission / terms") + inp("base", i, t.base, "e.g. Net revenue", "Paid on")
+            + '<div style="display:flex;gap:6px;">'
+              + '<button type="button" class="btn ghost sm" data-tier-move="'+i+'" data-dir="-1" aria-label="Move up"'+(i === 0 ? ' disabled' : '')+'>↑</button>'
+              + '<button type="button" class="btn ghost sm" data-tier-move="'+i+'" data-dir="1" aria-label="Move down"'+(i === d.tiers.length - 1 ? ' disabled' : '')+'>↓</button>'
+              + '<button type="button" class="btn ghost sm" data-tier-remove="'+i+'" aria-label="Remove"'+(d.tiers.length < 2 ? ' disabled' : '')+'>Remove</button>'
+            + '</div></div>';
+        }).join("")
+      + '<div><button type="button" class="btn secondary sm" data-tier-add>+ Add offering</button></div>'
+      + '<div id="tierEditError" class="login-msg bad" role="alert" hidden></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-tier-save="'+attr(p.id)+'">Save</button><button type="button" class="btn secondary sm" data-tier-cancel>Cancel</button></div>'
+      + '<p class="field-note" style="margin:0;">These are the partner-facing terms from '+esc(p.name)+'\'s agreement. For renewal periods, payout terms and the CloudWAV fee, use Configure program.</p>'
+    + '</form>';
+  }
+  function saveTierEdit(id){
+    var p = programById(id); if (!p || !canEditTiers()) return;
+    var d = readTierDraft(), problems = [];
+    d.tiers = d.tiers.filter(function(t){ return t.tier || t.rate || t.base; });
+    if (!d.tiers.length) problems.push("Add at least one offering.");
+    d.tiers.forEach(function(t, i){ if (!t.tier) problems.push("Offering " + (i + 1) + " needs a name."); if (!t.rate) problems.push((t.tier || "Offering " + (i + 1)) + " needs its commission or terms (or \"To be agreed\")."); });
+    if (!d.relationships.length) problems.push("Pick at least one relationship type.");
+    if (problems.length){ var e = document.getElementById("tierEditError"); e.innerHTML = problems.map(esc).join("<br>"); e.hidden = false; return; }
+    p.tiers = d.tiers.map(function(t){ return { tier:t.tier, rate:t.rate, base:t.base || "Net revenue" }; });
+    p.relationships = d.relationships.slice(); p.tiersSetup = Math.max(1, p.tiersSetup || 0);
+    syncTermsTiers(p); p.terms.updatedAt = nowStamp(); p.terms.updatedBy = state.account ? state.account.name : "Program Operator";
+    saveProgramTerms();
+    state.tierDraft = null; state.tierEditId = null;
+    toast(p.name + " offerings saved");
+    render();
+  }
+  document.addEventListener("click", function(ev){
+    var t = ev.target.closest ? ev.target : null; if (!t) return;
+    var b;
+    if ((b = t.closest("[data-tier-edit-open]"))){ var p = programById(b.getAttribute("data-tier-edit-open")); if (!p || !canEditTiers()) return;
+      state.tierEditId = p.id; state.tierDraft = { relationships:(p.relationships || []).slice(), tiers:p.tiers.map(function(x){ return { tier:x.tier, rate:x.rate, base:x.base }; }) }; render(); return; }
+    if (t.closest("[data-tier-cancel]")){ state.tierEditId = null; state.tierDraft = null; render(); return; }
+    if ((b = t.closest("[data-tier-save]"))){ saveTierEdit(b.getAttribute("data-tier-save")); return; }
+    if (t.closest("[data-tier-add]")){ readTierDraft().tiers.push({ tier:"", rate:"", base:"Net revenue" }); render(); return; }
+    if ((b = t.closest("[data-tier-remove]"))){ readTierDraft().tiers.splice(+b.getAttribute("data-tier-remove"), 1); render(); return; }
+    if ((b = t.closest("[data-tier-move]"))){ var d = readTierDraft(), i = +b.getAttribute("data-tier-move"), j = i + (+b.getAttribute("data-dir"));
+      if (j >= 0 && j < d.tiers.length){ var x = d.tiers[i]; d.tiers[i] = d.tiers[j]; d.tiers[j] = x; } render(); return; }
+  });
+
   function renderVendorProfile(){
     var body = document.getElementById("vendorProfileContent");
     if (!body) return;
@@ -4894,7 +4979,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + '<span style="font-size:.86rem;">'+esc(p.name)+' is also listed as a <b>Partner</b> in the Partner Network.</span>'
             + '<button class="btn secondary sm" style="margin-left:auto;" data-view-profile="'+esc(p.partnerProfileId)+'">View Partner profile →</button>'
           + '</div>' : '')
-        + '<div><div class="section-head"><h2 style="font-size:.9rem;">Relationship &amp; tiers</h2></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">'+relBadges(p.relationships)+tiersHtml+'</div></div>'
+        + '<div id="vendorTiersSection"><div class="section-head"><h2 style="font-size:.9rem;">Relationship &amp; tiers</h2>'
+          + (canEditTiers() && state.tierEditId !== p.id ? '<button type="button" class="btn secondary sm" data-tier-edit-open="'+attr(p.id)+'">Edit offerings</button>' : '')
+          + (mine && !canEditTiers() ? '<span class="hint">Set in your agreement -- message CloudWAV to change them</span>' : '')+'</div>'
+          + (canEditTiers() && state.tierEditId === p.id && state.tierDraft ? '<div style="margin-top:8px;">'+tierEditorHtml(p)+'</div>'
+            : '<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">'+relBadges(p.relationships)+tierViewHtml(p)+'</div>')+'</div>'
         + (social ? '<div><div class="section-head"><h2 style="font-size:.9rem;">Elsewhere</h2></div><div style="margin-top:8px;">'+social+'</div></div>' : '')
         + (function(){
             var today = new Date().toISOString().slice(0,10);
@@ -6312,7 +6401,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function saveProgramTerms(){
     try {
       var out = {};
-      programs.forEach(function(pg){ if (pg.terms) out[pg.id] = { terms: pg.terms, tiers: pg.tiers, agreement: pg.agreement, status: pg.status }; });
+      programs.forEach(function(pg){ if (pg.terms) out[pg.id] = { terms: pg.terms, tiers: pg.tiers, agreement: pg.agreement, status: pg.status, relationships: pg.relationships, tiersSetup: pg.tiersSetup }; });
       lsSet(PROGRAM_TERMS_KEY, JSON.stringify(out));
     } catch(e){ console.log("Could not save program terms:", e); }
   }
@@ -6323,6 +6412,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       Object.keys(saved).forEach(function(id){
         var pg = programById(id); if (!pg) return;
         pg.terms = saved[id].terms; pg.tiers = saved[id].tiers; pg.agreement = saved[id].agreement; pg.status = saved[id].status;
+        if (saved[id].relationships) pg.relationships = saved[id].relationships;
+        pg.tiersSetup = saved[id].tiersSetup;   // older saves have none -> ensureBotnoiTiers() re-orders them once
       });
     } catch(e){ console.log("Could not load program terms:", e); }
   }
@@ -8495,7 +8586,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var missing = CLOUD_COLLECTIONS.some(function(c){ return c.mode === "merge" && !Object.keys(CLOUD.inCloud[c.name] || {}).length; });
       if (isOp() && missing) await cloudSeed(true);
       if (isOp()) addIntelsenseSamples(true);
-      if (isOp()){ ensureOwnPartner(); cloudSchedule(); }
+      if (isOp()){ ensureOwnPartner(); ensureBotnoiTiers(); cloudSchedule(); }
     } catch(e){
       console.warn("Cloud load failed:", e);
       CLOUD.loadFails = (CLOUD.loadFails || 0) + 1;
@@ -12762,6 +12853,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadResourceData();
   loadVendorEdits();
   loadProgramTerms();
+  ensureBotnoiTiers();
   loadDeals();
   loadMspProspects();
   loadIncentives();

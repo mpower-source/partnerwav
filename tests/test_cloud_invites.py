@@ -62,5 +62,14 @@ with sync_playwright() as p:
     ok(pg.locator(f'[data-offer="{OFFER}"]').count() == 0 and mock.sql("select count(*) as n from portal_records where collection='affiliateSignups'", uid=USERS["vendor@intelsense.test"]["id"])[0]["n"] == 0, "Intelsense sees neither the offer nor the sign-ups")
     b.close()
 
+    # Botnoi's program already in Supabase with only the JV tier: re-ordered once when CloudWAV signs in
+    old = [r for r in db("programs") if r["id"] == "botnoi"][0]["data"]
+    old.pop("tiersSetup", None); old["logo"] = "data:image/png;base64,iVBORw0KGgo="
+    old["tiers"] = [{"tier": "Channel Manager", "rate": "Per JV profit-allocation schedule", "base": "Per Joint Venture Agreement, Schedule C"}]
+    mock.sql("update portal_records set data = %s where collection='programs' and id='botnoi'", (json.dumps(old),), fetch=False, uid=USERS["ops@cloudwav.test"]["id"])
+    b, ctx, pg = session(p, "ops@cloudwav.test"); pg.wait_for_timeout(1000); settle(pg)
+    d = [r for r in db("programs") if r["id"] == "botnoi"][0]["data"]
+    ok([t["tier"] for t in d["tiers"]] == ["Reseller", "Channel Manager", "Joint Venture"] and d["logo"].startswith("data:image/png"), "Cloud Botnoi program re-ordered (Reseller, Channel Manager, Joint Venture), other fields kept")
+    b.close()
 stop_pg()
 report()
