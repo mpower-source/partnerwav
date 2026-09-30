@@ -253,6 +253,8 @@
   .card-pad{ padding:18px 20px; }
 
   .directory-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:14px; }
+  /* affiliate tiles keep their tile size even when only one or two are showing */
+  #affiliateMarketplaceGrid, #myAffiliateGrid, #vendorAffiliateOffers{ grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); }
   .program-card{ border:1px solid var(--line); border-radius:14px; padding:17px; background:var(--surface); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:10px; }
   .program-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; flex-wrap:wrap; }
   .program-name{ font-weight:700; font-size:.98rem; }
@@ -3524,11 +3526,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<p class="program-desc">'+esc(a.desc)+'</p>'
       + (a.note ? '<p class="field-note" style="margin:0;">'+esc(a.note)+'</p>' : '')
       + directHtml
-      + (isInviteOffer(a) && editable && live ? inviteToolsHtml(a) : '')
+      + (isInviteOffer(a) && editable && live ? '<span class="field-note" data-invite-summary="'+esc(a.id)+'">'+signupsFor(a.id).length+' sign-up'+(signupsFor(a.id).length === 1 ? '' : 's')+' · invite link &amp; QR code ready</span>' : '')
       + (isInviteOffer(a) && editable && !live ? '<span class="field-note" data-invite-waiting>Your invite link and QR code appear here once CloudWAV approves the offer.</span>' : '')
       + (a.direct && !a.directLink ? '<span class="badge warn" style="align-self:flex-start;" data-link-pending="'+esc(a.id)+'">Link &amp; QR code coming soon</span>' : '')
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
-      + '<div class="program-actions">'+reviewBtns+joinBtn+editBtns+'</div>'
+      + '<div class="program-actions">'+reviewBtns+joinBtn
+        + (isInviteOffer(a) && editable && live ? '<button class="btn primary sm" data-invite-open="'+esc(a.id)+'">Invite link &amp; QR</button><button class="btn secondary sm" data-invite-signups="'+esc(a.id)+'">Sign-ups ('+signupsFor(a.id).length+')</button>' : '')
+        + editBtns+'</div>'
     + '</div>';
   }
   function reviewAffiliateOffer(id, decision){
@@ -3626,6 +3630,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     + '</div>';
   }
 
+  function showInviteTools(id){
+    var a = affiliateById(id); if (!a || !canEditOffer(a)) return;
+    var back = openModal('<div class="modal-head"><h2>Invite link &amp; QR: '+esc(a.name)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<p class="field-note" style="margin:0 0 10px;">Send this to your own audience -- WhatsApp and LINE groups, email, slides, booth signs. Everyone who signs up shows under Sign-ups.</p>'
+      + inviteToolsHtml(a)
+      + '<div class="modal-actions"><button type="button" class="btn primary" data-modal-ok>Done</button></div>');
+    back.querySelector("[data-modal-ok]").addEventListener("click", closeModal);
+    var su = back.querySelector("[data-invite-signups]"); if (su) su.addEventListener("click", function(ev){ ev.stopPropagation(); closeModal(); showInviteSignups(id); });
+    fillQrCodes();
+  }
   function showInviteSignups(id){
     var a = affiliateById(id); if (!a || !canEditOffer(a)) return;
     var list = signupsFor(id).slice().sort(function(x, y){ return String(y.createdAt).localeCompare(String(x.createdAt)); });
@@ -3778,8 +3792,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("submit", function(ev){ if (ev.target && ev.target.id === "inviteForm") submitInvite(ev); });
   document.addEventListener("click", function(ev){ if (ev.target && ev.target.id === "ourAffiliateBtn"){ state.affOwnOnly = !state.affOwnOnly; render(); } });
   document.addEventListener("click", function(ev){
+    var o = ev.target.closest && ev.target.closest("[data-invite-open]");
+    if (o){ showInviteTools(o.getAttribute("data-invite-open")); return; }
     var b = ev.target.closest && ev.target.closest("[data-invite-signups]");
-    if (b){ showInviteSignups(b.getAttribute("data-invite-signups")); }
+    if (b && !b.closest(".modal")){ showInviteSignups(b.getAttribute("data-invite-signups")); }
   });
 
   function renderAffiliateManage(){

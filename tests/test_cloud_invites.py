@@ -53,7 +53,8 @@ with sync_playwright() as p:
 
     # Botnoi sees its offer and the leads; Intelsense doesn't
     b, ctx, pg = session(p, "vendor@botnoi.test"); nav(pg, "affiliate-marketplace"); pg.wait_for_timeout(800)
-    tools = pg.locator(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"] [data-invite-tools]')
+    pg.click(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"] [data-invite-open]'); pg.wait_for_timeout(300)
+    tools = pg.locator(".modal [data-invite-tools]")
     ok(tools.count() == 1 and "Sign-ups (2)" in tools.inner_text(), "Botnoi sees its invite link and 2 sign-ups")
     tools.locator("[data-invite-signups]").click(); pg.wait_for_timeout(300)
     ok("Somsri Thai Kitchen" in pg.inner_text("#inviteSignupRows") and "Nok Sukjai" in pg.inner_text("#inviteSignupRows"), "Botnoi's sign-up list")
