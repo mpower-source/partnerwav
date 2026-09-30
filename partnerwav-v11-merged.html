@@ -1657,7 +1657,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-affiliate-marketplace" hidden>
         <div class="section-head"><h2>Affiliate Marketplace</h2><span class="hint">Back-office tools CloudWAV resells to Partners and Vendors -- for running your own business, not for resale to your customers</span></div>
         <div style="height:14px"></div>
-        <button class="btn primary" id="createAffiliateOfferBtn" data-goto-screen="affiliate-offer-editor" data-create-new style="margin-bottom:16px;">+ Create Offer</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="btn primary" id="createAffiliateOfferBtn" data-goto-screen="affiliate-offer-editor" data-create-new>+ Create Offer</button>
+          <button class="btn secondary" id="ourAffiliateBtn" type="button" hidden aria-pressed="false">Our affiliate program</button>
+        </div>
         <div class="directory-grid" id="affiliateMarketplaceGrid"></div>
       </section>
 
@@ -2550,6 +2553,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
   }
 
+  // Botnoi's robot symbol, redrawn as a vector from Botnoi's logo (white on Botnoi's dark navy)
+  var BOTNOI_LOGO = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-9.5 -27.5 180 180" width="400" height="400">'
+    + '<rect x="-9.5" y="-27.5" width="180" height="180" fill="#070b16"/><g fill="#fff">'
+    + '<circle cx="80.5" cy="16.5" r="8.5"/><circle cx="53" cy="75" r="9"/><circle cx="108" cy="75" r="9"/>'
+    + '<rect x="12" y="65" width="8" height="23" rx="4"/><rect x="141" y="65" width="8.5" height="23" rx="4"/></g>'
+    + '<rect x="27.5" y="35.5" width="107" height="78" rx="19.5" fill="none" stroke="#fff" stroke-width="9"/></svg>');
   // Botnoi's program: reseller first, then channel manager, then the joint venture (rates still to be agreed)
   var BOTNOI_TIERS = [
     { tier:"Reseller", rate:"To be agreed with Botnoi", base:"Net revenue" },
@@ -2580,7 +2589,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
     { id:"botnoi", name:"Botnoi Voice", vertical:"Conversational AI (voice)", origin:"Thailand", desc:"Thai voice/conversational-AI platform expanding into the US market -- open to a straight Vendor Program relationship or a deeper Joint Venture, depending on the partner.", relationships:["Vendor Program","Joint Venture"], tiersSetup:1, tiers:BOTNOI_TIERS.map(function(t){ return Object.assign({}, t); }),
       agreement:{ type:"Joint Venture Agreement", status:"pending" }, status:"onboarding",
-      logo:"", website:"https://botnoigroup.com",
+      logo:BOTNOI_LOGO, logoSetup:1, website:"https://botnoigroup.com",
       social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
     { id:"zipevent", name:"ZipEvent", vertical:"Events & marketing (Thailand)", origin:"Thailand", desc:"Thailand's largest AI/tech event platform -- a co-marketing relationship, not a reseller program.", relationships:["Custom Marketing"], tiers:[
         { tier:"Marketing partner", rate:"Per-campaign MDF, 50/50 upfront/milestone", base:"Approved campaign budget" }
@@ -2667,7 +2676,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"botnoi-sme-ai-invite", demo:true, vendorId:"botnoi", audience:"invite", status:"approved", name:"BOTNOI AI -- Refer a Thai SME", category:"Conversational & Voice AI",
       desc:"Botnoi's invite-only referral offer for its own community. People who sign up get a personal link; Thai SMEs they bring in can claim free BOTNOI AI credits.",
       note:"Demo built on Botnoi's SME AI credits offer. Confirm the referral reward and end date with Botnoi before sending.",
-      apiIntegration:false, directLink:"", qr:"", logo:"", archivedAt:null,
+      apiIntegration:false, directLink:"", qr:"", logo:BOTNOI_LOGO, logoSetup:1, archivedAt:null,
       invite:{ eyebrow:"Regional Thai AI ecosystem partner", website:"https://botnoigroup.com", validUntil:"",
         headline:"Help Thai businesses get THB 5,000 of free AI credits",
         body:"Botnoi Group is Thailand's leading AI and data science company. Thai SMEs can claim THB 5,000 in free BOTNOI credits under a government-supported program. Share your personal link with businesses you know and earn a reward for each one that activates its credits.",
@@ -3767,6 +3776,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     fillQrCodes();
   }
   document.addEventListener("submit", function(ev){ if (ev.target && ev.target.id === "inviteForm") submitInvite(ev); });
+  document.addEventListener("click", function(ev){ if (ev.target && ev.target.id === "ourAffiliateBtn"){ state.affOwnOnly = !state.affOwnOnly; render(); } });
   document.addEventListener("click", function(ev){
     var b = ev.target.closest && ev.target.closest("[data-invite-signups]");
     if (b){ showInviteSignups(b.getAttribute("data-invite-signups")); }
@@ -3816,14 +3826,25 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         ? mine.map(function(a){ return affiliateCard(a); }).join("")
         : '<div class="empty">No affiliate tools enrolled yet -- visit the Affiliate Marketplace to add one.</div>';
     }
+    // Vendors: "Our affiliate program" shows only their own offers. CloudWAV: only offers vendors added.
+    var ownBtn = document.getElementById("ourAffiliateBtn"), ownOnly = !!state.affOwnOnly && (state.role === "vendor" || state.role === "operator");
+    if (ownBtn){
+      ownBtn.hidden = state.role !== "vendor" && state.role !== "operator";
+      ownBtn.textContent = ownOnly ? "Show all offers" : (state.role === "vendor" ? "Our affiliate program" : "Vendor affiliate programs");
+      ownBtn.setAttribute("aria-pressed", ownOnly ? "true" : "false");
+    }
     var createOfferBtn = document.getElementById("createAffiliateOfferBtn");
     if (createOfferBtn){ createOfferBtn.hidden = state.role !== "operator" && state.role !== "vendor"; createOfferBtn.textContent = state.role === "vendor" ? "+ Add my affiliate program" : "+ Create Offer"; }
     var mktGrid = document.getElementById("affiliateMarketplaceGrid");
     if (mktGrid){
       // pending reviews first (for CloudWAV), then offers whose link is ready to use, then the rest -- each in list order
       var rank = function(a){ return a.status === "pending" ? 0 : a.directLink ? 1 : 2; };
-      var shown = affiliatePrograms.filter(offerVisible).slice().sort(function(x, y){ return rank(x) - rank(y); });
-      mktGrid.innerHTML = shown.length ? shown.map(function(a){ return affiliateCard(a, true); }).join("") : '<div class="empty">No affiliate offers yet.</div>';
+      var shown = affiliatePrograms.filter(offerVisible).filter(function(a){
+        if (!ownOnly) return true;
+        return state.role === "vendor" ? a.vendorId === state.myVendorId : !!a.vendorId;
+      }).slice().sort(function(x, y){ return rank(x) - rank(y); });
+      mktGrid.innerHTML = shown.length ? shown.map(function(a){ return affiliateCard(a, true); }).join("")
+        : '<div class="empty">' + (ownOnly ? (state.role === "vendor" ? "You haven't added an affiliate program yet -- use \"+ Add my affiliate program\"." : "No vendor has added an affiliate program yet.") : "No affiliate offers yet.") + '</div>';
     }
   }
 
@@ -4680,7 +4701,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // ===== VENDOR PROFILE: inline edit / save (own profile only) =====
   var VENDOR_EDITS_KEY = "partnerWAV_vendorProfileEdits";
-  var VENDOR_EDITABLE = ["name","vertical","origin","desc","logo","website","social","products"];
+  var VENDOR_EDITABLE = ["name","vertical","origin","desc","logo","logoSetup","website","social","products"];
   function saveVendorEdits(){
     try {
       var out = {};
@@ -4783,6 +4804,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     p.tiersSetup = 1;
     syncTermsTiers(p); saveProgramTerms();
     return true;
+  }
+  function ensureBotnoiLogo(){
+    var changed = false;
+    [programById("botnoi"), affiliateById("botnoi-sme-ai-invite")].forEach(function(x){
+      if (!x || x.logoSetup) return;
+      if (!x.logo) x.logo = BOTNOI_LOGO;
+      x.logoSetup = 1; changed = true;
+    });
+    if (changed){ var b = programById("botnoi"); if (b){ b._edited = true; saveVendorEdits(); } saveVendorData(); }
+    return changed;
   }
   function syncTermsTiers(p){ if (p.terms) p.terms.tiers = p.tiers.map(parseTierRate); else p.terms = termsFor(p); }
   function canEditTiers(){ return state.role === "operator" || (typeof canPreview === "function" && canPreview()); }
@@ -8586,7 +8617,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var missing = CLOUD_COLLECTIONS.some(function(c){ return c.mode === "merge" && !Object.keys(CLOUD.inCloud[c.name] || {}).length; });
       if (isOp() && missing) await cloudSeed(true);
       if (isOp()) addIntelsenseSamples(true);
-      if (isOp()){ ensureOwnPartner(); ensureBotnoiTiers(); cloudSchedule(); }
+      if (isOp()){ ensureOwnPartner(); ensureBotnoiTiers(); ensureBotnoiLogo(); cloudSchedule(); }
     } catch(e){
       console.warn("Cloud load failed:", e);
       CLOUD.loadFails = (CLOUD.loadFails || 0) + 1;
@@ -12854,6 +12885,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadVendorEdits();
   loadProgramTerms();
   ensureBotnoiTiers();
+  ensureBotnoiLogo();
   loadDeals();
   loadMspProspects();
   loadIncentives();

@@ -13,12 +13,27 @@ with sync_playwright() as p:
     ok(pg.locator(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"]').count() == 0, "Partners don't see Botnoi's invite-only offer in the marketplace")
     role(pg, "vendor"); nav(pg, "affiliate-marketplace")
     ok(pg.locator(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"]').count() == 0, "Other vendors (Intelsense) don't see it either")
+    ok(pg.locator("#ourAffiliateBtn").is_visible() and pg.inner_text("#ourAffiliateBtn") == "Our affiliate program", "Vendors get an 'Our affiliate program' button")
+    pg.click("#ourAffiliateBtn"); pg.wait_for_timeout(200)
+    ok(pg.locator("#affiliateMarketplaceGrid .program-card").count() == 0 and "haven't added an affiliate program" in pg.inner_text("#affiliateMarketplaceGrid"), "Intelsense has none yet -- says how to add one")
+    pg.click("#ourAffiliateBtn"); pg.wait_for_timeout(200)
+    role(pg, "partner"); nav(pg, "affiliate-marketplace")
+    ok(not pg.locator("#ourAffiliateBtn").is_visible(), "Partners don't get the button")
 
     # ----- CloudWAV sees it with the invite tools
     role(pg, "operator"); nav(pg, "affiliate-marketplace"); pg.wait_for_timeout(800)
     card = pg.locator(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"]')
     ok(card.count() == 1 and card.locator("[data-invite-only]").count() == 1 and "Demo" in card.inner_text(), "Operator sees it, marked Invite only and Demo")
     ok("THB 300" not in card.inner_text() and card.locator("[data-aff-terms]").count() == 0, "Reward terms stay off the tile")
+    ok(card.locator("img.entity-logo-img").count() == 1 and "svg" in card.locator("img.entity-logo-img").get_attribute("src"), "Botnoi robot logo on the offer")
+    # "Vendor affiliate programs" filter for CloudWAV
+    pg.click("#ourAffiliateBtn"); pg.wait_for_timeout(200)
+    ids = [c.get_attribute("data-offer") for c in pg.locator("#affiliateMarketplaceGrid .program-card").all()]
+    ok(OFFER in ids and "lovable" not in ids and "xero" not in ids, "Operator: 'Vendor affiliate programs' shows only vendors' offers")
+    ok(pg.inner_text("#ourAffiliateBtn") == "Show all offers", "Button switches to 'Show all offers'")
+    pg.click("#ourAffiliateBtn"); pg.wait_for_timeout(200)
+    ok(pg.locator('#affiliateMarketplaceGrid [data-offer="lovable"]').count() == 1, "Back to all offers")
+    card = pg.locator(f'#affiliateMarketplaceGrid [data-offer="{OFFER}"]')
     tools = card.locator("[data-invite-tools]")
     link = tools.locator(".aff-link-input").input_value()
     ok(link.endswith("?invite=" + OFFER), "Invite link: " + link)
