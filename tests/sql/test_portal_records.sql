@@ -185,4 +185,31 @@ update portal_records set data = jsonb_set(data,'{thread}','[{"text":"thanks"}]'
 select t('partner can still add notes after it is won', (select data->'thread'->0->>'text' from portal_records where id='r1') = 'thanks');
 reset role;
 
+-- ===== invite-only affiliate offers: public sign-ups through submit_affiliate_signup()
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers,is_public) values
+ ('affiliatePrograms','inv-live','{"id":"inv-live","vendorId":"botnoi","audience":"invite","status":"approved"}','{*}','{vendor:botnoi}',true),
+ ('affiliatePrograms','inv-pending','{"id":"inv-pending","vendorId":"botnoi","audience":"invite","status":"pending"}','{vendor:botnoi}','{vendor:botnoi}',false),
+ ('affiliatePrograms','mkt-live','{"id":"mkt-live","vendorId":"botnoi","status":"approved"}','{*}','{vendor:botnoi}',true);
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('anon signs up on a live invite page', public.submit_affiliate_signup('inv-live', '{"name":"Nok","email":"Nok@Example.co.th","kind":"referrer","consent":true,"phone":"0812345678"}') like 'sg-%');
+select t('anon business sign-up with a referrer', public.submit_affiliate_signup('inv-live', '{"name":"Som Shop","email":"som@shop.th","kind":"business","consent":true,"referredBy":"sg-abc"}') like 'sg-%');
+select t('sign-up needs consent', fails($$select public.submit_affiliate_signup('inv-live', '{"name":"A","email":"a@b.co","consent":false}')$$));
+select t('sign-up needs a valid email', fails($$select public.submit_affiliate_signup('inv-live', '{"name":"A","email":"nope","consent":true}')$$));
+select t('no sign-ups on an unapproved invite', fails($$select public.submit_affiliate_signup('inv-pending', '{"name":"A","email":"a@b.co","consent":true}')$$));
+select t('no sign-ups on a marketplace offer', fails($$select public.submit_affiliate_signup('mkt-live', '{"name":"A","email":"a@b.co","consent":true}')$$));
+select t('anon cannot insert sign-ups directly', fails($$insert into portal_records(collection,id,data,readers,writers) values ('affiliateSignups','sg-x','{}','{vendor:botnoi}','{}')$$));
+select t('anon cannot read sign-ups', (select count(*) from portal_records where collection='affiliateSignups') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authenticated;
+select t('the owning vendor reads its sign-ups', (select count(*) from portal_records where collection='affiliateSignups') = 2);
+select t('sign-up is stored cleaned (email lower-cased, vendor set)', (select count(*) from portal_records where collection='affiliateSignups' and data->>'email'='nok@example.co.th' and data->>'vendorId'='botnoi') = 1);
+select t('vendor cannot add fake sign-ups', fails($$insert into portal_records(collection,id,data,readers,writers) values ('affiliateSignups','sg-y','{"vendorId":"botnoi"}','{vendor:botnoi}','{vendor:botnoi}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('other vendors cannot read the sign-ups', (select count(*) from portal_records where collection='affiliateSignups') = 0);
+select t('signed-in members can use the invite page too', public.submit_affiliate_signup('inv-live', '{"name":"Ian","email":"ian@intelsense.ai","consent":true}') like 'sg-%');
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

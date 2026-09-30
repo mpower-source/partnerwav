@@ -24,6 +24,19 @@ def supabase_umd():
     with tarfile.open(tgz) as t:
         return t.extractfile("package/dist/umd/supabase.js").read().decode("utf8")
 
+def qrcode_js():
+    """qrcode-generator 1.4.4 (the QR library the portal loads): tests/vendor/ if present, else fetched once via npm pack."""
+    d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "qrcode-generator")
+    f = os.path.join(d, "qrcode.js")
+    if not os.path.exists(f):
+        import subprocess, tempfile, tarfile, glob
+        t = tempfile.mkdtemp()
+        subprocess.run(["npm", "pack", "qrcode-generator@1.4.4", "--silent"], cwd=t, check=True, capture_output=True)
+        os.makedirs(d, exist_ok=True)
+        with tarfile.open(glob.glob(os.path.join(t, "*.tgz"))[0]) as z:
+            open(f, "wb").write(z.extractfile("package/qrcode.js").read())
+    return open(f, encoding="utf8").read()
+
 errs = []; R = []
 def ok(c, m): R.append(("PASS " if c else "FAIL ") + m)
 

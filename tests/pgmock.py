@@ -109,7 +109,8 @@ class PgSupabase(MockSupabase):
         if not fn.replace("_", "").isalnum(): return route.fulfill(status=404, headers=hdr, body="")
         try:
             args = ", ".join(f"{k} => %s" for k in body)
-            r = self.sql(f"select public.{fn}({args}) as v", tuple(body.values()), uid=uid)
+            vals = tuple(psycopg2.extras.Json(v) if isinstance(v, (dict, list)) else v for v in body.values())
+            r = self.sql(f"select public.{fn}({args}) as v", vals, uid=uid)
             return route.fulfill(status=200, content_type="application/json", body=json.dumps(r[0]["v"], default=str), headers=hdr)
         except psycopg2.Error as e:
             msg = (e.pgerror or str(e)).strip().split("\n")[0].replace("ERROR:  ", "")

@@ -135,7 +135,7 @@ create or replace function public.portal_operator_only(c text)
 returns boolean language sql immutable as $$
   select c = any (array['mspProspects','mspEngagements','landingPages',
                         'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
-                        'programFees','platformFees'])
+                        'programFees','platformFees','affiliateSignups'])
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -155,6 +155,9 @@ begin
   new.updated_at := now();
   new.updated_by := auth.uid();
   if public.is_portal_operator() then return new; end if;
+  -- public sign-ups on a vendor's invite page arrive through submit_affiliate_signup() below
+  if new.collection = 'affiliateSignups' and tg_op = 'INSERT'
+     and current_setting('portal.affiliate_signup', true) = 'on' then return new; end if;
   if k is null then raise exception 'This account has no PartnerWAV role'; end if;
 
   -- The portal saves with upsert (INSERT ... ON CONFLICT DO UPDATE). The insert trigger sees
@@ -232,6 +235,57 @@ drop trigger if exists portal_records_guard on public.portal_records;
 create trigger portal_records_guard
   before insert or update on public.portal_records
   for each row execute function public.portal_records_guard();
+
+-- ---------------------------------------------------------------------------
+-- 5b. Invite-only affiliate offers: anyone with the vendor's invite link can sign up without
+--     an account. Only the vendor that owns the offer (and CloudWAV) can read the sign-ups.
+-- ---------------------------------------------------------------------------
+create or replace function public.submit_affiliate_signup(p_offer text, p_data jsonb)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  offer jsonb;
+  vendor text;
+  new_id text := 'sg-' || replace(gen_random_uuid()::text, '-', '');
+  clean jsonb;
+begin
+  select data into offer from public.portal_records
+   where collection = 'affiliatePrograms' and id = p_offer and is_public;
+  if offer is null or offer ->> 'audience' is distinct from 'invite'
+     or coalesce(offer ->> 'status', 'approved') not in ('approved', 'active') then
+    raise exception 'This invitation is not available';
+  end if;
+  vendor := offer ->> 'vendorId';
+  if coalesce(vendor, '') = '' then raise exception 'This invitation is not available'; end if;
+  if p_data is null or jsonb_typeof(p_data) <> 'object' or length(p_data::text) > 4000 then
+    raise exception 'Sign-up details are missing or too long';
+  end if;
+  if coalesce(trim(p_data ->> 'name'), '') = '' or coalesce(p_data ->> 'email', '') !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
+    raise exception 'Please give your name and a valid email address';
+  end if;
+  if coalesce((p_data ->> 'consent')::boolean, false) is not true then
+    raise exception 'Please agree to be contacted about this offer';
+  end if;
+  clean := jsonb_build_object(
+    'id', new_id, 'offerId', p_offer, 'vendorId', vendor,
+    'kind',      case when p_data ->> 'kind' = 'business' then 'business' else 'referrer' end,
+    'name',      left(trim(p_data ->> 'name'), 120),
+    'email',     left(lower(trim(p_data ->> 'email')), 160),
+    'phone',     left(coalesce(p_data ->> 'phone', ''), 60),
+    'lineId',    left(coalesce(p_data ->> 'lineId', ''), 60),
+    'company',   left(coalesce(p_data ->> 'company', ''), 160),
+    'role',      left(coalesce(p_data ->> 'role', ''), 80),
+    'note',      left(coalesce(p_data ->> 'note', ''), 500),
+    'referredBy',left(coalesce(p_data ->> 'referredBy', ''), 60),
+    'consent',   true,
+    'createdAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI'));
+  perform set_config('portal.affiliate_signup', 'on', true);
+  insert into public.portal_records (collection, id, data, readers, writers, is_public)
+  values ('affiliateSignups', new_id, clean, array['vendor:' || vendor], array[]::text[], false);
+  perform set_config('portal.affiliate_signup', 'off', true);
+  return new_id;
+end $$;
+revoke all on function public.submit_affiliate_signup(text, jsonb) from public;
+grant execute on function public.submit_affiliate_signup(text, jsonb) to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 6. Live updates: other people's changes show up without reloading
