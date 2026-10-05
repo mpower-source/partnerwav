@@ -474,6 +474,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .va-lines{ table-layout:fixed; border-collapse:collapse; min-width:0 !important; } .va-lines td:last-child{ width:128px; }
   .va-lines td, .va-lines th{ white-space:normal; padding:6px 0; font-size:.88rem; border-bottom:1px solid var(--line); } .va-lines th{ font-size:.74rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); border-bottom:0; }
   .va-amt{ width:104px; text-align:right; font:inherit; font-size:.88rem; padding:6px 8px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-variant-numeric:tabular-nums; }
+  .va-roi-big{ display:grid; grid-template-columns:1fr 1fr; gap:10px; } .va-roi-big > div{ padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+  .va-roi-big span{ display:block; font-size:.76rem; color:var(--ink-soft); } .va-roi-big b{ font-family:"IBM Plex Mono",monospace; font-size:1.25rem; }
+  .va-roi-table tr.on td{ font-weight:700; background:var(--accent-soft); } .va-roi-table td:last-child{ width:auto; } .va-roi-table td, .va-roi-table th{ padding:6px 8px; }
+  @media (max-width:520px){ .va-roi-big{ grid-template-columns:1fr; } }
   .va-total{ display:flex; justify-content:space-between; align-items:baseline; margin-top:12px; font-size:.95rem; } .va-total b{ font-family:"IBM Plex Mono",monospace; font-size:1.5rem; }
   @media (max-width:760px){ .va-fields, .va-two{ grid-template-columns:1fr; } .va-nav .btn{ flex:1; } }
   /* dropdowns that sit on their own (not in a form row): same look as the app's buttons and inputs */
@@ -3860,6 +3864,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // placeholders to adjust in Vendor Assessments -> Pricing model.
   var PRICING_DEFAULT = { id:"default", currency:"USD", updatedAt:"",
     plans:[
+      { id:"startup", name:"Startup", price:197, size:"Early-stage, up to 10 partners", blurb:"For early-stage companies: the basics at a low monthly fee. CloudWAV also earns when the partners it brings you sell, so most of what you pay follows your results. Move up when the channel is paying for itself." },
       { id:"launch", name:"Launch", price:500, size:"Up to 10 partners", blurb:"Start or formalize a partner program." },
       { id:"growth", name:"Growth", price:1500, size:"11-50 partners", blurb:"Scale with incentives, affiliate offers, training and landing pages." },
       { id:"enterprise", name:"Enterprise", price:3500, size:"50+ partners", blurb:"Everything, with CloudWAV recruiting partners for you and dedicated support." }
@@ -3876,7 +3881,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       { id:"referrals", name:"Software referrals", price:0, blurb:"Custom software requests from your customers are referred to trusted development firms, with a tracked referral fee. No monthly fee -- fee share only." }
     ] };
   var pricingModel = JSON.parse(JSON.stringify(PRICING_DEFAULT));
-  var VA_PLAN_ORDER = ["launch", "growth", "enterprise"];
+  var VA_PLAN_ORDER = ["startup", "launch", "growth", "enterprise"];   // Startup includes the same basics as Launch
+  var VA_FEATURE_PLANS = ["launch", "growth", "enterprise"];
   // What each plan includes, from what PartnerWAV does today. "plan" = the lowest plan that includes it.
   var VA_NEEDS = [
     { id:"listing", plan:"launch", name:"Vendor profile, product tiles and program listing" },
@@ -3896,7 +3902,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var VA_STEPS = [
     { id:"company", title:"About your company", fields:[
       { k:"company", label:"Company name", type:"text", req:true }, { k:"website", label:"Website", type:"url", ph:"https://" },
-      { k:"hq", label:"Where are you based?", type:"text", ph:"City, country" }, { k:"contactName", label:"Contact name", type:"text", req:true },
+      { k:"hq", label:"Where are you based?", type:"text", ph:"City, country" },
+      { k:"companyStage", label:"Where is the company today?", type:"single", req:true, options:["Startup -- pre-revenue or early revenue","Growing -- steady revenue, small team","Established"] },
+      { k:"contactName", label:"Contact name", type:"text", req:true },
       { k:"contactRole", label:"Role", type:"text", ph:"e.g. Founder, Head of Sales" }, { k:"email", label:"Email", type:"email", req:true },
       { k:"phone", label:"Mobile / WhatsApp", type:"tel" }, { k:"lineId", label:"LINE ID", type:"text" } ] },
     { id:"products", title:"What you sell", fields:[
@@ -3917,6 +3925,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       { k:"raising", label:"Are you raising investment?", type:"single", when:"investor", options:["Raising now","Planning to raise in the next 12 months","Not raising, just interested"] },
       { k:"raiseAmount", label:"Round and amount, if you know it", type:"text", when:"investor", ph:"e.g. Seed, USD 1.5M" } ] },
     { id:"finish", title:"Timing and anything else", fields:[
+      { k:"budget", label:"Monthly budget for a partner program today", type:"single", options:["None yet","Under $500","$500 - $2,000","Over $2,000","Not sure"] },
       { k:"timeline", label:"When would you like to start?", type:"single", options:["As soon as possible","In 1-3 months","In 3-6 months","Just exploring"] },
       { k:"notes", label:"Anything else we should know?", type:"textarea", wide:true },
       { k:"notesInternal", label:"Call notes (only CloudWAV sees these)", type:"textarea", wide:true, operatorOnly:true },
@@ -3938,17 +3947,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function vaMoney(n){ return "$" + Math.round(n || 0).toLocaleString("en-US"); }
   function vaUrl(){ return appBaseUrl() + "?assess=1"; }
   // Recommended plan: the larger of what their partner count calls for and what the features they ticked need
+  function vaStartupEligible(a){ return /^Startup/.test(a.companyStage || "") && (a.partners === "0" || a.partners === "1-10"); }
   function vaRecommend(a){
-    var bySize = (a.partners === "51-200" || a.partners === "200+") ? 2 : a.partners === "11-50" ? 1 : 0, why = [];
-    var byNeed = 0, top = null;
+    var bySize = (a.partners === "51-200" || a.partners === "200+") ? 3 : a.partners === "11-50" ? 2 : 1, why = [];
+    var byNeed = 1, top = null;
     (a.needs || []).forEach(function(id){ var n = VA_NEEDS.filter(function(x){ return x.id === id; })[0]; if (n && VA_PLAN_ORDER.indexOf(n.plan) > byNeed){ byNeed = VA_PLAN_ORDER.indexOf(n.plan); top = n; } });
     var idx = Math.max(bySize, byNeed);
-    if (a.support === "managed" && idx === 0){ idx = 1; why.push("CloudWAV running the program starts at Growth"); }
+    if (a.support === "managed" && idx === 1){ idx = 2; why.push("CloudWAV running the program starts at Growth"); }
     if (a.partners) why.unshift((a.partners === "0" ? "No" : a.partners) + " active partners");
-    if (top && byNeed >= bySize && byNeed > 0) why.push("needs \"" + top.name + "\"");
+    if (top && byNeed >= bySize && byNeed > 1) why.push("needs \"" + top.name + "\"");
+    // early-stage companies start on Startup (no monthly fee) unless they asked for more than the basics
+    if (vaStartupEligible(a)){
+      if (idx === 1){ idx = 0; why.push("early-stage company" + (a.budget === "None yet" || a.budget === "Under $500" ? ", small budget" : "")); }
+      else why.push("startup -- could begin on the Startup plan and move up");
+    }
     return { plan: VA_PLAN_ORDER[idx], why: why.join(" · ") };
   }
-  function vaPlanIncludes(planId){ var i = VA_PLAN_ORDER.indexOf(planId); return VA_NEEDS.filter(function(n){ return VA_PLAN_ORDER.indexOf(n.plan) <= i; }); }
+  function vaPlanIncludes(planId){ var i = Math.max(1, VA_PLAN_ORDER.indexOf(planId)); return VA_NEEDS.filter(function(n){ return VA_PLAN_ORDER.indexOf(n.plan) <= i; }); }
   // Build (or rebuild) the quote lines from the pricing model
   function vaBuildQuote(a, keep){
     var q = keep || {}, rec = vaRecommend(a);
@@ -3965,6 +3980,35 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var sub = lines.reduce(function(t, l){ return t + (l.amount || 0); }, 0), disc = Math.round(sub * (Number(q.discountPct) || 0)) / 100;
     return { lines:lines, subtotal:sub, discount:disc, monthly: sub - disc, annual: (sub - disc) * 12 };
   }
+  // ROI: what a partner channel is worth at a given size. All inputs are assumptions the operator (or vendor) can change.
+  var VA_DEAL_VALUE = { "Under $1,000":500, "$1,000 - $10,000":5000, "$10,000 - $50,000":25000, "Over $50,000":75000 };
+  function vaRoiDefaults(a){
+    var r = a.roi || {}, partnersNow = { "0":0, "1-10":5, "11-50":25, "51-200":100, "200+":250 }[a.partners] || 0;
+    return { partners: r.partners != null ? r.partners : Math.max(10, partnersNow), dealsPerPartner: r.dealsPerPartner != null ? r.dealsPerPartner : 3,
+      dealValue: r.dealValue != null ? r.dealValue : (VA_DEAL_VALUE[a.dealSize] || 5000), commissionPct: r.commissionPct != null ? r.commissionPct : 20, feePct: r.feePct != null ? r.feePct : 5 };   // 5% = CloudWAV's override on sales by partners it brings
+  }
+  // monthly = PartnerWAV subscription per month (0 on the Startup plan)
+  function vaRoiCalc(r, monthly, partners){
+    var n = partners != null ? partners : r.partners, revenue = n * r.dealsPerPartner * r.dealValue;
+    var commission = revenue * r.commissionPct / 100, fee = revenue * r.feePct / 100, cost = (monthly || 0) * 12;
+    var keep = revenue - commission - fee - cost, perPartner = r.dealsPerPartner * r.dealValue * (1 - (r.commissionPct + r.feePct) / 100);
+    return { revenue:revenue, commission:commission, fee:fee, cost:cost, keep:keep, spend: cost + fee,
+      multiple: (cost + fee) > 0 ? keep / (cost + fee) : null, breakEven: cost > 0 && perPartner > 0 ? Math.ceil(cost / perPartner) : 0 };
+  }
+  function vaRoiOutHtml(r, monthly){
+    var c = vaRoiCalc(r, monthly), sizes = [5, 10, 25, 50, 100].filter(function(n){ return n !== r.partners; }).concat([r.partners]).sort(function(x, y){ return x - y; });
+    return '<div class="va-roi-big"><div><span>Partner-sold revenue a year</span><b data-roi="revenue">'+vaMoney(c.revenue)+'</b></div><div><span>You keep, after commissions and PartnerWAV</span><b data-roi="keep">'+vaMoney(c.keep)+'</b></div></div>'
+      + '<div class="field-note" data-roi="line">'+vaMoney(c.commission)+' to partners in commission · '+vaMoney(c.fee)+' CloudWAV override'+(c.cost ? ' · '+vaMoney(c.cost)+' PartnerWAV subscription' : ' · no monthly fee')
+        + (c.multiple != null && c.multiple > 0 ? ' · about <b>'+(Math.round(c.multiple * 10) / 10)+'x</b> back for every $1 spent with CloudWAV' : '')
+        + (c.breakEven ? ' · the subscription pays for itself at <b>'+c.breakEven+' active partner'+(c.breakEven === 1 ? '' : 's')+'</b>' : '')+'</div>'
+      + '<table class="va-lines va-roi-table" style="width:100%;margin-top:8px;"><thead><tr><th style="text-align:left;">Active partners</th><th style="text-align:right;">Revenue / year</th><th style="text-align:right;">You keep</th></tr></thead><tbody>'
+      + sizes.map(function(n){ var x = vaRoiCalc(r, monthly, n); return '<tr'+(n === r.partners ? ' class="on"' : '')+'><td>'+n+'</td><td style="text-align:right;">'+vaMoney(x.revenue)+'</td><td style="text-align:right;">'+vaMoney(x.keep)+'</td></tr>'; }).join("")+'</tbody></table>';
+  }
+  function vaRoiInputsHtml(r, withFee){
+    var f = function(k, label, step, suffix){ return '<div class="field-row"><label for="roi_'+k+'">'+label+'</label><input type="number" min="0" step="'+step+'" id="roi_'+k+'" data-roi-in="'+k+'" value="'+r[k]+'" class="va-amt" style="width:100%;text-align:left;"></div>'; };
+    return '<div class="form-grid">'+f("partners", "Active partners", 1)+f("dealsPerPartner", "Deals per partner, per year", 1)+f("dealValue", "Average deal value a year ($)", 500)+f("commissionPct", "Partner commission %", 1)+(withFee ? f("feePct", "CloudWAV override on partner sales %", 0.5) : '')+'</div>';
+  }
+  function vaRoiRead(r){ document.querySelectorAll("[data-roi-in]").forEach(function(el){ var v = Number(el.value); r[el.getAttribute("data-roi-in")] = isNaN(v) || v < 0 ? 0 : v; }); return r; }
   var VA_STATUS = { "new":{ label:"New", cls:"warn" }, contacted:{ label:"Contacted", cls:"accent" }, quoted:{ label:"Quoted", cls:"accent2" }, won:{ label:"Signed up", cls:"good" }, lost:{ label:"Not going ahead", cls:"neutral" } };
 
   // ----- the wizard (shared by the public page and the operator screen) -----
@@ -3984,8 +4028,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (f.type === "multi")
       return '<fieldset class="va-set va-wide"><legend>'+esc(f.label)+' <span class="field-note">(choose any)</span></legend><div class="va-opts">'+f.options.map(function(o){ return vaChoice("checkbox", f.k, o, o, (v || []).indexOf(o) > -1); }).join("")+'</div></fieldset>';
     if (f.type === "needs")
-      return '<div class="va-wide">'+VA_PLAN_ORDER.map(function(pl){ var p = pmItem("plans", pl);
-        return '<fieldset class="va-set"><legend>'+(pl === "launch" ? "The basics" : pl === "growth" ? "Growing the program" : "Done for you")+' <span class="badge neutral">'+esc(p.name)+(pl === "launch" ? '' : ' and up')+'</span></legend><div class="va-opts col">'
+      return '<div class="va-wide">'+VA_FEATURE_PLANS.map(function(pl){ var p = pmItem("plans", pl);
+        return '<fieldset class="va-set"><legend>'+(pl === "launch" ? "The basics" : pl === "growth" ? "Growing the program" : "Done for you")+' <span class="badge neutral">'+esc(pl === "launch" ? "Every plan" : p.name + " and up")+'</span></legend><div class="va-opts col">'
           + VA_NEEDS.filter(function(n){ return n.plan === pl; }).map(function(n){ return vaChoice("checkbox", "needs", n.id, n.name, (d.needs || []).indexOf(n.id) > -1); }).join("")+'</div></fieldset>'; }).join("")+'</div>';
     if (f.type === "support")
       return '<fieldset class="va-set va-wide"><legend>'+esc(f.label)+star+'</legend><div class="va-opts col">'+pricingModel.support.map(function(s){ return vaChoice("radio", "support", s.id, s.name, v === s.id, s.blurb); }).join("")+'</div></fieldset>';
@@ -4081,11 +4125,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (state.vaPublicDone){
       if (box.querySelector("[data-va-done]") && !force) return;
       var a = state.vaPublicDone, rec = vaRecommend(a), p = pmItem("plans", rec.plan);
+      state.vaPublicRoi = state.vaPublicRoi || vaRoiDefaults(a);
       box.innerHTML = '<div class="lp-public-wrap"><div class="lp-page"><div class="lp-hero"><div class="lp-eyebrow">PartnerWAV · CloudWAV Consulting</div><h1>Thank you, '+esc((a.contactName || "").split(" ")[0])+'.</h1>'
         + '<p>We have your answers. Someone from CloudWAV will contact you within two business days to walk through PartnerWAV and go over pricing for '+esc(a.company)+'.</p></div>'
         + '<div class="lp-body" data-va-done><div class="inv-offer"><div class="aff-section-title">Based on your answers</div><div style="font-size:1.05rem;font-weight:700;">The '+esc(p.name)+' plan looks like the right starting point</div><div class="field-note">'+esc(p.blurb)+'</div></div>'
         + '<div><div class="aff-section-title">What that includes</div><ul class="lp-features">'+vaPlanIncludes(rec.plan).map(function(n){ return '<li>'+esc(n.name)+'</li>'; }).join("")+'</ul></div>'
         + ((a.addons || []).length ? '<div><div class="aff-section-title">Add-on services you chose</div><ul class="lp-features">'+a.addons.map(function(id){ var x = pmItem("addons", id); return x ? '<li><b>'+esc(x.name)+'</b><br><span class="field-note">'+esc(x.blurb)+'</span></li>' : ''; }).join("")+'</ul></div>' : '')
+        + '<div data-va-roi-public><div class="aff-section-title">What a partner channel could be worth</div><p class="field-note" style="margin:4px 0 10px;">Change the numbers to match your business.</p>'
+          + vaRoiInputsHtml(state.vaPublicRoi, false)+'<div id="vaRoiOut" style="margin-top:10px;">'+vaRoiPublicOut(state.vaPublicRoi)+'</div></div>'
         + '</div><div class="lp-foot">PartnerWAV · CloudWAV Consulting</div></div></div>';
       return;
     }
@@ -4113,7 +4160,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<select id="vaStatus" class="filter app-select" aria-label="Status">'+Object.keys(VA_STATUS).map(function(k){ return '<option value="'+k+'"'+(k === a.status ? ' selected' : '')+'>'+esc(VA_STATUS[k].label)+'</option>'; }).join("")+'</select></div></div>'
         + '<div class="va-two">'
           + '<div><div class="aff-section-title">Contact</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">'
-            + vaSummaryRow("Email", a.email) + vaSummaryRow("Mobile / WhatsApp", a.phone) + vaSummaryRow("LINE ID", a.lineId) + vaSummaryRow("Website", a.website) + vaSummaryRow("Based in", a.hq) + '</div>'
+            + vaSummaryRow("Email", a.email) + vaSummaryRow("Mobile / WhatsApp", a.phone) + vaSummaryRow("LINE ID", a.lineId) + vaSummaryRow("Website", a.website) + vaSummaryRow("Based in", a.hq) + vaSummaryRow("Company stage", a.companyStage) + vaSummaryRow("Budget today", a.budget) + '</div>'
             + '<div class="aff-section-title" style="margin-top:14px;">What they sell</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">'
             + (a.productSummary ? '<p class="program-desc" style="margin:0;">'+esc(a.productSummary)+'</p>' : '') + vaSummaryRow("Type", a.productTypes) + vaSummaryRow("Products", a.productCount) + vaSummaryRow("Deal size / year", a.dealSize) + '</div>'
             + '<div class="aff-section-title" style="margin-top:14px;">Partner program</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">'
@@ -4134,13 +4181,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + '<div class="va-total"><span>Monthly</span><b id="vaMonthly">'+vaMoney(calc.monthly)+'</b></div><div class="field-note" style="text-align:right;" id="vaAnnual">'+vaMoney(calc.annual)+' a year'+(calc.discount ? ' · '+vaMoney(calc.discount)+' discount a month' : '')+'</div>'
             + '<div class="field-row" style="margin-top:10px;"><label for="vaQuoteNote">Note on the quote</label><input type="text" id="vaQuoteNote" value="'+attr(q.note || "")+'" placeholder="e.g. Part deferred until funding closes"></div>'
             + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button type="button" class="btn primary sm" data-va-save>Save</button><button type="button" class="btn secondary sm" data-va-copy-quote>Copy quote summary</button><button type="button" class="btn ghost sm" data-va-delete>Delete</button></div>'
+            + '<div class="aff-section-title" style="margin-top:18px;">Return on investment <span class="field-note" style="text-transform:none;letter-spacing:0;font-weight:400;">-- estimate to show the vendor; change the assumptions</span></div>'
+            + '<div style="margin-top:6px;" data-va-roi>'+vaRoiInputsHtml(vaRoiDefaults(a), true)+'<div id="vaRoiOut" style="margin-top:10px;">'+vaRoiOutHtml(vaRoiDefaults(a), calc.monthly)+'</div></div>'
           + '</div>'
         + '</div></div>';
   }
   function vaQuoteText(a){
     var c = vaQuoteLines(a.quote);
     return "PartnerWAV for " + a.company + "\n" + c.lines.map(function(l){ return "- " + l.label + ": " + vaMoney(l.amount) + " / month"; }).join("\n")
-      + (c.discount ? "\n- Discount (" + a.quote.discountPct + "%): -" + vaMoney(c.discount) + " / month" : "") + "\nTotal: " + vaMoney(c.monthly) + " / month (" + vaMoney(c.annual) + " a year)" + (a.quote.note ? "\n" + a.quote.note : "");
+      + (c.discount ? "\n- Discount (" + a.quote.discountPct + "%): -" + vaMoney(c.discount) + " / month" : "") + "\nTotal: " + (c.monthly ? vaMoney(c.monthly) + " / month (" + vaMoney(c.annual) + " a year)" : "no monthly fee") + (a.quote.note ? "\n" + a.quote.note : "")
+      + (function(){ var r = vaRoiDefaults(a), x = vaRoiCalc(r, c.monthly); return "\n\nEstimated return with " + r.partners + " active partners (" + r.dealsPerPartner + " deals each a year at " + vaMoney(r.dealValue) + "):\n- Partner-sold revenue: " + vaMoney(x.revenue) + " a year\n- You keep after commissions and PartnerWAV: " + vaMoney(x.keep) + " a year"
+          + (x.breakEven ? "\n- The subscription pays for itself at " + x.breakEven + " active partner" + (x.breakEven === 1 ? "" : "s") : "") + "\n(Estimate, not a guarantee.)"; })();
   }
   function vaReadDetail(a){
     var g = function(id){ var el = document.getElementById(id); return el ? el.value : undefined; };
@@ -4149,6 +4200,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var q = a.quote; if (g("vaPlan")) q.planId = g("vaPlan"); if (g("vaSupport")) q.supportId = g("vaSupport");
     q.addons = [].slice.call(document.querySelectorAll("[data-va-qaddon]")).filter(function(x){ return x.checked; }).map(function(x){ return x.getAttribute("data-va-qaddon"); });
     q.discountPct = Math.min(100, Math.max(0, Number(g("vaDiscount")) || 0)); q.note = (g("vaQuoteNote") || "").trim();
+    if (document.querySelector("[data-va-roi] [data-roi-in]")) a.roi = vaRoiRead(vaRoiDefaults(a));
     q.overrides = q.overrides || {};
     document.querySelectorAll("[data-va-line]").forEach(function(el){ var k = el.getAttribute("data-va-line"), list = (vaQuoteLines(Object.assign({}, q, { overrides:{} })).lines.filter(function(l){ return l.key === k; })[0] || {}).list;
       var val = el.value === "" ? list : Math.max(0, Number(el.value) || 0); if (val === list) delete q.overrides[k]; else q.overrides[k] = val; });
@@ -4238,11 +4290,29 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("change", function(ev){
     var t = ev.target; if (!t.closest || !t.closest(".va-quote")) return; var a = vaById(state.vaId); if (!a) return;
     var before = JSON.stringify(a.quote); vaReadDetail(a);
+    // a new plan or support level starts again from its list price
+    if (t.id === "vaPlan" && a.quote.overrides) delete a.quote.overrides.plan;
+    if (t.id === "vaSupport" && a.quote.overrides) delete a.quote.overrides.support;
     if (t.id === "vaPlan" || t.id === "vaSupport" || t.hasAttribute("data-va-qaddon")){ state.vaDetailV = (state.vaDetailV || 0) + 1; renderOperatorAssessments(true); return; }
     var c = vaQuoteLines(a.quote); document.getElementById("vaMonthly").textContent = vaMoney(c.monthly);
     document.getElementById("vaAnnual").textContent = vaMoney(c.annual) + " a year" + (c.discount ? " · " + vaMoney(c.discount) + " discount a month" : "");
-    if (before === JSON.stringify(a.quote)) return;
+    var out = document.getElementById("vaRoiOut"); if (out) out.innerHTML = vaRoiOutHtml(vaRoiDefaults(a), c.monthly);
   });
+  document.addEventListener("input", function(ev){
+    var t = ev.target; if (!t.hasAttribute || !t.hasAttribute("data-roi-in")) return;
+    var out = document.getElementById("vaRoiOut"); if (!out) return;
+    if (t.closest("[data-va-roi]")){ var a = vaById(state.vaId); if (!a) return; a.roi = vaRoiRead(vaRoiDefaults(a)); out.innerHTML = vaRoiOutHtml(a.roi, vaQuoteLines(a.quote).monthly); }
+    else if (t.closest("[data-va-roi-public]")){ state.vaPublicRoi = vaRoiRead(state.vaPublicRoi); out.innerHTML = vaRoiPublicOut(state.vaPublicRoi); }
+  });
+  // public version: revenue only, no PartnerWAV prices
+  function vaRoiPublicOut(r){
+    var rows = [5, 10, 25, 50, 100].filter(function(n){ return n !== r.partners; }).concat([r.partners]).sort(function(x, y){ return x - y; });
+    var c = vaRoiCalc(Object.assign({}, r, { feePct:0 }), 0);
+    return '<div class="va-roi-big"><div><span>Partner-sold revenue a year</span><b>'+vaMoney(c.revenue)+'</b></div><div><span>After partner commissions</span><b>'+vaMoney(c.revenue - c.commission)+'</b></div></div>'
+      + '<table class="va-lines va-roi-table" style="width:100%;margin-top:8px;"><thead><tr><th style="text-align:left;">Active partners</th><th style="text-align:right;">Revenue / year</th><th style="text-align:right;">After commissions</th></tr></thead><tbody>'
+      + rows.map(function(n){ var x = vaRoiCalc(Object.assign({}, r, { feePct:0 }), 0, n); return '<tr'+(n === r.partners ? ' class="on"' : '')+'><td>'+n+'</td><td style="text-align:right;">'+vaMoney(x.revenue)+'</td><td style="text-align:right;">'+vaMoney(x.revenue - x.commission)+'</td></tr>'; }).join("")+'</tbody></table>'
+      + '<p class="field-note" style="margin:8px 0 0;">An estimate from the numbers above, not a promise. Results depend on your product, pricing and how active your partners are.</p>';
+  }
 
   function renderAffiliateManage(){
     var box = document.getElementById("affiliateManageContent");

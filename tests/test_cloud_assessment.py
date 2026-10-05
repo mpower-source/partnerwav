@@ -27,7 +27,7 @@ def settle(pg):
 with sync_playwright() as p:
     # a prospective vendor, not signed in, sends the form
     b, ctx, pg = open_page_supabase(p, mock, "?assess=1"); pg.wait_for_timeout(500)
-    pg.fill("#va_company", "Bright Hardware"); pg.fill("#va_contactName", "Ann Lee"); pg.fill("#va_email", "ann@bright.example"); pg.click("[data-va-next]"); pg.wait_for_timeout(200)
+    pg.fill("#va_company", "Bright Hardware"); pg.fill("#va_contactName", "Ann Lee"); pg.fill("#va_email", "ann@bright.example"); pg.check('[data-va-k="companyStage"][value="Established"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(200)
     pg.fill("#va_productSummary", "Smart sensors"); pg.click("[data-va-next]"); pg.wait_for_timeout(200)
     pg.check('[data-va-k="programStage"][value="No partner program yet"]'); pg.check('[data-va-k="partners"][value="1-10"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(200)
     pg.check('[data-va-k="needs"][value="deals"]'); pg.check('[data-va-k="support"][value="self"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(200)
