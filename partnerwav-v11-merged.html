@@ -4118,16 +4118,29 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   });
   function vaRerender(){ if (state.screen === "public-assess") renderPublicAssess(true); else renderOperatorAssessments(true); window.scrollTo(0, 0); }
 
+  // CloudWAV's booking link and reply promise, read without signing in
+  function vaOperatorContact(){ return contactFor("operator:") || {}; }
+  async function cloudLoadOperatorContact(){
+    if (!supabase || DEMO_MODE) return false;
+    try { var r = await supabase.from("portal_records").select("data").eq("collection", "contactChannels").eq("id", "operator:").maybeSingle();
+      if (r.error || !r.data) return false;
+      var d = r.data.data, i = contactChannels.map(function(x){ return x.id; }).indexOf("operator:");
+      if (i > -1) contactChannels[i] = d; else contactChannels.push(d); return true;
+    } catch(e){ return false; }
+  }
   // ----- public page (?assess=1) -----
   function renderPublicAssess(force){
     var box = document.getElementById("publicAssessContent");
     if (!box || state.screen !== "public-assess") return;
+    if (!state.vaContactTried){ state.vaContactTried = true; cloudLoadOperatorContact().then(function(ok2){ if (ok2 && state.vaPublicDone) renderPublicAssess(true); }); }
     if (state.vaPublicDone){
       if (box.querySelector("[data-va-done]") && !force) return;
       var a = state.vaPublicDone, rec = vaRecommend(a), p = pmItem("plans", rec.plan);
       state.vaPublicRoi = state.vaPublicRoi || vaRoiDefaults(a);
       box.innerHTML = '<div class="lp-public-wrap"><div class="lp-page"><div class="lp-hero"><div class="lp-eyebrow">PartnerWAV · CloudWAV Consulting</div><h1>Thank you, '+esc((a.contactName || "").split(" ")[0])+'.</h1>'
-        + '<p>We have your answers. Someone from CloudWAV will contact you within two business days to walk through PartnerWAV and go over pricing for '+esc(a.company)+'.</p></div>'
+        + '<p>We have your answers. Someone from CloudWAV will contact you within '+esc(vaOperatorContact().assessFollowUp || "two business days")+' to walk through PartnerWAV and go over pricing for '+esc(a.company)+'.</p>'
+        + (safeLink(vaOperatorContact().booking) ? '<a class="lp-cta" href="'+attr(vaOperatorContact().booking)+'" target="_blank" rel="noopener noreferrer" data-va-book>Book a call now</a><p style="margin-top:8px;font-size:.86rem;opacity:.9;">Prefer not to wait? Pick a time that suits you.</p>' : '')
+        + '</div>'
         + '<div class="lp-body" data-va-done><div class="inv-offer"><div class="aff-section-title">Based on your answers</div><div style="font-size:1.05rem;font-weight:700;">The '+esc(p.name)+' plan looks like the right starting point</div><div class="field-note">'+esc(p.blurb)+'</div></div>'
         + '<div><div class="aff-section-title">What that includes</div><ul class="lp-features">'+vaPlanIncludes(rec.plan).map(function(n){ return '<li>'+esc(n.name)+'</li>'; }).join("")+'</ul></div>'
         + ((a.addons || []).length ? '<div><div class="aff-section-title">Add-on services you chose</div><ul class="lp-features">'+a.addons.map(function(id){ var x = pmItem("addons", id); return x ? '<li><b>'+esc(x.name)+'</b><br><span class="field-note">'+esc(x.blurb)+'</span></li>' : ''; }).join("")+'</ul></div>' : '')
@@ -4258,6 +4271,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var shown = vendorAssessments.filter(function(x){ return f === "all" || (f === "open" ? (x.status !== "won" && x.status !== "lost") : x.status === f); });
     box.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"><button type="button" class="btn primary" data-va-start>+ Start an assessment</button>'
       + '<button type="button" class="btn secondary" data-va-link>Vendor link</button><button type="button" class="btn secondary" data-va-pricing>Pricing model</button></div>'
+      + (safeLink(vaOperatorContact().booking) ? '' : '<p class="field-note" data-va-booking-hint style="margin:0 0 12px;">Tip: add your Calendly link under <b>WhatsApp &amp; LINE → My contact &amp; booking link</b> and vendors get a "Book a call now" button after they send the form. You can change the "we reply within…" promise there too.</p>')
       + '<div class="stat-row" style="margin-bottom:14px;"><div class="stat-tile"><span class="stat-label">New from the link</span><span class="stat-value">'+count("new")+'</span><span class="stat-trend">Waiting for a call</span></div>'
         + '<div class="stat-tile"><span class="stat-label">Contacted</span><span class="stat-value">'+count("contacted")+'</span><span class="stat-trend">Quote to prepare</span></div>'
         + '<div class="stat-tile"><span class="stat-label">Quoted</span><span class="stat-value">'+count("quoted")+'</span><span class="stat-trend">'+vaMoney(vendorAssessments.filter(function(x){ return x.status === "quoted" && x.quote; }).reduce(function(t, x){ return t + vaQuoteLines(x.quote).monthly; }, 0))+' / month quoted</span></div>'
@@ -9053,7 +9067,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { name:"softwareHouses", mode:"replace", get:function(){ return softwareHouses; }, set:function(a){ softwareHouses = a; },
       access:function(r){ return { readers: r.status === "active" ? EVERYONE : [], writers:[] }; } },
     { name:"contactChannels", mode:"replace", get:function(){ return contactChannels; }, set:function(a){ contactChannels = a; },
-      access:function(r){ return { readers: r.show ? EVERYONE : [r.id], writers:[r.id] }; } },
+      access:function(r){ return { readers: r.show ? EVERYONE : [r.id], writers:[r.id], pub: r.id === "operator:" && r.show !== false }; } },
     { name:"socialGroups", mode:"replace", get:function(){ return socialGroups; }, set:function(a){ socialGroups = a; },
       access:function(r){ return { readers: r.listed !== false ? EVERYONE : [r.ownerKey], writers:[r.ownerKey] }; } },
     { name:"broadcasts", mode:"replace", get:function(){ return broadcasts; }, set:function(a){ broadcasts = a; },
@@ -10319,11 +10333,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function safeLink(u){ return /^https:\/\//i.test(String(u || "")) ? u : ""; }
   // Buttons to reach someone outside the portal (used on profiles and in Messages)
   function contactButtonsHtml(key, text){
-    var c = contactFor(key); if (!c || !c.show || (!c.whatsapp && !c.line)) return "";
+    var c = contactFor(key); if (!c || !c.show || (!c.whatsapp && !c.line && !safeLink(c.booking))) return "";
     var b = [];
+    if (safeLink(c.booking)) b.push('<a class="btn primary sm" href="'+attr(c.booking)+'" target="_blank" rel="noopener noreferrer" data-contact-book="'+attr(key)+'">Book a call</a>');
     if (c.whatsapp) b.push('<a class="btn secondary sm ch-wa" href="'+attr(waChatUrl(c.whatsapp, text || ""))+'" target="_blank" rel="noopener noreferrer" data-contact-wa="'+attr(key)+'">WhatsApp</a>');
     if (c.line) b.push('<a class="btn secondary sm ch-line" href="'+attr(lineChatUrl(c.line))+'" target="_blank" rel="noopener noreferrer" data-contact-line="'+attr(key)+'">LINE</a>');
-    return '<div class="ch-contact" data-contact-buttons="'+attr(key)+'"><span class="field-note">Also on:</span>'+b.join("")+(c.preferred ? '<span class="field-note">prefers '+esc(c.preferred === "line" ? "LINE" : "WhatsApp")+'</span>' : '')+'</div>';
+    return '<div class="ch-contact" data-contact-buttons="'+attr(key)+'"><span class="field-note">'+(c.whatsapp || c.line ? 'Also on:' : 'Talk to us:')+'</span>'+b.join("")+(c.preferred ? '<span class="field-note">prefers '+esc(c.preferred === "line" ? "LINE" : "WhatsApp")+'</span>' : '')+'</div>';
   }
   function groupById(id){ return socialGroups.filter(function(g){ return g.id === id; })[0] || null; }
   function myGroups(){ var k = chMe(); return socialGroups.filter(function(g){ return g.ownerKey === k; }); }
@@ -10359,7 +10374,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var box = document.getElementById("channelsContent");
     if (!box || state.screen !== "channels") return;
     var me = chMe(), tab = state.chTab || "share";
-    var tabs = [["share", "Share & broadcast"], ["groups", "My groups"], ["directory", "Group directory"], ["contact", "My WhatsApp & LINE"]].map(function(t){
+    var tabs = [["share", "Share & broadcast"], ["groups", "My groups"], ["directory", "Group directory"], ["contact", "My contact & booking link"]].map(function(t){
       return '<button type="button" class="filter-chip" data-ch-tab="'+t[0]+'" aria-pressed="'+(tab === t[0])+'">'+t[1]+'</button>'; }).join("");
     var html = '<div class="filter-row" style="margin-bottom:14px;">'+tabs+'</div>';
     if (!me){ box.innerHTML = html + '<div class="empty">Create your profile first -- then you can add your WhatsApp and LINE details and groups.</div>'; return; }
@@ -10460,6 +10475,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="field-row"><label for="cLine">LINE ID</label><input id="cLine" type="text" value="'+attr(c.line)+'" placeholder="your LINE ID, or @ID for an Official Account"></div>'
         + '<div class="field-row"><label for="cPreferred">Preferred</label><select id="cPreferred"><option value="">No preference</option><option value="whatsapp"'+(c.preferred === "whatsapp" ? " selected" : "")+'>WhatsApp</option><option value="line"'+(c.preferred === "line" ? " selected" : "")+'>LINE</option></select></div>'
       + '</div>'
+      + '<div class="field-row"><label for="cBooking">Booking link (Calendly or similar)</label><input id="cBooking" type="url" value="'+attr(c.booking)+'" placeholder="https://calendly.com/your-name/30min">'
+        + '<span class="field-note">Adds a "Book a call" button next to your WhatsApp and LINE buttons, so people can pick a time without emailing back and forth.'+(me === "operator:" ? ' Yours also appears on the thank-you page of the vendor assessment.' : '')+'</span></div>'
+      + (me === "operator:" ? '<div class="field-row"><label for="cFollowUp">Vendor assessment: we reply within…</label><input id="cFollowUp" type="text" maxlength="40" value="'+attr(c.assessFollowUp || "two business days")+'" placeholder="two business days">'
+        + '<span class="field-note">Shown to vendors after they send the assessment: "Someone from CloudWAV will contact you within …"</span></div>' : '')
       + '<label class="cfg-check"><input type="checkbox" id="cShow"'+(c.show !== false ? " checked" : "")+'> Show these to signed-in PartnerWAV members</label>'
       + '<div id="cError" class="login-msg bad" hidden></div>'
       + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-c-save>Save</button>'+(c.id ? '<span class="field-note">Preview:</span>'+(contactButtonsHtml(me) || '<span class="field-note">hidden</span>') : '')+'</div>'
@@ -10471,8 +10490,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var wa = v("cWhatsApp"), line = v("cLine").replace(/^https?:\/\/\S+\/~?/i, "");
     if (!validWhatsApp(wa)){ err.textContent = "Enter the WhatsApp number with its country code, e.g. +66 81 234 5678."; err.hidden = false; return; }
     if (line && !/^@?[A-Za-z0-9._-]{2,40}$/.test(line)){ err.textContent = "A LINE ID is letters, numbers, dots, dashes or underscores (add @ for an Official Account)."; err.hidden = false; return; }
+    var booking = v("cBooking");
+    if (booking && !/^https?:\/\//i.test(booking) && /^[^\s\/]+\.\S+/.test(booking)) booking = "https://" + booking;
+    if (booking && !/^https:\/\/\S+\.\S+/i.test(booking)){ err.textContent = "The booking link needs to be a secure web address, like https://calendly.com/your-name/30min."; err.hidden = false; return; }
     var rec = contactFor(me);
     if (!rec){ rec = { id:me }; contactChannels.push(rec); }
+    rec.booking = booking;
+    var fu = document.getElementById("cFollowUp"); if (fu) rec.assessFollowUp = fu.value.trim() || "two business days";
     rec.whatsapp = wa ? "+" + waDigits(wa) : ""; rec.line = line; rec.preferred = v("cPreferred"); rec.show = document.getElementById("cShow").checked; rec.updatedAt = nowStamp();
     saveChannels(); toast("Saved -- your WhatsApp and LINE buttons are "+(rec.show ? "on your profile" : "hidden")); renderChannels();
   }

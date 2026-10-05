@@ -50,9 +50,20 @@ with sync_playwright() as p:
     pg.click("[data-va-list]"); pg.click("[data-va-pricing]"); pg.wait_for_timeout(200); pg.fill('[data-pm="addons:marketing"]', "1200"); pg.click("#pmSave"); pg.wait_for_timeout(400); settle(pg)
     pm = db("pricingModel")
     ok(len(pm) == 1 and pm[0]["readers"] == [] and not pm[0]["is_public"] and [a for a in pm[0]["data"]["addons"] if a["id"] == "marketing"][0]["price"] == 1200, "Pricing model saved privately")
+    # CloudWAV's booking link is readable without signing in (for the thank-you page); a vendor's is not public
+    nav(pg, "channels"); pg.click('[data-ch-tab="contact"]'); pg.wait_for_timeout(200)
+    pg.fill("#cBooking", "https://calendly.com/cloudwav/intro"); pg.click("[data-c-save]"); pg.wait_for_timeout(400); settle(pg)
+    oc = [r for r in db("contactChannels") if r["id"] == "operator:"]
+    ok(len(oc) == 1 and oc[0]["is_public"] and oc[0]["data"]["booking"] == "https://calendly.com/cloudwav/intro", "CloudWAV's booking link saved and public")
+    anon = mock.sql("select data->>'booking' as b from portal_records where collection='contactChannels' and id='operator:'")
+    ok(anon and anon[0]["b"] == "https://calendly.com/cloudwav/intro", "Anonymous visitors can read it")
     b.close()
 
     b, ctx, pg = session(p, "vendor@intelsense.test"); pg.wait_for_timeout(800)
+    nav(pg, "channels"); pg.click('[data-ch-tab="contact"]'); pg.wait_for_timeout(200)
+    pg.fill("#cWhatsApp", "+66812345678"); pg.fill("#cBooking", "https://calendly.com/intelsense/demo"); pg.click("[data-c-save]"); pg.wait_for_timeout(400); settle(pg)
+    vc = [r for r in db("contactChannels") if r["id"] == "vendor:intelsense"]
+    ok(len(vc) == 1 and not vc[0]["is_public"] and vc[0]["data"]["booking"].endswith("/demo"), "A vendor's booking link saves (members only, not public)")
     n = mock.sql("select count(*) as n from portal_records where collection in ('vendorAssessments','pricingModel')", uid=USERS["vendor@intelsense.test"]["id"])[0]["n"]
     ok(n == 0 and pg.locator('[data-screen="operator-assessments"]:visible').count() == 0, "Vendors can't see assessments, quotes or the pricing model")
     b.close()
