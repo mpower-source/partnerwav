@@ -135,7 +135,8 @@ create or replace function public.portal_operator_only(c text)
 returns boolean language sql immutable as $$
   select c = any (array['mspProspects','mspEngagements','landingPages',
                         'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
-                        'programFees','platformFees','affiliateSignups'])
+                        'programFees','platformFees','affiliateSignups',
+                        'vendorAssessments','pricingModel'])
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -158,6 +159,9 @@ begin
   -- public sign-ups on a vendor's invite page arrive through submit_affiliate_signup() below
   if new.collection = 'affiliateSignups' and tg_op = 'INSERT'
      and current_setting('portal.affiliate_signup', true) = 'on' then return new; end if;
+  -- a vendor's fit assessment sent from the public form arrives through submit_vendor_assessment() below
+  if new.collection = 'vendorAssessments' and tg_op = 'INSERT'
+     and current_setting('portal.vendor_assessment', true) = 'on' then return new; end if;
   if k is null then raise exception 'This account has no PartnerWAV role'; end if;
 
   -- The portal saves with upsert (INSERT ... ON CONFLICT DO UPDATE). The insert trigger sees
@@ -286,6 +290,43 @@ begin
 end $$;
 revoke all on function public.submit_affiliate_signup(text, jsonb) from public;
 grant execute on function public.submit_affiliate_signup(text, jsonb) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 5c. Vendor fit assessment: a prospective vendor fills in the public form (no account).
+--     Only CloudWAV can read what they sent; CloudWAV then contacts them about pricing.
+-- ---------------------------------------------------------------------------
+create or replace function public.submit_vendor_assessment(p_data jsonb)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  new_id text := 'va-' || replace(gen_random_uuid()::text, '-', '');
+  clean jsonb;
+begin
+  if p_data is null or jsonb_typeof(p_data) <> 'object' or length(p_data::text) > 12000 then
+    raise exception 'The form is empty or too long';
+  end if;
+  if coalesce(trim(p_data ->> 'company'), '') = '' or coalesce(trim(p_data ->> 'contactName'), '') = ''
+     or coalesce(p_data ->> 'email', '') !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
+    raise exception 'Please give your company, your name and a valid email address';
+  end if;
+  if coalesce((p_data ->> 'consent')::boolean, false) is not true then
+    raise exception 'Please agree to be contacted about PartnerWAV';
+  end if;
+  -- keep the answers, but CloudWAV-only fields can never be set from the public form
+  clean := (p_data - 'quote' - 'plan' - 'notesInternal' - 'statusLog')
+    || jsonb_build_object('id', new_id, 'source', 'vendor-link', 'status', 'new',
+         'email', left(lower(trim(p_data ->> 'email')), 160),
+         'company', left(trim(p_data ->> 'company'), 160),
+         'contactName', left(trim(p_data ->> 'contactName'), 120),
+         'consent', true,
+         'createdAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI'));
+  perform set_config('portal.vendor_assessment', 'on', true);
+  insert into public.portal_records (collection, id, data, readers, writers, is_public)
+  values ('vendorAssessments', new_id, clean, array[]::text[], array[]::text[], false);
+  perform set_config('portal.vendor_assessment', 'off', true);
+  return new_id;
+end $$;
+revoke all on function public.submit_vendor_assessment(jsonb) from public;
+grant execute on function public.submit_vendor_assessment(jsonb) to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 6. Live updates: other people's changes show up without reloading

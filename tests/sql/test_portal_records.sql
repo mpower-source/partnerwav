@@ -212,4 +212,20 @@ select t('other vendors cannot read the sign-ups', (select count(*) from portal_
 select t('signed-in members can use the invite page too', public.submit_affiliate_signup('inv-live', '{"name":"Ian","email":"ian@intelsense.ai","consent":true}') like 'sg-%');
 reset role;
 
+-- ===== vendor fit assessment from the public form
+select pg_temp.as_user(''); set role anon;
+select t('anon sends a vendor assessment', public.submit_vendor_assessment('{"company":"Acme AI","contactName":"Ann","email":"Ann@Acme.io","consent":true,"partners":"11-50","addons":["investor"],"status":"won","quote":{"total":1}}') like 'va-%');
+select t('assessment needs consent', fails($$select public.submit_vendor_assessment('{"company":"A","contactName":"B","email":"a@b.co"}')$$));
+select t('assessment needs company, name and email', fails($$select public.submit_vendor_assessment('{"company":"A","email":"a@b.co","consent":true}')$$));
+select t('anon cannot read assessments', (select count(*) from portal_records where collection='vendorAssessments') = 0);
+select t('anon cannot insert assessments directly', fails($$insert into portal_records(collection,id,data) values ('vendorAssessments','va-x','{}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('vendors cannot read assessments or the pricing model', (select count(*) from portal_records where collection in ('vendorAssessments','pricingModel')) = 0);
+select t('vendors cannot write the pricing model', fails($$insert into portal_records(collection,id,data,readers,writers) values ('pricingModel','default','{}','{}','{vendor:intelsense}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV reads the assessment; public form could not set status or a quote', (select count(*) from portal_records where collection='vendorAssessments' and data->>'status'='new' and data->>'source'='vendor-link' and not (data ? 'quote') and data->>'email'='ann@acme.io' and data->>'partners'='11-50') = 1);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;
