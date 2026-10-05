@@ -480,6 +480,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   @media (max-width:520px){ .va-roi-big{ grid-template-columns:1fr; } }
   .va-total{ display:flex; justify-content:space-between; align-items:baseline; margin-top:12px; font-size:.95rem; } .va-total b{ font-family:"IBM Plex Mono",monospace; font-size:1.5rem; }
   @media (max-width:760px){ .va-fields, .va-two{ grid-template-columns:1fr; } .va-nav .btn{ flex:1; } }
+  .int-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:16px; align-items:start; }
+  .int-card{ display:flex; flex-direction:column; gap:10px; } .int-head{ display:flex; align-items:center; gap:10px; } .int-head h3{ margin:0; font-size:1.05rem; flex:1; }
+  .int-logo{ width:40px; height:40px; border-radius:10px; display:grid; place-items:center; font-weight:800; color:#fff; flex:none; font-family:"Space Grotesk",sans-serif; }
+  .modal.modal-wide{ width:min(760px, 96vw); max-width:none; } .book-frame{ width:100%; height:min(680px, 72vh); border:0; border-radius:10px; background:#fff; }
   /* dropdowns that sit on their own (not in a form row): same look as the app's buttons and inputs */
   select.filter.app-select{ -webkit-appearance:none; appearance:none; font-family:inherit; font-size:.86rem; font-weight:600; padding:9px 34px 9px 12px; border-radius:10px; min-height:38px; cursor:pointer;
     border:1px solid var(--line); background-color:var(--surface); color:var(--ink); max-width:100%; text-overflow:ellipsis;
@@ -693,6 +697,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="training"><span class="ic">🎓</span>Training</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
+      <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
       <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
     </nav>
 
@@ -710,6 +715,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
+      <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
       <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
     </nav>
 
@@ -723,6 +729,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
+      <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
       <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
     </nav>
 
@@ -731,6 +738,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="operator-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
+      <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
       <button class="navlink" data-screen="operator-programs"><span class="ic">⚙️</span>Manage Programs</button>
       <button class="navlink" data-screen="operator-partners"><span class="ic">👨‍💼</span>Partners &amp; Tiers</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
@@ -2067,6 +2075,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="operatorAgreementsContent"></div>
       </section>
 
+      <!-- ===== ALL ROLES: INTEGRATIONS (Calendly, HubSpot, ...) ===== -->
+      <section id="scr-integrations" hidden>
+        <div class="section-head"><h2>Integrations</h2><span class="hint">Connect the tools you already use, so PartnerWAV fits how your company works</span></div>
+        <div style="height:14px"></div>
+        <div id="integrationsContent"></div>
+      </section>
+
       <section id="scr-channels" hidden>
         <div class="section-head"><h2>WhatsApp &amp; LINE</h2><span class="hint">Reach your groups and contacts where they already are -- event updates, announcements and one-to-one chats</span></div>
         <div style="height:14px"></div>
@@ -3281,6 +3296,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-agreements":"Agreements",
     "operator-revenue":"CloudWAV Revenue",
     "channels":"WhatsApp & LINE",
+    "integrations":"Integrations",
     "referrals":"Software Referrals",
     "referral-view":"Software Referral",
     "operator-shop-editor":"Shop Product",
@@ -4271,7 +4287,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var shown = vendorAssessments.filter(function(x){ return f === "all" || (f === "open" ? (x.status !== "won" && x.status !== "lost") : x.status === f); });
     box.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"><button type="button" class="btn primary" data-va-start>+ Start an assessment</button>'
       + '<button type="button" class="btn secondary" data-va-link>Vendor link</button><button type="button" class="btn secondary" data-va-pricing>Pricing model</button></div>'
-      + (safeLink(vaOperatorContact().booking) ? '' : '<p class="field-note" data-va-booking-hint style="margin:0 0 12px;">Tip: add your Calendly link under <b>WhatsApp &amp; LINE → My contact &amp; booking link</b> and vendors get a "Book a call now" button after they send the form. You can change the "we reply within…" promise there too.</p>')
+      + (safeLink(vaOperatorContact().booking) ? '' : '<p class="field-note" data-va-booking-hint style="margin:0 0 12px;">Tip: add your Calendly link under <b>Integrations</b> and vendors get a "Book a call now" button after they send the form. You can change the "we reply within…" promise under WhatsApp &amp; LINE → My contact &amp; booking link.</p>')
       + '<div class="stat-row" style="margin-bottom:14px;"><div class="stat-tile"><span class="stat-label">New from the link</span><span class="stat-value">'+count("new")+'</span><span class="stat-trend">Waiting for a call</span></div>'
         + '<div class="stat-tile"><span class="stat-label">Contacted</span><span class="stat-value">'+count("contacted")+'</span><span class="stat-trend">Quote to prepare</span></div>'
         + '<div class="stat-tile"><span class="stat-label">Quoted</span><span class="stat-value">'+count("quoted")+'</span><span class="stat-trend">'+vaMoney(vendorAssessments.filter(function(x){ return x.status === "quoted" && x.quote; }).reduce(function(t, x){ return t + vaQuoteLines(x.quote).monthly; }, 0))+' / month quoted</span></div>'
@@ -4327,6 +4343,107 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + rows.map(function(n){ var x = vaRoiCalc(Object.assign({}, r, { feePct:0 }), 0, n); return '<tr'+(n === r.partners ? ' class="on"' : '')+'><td>'+n+'</td><td style="text-align:right;">'+vaMoney(x.revenue)+'</td><td style="text-align:right;">'+vaMoney(x.revenue - x.commission)+'</td></tr>'; }).join("")+'</tbody></table>'
       + '<p class="field-note" style="margin:8px 0 0;">An estimate from the numbers above, not a promise. Results depend on your product, pricing and how active your partners are.</p>';
   }
+
+
+  // ===== INTEGRATIONS (all roles) =====
+  // Calendly works today without any keys: each account saves its booking link and the scheduler opens inside
+  // PartnerWAV (Calendly's own inline embed, an iframe). HubSpot needs a server-side connection (the HubSpot token
+  // must never sit in this page), so here an account says what it wants synced and CloudWAV sets up the connection.
+  var HUBSPOT_SYNC = [["contacts","Contacts and companies (partners, vendors, prospects)"],["deals","Registered deals and their status"],["leads","Leads from invite pages, landing pages and assessments"],["marketing","Marketing lists and email campaigns"]];
+  function isCalendly(u){ return /^https:\/\/(www\.)?calendly\.com\//i.test(String(u || "")); }
+  function bookingEmbedUrl(u){ return u + (u.indexOf("?") > -1 ? "&" : "?") + "embed_domain=" + encodeURIComponent(window.location.hostname || "localhost") + "&embed_type=Inline&hide_gdpr_banner=1"; }
+  function bookingOwner(url){ return contactChannels.filter(function(c){ return c.booking === url; })[0] || null; }
+  // Open a booking link: Calendly links open inside PartnerWAV unless the owner turned that off; anything else opens in a new tab
+  function openBooking(url, who){
+    url = safeLink(url); if (!url) return false;
+    var owner = bookingOwner(url);
+    if (!isCalendly(url) || (owner && owner.bookingEmbed === false)) return false;
+    var back = openModal('<div class="modal-head"><h2>Book a call'+(who ? ' with '+esc(who) : '')+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<iframe class="book-frame" src="'+attr(bookingEmbedUrl(url))+'" title="Pick a time" data-book-frame></iframe>'
+      + '<div class="modal-actions"><a class="btn ghost" href="'+attr(url)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open in a new tab</a><button type="button" class="btn primary" data-modal-ok>Done</button></div>');
+    back.querySelector(".modal").classList.add("modal-wide");
+    back.querySelector("[data-modal-ok]").addEventListener("click", closeModal);
+    return true;
+  }
+  document.addEventListener("click", function(ev){
+    var a = ev.target.closest && ev.target.closest("[data-contact-book], [data-va-book], [data-int-test]"); if (!a) return;
+    var url = a.getAttribute("href") || a.getAttribute("data-int-test"), key = a.getAttribute("data-contact-book");
+    if (openBooking(url, key ? keyName(key) : (a.hasAttribute("data-va-book") ? "CloudWAV" : ""))) ev.preventDefault();
+    else if (a.hasAttribute("data-int-test") && safeLink(url)) window.open(url, "_blank", "noopener");
+  });
+  // Calendly tells the page when a time has been booked
+  window.addEventListener("message", function(ev){
+    if (!/^https:\/\/(www\.)?calendly\.com$/.test(ev.origin || "") || !ev.data || ev.data.event !== "calendly.event_scheduled") return;
+    state.bookingMade = true; toast("Call booked -- check your email for the invite");
+    var b = document.querySelector("[data-va-book]"); if (b){ b.textContent = "Call booked ✓"; }
+  });
+  function integrationsFor(me){ var c = contactFor(me) || {}; return c.integrations || {}; }
+  function renderIntegrations(force){
+    var box = document.getElementById("integrationsContent");
+    if (!box || state.screen !== "integrations") return;
+    var me = chMe();
+    if (!me){ box.innerHTML = '<div class="empty">Create your profile first -- then you can connect your tools.</div>'; return; }
+    var c = contactFor(me) || {}, ig = c.integrations || {}, hs = ig.hubspot || {}, key = me + ":" + (state.intV || 0);
+    if (!force && box.getAttribute("data-int-key") === key) return;   // keep what's being typed
+    box.setAttribute("data-int-key", key);
+    var badge = function(on, yes, no){ return '<span class="badge '+(on ? 'good' : 'neutral')+'">'+(on ? yes : no)+'</span>'; };
+    var isOperator = me === "operator:";
+    var requests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.hubspot && x.integrations.hubspot.requested; }) : [];
+    box.innerHTML = '<div class="int-grid">'
+      // --- Calendly
+      + '<div class="card card-pad int-card" data-int="calendly"><div class="int-head"><span class="int-logo" style="background:#006bff;">C</span><h3>Calendly</h3>'+badge(!!safeLink(c.booking), "Connected", "Not set up")+'</div>'
+        + '<p class="field-note" style="margin:0;">Let people book time with you without emailing back and forth. Works with any Calendly plan -- paste your scheduling link.</p>'
+        + '<div class="field-row"><label for="intBooking">Your scheduling link</label><input type="url" id="intBooking" value="'+attr(c.booking || "")+'" placeholder="https://calendly.com/your-name/30min"></div>'
+        + '<label class="cfg-check"><input type="checkbox" id="intEmbed"'+(c.bookingEmbed !== false ? ' checked' : '')+'> Open the scheduler inside PartnerWAV (instead of a new tab)</label>'
+        + '<div id="intCalError" class="login-msg bad" hidden></div>'
+        + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="calendly">Save</button>'+(safeLink(c.booking) ? '<button type="button" class="btn secondary sm" data-int-test="'+attr(c.booking)+'">Try it</button>' : '')+'</div>'
+        + '<div class="aff-section-title" style="margin-top:4px;">Where it shows</div><ul class="shop-list" style="margin:0;"><li>A "Book a call" button on your profile and in Messages, next to WhatsApp and LINE</li>'
+          + (isOperator ? '<li>"Book a call now" on the thank-you page of the vendor assessment</li>' : '')+'</ul>'
+        + '<p class="field-note" style="margin:0;">Other scheduling tools (Cal.com, Google Calendar booking pages, HubSpot Meetings) work too -- they open in a new tab.</p>'
+        + '<p class="field-note" style="margin:0;"><b>Coming next:</b> bookings recorded in PartnerWAV automatically. That needs a server connection to your Calendly account, set up with CloudWAV.</p></div>'
+      // --- HubSpot
+      + '<div class="card card-pad int-card" data-int="hubspot"><div class="int-head"><span class="int-logo" style="background:#ff7a59;">H</span><h3>HubSpot</h3>'+(hs.requested ? '<span class="badge warn">Setup requested</span>' : '<span class="badge neutral">Not connected</span>')+'</div>'
+        + '<p class="field-note" style="margin:0;">Keep your HubSpot CRM and marketing in step with PartnerWAV. Tick what you want synced and CloudWAV will set up the connection with you.</p>'
+        + '<div class="va-opts col">'+HUBSPOT_SYNC.map(function(o){ var on = (hs.sync || []).indexOf(o[0]) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-int-hs="'+o[0]+'"'+(on ? ' checked' : '')+'><span><b>'+esc(o[1])+'</b></span></label>'; }).join("")+'</div>'
+        + '<div class="field-row"><label for="intHsDir">Direction</label><select id="intHsDir" class="filter app-select">'+[["to-hubspot","PartnerWAV → HubSpot"],["from-hubspot","HubSpot → PartnerWAV"],["both","Both ways"]].map(function(o){ return '<option value="'+o[0]+'"'+((hs.direction || "to-hubspot") === o[0] ? ' selected' : '')+'>'+o[1]+'</option>'; }).join("")+'</select></div>'
+        + '<div id="intHsError" class="login-msg bad" hidden></div>'
+        + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="hubspot">'+(hs.requested ? "Update request" : "Request connection")+'</button>'+(hs.requested ? '<button type="button" class="btn ghost sm" data-int-cancel="hubspot">Cancel request</button><span class="field-note">Requested '+esc(hs.requestedAt || "")+'</span>' : '')+'</div>'
+        + '<p class="field-note" style="margin:0;">Why a request, not a button: HubSpot needs a private access key, and that key must be kept on a server, never in a web page. CloudWAV sets that up once per HubSpot account.</p></div>'
+      // --- already connected / planned
+      + '<div class="card card-pad int-card" data-int="chat"><div class="int-head"><span class="int-logo" style="background:#25d366;">W</span><h3>WhatsApp &amp; LINE</h3>'+badge(!!(c.whatsapp || c.line), "Set up", "Not set up")+'</div>'
+        + '<p class="field-note" style="margin:0;">Your number, LINE ID and groups, with share buttons for announcements and event updates.</p>'
+        + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-goto-screen="channels">Open WhatsApp &amp; LINE</button></div></div>'
+      + '<div class="card card-pad int-card" data-int="planned"><div class="int-head"><span class="int-logo" style="background:#8a84a8;">+</span><h3>Planned</h3><span class="badge neutral">Not yet</span></div>'
+        + '<ul class="shop-list" style="margin:0;"><li>Luma, Eventbrite and ZipEvent -- event listings and registrations</li><li>Notion -- investor shortlists and fundraising pipeline</li><li>Salesforce and Zoho CRM</li><li>Slack and Microsoft Teams announcements</li></ul>'
+        + '<p class="field-note" style="margin:0;">Need one of these sooner, or something else? Message CloudWAV.</p></div>'
+      + '</div>'
+      + (isOperator ? '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1rem;">HubSpot connection requests</h2><span class="hint">Accounts that asked to be connected</span></div>'
+        + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;" id="intRequests">'+(requests.length ? requests.map(function(x){ var h = x.integrations.hubspot;
+            return '<div class="deal-row" data-int-req="'+attr(x.id)+'"><span class="deal-row-name">'+esc(keyName(x.id))+'<span class="field-note" style="display:block;font-weight:400;">'+esc((h.sync || []).map(function(k){ var o = HUBSPOT_SYNC.filter(function(y){ return y[0] === k; })[0]; return o ? o[1].split(" (")[0] : k; }).join(" · "))+' · '+esc(h.direction || "")+' · requested '+esc(h.requestedAt || "")+'</span></span></div>'; }).join("")
+          : '<div class="empty" style="padding:12px;">No requests yet.</div>')+'</div>' : '');
+  }
+  function saveIntegration(which){
+    var me = chMe(); if (!me) return;
+    var rec = contactFor(me); if (!rec){ rec = { id:me, show:true }; contactChannels.push(rec); }
+    if (which === "calendly"){
+      var err = document.getElementById("intCalError"), u = document.getElementById("intBooking").value.trim();
+      if (u && !/^https?:\/\//i.test(u) && /^[^\s\/]+\.\S+/.test(u)) u = "https://" + u;
+      if (u && !/^https:\/\/\S+\.\S+/i.test(u)){ err.textContent = "The link needs to be a secure web address, like https://calendly.com/your-name/30min."; err.hidden = false; return; }
+      rec.booking = u; rec.bookingEmbed = document.getElementById("intEmbed").checked; rec.updatedAt = nowStamp();
+      toast(u ? "Calendly link saved" : "Booking link removed");
+    } else {
+      var sync = [].slice.call(document.querySelectorAll("[data-int-hs]")).filter(function(x){ return x.checked; }).map(function(x){ return x.getAttribute("data-int-hs"); }), e2 = document.getElementById("intHsError");
+      if (!sync.length){ e2.textContent = "Tick at least one thing to sync."; e2.hidden = false; return; }
+      rec.integrations = rec.integrations || {}; rec.integrations.hubspot = { requested:true, sync:sync, direction:document.getElementById("intHsDir").value, requestedAt:(rec.integrations.hubspot && rec.integrations.hubspot.requestedAt) || nowStamp().slice(0, 10) };
+      rec.updatedAt = nowStamp(); toast("Request sent -- CloudWAV will contact you to connect HubSpot");
+    }
+    saveChannels(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; renderIntegrations(true);
+  }
+  document.addEventListener("click", function(ev){
+    var b = ev.target.closest && ev.target.closest("[data-int-save]"); if (b){ saveIntegration(b.getAttribute("data-int-save")); return; }
+    var x = ev.target.closest && ev.target.closest("[data-int-cancel]");
+    if (x){ var rec = contactFor(chMe()); if (rec && rec.integrations){ delete rec.integrations.hubspot; saveChannels(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast("Request cancelled"); renderIntegrations(true); } }
+  });
 
   function renderAffiliateManage(){
     var box = document.getElementById("affiliateManageContent");
@@ -4618,6 +4735,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderOperatorAgreements();
     renderOperatorRevenue();
     renderChannels();
+    renderIntegrations();
     renderReferrals();
     renderReferralView();
     renderShop();
@@ -10476,7 +10594,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="field-row"><label for="cPreferred">Preferred</label><select id="cPreferred"><option value="">No preference</option><option value="whatsapp"'+(c.preferred === "whatsapp" ? " selected" : "")+'>WhatsApp</option><option value="line"'+(c.preferred === "line" ? " selected" : "")+'>LINE</option></select></div>'
       + '</div>'
       + '<div class="field-row"><label for="cBooking">Booking link (Calendly or similar)</label><input id="cBooking" type="url" value="'+attr(c.booking)+'" placeholder="https://calendly.com/your-name/30min">'
-        + '<span class="field-note">Adds a "Book a call" button next to your WhatsApp and LINE buttons, so people can pick a time without emailing back and forth.'+(me === "operator:" ? ' Yours also appears on the thank-you page of the vendor assessment.' : '')+'</span></div>'
+        + '<span class="field-note">Adds a "Book a call" button next to your WhatsApp and LINE buttons, so people can pick a time without emailing back and forth. More options under Integrations.'+(me === "operator:" ? ' Yours also appears on the thank-you page of the vendor assessment.' : '')+'</span></div>'
       + (me === "operator:" ? '<div class="field-row"><label for="cFollowUp">Vendor assessment: we reply within…</label><input id="cFollowUp" type="text" maxlength="40" value="'+attr(c.assessFollowUp || "two business days")+'" placeholder="two business days">'
         + '<span class="field-note">Shown to vendors after they send the assessment: "Someone from CloudWAV will contact you within …"</span></div>' : '')
       + '<label class="cfg-check"><input type="checkbox" id="cShow"'+(c.show !== false ? " checked" : "")+'> Show these to signed-in PartnerWAV members</label>'
