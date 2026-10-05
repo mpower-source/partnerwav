@@ -30,7 +30,7 @@ with sync_playwright() as p:
     pg.locator('[data-vendor-edit-save="intelsense"]').first.click(); pg.wait_for_timeout(400)
     tile = pg.locator('[data-product-tile="finsense-ai"]')
     ok(tile.locator("img.entity-logo-img").count() == 1, "Product tile shows its logo")
-    ok(pg.locator('[data-product-tile="unisense-ai"] img.entity-logo-img').count() == 0 and pg.locator('[data-product-tile="unisense-ai"] .entity-logo-fallback').count() == 1, "Products without a logo show initials")
+    ok(pg.locator('[data-product-tile="unisense-ai"] img.entity-logo-img').count() == 1 and pg.locator('[data-product-tile="unisense-ai"] .entity-logo-fallback').count() == 0, "Other products keep their built-in Intelsense icons")
     ok(pg.locator("#vendorProfileContent .profile-header img.entity-logo-img").count() >= 1, "Company logo on the profile")
     # remove product logo again works
     pg.locator('[data-edit-vendor-profile="intelsense"]:visible').first.click(); pg.wait_for_timeout(300)
