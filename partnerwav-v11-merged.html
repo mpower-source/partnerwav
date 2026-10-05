@@ -457,6 +457,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .btn:disabled{ opacity:.5; cursor:not-allowed; }
 
   .filter-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  /* dropdowns that sit on their own (not in a form row): same look as the app's buttons and inputs */
+  select.filter.app-select{ -webkit-appearance:none; appearance:none; font-family:inherit; font-size:.86rem; font-weight:600; padding:9px 34px 9px 12px; border-radius:10px; min-height:38px; cursor:pointer;
+    border:1px solid var(--line); background-color:var(--surface); color:var(--ink); max-width:100%; text-overflow:ellipsis;
+    background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238a84a8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center; transition:border-color .15s, box-shadow .15s; }
+  select.app-select:hover{ border-color:var(--accent); }
+  select.app-select:focus-visible{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft, rgba(91,61,245,.18)); }
+  select.app-select option{ font-weight:400; color:var(--ink); background:var(--surface); }
+  #agrReqProgram{ min-width:260px; }
   select.filter{ font:inherit; font-size:.82rem; padding:7px 10px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
 
   .empty{ text-align:center; padding:34px 20px; color:var(--ink-faint); font-size:.88rem; }
@@ -5727,7 +5736,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (state.activeConversation && !mine.some(function(c){ return c.id === state.activeConversation; })) state.activeConversation = null;
     if (!state.activeConversation && mine.length) state.activeConversation = mine[0].id;
     var contacts = msgContacts(me);
-    listBox.innerHTML = '<div class="msg-new"><select id="msgNewTo" aria-label="Start a conversation with"><option value="">+ New message to…</option>'
+    listBox.innerHTML = '<div class="msg-new"><select id="msgNewTo" class="filter app-select" aria-label="Start a conversation with"><option value="">+ New message to…</option>'
         + contacts.map(function(x){ return '<option value="'+esc(x[0]).replace(/"/g,"&quot;")+'">'+esc(x[1])+'</option>'; }).join("") + '</select></div>'
       + (mine.length ? mine.map(function(c){
           var other = otherParty(c, me), msgs = convoMessages(c.id), last = msgs[msgs.length - 1];
@@ -9231,7 +9240,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var me = myMsgKey(), vendorId = state.role === "vendor" ? state.myVendorId : null;
     var list = agreementsList.filter(function(a){ return a.partyKey === me || (vendorId && a.kind === "partner" && a.programId === vendorId); });
     var reqable = state.role === "partner" ? programs.filter(function(p){ return !list.some(function(a){ return a.kind === "partner" && a.programId === p.id && a.status !== "terminated"; }); }) : [];
-    box.innerHTML = (state.role === "partner" ? '<div class="cfg-actions" style="margin-bottom:12px;flex-wrap:wrap;"><select id="agrReqProgram" aria-label="Program"><option value="">Request an agreement for…</option>'
+    box.innerHTML = (state.role === "partner" ? '<div class="cfg-actions" style="margin-bottom:12px;flex-wrap:wrap;"><select id="agrReqProgram" class="filter app-select" aria-label="Program"><option value="">Request an agreement for…</option>'
         + reqable.map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'; }).join("") + '</select><button type="button" class="btn primary sm" data-agr-request>Request agreement</button></div>' : '')
       + (list.length ? '<div class="card"><div class="table-scroll"><table><thead><tr><th>With</th><th>For</th><th>Agreement</th><th>Status</th><th>Signatures</th><th></th></tr></thead><tbody>'
         + list.map(function(a){
