@@ -17,7 +17,7 @@ with sync_playwright() as p:
     t = pg.locator("[data-cfg-tier]")
     ok(t.count() == 2, "Both Intelsense tiers loaded")
     ok(t.nth(0).locator(".cfg-t-fy").input_value() == "15" and t.nth(0).locator(".cfg-t-ren").input_value() == "5", "Reseller parsed to 15 / 5")
-    ok(t.nth(1).locator(".cfg-t-ovr").input_value() == "5", "Channel Manager override parsed to 5")
+    ok(t.nth(1).locator(".cfg-t-ovr").input_value() == "" and t.nth(1).locator(".cfg-t-fy").input_value() == "15", "Channel Manager has no override (15 / 5 only)")
     ok(pg.input_value("#cfgAgreementType") == "Vendor Program Agreement" and pg.input_value("#cfgRevenueBase") == "net", "Agreement type + Net Revenue base loaded")
     ok(pg.locator("[data-cfg-remove-deduction]").count() == 3, "Default itemized deductions shown")
     ok(pg.locator("[data-cfg-product]").count() == 4, "Per-product rates for all 4 Intelsense products")
@@ -63,7 +63,7 @@ with sync_playwright() as p:
     # --- flows through to what partners see
     nav(pg, "vendor-network"); pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(200)
     vp = pg.inner_text("#vendorProfileContent")
-    ok("18% + 5%" in vp and "15% + 5% + 5% override" in vp and "Affiliate" in vp and "10%" in vp, "Vendor profile shows the configured tiers")
+    ok("18% + 5%" in vp and "override" not in vp.lower() and "Affiliate" in vp and "10%" in vp, "Vendor profile shows the configured tiers")
 
     # --- reopen: values kept
     nav(pg, "operator-programs"); open_config(pg, "intelsense")
@@ -100,5 +100,22 @@ with sync_playwright() as p:
     role(pg, "operator"); nav(pg, "operator-programs"); open_config(pg, "intelsense")
     pg.set_viewport_size({"width": 390, "height": 844}); pg.wait_for_timeout(200)
     ok(pg.evaluate("document.documentElement.scrollWidth-innerWidth") <= 0, "No horizontal overflow at 390px")
+    b.close()
+
+# --- an older saved copy of Intelsense loses the "+ 5% override" once; a later operator edit is kept
+with sync_playwright() as p:
+    b, pg = open_page(p)
+    pg.evaluate("""localStorage.setItem('partnerWAV_programTerms', JSON.stringify({ intelsense: { terms: null, tiers:[{tier:'Reseller', rate:'15% + 5%', base:'Net revenue'},{tier:'Channel Manager', rate:'15% + 5% + 5% override', base:'Sub-reseller revenue'}], agreement:{type:'Vendor Program Agreement', status:'active'}, status:'active' } }))""")
+    pg.reload(); pg.wait_for_timeout(700)
+    role(pg, "operator"); nav(pg, "operator-programs")
+    saved = pg.evaluate("JSON.parse(localStorage.getItem('partnerWAV_programTerms')).intelsense")
+    ok(saved["tiers"][1]["rate"] == "15% + 5%" and saved["tiersSetup"] == 1, "Older saved Intelsense tier loses the 5% override: " + saved["tiers"][1]["rate"])
+    ok(saved["terms"]["tiers"][1]["override"] == "", "Structured terms carry no override either")
+    open_config(pg, "intelsense")
+    pg.locator("[data-cfg-tier]").nth(1).locator(".cfg-t-ovr").fill("3")
+    pg.locator("[data-config-save]").first.click(); pg.wait_for_timeout(250)
+    pg.reload(); pg.wait_for_timeout(700)
+    saved = pg.evaluate("JSON.parse(localStorage.getItem('partnerWAV_programTerms')).intelsense")
+    ok("3% override" in saved["tiers"][1]["rate"], "An override the operator sets afterwards is kept: " + saved["tiers"][1]["rate"])
     b.close()
 report()

@@ -931,7 +931,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="partnerLevelCard"></div>
         <div class="stat-row">
           <div class="stat-tile"><span class="stat-label">Enrolled programs</span><span class="stat-value" id="statEnrolled">2</span><span class="stat-trend">of 4 in the directory</span></div>
-          <div class="stat-tile"><span class="stat-label">Commission YTD</span><span class="stat-value">$184,200</span><span class="stat-trend">↑ 12%</span></div>
+          <div class="stat-tile"><span class="stat-label">Commission YTD</span><span class="stat-value">$51,360</span><span class="stat-trend">↑ 12%</span></div>
           <div class="stat-tile"><span class="stat-label">Open deals</span><span class="stat-value">3</span><span class="stat-trend">↑ 1 this week</span></div>
           <div class="stat-tile"><span class="stat-label">Active agreements</span><span class="stat-value">2</span><span class="stat-trend">2 more in draft</span></div>
         </div>
@@ -2788,9 +2788,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { tier:"Joint Venture", rate:"Per JV profit-allocation schedule", base:"Per Joint Venture Agreement, Schedule C" }
   ];
   var programs = [
-    { id:"intelsense", productLogosSetup:1, name:"Intelsense AI", vertical:"Technology", origin:"Bangladesh", desc:"Conversational-AI platform for enterprise support automation.", relationships:["Vendor Program"], tiers:[
+    { id:"intelsense", tiersSetup:1, productLogosSetup:1, name:"Intelsense AI", vertical:"Technology", origin:"Bangladesh", desc:"Conversational-AI platform for enterprise support automation.", relationships:["Vendor Program"], tiers:[
         { tier:"Reseller", rate:"15% + 5%", base:"Net revenue" },
-        { tier:"Channel Manager", rate:"15% + 5% + 5% override", base:"Sub-reseller revenue" }
+        { tier:"Channel Manager", rate:"15% + 5%", base:"Sub-reseller revenue" }
       ], agreement:{ type:"Vendor Program Agreement", status:"active" }, status:"active",
       logo:VENDOR_LOGOS["intelsense"], logoSetup:1, website:"https://intelsense.ai",
       social:{ linkedin:"https://linkedin.com/company/intelsense-ai", twitter:"https://x.com/intelsenseai", facebook:"" },
@@ -2921,7 +2921,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   ];
 
   var commissionRows = [
-    { partner:"Siam Digital MSP", program:"Intelsense AI", tier:"Reseller", status:"active", amount:"฿148,200.00" },
+    { partner:"Siam Digital MSP", program:"Intelsense AI", tier:"Reseller", status:"active", amount:"$48,200.00" },
     { partner:"Gulf Coast VAR", program:"Cross Connect", tier:"Affiliate", status:"pending", amount:"$860.00" },
     { partner:"Portonics Ltd.", program:"Intelsense AI", tier:"Installer", status:"active", amount:"$2,300.00" },
     { partner:"Riverside Telco", program:"Botnoi Voice", tier:"Channel Manager", status:"draft", amount:"--" }
@@ -5831,6 +5831,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var byName = {}; (p.tiers || []).forEach(function(t){ if (t !== jv) byName[String(t.tier).toLowerCase()] = t; });
     p.tiers = [byName["reseller"] || BOTNOI_TIERS[0], byName["channel manager"] || BOTNOI_TIERS[1], Object.assign({}, BOTNOI_TIERS[2], jv ? { rate:jv.rate, base:jv.base } : {})].concat(others)
       .map(function(t){ return Object.assign({}, t); });
+    p.tiersSetup = 1;
+    syncTermsTiers(p); saveProgramTerms();
+    return true;
+  }
+  // One-time: Intelsense's Channel Manager tier carried a "+ 5% override" that was never part of the program.
+  // CloudWAV Consulting's extra 5% is its own reseller rate (20% instead of 15%, on its enrollment), and the
+  // 5% for partners CloudWAV brings is the platform operator fee. Saved and cloud copies lose the override once.
+  function ensureIntelsenseTiers(){
+    var p = programById("intelsense"); if (!p || (p.tiersSetup || 0) >= 1) return false;
+    p.tiers = (p.tiers || []).map(function(t){
+      var c = Object.assign({}, t);
+      if (/channel manager/i.test(String(c.tier))) c.rate = String(c.rate || "").replace(/\s*\+\s*5(?:\.0+)?%\s*override\s*$/i, "");
+      return c;
+    });
     p.tiersSetup = 1;
     syncTermsTiers(p); saveProgramTerms();
     return true;
@@ -9693,7 +9707,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var missing = CLOUD_COLLECTIONS.some(function(c){ return c.mode === "merge" && !Object.keys(CLOUD.inCloud[c.name] || {}).length; });
       if (isOp() && missing) await cloudSeed(true);
       if (isOp()) addIntelsenseSamples(true);
-      if (isOp()){ ensureOwnPartner(); ensureBotnoiTiers(); ensureBotnoiLogo(); ensureIntelsenseProductLogos(); ensureVendorLogos(); cloudSchedule(); }
+      if (isOp()){ ensureOwnPartner(); ensureBotnoiTiers(); ensureIntelsenseTiers(); ensureBotnoiLogo(); ensureIntelsenseProductLogos(); ensureVendorLogos(); cloudSchedule(); }
     } catch(e){
       console.warn("Cloud load failed:", e);
       CLOUD.loadFails = (CLOUD.loadFails || 0) + 1;
@@ -15737,6 +15751,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadVendorEdits();
   loadProgramTerms();
   ensureBotnoiTiers();
+  ensureIntelsenseTiers();
   ensureBotnoiLogo();
   ensureIntelsenseProductLogos();
   ensureVendorLogos();
