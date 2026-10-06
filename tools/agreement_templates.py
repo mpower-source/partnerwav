@@ -2,7 +2,7 @@
 """Source of truth for the full text of CloudWAV's four PartnerWAV agreements.
 
 The text was written out from the agreement outlines in the PartnerWAV project (docs 01-04) and the
-planning brief, and follows their section numbering (e.g. Vendor Program 5.2 no platform fee, 5.4 Net
+planning brief, and follows their section numbering (e.g. Vendor Program 5.2 CloudWAV's compensation, 5.4 Net
 Revenue, 6.3-6.5 non-circumvention, 13.2/13.5 symmetric termination; Joint Venture 3, 5-6, 7, 8, 10, 12, 14;
 Custom Marketing 1.3, 4, 6; Reseller 2, 5, 6).
 
@@ -79,7 +79,7 @@ T["Vendor Program Agreement"] = {
   ]},
   {"title": "Override, installer margin, CloudWAV's compensation and Net Revenue", "clauses": [
     "A Channel Manager earns the Override in Schedule B on sales made by the sub-resellers it recruited. CloudWAV acts as Channel Manager for the Partners it recruits into the Program and earns the Override on their sales.",
-    "The Override is additive: it is paid on top of the sub-reseller's Commission as a separate line and is never taken out of it. CloudWAV's compensation for operating the Program is the Override and, where Schedule C applies, the Installer Network margin. {{platformFeeText}}",
+    "The Override is additive: it is paid on top of the sub-reseller's Commission as a separate line and is never taken out of it. CloudWAV's compensation for operating the Program is the Override, the platform operator fee and, where Schedule C applies, the Installer Network margin. {{platformFeeText}} The Vendor also pays the monthly PartnerWAV subscription stated in Schedule B for its use of the platform. No other platform, listing or set-up fee is payable unless the parties agree it in writing.",
     "{{installerMarginText}}",
     "\"Net Revenue\" means the amounts actually invoiced to and collected from the Customer for the Products, less only these deductions: {{deductionsText}}. Every deduction must be itemized line by line on the commission statement, supported by documents the Vendor provides on request, and of a kind approved in advance in Schedule B. No deduction that is not listed there may be taken without CloudWAV's prior written agreement.",
     "The Vendor issues a statement for each payout period showing, for each Customer, the invoices issued, amounts collected, deductions taken, the Commission and Override due and the Partner credited.",
@@ -145,7 +145,7 @@ T["Vendor Program Agreement"] = {
   {"title": "Schedule B -- Commission and Override economics", "rows": [
     ["Tiers, rates and bases", "{{tiersTable}}"], ["Revenue base", "{{revenueBaseText}}"], ["Permitted deductions", "{{deductionsText}}"],
     ["Renewal / recurring duration", "{{renewalDuration}}"], ["Payout schedule", "{{payoutSchedule}}"], ["Currency and minimum payout", "{{currency}}; minimum {{minPayout}} {{currency}}"],
-    ["Platform fee", "{{platformFeeShort}}"], ["Deal protection", "{{dealProtectionDays}} days from approval; approval within {{approvalSlaDays}} business days"]]},
+    ["Platform operator fee", "{{platformFeeShort}}"], ["PartnerWAV subscription", "{{planFee}}"], ["Deal protection", "{{dealProtectionDays}} days from approval; approval within {{approvalSlaDays}} business days"]]},
   {"title": "Schedule C -- Installer Network", "rows": [
     ["Installer Network", "{{installerScheduleText}}"], ["Certification, countries and job types", "{{installerDetails}}"]]},
   {"title": "Schedule D -- Territory and exclusivity", "rows": [
@@ -160,6 +160,7 @@ T["Vendor Program Agreement"] = {
  "html": ["tiersTable"],
  "fields": F({
   "territory": {"label": "Territory (countries or regions)"},
+  "planFee": {"label": "PartnerWAV plan and monthly fee (e.g. Growth plan, USD 1,497 a month)"},
   "exclusivity": {"label": "Exclusivity", "def": "non-exclusive"},
   "cureDays": {"label": "Cure period (days)", "def": "30"},
   "liabilityCap": {"label": "Liability cap", "def": "the total Commission, Override and fees paid or payable under this Agreement in the 12 months before the claim"},
@@ -175,8 +176,8 @@ T["Vendor Program Agreement"] = {
   "renewalText": "It then renews automatically for successive 12-month periods unless either party gives notice of non-renewal at least 60 days before the end of the current term.",
   "installerMarginText": "On jobs delivered through the Certified Installer Network, CloudWAV earns the Installer Network margin stated in Schedule C on installer billings, separate from Commission. If Schedule C is marked not applicable, no Installer Network margin applies.",
   "installerScheduleText": "[Applies / Not applicable]. CloudWAV margin on installer billings: [__]%",
-  "platformFeeText": "No separate platform, listing or set-up fee is payable by the Vendor.",
-  "platformFeeShort": "None",
+  "platformFeeText": "The Vendor pays CloudWAV a platform operator fee of 5% of deal value on sales by Partners CloudWAV brought to the Program and operates for the Vendor, and 2% on sales by Partners the Vendor invited to the Program, invoiced as the Vendor collects from the Customer. The platform operator fee is paid by the Vendor in addition to Commission and never reduces what a Partner earns.",
+  "platformFeeShort": "5% (Partners CloudWAV brings and operates); 2% (Partners the Vendor invites); invoiced as the Vendor collects",
   "nonCircumventionText": "The Vendor will not deal directly with a Customer or prospect introduced through a registered deal, or route such a deal through another channel, in order to avoid Commission, Override or other amounts under this Agreement.",
   "proServicesText": "CloudWAV, Partners and certified installers may provide consulting, implementation, integration, training and other professional services to Customers in connection with the Products, on their own terms. The Vendor will not block or restrict this, and may also offer its own services.",
   "tiersTable": [["Tier", "Rate", "Base"], ["Affiliate / Referral", "[__]", "[__]"], ["Reseller", "[__]% first year + [__]% renewal", "Net Revenue"], ["Channel Manager", "Reseller rate + [__]% Override", "Sub-reseller revenue"]]

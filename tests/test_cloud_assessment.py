@@ -43,7 +43,7 @@ with sync_playwright() as p:
     row = pg.locator("[data-va-row]").filter(has_text="Bright Hardware")
     ok(row.count() == 1 and "NEW" in row.inner_text().upper(), "CloudWAV sees it as New")
     row.locator("[data-va-open]").click(); pg.wait_for_timeout(300)
-    ok(pg.inner_text("#vaMonthly") == "$1,500", "Quote: Launch 500 + Marketing services 1,000")
+    ok(pg.inner_text("#vaMonthly") == "$1,497", "Quote: Launch 497 + Marketing services 1,000")
     pg.select_option("#vaStatus", "quoted"); pg.click("[data-va-save]"); pg.wait_for_timeout(400); ok(settle(pg), "Saved")
     d = db("vendorAssessments")[0]["data"]
     ok(d["status"] == "quoted" and d["quote"]["planId"] == "launch", "Quote and status saved to Supabase")
@@ -69,7 +69,7 @@ with sync_playwright() as p:
     b.close()
 
     b, ctx, pg = session(p, "ops@cloudwav.test"); pg.wait_for_timeout(1200); nav(pg, "operator-assessments"); pg.locator("[data-va-open]").first.click(); pg.wait_for_timeout(300)
-    ok(pg.inner_text("#vaMonthly") == "$1,700", "Pricing model reloads from Supabase (Marketing services now 1,200)")
+    ok(pg.inner_text("#vaMonthly") == "$1,697", "Pricing model reloads from Supabase (Marketing services now 1,200)")
     b.close()
 stop_pg()
 report()

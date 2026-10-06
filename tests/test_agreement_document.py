@@ -66,11 +66,11 @@ with sync_playwright() as p:
     ok('5.4 "Net Revenue" means' in flat and "5.2 The Override is additive" in flat and "6.3 The Vendor will not deal directly" in flat and "13.2 Either party may terminate for convenience" in flat and "13.5 Any post-termination restriction" in flat, "Clause numbers match the agreement outline (5.2, 5.4, 6.3, 13.2, 13.5)")
     ok(d.locator(".agr-table .agr-table td", has_text="Affiliate").count() >= 1 and "12% on hardware sale" in t and "Cross Connect" in t, "Schedule B carries the program's own tiers and rates")
     ok("90 days" in t and "Net Revenue" not in d.locator("p", has_text="Commission is calculated on").first.inner_text() and "Gross Revenue" in t, "Protection window and revenue base come from the program's configuration (Cross Connect pays on gross)")
-    ok("platform fee of 3%" in t and "6%" in t, "The platform fee clause reflects the fee set in the portal")
+    ok("platform operator fee of 5%" in t and "2% (1% above 1,000,000) on sales by Partners the Vendor invited" in t and "monthly PartnerWAV subscription" in t, "Clause 5.2 states the platform operator fee set in the portal (5% / 2%) and the monthly subscription")
     ok(pg.input_value('input[data-agr-field="cloudwavEntity"] >> nth=0') == "CloudWAV Real LLC, a Wyoming limited liability company" and pg.input_value('input[data-agr-field="cureDays"]') == "30", "CloudWAV details and standard values are pre-filled, and stay editable")
     miss = pg.inner_text("#agrDocStatus")
     ok("still to fill in" in miss and "Territory" in miss and "Their legal entity" in miss, "It lists what only you can supply (their legal entity, territory, governing law...)")
-    for k, val in [("effectiveDate", "2026-11-01"), ("partyEntity", "Cross Connect Inc., a Delaware corporation"), ("territory", "United States and Thailand"), ("governingLaw", "the laws of the State of Wyoming, USA"), ("arbitrationSeat", "seated in Cheyenne, Wyoming under the AAA Commercial Rules"), ("partyContact", "Dana, dana@crossconnect.example")]:
+    for k, val in [("effectiveDate", "2026-11-01"), ("partyEntity", "Cross Connect Inc., a Delaware corporation"), ("territory", "United States and Thailand"), ("planFee", "Growth plan, USD 1,497 a month"), ("governingLaw", "the laws of the State of Wyoming, USA"), ("arbitrationSeat", "seated in Cheyenne, Wyoming under the AAA Commercial Rules"), ("partyContact", "Dana, dana@crossconnect.example")]:
         f = pg.locator(f'input[data-agr-field="{k}"]').first; f.fill(val); f.dispatch_event("change")
     pg.wait_for_timeout(200)
     ok("All fields are filled in" in pg.inner_text("#agrDocStatus"), "Filling them clears the list")

@@ -4038,12 +4038,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var VA_KEY = "partnerWAV_vendorAssessments", PRICING_KEY = "partnerWAV_pricingModel";
   // Starting prices (USD per month). Plan prices follow the earlier strategy docs; add-on and support prices are
   // placeholders to adjust in Vendor Assessments -> Pricing model.
-  var PRICING_DEFAULT = { id:"default", currency:"USD", updatedAt:"",
+  var PRICING_DEFAULT = { id:"default", rev:2, currency:"USD", updatedAt:"",   // rev 2: Launch 497, Growth 1,497, Enterprise 2,497
     plans:[
       { id:"startup", name:"Startup", price:197, size:"Early-stage, up to 10 partners", blurb:"For early-stage companies: the basics at a low monthly fee. CloudWAV also earns when the partners it brings you sell, so most of what you pay follows your results. Move up when the channel is paying for itself." },
-      { id:"launch", name:"Launch", price:500, size:"Up to 10 partners", blurb:"Start or formalize a partner program." },
-      { id:"growth", name:"Growth", price:1500, size:"11-50 partners", blurb:"Scale with incentives, affiliate offers, training and landing pages." },
-      { id:"enterprise", name:"Enterprise", price:3500, size:"50+ partners", blurb:"Everything, with CloudWAV recruiting partners for you and dedicated support." }
+      { id:"launch", name:"Launch", price:497, size:"Up to 10 partners", blurb:"Start or formalize a partner program." },
+      { id:"growth", name:"Growth", price:1497, size:"11-50 partners", blurb:"Scale with incentives, affiliate offers, training and landing pages." },
+      { id:"enterprise", name:"Enterprise", price:2497, size:"50+ partners", blurb:"Everything, with CloudWAV recruiting partners for you and dedicated support." }
     ],
     support:[
       { id:"self", name:"Self-serve", price:0, blurb:"Your team runs the program in PartnerWAV. We set you up and answer questions." },
@@ -4115,7 +4115,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // a saved model keeps its prices; plans / add-ons added to the code later appear automatically
   function mergePricing(m){
     var out = JSON.parse(JSON.stringify(PRICING_DEFAULT)); out.updatedAt = m.updatedAt || "";
-    ["plans","support","addons"].forEach(function(g){ out[g].forEach(function(x){ var s = (m[g] || []).filter(function(y){ return y.id === x.id; })[0]; if (s && typeof s.price === "number") x.price = s.price; }); });
+    // plan prices saved before the current price list (older rev) give way to it once; support and add-on prices are kept
+    var groups = (Number(m.rev) || 1) >= PRICING_DEFAULT.rev ? ["plans","support","addons"] : ["support","addons"];
+    groups.forEach(function(g){ out[g].forEach(function(x){ var s = (m[g] || []).filter(function(y){ return y.id === x.id; })[0]; if (s && typeof s.price === "number") x.price = s.price; }); });
     return out;
   }
   function vaById(id){ return vendorAssessments.filter(function(a){ return a.id === id; })[0] || null; }
@@ -4161,20 +4163,25 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function vaRoiDefaults(a){
     var r = a.roi || {}, partnersNow = { "0":0, "1-10":5, "11-50":25, "51-200":100, "200+":250 }[a.partners] || 0;
     return { partners: r.partners != null ? r.partners : Math.max(10, partnersNow), dealsPerPartner: r.dealsPerPartner != null ? r.dealsPerPartner : 3,
-      dealValue: r.dealValue != null ? r.dealValue : (VA_DEAL_VALUE[a.dealSize] || 5000), commissionPct: r.commissionPct != null ? r.commissionPct : 20, feePct: r.feePct != null ? r.feePct : 5 };   // 5% = CloudWAV's override on sales by partners it brings
+      dealValue: r.dealValue != null ? r.dealValue : (VA_DEAL_VALUE[a.dealSize] || 5000), commissionPct: r.commissionPct != null ? r.commissionPct : 20, feePct: r.feePct != null ? r.feePct : vaFeeRates().operator,
+      invitedPct: r.invitedPct != null ? r.invitedPct : 0 };   // feePct = platform operator fee on partners CloudWAV brings; invitedPct = share of partners the vendor invites (lower fee)
   }
-  // monthly = PartnerWAV subscription per month (0 on the Startup plan)
+  function vaFeeRates(){ var f = typeof DEFAULT_PROGRAM_FEE !== "undefined" && DEFAULT_PROGRAM_FEE ? DEFAULT_PROGRAM_FEE : { sourcedPct:5, basePct:2 }; return { operator:f.sourcedPct, invited:f.basePct }; }
+  function vaFeeNote(){ var f = vaFeeRates(); return "Platform operator fee: " + f.operator + "% of sales by partners CloudWAV brings and operates for you, " + f.invited + "% of sales by partners you invite yourself. It is paid as you collect, on top of partner commission, and never reduces what partners earn."; }
+  // the fee rate across all partners: the operator rate, pulled down by the share of partners the vendor invited
+  function vaBlendedFee(r){ var sh = Math.min(100, Math.max(0, Number(r.invitedPct) || 0)) / 100; return r.feePct * (1 - sh) + Math.min(r.feePct, vaFeeRates().invited) * sh; }
+  // monthly = PartnerWAV subscription per month
   function vaRoiCalc(r, monthly, partners){
-    var n = partners != null ? partners : r.partners, revenue = n * r.dealsPerPartner * r.dealValue;
-    var commission = revenue * r.commissionPct / 100, fee = revenue * r.feePct / 100, cost = (monthly || 0) * 12;
-    var keep = revenue - commission - fee - cost, perPartner = r.dealsPerPartner * r.dealValue * (1 - (r.commissionPct + r.feePct) / 100);
+    var n = partners != null ? partners : r.partners, revenue = n * r.dealsPerPartner * r.dealValue, feePct = vaBlendedFee(r);
+    var commission = revenue * r.commissionPct / 100, fee = revenue * feePct / 100, cost = (monthly || 0) * 12;
+    var keep = revenue - commission - fee - cost, perPartner = r.dealsPerPartner * r.dealValue * (1 - (r.commissionPct + feePct) / 100);
     return { revenue:revenue, commission:commission, fee:fee, cost:cost, keep:keep, spend: cost + fee,
       multiple: (cost + fee) > 0 ? keep / (cost + fee) : null, breakEven: cost > 0 && perPartner > 0 ? Math.ceil(cost / perPartner) : 0 };
   }
   function vaRoiOutHtml(r, monthly){
     var c = vaRoiCalc(r, monthly), sizes = [5, 10, 25, 50, 100].filter(function(n){ return n !== r.partners; }).concat([r.partners]).sort(function(x, y){ return x - y; });
     return '<div class="va-roi-big"><div><span>Partner-sold revenue a year</span><b data-roi="revenue">'+vaMoney(c.revenue)+'</b></div><div><span>You keep, after commissions and PartnerWAV</span><b data-roi="keep">'+vaMoney(c.keep)+'</b></div></div>'
-      + '<div class="field-note" data-roi="line">'+vaMoney(c.commission)+' to partners in commission · '+vaMoney(c.fee)+' CloudWAV override'+(c.cost ? ' · '+vaMoney(c.cost)+' PartnerWAV subscription' : ' · no monthly fee')
+      + '<div class="field-note" data-roi="line">'+vaMoney(c.commission)+' to partners in commission · '+vaMoney(c.fee)+' platform operator fee'+(c.cost ? ' · '+vaMoney(c.cost)+' PartnerWAV subscription' : ' · no monthly fee')
         + (c.multiple != null && c.multiple > 0 ? ' · about <b>'+(Math.round(c.multiple * 10) / 10)+'x</b> back for every $1 spent with CloudWAV' : '')
         + (c.breakEven ? ' · the subscription pays for itself at <b>'+c.breakEven+' active partner'+(c.breakEven === 1 ? '' : 's')+'</b>' : '')+'</div>'
       + '<table class="va-lines va-roi-table" style="width:100%;margin-top:8px;"><thead><tr><th style="text-align:left;">Active partners</th><th style="text-align:right;">Revenue / year</th><th style="text-align:right;">You keep</th></tr></thead><tbody>'
@@ -4182,7 +4189,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function vaRoiInputsHtml(r, withFee){
     var f = function(k, label, step, suffix){ return '<div class="field-row"><label for="roi_'+k+'">'+label+'</label><input type="number" min="0" step="'+step+'" id="roi_'+k+'" data-roi-in="'+k+'" value="'+r[k]+'" class="va-amt" style="width:100%;text-align:left;"></div>'; };
-    return '<div class="form-grid">'+f("partners", "Active partners", 1)+f("dealsPerPartner", "Deals per partner, per year", 1)+f("dealValue", "Average deal value a year ($)", 500)+f("commissionPct", "Partner commission %", 1)+(withFee ? f("feePct", "CloudWAV override on partner sales %", 0.5) : '')+'</div>';
+    return '<div class="form-grid">'+f("partners", "Active partners", 1)+f("dealsPerPartner", "Deals per partner, per year", 1)+f("dealValue", "Average deal value a year ($)", 500)+f("commissionPct", "Partner commission %", 1)+(withFee ? f("feePct", "Platform operator fee %", 0.5) : '')+f("invitedPct", "Partners you invite yourself %", 5)+'</div>';
   }
   function vaRoiRead(r){ document.querySelectorAll("[data-roi-in]").forEach(function(el){ var v = Number(el.value); r[el.getAttribute("data-roi-in")] = isNaN(v) || v < 0 ? 0 : v; }); return r; }
   var VA_STATUS = { "new":{ label:"New", cls:"warn" }, contacted:{ label:"Contacted", cls:"accent" }, quoted:{ label:"Quoted", cls:"accent2" }, won:{ label:"Signed up", cls:"good" }, lost:{ label:"Not going ahead", cls:"neutral" } };
@@ -4368,6 +4375,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
               + '<tr><td>Discount %</td><td style="text-align:right;"><input type="number" min="0" max="100" step="5" class="va-amt" id="vaDiscount" value="'+(q.discountPct || 0)+'" aria-label="Discount percent"></td></tr>'
               + '</tbody></table>'
             + '<div class="va-total"><span>Monthly</span><b id="vaMonthly">'+vaMoney(calc.monthly)+'</b></div><div class="field-note" style="text-align:right;" id="vaAnnual">'+vaMoney(calc.annual)+' a year'+(calc.discount ? ' · '+vaMoney(calc.discount)+' discount a month' : '')+'</div>'
+            + '<div class="field-note" data-va-fee-note style="margin-top:8px;">Plus the '+esc(vaFeeNote().replace(/^Platform/, "platform"))+'</div>'
             + '<div class="field-row" style="margin-top:10px;"><label for="vaQuoteNote">Note on the quote</label><input type="text" id="vaQuoteNote" value="'+attr(q.note || "")+'" placeholder="e.g. Part deferred until funding closes"></div>'
             + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><button type="button" class="btn primary sm" data-va-save>Save</button><button type="button" class="btn secondary sm" data-va-copy-quote>Copy quote summary</button><button type="button" class="btn ghost sm" data-va-delete>Delete</button></div>'
             + '<div class="aff-section-title" style="margin-top:18px;">Return on investment <span class="field-note" style="text-transform:none;letter-spacing:0;font-weight:400;">-- estimate to show the vendor; change the assumptions</span></div>'
@@ -4378,7 +4386,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function vaQuoteText(a){
     var c = vaQuoteLines(a.quote);
     return "PartnerWAV for " + a.company + "\n" + c.lines.map(function(l){ return "- " + l.label + ": " + vaMoney(l.amount) + " / month"; }).join("\n")
-      + (c.discount ? "\n- Discount (" + a.quote.discountPct + "%): -" + vaMoney(c.discount) + " / month" : "") + "\nTotal: " + (c.monthly ? vaMoney(c.monthly) + " / month (" + vaMoney(c.annual) + " a year)" : "no monthly fee") + (a.quote.note ? "\n" + a.quote.note : "")
+      + (c.discount ? "\n- Discount (" + a.quote.discountPct + "%): -" + vaMoney(c.discount) + " / month" : "") + "\nTotal: " + (c.monthly ? vaMoney(c.monthly) + " / month (" + vaMoney(c.annual) + " a year)" : "no monthly fee") + (a.quote.note ? "\n" + a.quote.note : "") + "\n" + vaFeeNote()
       + (function(){ var r = vaRoiDefaults(a), x = vaRoiCalc(r, c.monthly); return "\n\nEstimated return with " + r.partners + " active partners (" + r.dealsPerPartner + " deals each a year at " + vaMoney(r.dealValue) + "):\n- Partner-sold revenue: " + vaMoney(x.revenue) + " a year\n- You keep after commissions and PartnerWAV: " + vaMoney(x.keep) + " a year"
           + (x.breakEven ? "\n- The subscription pays for itself at " + x.breakEven + " active partner" + (x.breakEven === 1 ? "" : "s") : "") + "\n(Estimate, not a guarantee.)"; })();
   }
@@ -4412,7 +4420,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var row = function(g, x){ return '<tr><td><b>'+esc(x.name)+'</b>'+(x.size ? ' <span class="field-note">'+esc(x.size)+'</span>' : '')+'</td><td style="text-align:right;white-space:nowrap;">$ <input type="number" min="0" step="50" class="va-amt" data-pm="'+g+':'+x.id+'" value="'+x.price+'" aria-label="'+attr(x.name)+' monthly price"></td></tr>'; };
     var sect = function(title, g){ return '<tr><th colspan="2" style="text-align:left;padding-top:10px;">'+title+'</th></tr>'+pricingModel[g].map(function(x){ return row(g, x); }).join(""); };
     var back = openModal('<div class="modal-head"><h2>Pricing model</h2><button class="modal-close" aria-label="Close">×</button></div>'
-      + '<p class="field-note" style="margin:0 0 6px;">Monthly list prices in USD. Only CloudWAV sees these. Quotes use them as the starting point; saved quotes keep any price you changed by hand.</p>'
+      + '<p class="field-note" style="margin:0 0 6px;">Monthly list prices in USD. Only CloudWAV sees these. Quotes use them as the starting point; saved quotes keep any price you changed by hand. On every plan the vendor also pays the platform operator fee ('+vaFeeRates().operator+'% / '+vaFeeRates().invited+'%), which is set per program under CloudWAV Revenue.</p>'
       + '<table class="va-lines" style="width:100%;" id="pmTable"><tbody>'+sect("Plans", "plans")+sect("Support level (added to the plan)", "support")+sect("Add-on services", "addons")+'</tbody></table>'
       + '<div id="pmError" class="login-msg bad" role="alert" hidden></div>'
       + '<div class="modal-actions"><button type="button" class="btn ghost" id="pmReset">Reset to starting prices</button><button type="button" class="btn secondary" id="pmCancel">Cancel</button><button type="button" class="btn primary" id="pmSave">Save prices</button></div>');
@@ -4422,7 +4430,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var bad = false; back.querySelectorAll("[data-pm]").forEach(function(el){ if (el.value === "" || isNaN(Number(el.value)) || Number(el.value) < 0) bad = true; });
       if (bad){ var e = back.querySelector("#pmError"); e.textContent = "Every price needs a number (0 or more)."; e.hidden = false; return; }
       back.querySelectorAll("[data-pm]").forEach(function(el){ var p = el.getAttribute("data-pm").split(":"); pmItem(p[0], p[1]).price = Number(el.value); });
-      pricingModel.updatedAt = nowStamp(); saveAssessments(); closeModal(); toast("Pricing model saved"); renderOperatorAssessments(true);
+      pricingModel.rev = PRICING_DEFAULT.rev; pricingModel.updatedAt = nowStamp(); saveAssessments(); closeModal(); toast("Pricing model saved"); renderOperatorAssessments(true);
     });
   }
   function renderOperatorAssessments(force){
@@ -4497,10 +4505,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // public version: revenue only, no PartnerWAV prices
   function vaRoiPublicOut(r){
     var rows = [5, 10, 25, 50, 100].filter(function(n){ return n !== r.partners; }).concat([r.partners]).sort(function(x, y){ return x - y; });
-    var c = vaRoiCalc(Object.assign({}, r, { feePct:0 }), 0);
-    return '<div class="va-roi-big"><div><span>Partner-sold revenue a year</span><b>'+vaMoney(c.revenue)+'</b></div><div><span>After partner commissions</span><b>'+vaMoney(c.revenue - c.commission)+'</b></div></div>'
-      + '<table class="va-lines va-roi-table" style="width:100%;margin-top:8px;"><thead><tr><th style="text-align:left;">Active partners</th><th style="text-align:right;">Revenue / year</th><th style="text-align:right;">After commissions</th></tr></thead><tbody>'
-      + rows.map(function(n){ var x = vaRoiCalc(Object.assign({}, r, { feePct:0 }), 0, n); return '<tr'+(n === r.partners ? ' class="on"' : '')+'><td>'+n+'</td><td style="text-align:right;">'+vaMoney(x.revenue)+'</td><td style="text-align:right;">'+vaMoney(x.revenue - x.commission)+'</td></tr>'; }).join("")+'</tbody></table>'
+    var pr = Object.assign({}, r, { feePct: vaFeeRates().operator }), c = vaRoiCalc(pr, 0);
+    return '<div class="va-roi-big"><div><span>Partner-sold revenue a year</span><b>'+vaMoney(c.revenue)+'</b></div><div><span>After commissions and the platform fee</span><b data-roi-public="keep">'+vaMoney(c.revenue - c.commission - c.fee)+'</b></div></div>'
+      + '<table class="va-lines va-roi-table" style="width:100%;margin-top:8px;"><thead><tr><th style="text-align:left;">Active partners</th><th style="text-align:right;">Revenue / year</th><th style="text-align:right;">After commissions and fee</th></tr></thead><tbody>'
+      + rows.map(function(n){ var x = vaRoiCalc(pr, 0, n); return '<tr'+(n === r.partners ? ' class="on"' : '')+'><td>'+n+'</td><td style="text-align:right;">'+vaMoney(x.revenue)+'</td><td style="text-align:right;">'+vaMoney(x.revenue - x.commission - x.fee)+'</td></tr>'; }).join("")+'</tbody></table>'
+      + '<p class="field-note" data-va-fee-note style="margin:8px 0 0;">'+esc(vaFeeNote())+' The monthly plan is not included in these figures.</p>'
       + '<p class="field-note" style="margin:8px 0 0;">An estimate from the numbers above, not a promise. Results depend on your product, pricing and how active your partners are.</p>';
   }
 
@@ -10391,7 +10400,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "title": "Override, installer margin, CloudWAV's compensation and Net Revenue",
     "clauses": [
      "A Channel Manager earns the Override in Schedule B on sales made by the sub-resellers it recruited. CloudWAV acts as Channel Manager for the Partners it recruits into the Program and earns the Override on their sales.",
-     "The Override is additive: it is paid on top of the sub-reseller's Commission as a separate line and is never taken out of it. CloudWAV's compensation for operating the Program is the Override and, where Schedule C applies, the Installer Network margin. {{platformFeeText}}",
+     "The Override is additive: it is paid on top of the sub-reseller's Commission as a separate line and is never taken out of it. CloudWAV's compensation for operating the Program is the Override, the platform operator fee and, where Schedule C applies, the Installer Network margin. {{platformFeeText}} The Vendor also pays the monthly PartnerWAV subscription stated in Schedule B for its use of the platform. No other platform, listing or set-up fee is payable unless the parties agree it in writing.",
      "{{installerMarginText}}",
      "\"Net Revenue\" means the amounts actually invoiced to and collected from the Customer for the Products, less only these deductions: {{deductionsText}}. Every deduction must be itemized line by line on the commission statement, supported by documents the Vendor provides on request, and of a kind approved in advance in Schedule B. No deduction that is not listed there may be taken without CloudWAV's prior written agreement.",
      "The Vendor issues a statement for each payout period showing, for each Customer, the invoices issued, amounts collected, deductions taken, the Commission and Override due and the Partner credited.",
@@ -10552,8 +10561,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       "{{currency}}; minimum {{minPayout}} {{currency}}"
      ],
      [
-      "Platform fee",
+      "Platform operator fee",
       "{{platformFeeShort}}"
+     ],
+     [
+      "PartnerWAV subscription",
+      "{{planFee}}"
      ],
      [
       "Deal protection",
@@ -10646,6 +10659,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
    },
    "territory": {
     "label": "Territory (countries or regions)"
+   },
+   "planFee": {
+    "label": "PartnerWAV plan and monthly fee (e.g. Growth plan, USD 1,497 a month)"
    },
    "exclusivity": {
     "label": "Exclusivity",
@@ -11627,10 +11643,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       v.renewalText = t.autoRenew ? "It then renews automatically for successive 12-month periods unless either party gives notice of non-renewal at least " + t.terminationNoticeDays + " days before the end of the current term." : "It does not renew automatically.";
       v.installerMarginText = t.installerMargin ? "On jobs delivered through the Certified Installer Network, CloudWAV earns an Installer Network margin of " + t.installerMargin + " on installer billings, separate from Commission." : "No Installer Network margin applies to this Program unless Schedule C is completed.";
       v.installerScheduleText = t.installerMargin ? "Applies. CloudWAV margin: " + t.installerMargin : "Not applicable to this Program at the Effective Date.";
-      v.platformFeeText = fee.enabled ? "In addition, the Vendor pays CloudWAV a platform fee of " + feeRateText(fee, false) + " of deal value on sales by Partners the Vendor brought to the Program and " + feeRateText(fee, true) + " on sales by Partners CloudWAV brought in, "
-          + (fee.basis === "contract" ? "invoiced on the full deal value when the deal is approved" : "invoiced as the Vendor collects from the Customer") + ". The platform fee is paid by the Vendor in addition to Commission and never reduces what a Partner earns."
-        : "No separate platform, listing or set-up fee is payable by the Vendor.";
-      v.platformFeeShort = fee.enabled ? feeRateText(fee, false) + " (Vendor's own partners); " + feeRateText(fee, true) + " (partners CloudWAV brought in); " + String(FEE_BASIS[fee.basis] || "").toLowerCase() : "None";
+      v.platformFeeText = fee.enabled ? "The Vendor pays CloudWAV a platform operator fee of " + feeRateText(fee, true) + " of deal value on sales by Partners CloudWAV brought to the Program and operates for the Vendor, and " + feeRateText(fee, false) + " on sales by Partners the Vendor invited to the Program, "
+          + (fee.basis === "contract" ? "invoiced on the full deal value when the deal is approved" : "invoiced as the Vendor collects from the Customer") + ". The platform operator fee is paid by the Vendor in addition to Commission and never reduces what a Partner earns."
+        : "No platform operator fee applies to this Program.";
+      v.platformFeeShort = fee.enabled ? feeRateText(fee, true) + " (Partners CloudWAV brings and operates); " + feeRateText(fee, false) + " (Partners the Vendor invites); " + String(FEE_BASIS[fee.basis] || "").toLowerCase() : "None";
       v.nonCircumventionText = t.nonCircumvention ? "The Vendor will not deal directly with a Customer or prospect introduced through a registered deal, or route such a deal through another channel, in order to avoid Commission, Override or fees under this Agreement. If it does, the amounts that would have been due remain payable."
         : "The parties have agreed that no non-circumvention clause applies to this Program.";
       v.proServicesText = t.proServicesAllowed ? "CloudWAV, Partners and certified installers may provide consulting, implementation, integration, training and other professional services to Customers in connection with the Products, on their own terms. The Vendor will not block or restrict this, and may also offer its own services."
@@ -12183,7 +12199,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // because program records are public. Each approved deal gets a platformFees record, snapshotted at
   // approval so later rate changes don't rewrite history.
   var PROGRAM_FEES_KEY = "partnerWAV_programFees", PLATFORM_FEES_KEY = "partnerWAV_platformFees";
-  var DEFAULT_PROGRAM_FEE = { enabled:true, basePct:3, sourcedPct:6, largeDealThreshold:1000000, largeBasePct:1.5, largeSourcedPct:3, basis:"collected" };
+  // Platform operator fee: 5% on sales by partners CloudWAV brings and operates, 2% on sales by partners the vendor invites.
+  // Above the large-deal threshold both rates halve.
+  var DEFAULT_PROGRAM_FEE = { enabled:true, basePct:2, sourcedPct:5, largeDealThreshold:1000000, largeBasePct:1, largeSourcedPct:2.5, basis:"collected" };
   var FEE_BASIS = { collected:"As vendor collects", contract:"On approval, full value" };
   var FEE_STATUS = { due:{ label:"Due", cls:"warn" }, invoiced:{ label:"Invoiced", cls:"accent" }, paid:{ label:"Paid", cls:"good" }, waived:{ label:"Waived", cls:"neutral" } };
   var programFees = [];   // { id: programId, enabled, basePct, sourcedPct, largeDealThreshold, largeBasePct, largeSourcedPct, basis, updatedAt, updatedBy }
