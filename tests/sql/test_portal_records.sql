@@ -249,4 +249,39 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authent
 select t('CloudWAV sees the booking on the assessment', (select count(*) from portal_records where collection='vendorAssessments' and data->>'company'='Book Co' and data ? 'bookedAt') = 1);
 reset role;
 
+-- ===== accounts set up by CloudWAV, and investment round details
+insert into auth.users(id, email) values ('00000000-0000-0000-0000-000000000007', 'new@agentid.test');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('a vendor cannot set up accounts', fails($$select public.portal_setup_account('new@agentid.test','vendor','agentid','AgentID','TempPass123')$$));
+select t('a vendor cannot list accounts', fails($$select public.portal_accounts()$$));
+select t('a vendor cannot remove accounts', fails($$select public.portal_remove_account('00000000-0000-0000-0000-000000000003')$$));
+insert into portal_records(collection,id,data,readers,writers) values ('fundingProfiles','vendor:intelsense','{"id":"vendor:intelsense","status":"raising","round":"Series A"}','{vendor:intelsense}','{vendor:intelsense}');
+select t('a vendor saves its own investment round', (select count(*) from portal_records where collection='fundingProfiles') = 1);
+select t('a vendor cannot save another company''s round', fails($$insert into portal_records(collection,id,data,readers,writers) values ('fundingProfiles','vendor:botnoi','{"id":"vendor:botnoi"}','{vendor:intelsense}','{vendor:intelsense}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+select t('a private round is hidden from other companies', (select count(*) from portal_records where collection='fundingProfiles') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV sees the round', (select data->>'round' from portal_records where collection='fundingProfiles' and id='vendor:intelsense') = 'Series A');
+select t('CloudWAV sets up a vendor login', (select public.portal_setup_account(' New@AgentID.test','vendor','agentid','AgentID','TempPass123')->>'entity_id') = 'agentid');
+insert into portal_records(collection,id,data,readers,writers,is_public) values ('programs','agentid','{"id":"agentid","name":"AgentID","needsProfile":true,"tiers":[{"tier":"Reseller","rate":"To be agreed"}]}','{*}','{vendor:agentid}',true);
+select t('operator logins cannot be created here', fails($$select public.portal_setup_account('new@agentid.test','operator','x','X','TempPass123')$$));
+select t('an operator login cannot be re-assigned', fails($$select public.portal_setup_account('ops@cloudwav.test','vendor','agentid','X','TempPass123')$$));
+select t('an unknown email is refused', fails($$select public.portal_setup_account('nobody@nowhere.test','vendor','agentid','X','TempPass123')$$));
+select t('a short temporary password is refused', fails($$select public.portal_setup_account('new@agentid.test','vendor','agentid','X','short')$$));
+select t('the list shows the new login waiting for its own password', (select count(*) from jsonb_array_elements(public.portal_accounts()) a where a->>'email'='new@agentid.test' and a->>'role'='vendor' and (a->>'must_change_password')::boolean) = 1);
+reset role;
+select t('the temporary password is stored hashed and the email confirmed', (select encrypted_password = extensions.crypt('TempPass123', encrypted_password) and email_confirmed_at is not null from auth.users where email='new@agentid.test'));
+select pg_temp.as_user('00000000-0000-0000-0000-000000000007'); set role authenticated;
+update portal_records set data = data || '{"desc":"Identity for AI agents","needsProfile":false}' where collection='programs' and id='agentid';
+select t('the new vendor finishes the profile CloudWAV started', (select data->>'desc' = 'Identity for AI agents' and data->>'needsProfile' = 'false' from portal_records where collection='programs' and id='agentid'));
+select t('the new vendor cannot change its own commission tiers', fails($$update portal_records set data = data || '{"tiers":[{"tier":"Reseller","rate":"90%"}]}' where collection='programs' and id='agentid'$$));
+select t('choosing a password clears the flag', public.portal_password_changed());
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('the flag is cleared in the list', (select count(*) from jsonb_array_elements(public.portal_accounts()) a where a->>'email'='new@agentid.test' and not (a->>'must_change_password')::boolean) = 1);
+select t('CloudWAV removes the login''s access', public.portal_remove_account('00000000-0000-0000-0000-000000000007') and not public.portal_remove_account('00000000-0000-0000-0000-000000000001'));
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

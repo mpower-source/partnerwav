@@ -101,8 +101,8 @@
       <button type="button" class="login-link" id="forgotPasswordBtn">Forgot password?</button>
     </div>
     <div id="loginPanelNewPassword" hidden>
-      <h1 class="login-title">Set a new password</h1>
-      <p class="login-sub">Choose a password with at least 8 characters.</p>
+      <h1 class="login-title" id="newPasswordTitle">Set a new password</h1>
+      <p class="login-sub" id="newPasswordSub">Choose a password with at least 8 characters.</p>
       <label for="newPassword">New password</label>
       <input id="newPassword" type="password" autocomplete="new-password" minlength="8">
       <div id="newPasswordError" class="login-msg bad" role="alert" hidden></div>
@@ -870,6 +870,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">⚙️</span><span class="navsec-name">Settings</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
         <div class="navsec-items" hidden>
           <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
+          <button class="navlink" data-screen="operator-accounts"><span class="ic">🔑</span>Accounts &amp; Logins</button>
           <button class="navlink" data-screen="operator-data"><span class="ic">☁️</span>Cloud Data</button>
         </div>
       </div>
@@ -898,6 +899,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             <div class="account-pop" id="accountPop" hidden>
               <div class="account-name" id="accountName"></div>
               <div class="account-meta" id="accountMeta"></div>
+              <button type="button" class="btn secondary sm" id="changePwBtn" hidden>Change password</button>
               <button type="button" class="btn secondary sm" id="signOutBtn">Sign out</button>
             </div>
           </div>
@@ -945,6 +947,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             </table>
           </div>
         </div>
+        <div id="partnerFundingSlot" data-funding-slot></div>
       </section>
 
       <!-- ===== PARTNER: MY PROFILE (onboarding / edit) ===== -->
@@ -1216,6 +1219,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <div class="cfg-actions" style="margin-top:12px;"><button type="button" class="btn primary sm" id="vendorOverviewEditBtn" data-vendor-overview-edit>Edit full profile</button><button type="button" class="btn secondary sm" id="vendorOverviewViewBtn" data-vendor-overview-view>View full profile</button></div>
         </div>
         <div id="vendorOverviewEdit"></div>
+        <div id="vendorFundingSlot" data-funding-slot></div>
       </section>
 
       <!-- ===== VENDOR: MY PROGRAM LISTING ===== -->
@@ -2162,7 +2166,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-operator-programs" hidden>
         <div class="section-head"><h2>Manage programs</h2><span class="hint">Every vendor program CloudWAV operates</span></div>
         <div style="display:flex;gap:10px;margin-bottom:14px;">
-          <button class="btn primary sm" data-goto-screen="operator-program-editor">+ Create Program</button>
+          <button class="btn primary sm" data-acct-setup="vendor">+ Set up a vendor</button>
+          <button class="btn secondary sm" data-goto-screen="operator-program-editor">Add with full details</button>
         </div>
         <div class="card">
           <div class="table-scroll">
@@ -2177,7 +2182,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <!-- ===== OPERATOR: PARTNERS & TIERS ===== -->
       <section id="scr-operator-partners" hidden>
         <div class="section-head"><h2>Partners &amp; tiers</h2><span class="hint">Every partner in every program: approve, track performance, and move them up levels</span></div>
-        <div style="height:14px"></div>
+        <div style="display:flex;gap:10px;margin:12px 0 14px;"><button class="btn primary sm" data-acct-setup="partner">+ Set up a partner</button></div>
         <div id="operatorPartnersContent"></div>
       </section>
 
@@ -2227,6 +2232,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-referral-view" hidden>
         <button class="btn ghost sm" data-ref-back>← Back to Software referrals</button>
         <div id="referralViewContent" style="margin-top:14px;"></div>
+      </section>
+
+      <section id="scr-operator-accounts" hidden>
+        <div class="section-head"><h2>Accounts &amp; logins</h2><span class="hint">Set up a vendor, partner or affiliate with a company name and an email -- they finish their profile after signing in</span></div>
+        <div style="height:14px"></div>
+        <div id="accountsContent"></div>
       </section>
 
       <section id="scr-operator-data" hidden>
@@ -3428,6 +3439,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-partner-detail":"Partner",
     "operator-shop":"Shop Manager",
     "operator-data":"Cloud Data",
+    "operator-accounts":"Accounts & Logins",
     "operator-agreements":"Agreements",
     "operator-revenue":"CloudWAV Revenue",
     "channels":"WhatsApp & LINE",
@@ -4609,6 +4621,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Trainings and events anyone signed in can see, each with "Add to calendar": a Google Calendar link, an Outlook
   // link and a calendar file (.ics) that Apple Calendar and desktop Outlook open. No calendar account is connected.
   // Times are stored in UTC and shown in each viewer's own timezone.
+  // account set-up and investment rounds (functions live next to the sign-in code)
+  var ACCT_ROLES = { vendor:"Vendor", partner:"Partner", affiliate:"Affiliate" };
+  var acctList = null, acctListErr = "", acctListBusy = false;
+  var FUNDING_KEY = "partnerWAV_funding";
+  var fundingProfiles = [];
+  var FUND_STATUS = { "": "Not shared yet", "not-raising":"Not raising", "raising":"Raising now", "raised":"Round closed", "bootstrapped":"Bootstrapped / self-funded" };
+  var FUND_ROUNDS = ["Pre-seed", "Seed", "Series A", "Series B", "Series C or later", "Bridge round", "Convertible note / SAFE", "Other"];
   var calendarEvents = [];
   var CAL_KEY = "partnerWAV_calendar";
   var CAL_TYPES = ["Vendor training","PartnerWAV training","Webinar","In-person event","Meetup","Demo","Other"];
@@ -5013,8 +5032,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         var firstTier = p.tiers && p.tiers[0] ? esc(p.tiers[0].tier)+": "+esc(p.tiers[0].rate) : "--";
         var cfgNote = p.terms && p.terms.updatedAt ? "<div class='field-note'>Configured "+esc(p.terms.updatedAt)+"</div>" : "";
         var opLogo = p.logo ? "<img class='op-logo' src='"+esc(p.logo)+"' alt=''>" : "<span class='op-logo op-logo-empty' aria-hidden='true'>"+esc((p.name || "?").charAt(0))+"</span>";
-        return "<tr><td><div class='op-prog-name'>"+opLogo+"<div>"+esc(p.name)+cfgNote+"</div></div></td><td>"+esc(p.vertical)+"</td><td>"+relBadges(p.relationships)+"</td><td style='font-size:.82rem;'>"+firstTier+"</td><td>"+statusPill(p.status)+"</td>"
-          + "<td class='row-actions'><button class='btn secondary sm' data-op-logo='"+p.id+"'>"+(p.logo ? "Change logo" : "Add logo")+"</button> <button class='btn secondary sm' data-configure='"+p.id+"'>Configure</button></td></tr>";
+        return "<tr><td><div class='op-prog-name'>"+opLogo+"<div>"+esc(p.name)+cfgNote+fundingPill("vendor:" + p.id)+"</div></div></td><td>"+esc(p.vertical)+"</td><td>"+relBadges(p.relationships)+"</td><td style='font-size:.82rem;'>"+firstTier+"</td><td>"+statusPill(p.status)+"</td>"
+          + "<td class='row-actions'><button class='btn secondary sm' data-op-logo='"+p.id+"'>"+(p.logo ? "Change logo" : "Add logo")+"</button> <button class='btn secondary sm' data-acct-setup='vendor' data-acct-entity='"+p.id+"'>Login</button> <button class='btn secondary sm' data-configure='"+p.id+"'>Configure</button></td></tr>";
       }).join("");
     }
 
@@ -5047,6 +5066,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderChannels();
     renderIntegrations();
     renderCalendar();
+    renderAccounts();
+    renderFunding();
     renderReferrals();
     renderReferralView();
     renderShop();
@@ -5770,6 +5791,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     p.website = urls.website;
     p.social = Object.assign({}, p.social || {}, { linkedin:urls.linkedin, twitter:urls.twitter, facebook:urls.facebook });
     p.products = products;
+    p.needsProfile = false;
     p._edited = true;
     saveVendorEdits();
     state.vendorEditId = null; state.vendorOverviewEdit = null;
@@ -7785,6 +7807,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           name: name, country: country, tagline: tagline, specialties: specialties,
           credentials: credentials, website: website, services: services, logo: logo, social: Object.assign({}, partnerProfiles[idx].social || {}, {linkedin: linkedin})
         });
+        if (state.role === "partner") partnerProfiles[idx].needsProfile = false;
         saveVendorData();
         toast("Profile updated");
       }
@@ -7895,8 +7918,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (idx >= 0){
         affiliateProfiles[idx] = Object.assign(affiliateProfiles[idx], {
           name: name, country: country, tagline: tagline, specialties: specialties, logo: logo,
-          credentials: credentials, website: website, social: Object.assign(affiliateProfiles[idx].social, {linkedin: linkedin})
+          credentials: credentials, website: website, social: Object.assign(affiliateProfiles[idx].social || {}, {linkedin: linkedin})
         });
+        if (state.role === "affiliate") affiliateProfiles[idx].needsProfile = false;
         toast("Affiliate profile updated");
       }
     } else {
@@ -9524,6 +9548,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ return { readers:["vendor:" + r.vendorId], writers:[] }; } },
     { name:"calendarEvents", mode:"replace", get:function(){ return calendarEvents; }, set:function(a){ calendarEvents = a; },
       access:function(r){ return { readers: calPrivate(r) ? [r.ownerKey] : EVERYONE, writers:[r.ownerKey] }; } },
+    { name:"fundingProfiles", mode:"replace", get:function(){ return fundingProfiles; }, set:function(a){ fundingProfiles = a; },
+      access:function(r){ return { readers: r.visibility === "public" ? EVERYONE : [r.id], writers:[r.id] }; } },
     { name:"bookings", mode:"replace", get:function(){ return bookings; }, set:function(a){ bookings = a; },
       access:function(r){ return { readers:[r.ownerKey, r.bookedBy], writers:[r.bookedBy] }; } },
     { name:"vendorAssessments", mode:"replace", get:function(){ return vendorAssessments; }, set:function(a){ vendorAssessments = a; },
@@ -9647,6 +9673,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (CLOUD.loadFails > 1) return;   // retries only update the status chip; they don't redraw the screen
     }
     if (CLOUD.loaded) CLOUD.loadFails = 0;
+    if (CLOUD.loaded) acctProfilePrompt();
     renderPreserving();
     if (cloudSubscribed || !CLOUD.loaded) return;
     cloudSubscribed = true;
@@ -13964,6 +13991,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadSignups();
   loadAssessments();
   loadCalendar();
+  loadFunding();
   loadShop();
   loadLevels();
   loadEngagementsAndPages();
@@ -14012,6 +14040,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var org = state.account.entityName ? " · " + state.account.entityName : "";
       metaEl.textContent = (ROLE_NAMES[state.account.role] || state.account.role) + org + " · " + state.account.email;
       outBtn.textContent = "Sign out";
+      var cpw = document.getElementById("changePwBtn"); if (cpw) cpw.hidden = false;
     } else if (DEMO_MODE){
       btn.textContent = "PP";
       nameEl.textContent = "Demo mode";
@@ -14118,6 +14147,356 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var am = ev.target.closest("[data-admin-manage]"); if (am){ startPreview(am.getAttribute("data-admin-manage"), am.getAttribute("data-admin-id")); return; }
   });
 
+
+  // ===== ACCOUNT SETUP (CloudWAV sets up a company + login from a name and an email) =====
+  function acctEntities(role){
+    return role === "vendor" ? programs : role === "partner" ? partnerProfiles.filter(function(x){ return !x.archivedAt; })
+      : affiliateProfiles.filter(function(x){ return !x.archivedAt; });
+  }
+  function acctEntity(role, id){ return acctEntities(role).filter(function(x){ return x.id === id; })[0] || null; }
+  function acctSlug(role, name){
+    var base = String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || role;
+    var id = base, n = 2;
+    while (programById(id) || partnerById(id) || affiliateProfiles.some(function(a){ return a.id === id; })) id = base + "-" + (n++);
+    return id;
+  }
+  // 12 characters, no look-alikes (0/O, 1/l/I), always a letter, a digit and a capital
+  function acctTempPassword(){
+    var A = "abcdefghjkmnpqrstuvwxyz", B = "ABCDEFGHJKMNPQRSTUVWXYZ", D = "23456789", all = A + B + D, out = "";
+    var rnd = new Uint32Array(12); (window.crypto || window.msCrypto).getRandomValues(rnd);
+    for (var i = 0; i < 12; i++){ var set = i === 0 ? B : i === 1 ? A : i === 2 ? D : all; out += set.charAt(rnd[i] % set.length); }
+    return out;
+  }
+  // The starter record: only the name is known; needsProfile sends them to their profile at first sign-in
+  function acctCreateEntity(role, name){
+    var id = acctSlug(role, name), e;
+    if (role === "vendor"){
+      e = { id:id, _added:true, _edited:true, needsProfile:true, name:name, vertical:"", origin:"", desc:"", relationships:["Vendor Program"],
+        tiers:[{ tier:"Reseller", rate:"To be agreed", base:"To be agreed" }], agreement:{ type:"Vendor Program Agreement", status:"draft" },
+        status:"onboarding", logo:"", logoSetup:2, website:"", social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[], products:[] };
+      programs.push(e); saveVendorEdits();
+    } else {
+      e = { id:id, needsProfile:true, name:name, init:name.substring(0, 2).toUpperCase(), country:"", tagline:"", specialties:[], credentials:[],
+        services:[], pastProjects:[], logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" }, status:"active", archivedAt:null };
+      (role === "partner" ? partnerProfiles : affiliateProfiles).push(e); saveVendorData();
+    }
+    return e;
+  }
+  function acctSignInUrl(){ return window.location.origin + window.location.pathname; }
+  function acctLive(){ return !!(supabase && state.account && state.account.role === "operator"); }
+
+  function acctSetupModal(role, entityId, errText, vals){
+    role = ACCT_ROLES[role] ? role : "vendor"; vals = vals || {};
+    var fixed = entityId ? acctEntity(role, entityId) : null;
+    var a = function(x){ return esc(x || "").replace(/"/g, "&quot;"); };
+    var body = '<div class="modal-head"><h2>Set up ' + (fixed ? 'a login for ' + esc(fixed.name) : 'an account') + '</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div id="acctForm" style="display:flex;flex-direction:column;gap:12px;margin-top:14px;" data-acct-fixed="' + a(fixed ? fixed.id : "") + '">';
+    if (fixed) body += '<input type="hidden" id="acctRole" value="' + role + '">';
+    else {
+      body += '<div class="field-row"><label for="acctRole">Type</label><select id="acctRole" class="filter app-select">'
+        + Object.keys(ACCT_ROLES).map(function(r){ return '<option value="' + r + '"' + (r === role ? " selected" : "") + '>' + ACCT_ROLES[r] + '</option>'; }).join("") + '</select></div>'
+        + '<div class="field-row"><label for="acctCompany">Company name</label><input type="text" id="acctCompany" value="' + a(vals.company) + '" placeholder="e.g. AgentID" autocomplete="off"></div>';
+    }
+    body += '<div class="field-row"><label for="acctEmail">Email</label><input type="email" id="acctEmail" value="' + a(vals.email) + '" placeholder="name@company.com" autocomplete="off"></div>'
+      + '<div class="field-row"><label for="acctContact">Contact name <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><input type="text" id="acctContact" value="' + a(vals.contact) + '" autocomplete="off"></div>'
+      + '<span class="field-note">A temporary password is created for you to send. They choose their own the first time they sign in, then finish the rest of their profile themselves.</span>'
+      + '<div id="acctErr" class="login-msg bad" role="alert"' + (errText ? "" : " hidden") + '>' + esc(errText || "") + '</div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" id="acctCreateBtn">Create account</button>'
+      + '<button type="button" class="btn secondary sm" data-acct-close>Cancel</button></div></div>';
+    closeModal(); openModal(body);
+    var first = document.getElementById(fixed ? "acctEmail" : "acctCompany"); if (first) first.focus();
+  }
+
+  function acctRpcError(err, signupErr, email){
+    var m = (err && err.message) || String(err || "");
+    if (/Could not find the function|PGRST202|does not exist/i.test(m)) return "The database needs the latest set-up: re-run supabase/portal_records.sql in the Supabase SQL editor, then press Create account again.";
+    if (/No login exists/i.test(m)) return "Couldn't create the login for " + email + (signupErr ? " (" + signupErr + ")" : "")
+      + ". In Supabase, check that Authentication > Sign In / Providers > \"Allow new users to sign up\" is on, or add this email under Authentication > Users. Then press Create account again.";
+    return m;
+  }
+
+  async function acctCreate(){
+    var form = document.getElementById("acctForm"); if (!form) return;
+    var role = document.getElementById("acctRole").value, fixedId = form.getAttribute("data-acct-fixed");
+    var companyEl = document.getElementById("acctCompany");
+    var company = companyEl ? companyEl.value.trim() : "", email = document.getElementById("acctEmail").value.trim().toLowerCase();
+    var contact = document.getElementById("acctContact").value.trim();
+    var errEl = document.getElementById("acctErr"), btn = document.getElementById("acctCreateBtn");
+    function fail(t){ errEl.textContent = t; errEl.hidden = false; }
+    if (!fixedId && !company) return fail("Enter the company name.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail("Enter a valid email address.");
+    if (!fixedId){
+      var dup = acctEntities(role).filter(function(x){ return String(x.name).trim().toLowerCase() === company.toLowerCase(); })[0];
+      if (dup) fixedId = dup.id;   // same name: add the login to the company that is already there
+    }
+    var entity = fixedId ? acctEntity(role, fixedId) : acctCreateEntity(role, company);
+    if (!entity) return fail("That company could not be found.");
+    form.setAttribute("data-acct-fixed", entity.id);
+    if (!acctLive()){
+      closeModal(); render();
+      toast(entity.name + " added. This is the demo, so no real login was created.");
+      return;
+    }
+    btn.disabled = true; btn.textContent = "Creating...";
+    var temp = acctTempPassword(), signupErr = "";
+    try {
+      await cloudFlushNow();   // the company record is in place before the login exists
+      try {
+        var c2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false, storageKey:"pw-account-setup" } });
+        var su = await c2.auth.signUp({ email: email, password: temp });
+        if (su.error && !/already (been )?registered/i.test(su.error.message || "")) signupErr = su.error.message || "sign-up failed";
+      } catch(e1){ signupErr = (e1 && e1.message) || "sign-up failed"; }
+      var r = await supabase.rpc("portal_setup_account", { p_email: email, p_role: role, p_entity: entity.id, p_name: contact || entity.name, p_password: temp });
+      if (r.error) throw r.error;
+      acctList = null;
+      render();
+      acctResultModal({ name: entity.name, role: role, email: email, password: temp, contact: contact });
+    } catch(err){
+      render();
+      acctSetupModal(role, entity.id, acctRpcError(err, signupErr, email) + " " + entity.name + " itself has been added.", { email: email, contact: contact });
+    }
+  }
+
+  function acctResultText(o){
+    return "Hello" + (o.contact ? " " + o.contact : "") + ",\n\nYour " + ACCT_ROLES[o.role].toLowerCase() + " account for " + o.name + " on PartnerWAV is ready.\n\n"
+      + "Sign in: " + acctSignInUrl() + "\nEmail: " + o.email + "\nTemporary password: " + o.password + "\n\n"
+      + "You will be asked to choose your own password the first time you sign in. After that, please complete your company profile.\n\nCloudWAV";
+  }
+  function acctResultModal(o){
+    state.acctResult = o;
+    var row = function(l, v, mono){ return '<div style="display:flex;gap:10px;align-items:baseline;"><span style="width:150px;flex-shrink:0;color:var(--ink-soft);font-size:.85rem;">' + l + '</span><b' + (mono ? ' style="font-family:\'IBM Plex Mono\',monospace;letter-spacing:.04em;" id="acctTempPw"' : '') + '>' + esc(v) + '</b></div>'; };
+    closeModal();
+    openModal('<div class="modal-head"><h2>Login ready for ' + esc(o.name) + '</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">'
+      + row("Sign-in page", acctSignInUrl()) + row("Email", o.email) + row("Temporary password", o.password, true)
+      + '<span class="field-note">Send these to ' + esc(o.contact || o.name) + '. The password is shown only this once -- if it gets lost, use Reset password under Accounts &amp; Logins to make a new one.</span>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn primary sm" data-acct-copy>Copy details</button>'
+      + '<a class="btn secondary sm" id="acctMailBtn" href="mailto:' + encodeURIComponent(o.email) + '?subject=' + encodeURIComponent("Your PartnerWAV login") + '&body=' + encodeURIComponent(acctResultText(o)) + '">Open an email draft</a>'
+      + '<button type="button" class="btn secondary sm" data-acct-close>Done</button></div></div>');
+  }
+
+  async function acctLoadList(force){
+    if (!acctLive() || acctListBusy || (acctList && !force)) return;
+    acctListBusy = true;
+    try {
+      var r = await supabase.rpc("portal_accounts");
+      if (r.error) throw r.error;
+      acctList = Array.isArray(r.data) ? r.data : []; acctListErr = "";
+    } catch(e){ acctList = []; acctListErr = acctRpcError(e, "", ""); }
+    acctListBusy = false;
+    renderAccounts(true);
+  }
+  function acctFor(role, id){ return (acctList || []).filter(function(a){ return a.role === role && a.entity_id === id; }); }
+
+  function renderAccounts(force){
+    var el = document.getElementById("accountsContent"); if (!el || state.screen !== "operator-accounts") return;
+    if (acctLive() && !acctList){ acctLoadList(); }
+    var live = acctLive(), html = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"><button class="btn primary sm" data-acct-setup="vendor" data-acct-any>+ Set up an account</button>'
+      + (live ? '<button class="btn secondary sm" data-acct-refresh>Refresh</button>' : '') + '</div>';
+    if (!live) html += '<div class="card card-pad" style="margin-bottom:14px;"><b>Demo mode</b><div class="field-note">You can add companies here, but real logins and temporary passwords are only created when you are signed in to the live portal as CloudWAV.</div></div>';
+    if (acctListErr) html += '<div class="card card-pad" style="margin-bottom:14px;border-color:var(--bad);"><b>Couldn\'t load the logins</b><div class="field-note">' + esc(acctListErr) + '</div></div>';
+    if (live){
+      var rows = (acctList || []).filter(function(a){ return a.role !== "operator"; });
+      html += '<div class="card"><div class="table-scroll"><table><thead><tr><th>Company</th><th>Type</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody id="accountRows">'
+        + (rows.length ? rows.map(function(a){
+            var ent = acctEntity(a.role, a.entity_id);
+            var st = a.must_change_password ? '<span class="pill pending">Waiting for first sign-in</span>'
+              : '<span class="pill active">Active</span>' + (a.last_sign_in_at ? '<div class="field-note">Last sign-in ' + esc(String(a.last_sign_in_at).slice(0, 10)) + '</div>' : '');
+            return '<tr data-acct-row="' + esc(a.id) + '"><td>' + esc(ent ? ent.name : a.entity_id) + (ent && ent.needsProfile ? '<div class="field-note">Profile not finished yet</div>' : '') + '</td><td>' + esc(ACCT_ROLES[a.role] || a.role) + '</td><td>' + esc(a.email) + '</td><td>' + st + '</td>'
+              + '<td class="row-actions" style="white-space:nowrap;"><button class="btn secondary sm" data-acct-reset="' + esc(a.id) + '">Reset password</button> <button class="btn ghost sm" data-acct-remove="' + esc(a.id) + '" style="color:var(--bad);">Remove access</button></td></tr>';
+          }).join("") : '<tr><td colspan="5" style="color:var(--ink-soft);">' + (acctList ? "No logins yet -- set up the first one above." : "Loading...") + '</td></tr>')
+        + '</tbody></table></div></div>';
+    }
+    var none = [];
+    Object.keys(ACCT_ROLES).forEach(function(r){ acctEntities(r).forEach(function(e){ if (!live || (acctList && !acctFor(r, e.id).length)) none.push({ role:r, e:e }); }); });
+    if (none.length && (!live || acctList)){
+      html += '<div style="height:16px"></div><div class="section-head"><h2 style="font-size:.95rem;">' + (live ? "Companies without a login" : "Companies") + '</h2></div><div class="card"><div class="table-scroll"><table><tbody id="accountNoLoginRows">'
+        + none.map(function(x){ return '<tr><td>' + esc(x.e.name) + '</td><td>' + ACCT_ROLES[x.role] + '</td><td class="row-actions"><button class="btn secondary sm" data-acct-setup="' + x.role + '" data-acct-entity="' + esc(x.e.id) + '">Set up login</button></td></tr>'; }).join("")
+        + '</tbody></table></div></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  // A company CloudWAV set up from just a name: its first screen is its own profile, ready to fill in
+  function acctProfilePrompt(){
+    if (!state.account || state.account.role === "operator" || state.profilePrompted) return;
+    var role = state.account.role, ent = acctEntity(role, state.account.entityId);
+    if (ent && state.account.entityName !== ent.name){ state.account.entityName = ent.name; updateAccountMenu(); }
+    if (!ent || !ent.needsProfile) return;
+    state.profilePrompted = true;
+    if (role === "vendor"){ state.screen = "vendor-overview"; state.vendorEditId = null; state.vendorOverviewEdit = ent.id; }
+    else if (role === "partner"){ state.screen = "partner-profile-editor"; state.editingProfileId = ent.id; setTimeout(function(){ loadPartnerProfileForm(ent.id); }, 0); }
+    else { state.screen = "affiliate-profile-editor"; state.editingAffiliateId = ent.id; setTimeout(function(){ loadAffiliateProfileForm(ent.id); }, 0); }
+    setTimeout(function(){ toast("Welcome to PartnerWAV -- please finish your company profile"); }, 50);
+  }
+
+  function changePasswordModal(){
+    openModal('<div class="modal-head"><h2>Change password</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">'
+      + '<div class="field-row"><label for="cpwNew">New password</label><input type="password" id="cpwNew" autocomplete="new-password" minlength="8"></div>'
+      + '<div class="field-row"><label for="cpwAgain">New password again</label><input type="password" id="cpwAgain" autocomplete="new-password" minlength="8"></div>'
+      + '<div id="cpwErr" class="login-msg bad" role="alert" hidden></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" id="cpwSave">Save password</button><button type="button" class="btn secondary sm" data-acct-close>Cancel</button></div></div>');
+  }
+  async function changePasswordSave(){
+    var a = document.getElementById("cpwNew").value, b2 = document.getElementById("cpwAgain").value, err = document.getElementById("cpwErr");
+    function fail(t){ err.textContent = t; err.hidden = false; }
+    if (!a || a.length < 8) return fail("Use at least 8 characters.");
+    if (a !== b2) return fail("The two passwords don't match.");
+    if (!supabase || !state.account) return fail("Sign in to the live portal to change your password.");
+    try {
+      var r = await supabase.auth.updateUser({ password: a });
+      if (r.error) throw r.error;
+      try { await supabase.rpc("portal_password_changed"); } catch(e2){}
+      closeModal(); toast("Password updated");
+    } catch(e){ fail(friendlyAuthError(e)); }
+  }
+
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    var setup = t.closest("[data-acct-setup]");
+    if (setup && state.role === "operator"){ acctSetupModal(setup.getAttribute("data-acct-setup"), setup.getAttribute("data-acct-entity") || ""); return; }
+    if (t.closest("[data-acct-close]")){ state.acctResult = null; closeModal(); return; }
+    if (t.closest("#acctCreateBtn")){ acctCreate(); return; }
+    if (t.closest("[data-acct-refresh]")){ acctList = null; acctLoadList(true); return; }
+    if (t.closest("#changePwBtn")){ var pop = document.getElementById("accountPop"); if (pop) pop.hidden = true; changePasswordModal(); return; }
+    if (t.closest("#cpwSave")){ changePasswordSave(); return; }
+    if (t.closest("[data-acct-copy]") && state.acctResult){
+      var txt = acctResultText(state.acctResult);
+      (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function(){ toast("Copied"); }, function(){ toast("Couldn't copy -- select the details and copy them by hand"); });
+      return;
+    }
+    var reset = t.closest("[data-acct-reset]");
+    if (reset && acctLive()){
+      var acc = (acctList || []).filter(function(x){ return x.id === reset.getAttribute("data-acct-reset"); })[0]; if (!acc) return;
+      var ent = acctEntity(acc.role, acc.entity_id), nm = ent ? ent.name : acc.entity_id;
+      openModal('<div class="modal-head"><h2>Reset password for ' + esc(acc.email) + '?</h2><button class="modal-close" aria-label="Close">×</button></div>'
+        + '<p style="margin:14px 0;color:var(--ink-soft);">Their current password stops working. You get a new temporary password to send, and they choose their own at the next sign-in.</p>'
+        + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-acct-reset-go="' + esc(acc.id) + '">Create a new temporary password</button><button type="button" class="btn secondary sm" data-acct-close>Cancel</button></div>');
+      return;
+    }
+    var go = t.closest("[data-acct-reset-go]");
+    if (go && acctLive()){
+      var acc2 = (acctList || []).filter(function(x){ return x.id === go.getAttribute("data-acct-reset-go"); })[0]; if (!acc2) return;
+      var ent2 = acctEntity(acc2.role, acc2.entity_id), temp = acctTempPassword();
+      go.disabled = true;
+      supabase.rpc("portal_setup_account", { p_email: acc2.email, p_role: acc2.role, p_entity: acc2.entity_id, p_name: acc2.display_name || "", p_password: temp }).then(function(r){
+        if (r.error){ closeModal(); toast(acctRpcError(r.error, "", acc2.email)); return; }
+        acctList = null; render();
+        acctResultModal({ name: ent2 ? ent2.name : acc2.entity_id, role: acc2.role, email: acc2.email, password: temp, contact: "" });
+      });
+      return;
+    }
+    var rm = t.closest("[data-acct-remove]");
+    if (rm && acctLive()){
+      var acc3 = (acctList || []).filter(function(x){ return x.id === rm.getAttribute("data-acct-remove"); })[0]; if (!acc3) return;
+      openModal('<div class="modal-head"><h2>Remove access for ' + esc(acc3.email) + '?</h2><button class="modal-close" aria-label="Close">×</button></div>'
+        + '<p style="margin:14px 0;color:var(--ink-soft);">This login will no longer open the portal. The company and its records stay as they are, and you can set up a login for it again later.</p>'
+        + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-acct-remove-go="' + esc(acc3.id) + '">Remove access</button><button type="button" class="btn secondary sm" data-acct-close>Cancel</button></div>');
+      return;
+    }
+    var rmGo = t.closest("[data-acct-remove-go]");
+    if (rmGo && acctLive()){
+      supabase.rpc("portal_remove_account", { p_user: rmGo.getAttribute("data-acct-remove-go") }).then(function(r){
+        closeModal(); toast(r.error ? acctRpcError(r.error, "", "") : "Access removed"); acctList = null; acctLoadList(true);
+      });
+      return;
+    }
+  });
+  document.addEventListener("keydown", function(ev){
+    if (ev.key === "Enter" && ev.target && ev.target.closest && ev.target.closest("#acctForm") && ev.target.tagName === "INPUT"){ ev.preventDefault(); acctCreate(); }
+  });
+
+  // ===== INVESTMENT ROUND (vendors and partners; private to the company and CloudWAV unless they share it) =====
+  function loadFunding(){ try { var d = JSON.parse(lsGet(FUNDING_KEY) || "null"); if (Array.isArray(d)) fundingProfiles = d; } catch(e){} }
+  function saveFunding(){ try { lsSet(FUNDING_KEY, JSON.stringify(fundingProfiles)); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function fundingFor(key){ return fundingProfiles.filter(function(f){ return f.id === key; })[0] || null; }
+  function fundingSummary(f){
+    if (!f || !f.status) return "";
+    var hasRound = f.status === "raising" || f.status === "raised";
+    return FUND_STATUS[f.status] + (hasRound && f.round ? " · " + f.round : "");
+  }
+  // shown to CloudWAV next to a company's name
+  function fundingPill(key){
+    var f = fundingFor(key), t = fundingSummary(f);
+    return t && state.role === "operator" ? "<div class='field-note' data-funding-pill>💼 " + esc(t) + (f.status === "raising" && f.target ? " · target " + esc(f.target) : "") + "</div>" : "";
+  }
+  function fundingCardHtml(key, canEdit, editing){
+    var f = fundingFor(key) || { id:key, status:"", round:"", target:"", raised:"", investors:"", notes:"", openToIntros:false, visibility:"private" };
+    var a = function(x){ return esc(x || "").replace(/"/g, "&quot;"); };
+    var head = '<div class="section-head"><h2>Investment round</h2><span class="hint">' + (f.visibility === "public" ? "Shown on your profile" : "Only you and CloudWAV see this") + '</span></div><div style="height:12px"></div>';
+    if (!editing){
+      var hasRound = f.status === "raising" || f.status === "raised";
+      var line = function(l, v){ return v ? '<div class="tier-line"><span>' + l + '</span><b>' + esc(v) + '</b></div>' : ''; };
+      return '<div class="card card-pad" style="margin-top:16px;" data-funding-card>' + head
+        + (f.status ? line("Status", FUND_STATUS[f.status]) + (hasRound ? line("Round", f.round) + line(f.status === "raising" ? "Target" : "Round size", f.target) + line("Raised so far", f.raised) + line("Investors", f.investors) : "")
+            + line("Notes", f.notes) + line("Investor introductions", f.openToIntros ? "Open to introductions from CloudWAV" : "")
+          : '<p style="margin:0;color:var(--ink-soft);">' + (canEdit ? "Have you raised money, or are you raising now? Tell CloudWAV which round you are in." : "Nothing shared yet.") + '</p>')
+        + (canEdit ? '<div class="cfg-actions" style="margin-top:12px;"><button type="button" class="btn secondary sm" data-funding-edit>' + (f.status ? "Edit" : "Add investment round") + '</button></div>'
+                   : (state.role === "operator" || isPreviewing() ? '<div class="field-note" style="margin-top:10px;">View only -- the company keeps this up to date.</div>' : '')) + '</div>';
+    }
+    var opt = function(v, l, cur){ return '<option value="' + a(v) + '"' + (v === cur ? " selected" : "") + '>' + esc(l) + '</option>'; };
+    return '<div class="card card-pad" style="margin-top:16px;" data-funding-card>' + head + '<div id="fundingForm" style="display:flex;flex-direction:column;gap:12px;">'
+      + '<div class="field-row"><label for="fundStatus">Where are you with funding?</label><select id="fundStatus" class="filter app-select">'
+      + opt("", "Choose...", f.status) + opt("raising", "Raising now", f.status) + opt("raised", "Raised -- round closed", f.status) + opt("not-raising", "Not raising", f.status) + opt("bootstrapped", "Bootstrapped / self-funded", f.status) + '</select></div>'
+      + '<div id="fundRoundFields" style="display:flex;flex-direction:column;gap:12px;">'
+      + '<div class="field-row"><label for="fundRound">Round</label><select id="fundRound" class="filter app-select">' + opt("", "Choose...", f.round) + FUND_ROUNDS.map(function(r){ return opt(r, r, f.round); }).join("") + '</select></div>'
+      + '<div class="field-row"><label for="fundTarget">Target or round size</label><input type="text" id="fundTarget" value="' + a(f.target) + '" placeholder="e.g. USD 1.5M"></div>'
+      + '<div class="field-row"><label for="fundRaised">Raised so far</label><input type="text" id="fundRaised" value="' + a(f.raised) + '" placeholder="e.g. USD 400K committed"></div>'
+      + '<div class="field-row"><label for="fundInvestors">Investors <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><input type="text" id="fundInvestors" value="' + a(f.investors) + '" placeholder="Lead or existing investors"></div></div>'
+      + '<div class="field-row"><label for="fundNotes">Notes <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><textarea id="fundNotes" placeholder="Use of funds, timing, markets...">' + esc(f.notes || "") + '</textarea></div>'
+      + '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500;"><input type="checkbox" id="fundIntros"' + (f.openToIntros ? " checked" : "") + '> <span>We are open to investor introductions from CloudWAV</span></label>'
+      + '<div class="field-row"><label for="fundVisibility">Who can see this</label><select id="fundVisibility" class="filter app-select">' + opt("private", "Only my company and CloudWAV", f.visibility || "private") + opt("public", "Everyone in PartnerWAV (shown on my profile)", f.visibility || "private") + '</select></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-funding-save>Save</button><button type="button" class="btn secondary sm" data-funding-cancel>Cancel</button></div></div></div>';
+  }
+  function fundingSyncFields(){
+    var st = document.getElementById("fundStatus"), box = document.getElementById("fundRoundFields");
+    if (st && box) box.style.display = (st.value === "raising" || st.value === "raised") ? "flex" : "none";
+  }
+  function renderFunding(){
+    var role = state.role === "vendor" || state.role === "partner" ? state.role : null;
+    var key = role ? chMe() : null;
+    ["vendorFundingSlot", "partnerFundingSlot"].forEach(function(id){
+      var el = document.getElementById(id); if (!el) return;
+      var mine = (id === "vendorFundingSlot" ? "vendor" : "partner") === role && key;
+      if (!mine){ if (el.innerHTML) el.innerHTML = ""; el.removeAttribute("data-funding-key"); return; }
+      var editing = state.fundingEdit === key, canEdit = !isPreviewing();
+      var f = fundingFor(key), stamp = key + "|" + (editing ? "edit" : "view|" + JSON.stringify(f || {})) + "|" + canEdit;
+      if (el.getAttribute("data-funding-key") === stamp) return;   // leave a form someone is typing in alone
+      el.setAttribute("data-funding-key", stamp);
+      el.innerHTML = fundingCardHtml(key, canEdit, editing && canEdit);
+      fundingSyncFields();
+    });
+    // a round the company chose to share shows at the top of its public profile
+    [["vendorProfileContent", "vendor:" + (state.viewingVendorId || ""), "vendor-profile"], ["profileContent", "partner:" + (state.viewingPartnerId || ""), "partner-profile"]].forEach(function(x){
+      var host = document.getElementById(x[0]); if (!host) return;
+      var old = host.querySelector("[data-funding-public]"); if (old) old.remove();
+      var f = state.screen === x[2] ? fundingFor(x[1]) : null, t = fundingSummary(f);
+      if (!t || (f.visibility !== "public" && state.role !== "operator")) return;
+      var d = document.createElement("div"); d.setAttribute("data-funding-public", "");
+      d.className = "card card-pad"; d.style.marginBottom = "14px";
+      d.innerHTML = '<b>💼 Investment round:</b> ' + esc(t) + (f.target ? ' · ' + esc(f.target) : '') + (f.visibility !== "public" ? ' <span class="field-note">(private -- visible to CloudWAV only)</span>' : '');
+      host.insertBefore(d, host.firstChild);
+    });
+  }
+  document.addEventListener("change", function(ev){ if (ev.target && ev.target.id === "fundStatus") fundingSyncFields(); });
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    if (t.closest("[data-funding-edit]")){ state.fundingEdit = chMe(); renderFunding(); return; }
+    if (t.closest("[data-funding-cancel]")){ state.fundingEdit = null; renderFunding(); return; }
+    if (t.closest("[data-funding-save]")){
+      var key = chMe(); if (!key || isPreviewing() || !/^(vendor|partner):/.test(key)) return;
+      var v = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+      var st = v("fundStatus"), hasRound = st === "raising" || st === "raised";
+      var rec = { id:key, status:st, round:hasRound ? v("fundRound") : "", target:hasRound ? v("fundTarget") : "", raised:hasRound ? v("fundRaised") : "",
+        investors:hasRound ? v("fundInvestors") : "", notes:v("fundNotes"), openToIntros:document.getElementById("fundIntros").checked,
+        visibility:v("fundVisibility") === "public" ? "public" : "private", updatedAt:new Date().toISOString().slice(0, 10) };
+      fundingProfiles = fundingProfiles.filter(function(f){ return f.id !== key; }); fundingProfiles.push(rec);
+      state.fundingEdit = null; saveFunding(); toast("Investment round saved"); render();
+      return;
+    }
+  });
+
   function applyAccount(user, acct){
     state.account = { id:user.id, email:user.email, role:acct.role, entityId:acct.entity_id || null,
       name: acct.display_name || user.email, entityName: entityNameFor(acct.role, acct.entity_id) };
@@ -14133,7 +14512,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     cloudStart();
   }
 
-  var sessionUserId = null;
+  var sessionUserId = null, pwChosenThisSession = false;
+  function setNewPasswordText(temp){
+    document.getElementById("newPasswordTitle").textContent = temp ? "Choose your password" : "Set a new password";
+    document.getElementById("newPasswordSub").textContent = temp
+      ? "You signed in with a temporary password. Choose your own to continue -- at least 8 characters."
+      : "Choose a password with at least 8 characters.";
+  }
   async function handleSession(session){
     if (!session){
       sessionUserId = null; state.account = null; document.documentElement.classList.remove("op-preview");
@@ -14142,12 +14527,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (sessionUserId === session.user.id && state.account) return; // token refresh / tab refocus
     sessionUserId = session.user.id;
     try {
-      var res = await supabase.from("portal_users").select("role, entity_id, display_name").eq("id", session.user.id).maybeSingle();
+      var res = await supabase.from("portal_users").select("*").eq("id", session.user.id).maybeSingle();
       if (res.error) throw res.error;
       if (!res.data || !HOME_SCREEN[res.data.role]){
         document.getElementById("noAccountText").textContent = "You're signed in as " + session.user.email
           + ", but this account hasn't been given a PartnerWAV role yet. Ask your CloudWAV program operator to set it up, then sign in again.";
         showLoginPanel("NoAccount"); setAuthLocked(true); return;
+      }
+      if (res.data.must_change_password === true && !pwChosenThisSession){
+        // signed in with the temporary password CloudWAV sent: choose your own before going in
+        sessionUserId = null;
+        setNewPasswordText(true); showLoginPanel("NewPassword"); setAuthLocked(true); return;
       }
       applyAccount(session.user, res.data);
     } catch(e){
@@ -14201,6 +14591,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         var r = await supabase.auth.updateUser({ password: pw });
         if (r.error) throw r.error;
         errEl.hidden = true; document.getElementById("newPassword").value = "";
+        pwChosenThisSession = true;
+        try { await supabase.rpc("portal_password_changed"); } catch(e2){ console.warn("portal_password_changed:", e2); }
         toast("Password updated");
         var sess = await supabase.auth.getSession();
         sessionUserId = null;
@@ -14236,7 +14628,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     supabase.auth.onAuthStateChange(function(event, session){
       if (event === "TOKEN_REFRESHED") return;
-      if (event === "PASSWORD_RECOVERY"){ setAuthLocked(true); showLoginPanel("NewPassword"); return; }
+      if (event === "PASSWORD_RECOVERY"){ setAuthLocked(true); setNewPasswordText(false); showLoginPanel("NewPassword"); return; }
       // Defer: Supabase recommends not awaiting other supabase calls inside this callback
       setTimeout(function(){ handleSession(session); }, 0);
     });

@@ -1,7 +1,8 @@
 -- Minimal stand-in for the parts of Supabase the PartnerWAV SQL uses (for local testing only)
 create role anon nologin; create role authenticated nologin;
 create schema auth;
-create table auth.users (id uuid primary key, email text);
+create schema extensions; grant usage on schema extensions to anon, authenticated;
+create table auth.users (id uuid primary key, email text, encrypted_password text, email_confirmed_at timestamptz, last_sign_in_at timestamptz);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 grant usage on schema auth to anon, authenticated;
 grant execute on function auth.uid() to anon, authenticated;

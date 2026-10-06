@@ -23,7 +23,7 @@ with sync_playwright() as p:
     for r in ["partner", "vendor", "affiliate", "operator"]:
         role(pg, r)
         items = pg.evaluate("(id)=>[...document.querySelectorAll(id+' .navlink')].map(b=>b.getAttribute('data-screen')||'own')", "#nav" + r.title())
-        ok(len(items) == len(set(items)) and len(items) == {"partner": 20, "vendor": 15, "affiliate": 11, "operator": 23}[r], f"{r.title()}: all {len(items)} menu items kept, none duplicated")
+        ok(len(items) == len(set(items)) and len(items) == {"partner": 20, "vendor": 15, "affiliate": 11, "operator": 24}[r], f"{r.title()}: all {len(items)} menu items kept, none duplicated")
     # landing on a screen from elsewhere opens its section
     role(pg, "vendor"); nav(pg, "calendar")
     ok(pg.get_attribute('#navVendor [data-sec="connect"] .navsec-head', "aria-expanded") == "true" and visible_screen(pg) == ["scr-calendar"], "Vendor: Connect section open on Events & Calendar")

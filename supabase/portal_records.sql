@@ -183,6 +183,10 @@ begin
   if new.collection = 'contactChannels' and new.id <> k then
     raise exception 'You can only save your own WhatsApp and LINE details';
   end if;
+  -- investment round details: each company saves only its own
+  if new.collection = 'fundingProfiles' and new.id <> k then
+    raise exception 'You can only save your own investment round details';
+  end if;
   if new.collection in ('socialGroups', 'broadcasts') and (new.data ->> 'ownerKey') is distinct from k then
     raise exception 'You can only save your own groups';
   end if;
@@ -353,6 +357,77 @@ begin
 end $$;
 revoke all on function public.mark_assessment_booked(text) from public;
 grant execute on function public.mark_assessment_booked(text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 5b. Accounts set up by CloudWAV from inside the portal
+--     The operator enters a company name and an email; the portal creates the login with a
+--     temporary password and calls portal_setup_account() to give it a role. The person is
+--     asked to choose their own password the first time they sign in.
+--     Operator logins are never created or changed here -- only in portal_users.sql.
+-- ---------------------------------------------------------------------------
+create extension if not exists pgcrypto with schema extensions;
+alter table public.portal_users add column if not exists must_change_password boolean not null default false;
+
+create or replace function public.portal_setup_account(p_email text, p_role text, p_entity text, p_name text, p_password text)
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare u uuid; existing text;
+begin
+  if not public.is_portal_operator() then raise exception 'Only CloudWAV can set up accounts'; end if;
+  if p_role is null or p_role not in ('partner', 'vendor', 'affiliate') then raise exception 'Choose vendor, partner or affiliate'; end if;
+  if coalesce(trim(p_entity), '') = '' then raise exception 'The account needs a company'; end if;
+  if p_password is null or length(p_password) < 8 then raise exception 'The temporary password needs at least 8 characters'; end if;
+  select id into u from auth.users where lower(email) = lower(trim(p_email)) limit 1;
+  if u is null then raise exception 'No login exists for % yet', trim(p_email); end if;
+  select role into existing from public.portal_users where id = u;
+  if existing = 'operator' then raise exception 'That email belongs to a CloudWAV operator login'; end if;
+  update auth.users
+     set encrypted_password = crypt(p_password, gen_salt('bf')),
+         email_confirmed_at = coalesce(email_confirmed_at, now())
+   where id = u;
+  insert into public.portal_users (id, email, role, entity_id, display_name, must_change_password)
+  values (u, lower(trim(p_email)), p_role, trim(p_entity), nullif(trim(coalesce(p_name, '')), ''), true)
+  on conflict (id) do update
+    set email = excluded.email, role = excluded.role, entity_id = excluded.entity_id,
+        display_name = coalesce(excluded.display_name, public.portal_users.display_name), must_change_password = true;
+  return jsonb_build_object('id', u, 'email', lower(trim(p_email)), 'role', p_role, 'entity_id', trim(p_entity));
+end $$;
+revoke all on function public.portal_setup_account(text, text, text, text, text) from public;
+grant execute on function public.portal_setup_account(text, text, text, text, text) to authenticated;
+
+-- Called by the person themselves once they have chosen their own password.
+create or replace function public.portal_password_changed()
+returns boolean language sql security definer set search_path = public as $$
+  update public.portal_users set must_change_password = false where id = auth.uid() returning true;
+$$;
+revoke all on function public.portal_password_changed() from public;
+grant execute on function public.portal_password_changed() to authenticated;
+
+-- Every login and the company it belongs to (CloudWAV only).
+create or replace function public.portal_accounts()
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_portal_operator() then raise exception 'Only CloudWAV can list accounts'; end if;
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('id', p.id, 'email', p.email, 'role', p.role, 'entity_id', p.entity_id,
+             'display_name', p.display_name, 'must_change_password', p.must_change_password,
+             'last_sign_in_at', u.last_sign_in_at, 'created_at', p.created_at) order by p.role, p.email)
+    from public.portal_users p join auth.users u on u.id = p.id), '[]'::jsonb);
+end $$;
+revoke all on function public.portal_accounts() from public;
+grant execute on function public.portal_accounts() to authenticated;
+
+-- Take away a login's access to the portal (the login itself stays in Supabase Auth, without a role).
+create or replace function public.portal_remove_account(p_user uuid)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if not public.is_portal_operator() then raise exception 'Only CloudWAV can remove accounts'; end if;
+  delete from public.portal_users where id = p_user and role <> 'operator';
+  get diagnostics n = row_count;
+  return n > 0;
+end $$;
+revoke all on function public.portal_remove_account(uuid) from public;
+grant execute on function public.portal_remove_account(uuid) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 6. Live updates: other people's changes show up without reloading
