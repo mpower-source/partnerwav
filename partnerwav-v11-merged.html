@@ -9269,7 +9269,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Enrollments: a partner in a program. revenue12m / dealsClosed are the recorded history; approved deals
   // from Deal Approvals and completed Shop courses are added live.
   var enrollments = [
-    { id:"en-cloudwav-intelsense", partnerId:"cloudwav-consulting", partner:"CloudWAV Consulting", country:"", programId:"intelsense", tier:"Reseller", level:"Registered", status:"active", source:"vendor", joined:"2026-09-29", revenue12m:0, dealsClosed:0, coursesBefore:0, lastActivity:"2026-09-29", history:[],
+    { id:"en-cloudwav-intelsense", partnerId:"cloudwav-consulting", partner:"CloudWAV Consulting", country:"Thailand", programId:"intelsense", tier:"Reseller", level:"Registered", status:"active", source:"vendor", joined:"2026-09-29", revenue12m:0, dealsClosed:0, coursesBefore:0, lastActivity:"2026-09-29", history:[],
       notes:"Commission override: 20% first year + 5% renewal on Unisense AI, Finsense AI, AI Hubspot and AlterCrew (effective 2026-10-01; standard partners get 15% + 5%)." },
     { id:"en-siam-intelsense", partnerId:"siam-digital", partner:"Siam Digital MSP", country:"Thailand", programId:"intelsense", tier:"Reseller", level:"Gold", status:"active", source:"cloudwav", joined:"2025-11-04", revenue12m:182000, dealsClosed:9, coursesBefore:3, lastActivity:"2026-09-25", history:[] },
     { id:"en-siam-botnoi", partnerId:"siam-digital", partner:"Siam Digital MSP", country:"Thailand", programId:"botnoi", tier:"Channel Manager", level:"Bronze", status:"active", joined:"2026-06-12", revenue12m:14500, dealsClosed:2, coursesBefore:1, lastActivity:"2026-09-18", history:[] },
@@ -15835,17 +15835,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function isOwnPartner(){ return canPreview() && state.role === "partner" && state.myProfileId === OWN_PARTNER_ID; }
   function ensureOwnPartner(){
     if (!partnerById(OWN_PARTNER_ID)){
-      partnerProfiles.push({ id:OWN_PARTNER_ID, name:OWN_PARTNER_NAME, init:"CW", country:"", tagline:"CloudWAV's own partner practice -- reselling and implementing the programs on PartnerWAV.",
+      partnerProfiles.push({ id:OWN_PARTNER_ID, name:OWN_PARTNER_NAME, init:"CW", country:"Thailand", tagline:"CloudWAV's own partner practice -- reselling and implementing the programs on PartnerWAV.",
         specialties:[], credentials:[], services:[], pastProjects:[], logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" } });
       saveVendorData();
     }
     // CloudWAV's Intelsense rate from the Intelsense pricing doc: 20% first year + 5% renewal on all four products
     if (!enrollments.some(function(e){ return e.partnerId === OWN_PARTNER_ID && e.programId === "intelsense"; })){
-      enrollments.push({ id:"en-cloudwav-intelsense", partnerId:OWN_PARTNER_ID, partner:OWN_PARTNER_NAME, country:"", programId:"intelsense", tier:"Reseller", level:"Registered", status:"active", source:"vendor",
+      enrollments.push({ id:"en-cloudwav-intelsense", partnerId:OWN_PARTNER_ID, partner:OWN_PARTNER_NAME, country:"Thailand", programId:"intelsense", tier:"Reseller", level:"Registered", status:"active", source:"vendor",
         joined:todayIso(), revenue12m:0, dealsClosed:0, coursesBefore:0, lastActivity:todayIso(), history:[],
         notes:"Commission override: 20% first year + 5% renewal on Unisense AI, Finsense AI, AI Hubspot and AlterCrew (effective 2026-10-01; standard partners get 15% + 5%)." });
       saveLevels();
     }
+    // Saved copies made before the country was set: CloudWAV Consulting sells from Thailand
+    var ownProf = partnerById(OWN_PARTNER_ID);
+    if (ownProf && !ownProf.country){ ownProf.country = "Thailand"; saveVendorData(); }
+    var ownFix = false;
+    enrollments.forEach(function(e){ if (e.partnerId === OWN_PARTNER_ID && !e.country){ e.country = "Thailand"; ownFix = true; } });
+    if (ownFix) saveLevels();
     if (state.enrolled.indexOf("intelsense") < 0) state.enrolled.push("intelsense");
   }
   function openOwnPartner(){
