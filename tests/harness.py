@@ -125,7 +125,16 @@ def open_page_supabase(p, mock, query="", ctx=None, viewport=None):
     pg.goto(URL + query); pg.wait_for_timeout(900)
     return b, ctx, pg
 
+def open_menu(pg, screen):
+    """Menu items live in collapsible sections: open the one holding this screen."""
+    if pg.locator(f'[data-screen="{screen}"]:visible').count() == 0:
+        head = pg.locator(f'nav.navgroup:not([hidden]) .navsec:has([data-screen="{screen}"]) .navsec-head')
+        if head.count(): head.first.click(); pg.wait_for_timeout(100)
+def in_menu(pg, screen):
+    open_menu(pg, screen)
+    return pg.locator(f'[data-screen="{screen}"]:visible').count() == 1
 def nav(pg, screen):
+    open_menu(pg, screen)
     pg.locator(f'[data-screen="{screen}"]:visible').first.click(); pg.wait_for_timeout(200)
 def role(pg, r):
     pg.locator(f'[data-role="{r}"]').first.click(); pg.wait_for_timeout(200)

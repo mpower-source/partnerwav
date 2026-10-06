@@ -75,6 +75,7 @@ with sync_playwright() as p:
     pg.click("[data-preview-exit]"); pg.wait_for_timeout(300)
     ok(visible_screen(pg) == ["scr-operator-overview"] and pg.locator("#navOperator").is_visible() and not pg.locator("#previewBanner").is_visible(), "Back to Operator")
     # CloudWAV is also a partner: its own partner account under the same login
+    pg.click('#navOperator [data-sec="partners"] .navsec-head'); pg.wait_for_timeout(100)
     pg.click('.navlink[data-own-partner]'); pg.wait_for_timeout(600); settle(pg)
     ok(visible_screen(pg) == ["scr-partner-overview"] and "CloudWAV Consulting" in pg.inner_text("#previewBanner") and "own partner account" in pg.inner_text("#previewBanner"), "'CloudWAV as Partner' opens CloudWAV Consulting's partner workspace")
     pp = [r for r in db("partnerProfiles") if r["id"] == "cloudwav-consulting"]

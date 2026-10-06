@@ -4,7 +4,7 @@ with sync_playwright() as p:
     ctx = pg.context
     # ===== Operator: agreements
     role(pg, "operator")
-    ok(pg.locator('[data-screen="operator-agreements"]:visible').count() == 1 and pg.locator('[data-screen="referrals"]:visible').count() == 1, "Agreements + Software Referrals in the Operator menu")
+    ok(in_menu(pg, "operator-agreements") and in_menu(pg, "referrals"), "Agreements + Software Referrals in the Operator menu")
     nav(pg, "operator-agreements")
     ok(pg.locator("[data-agr-row]").count() == 9, "9 agreements: 6 vendor, 2 partner, 1 software referral")
     pg.select_option("#agrNewParty", "partner|partner:gulf-coast"); pg.click("[data-agr-create]"); pg.wait_for_timeout(150)

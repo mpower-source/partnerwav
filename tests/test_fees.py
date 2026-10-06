@@ -67,7 +67,7 @@ with sync_playwright() as p:
     ok("$2,520" in pg.inner_text("#dealFeeCard") and "DUE" in pg.inner_text("#dealFeeCard").upper(), "Approved deal keeps the fee recorded at approval, with its status")
 
     # ===== CloudWAV Revenue
-    ok(pg.locator('[data-screen="operator-revenue"]:visible').count() == 1, "CloudWAV Revenue in the Operator menu")
+    ok(in_menu(pg, "operator-revenue"), "CloudWAV Revenue in the Operator menu")
     nav(pg, "operator-revenue")
     txt = pg.inner_text("#operatorRevenueContent")
     ok("$2,520" in txt and "Bangkok Bank branch rollout" in txt and "CloudWAV-sourced" in txt, "Revenue lists the platform fee")

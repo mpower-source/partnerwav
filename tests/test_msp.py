@@ -3,7 +3,7 @@ from harness import *
 with sync_playwright() as p:
     b, pg = open_page(p)
     role(pg, "operator")
-    ok(pg.locator('[data-screen="operator-msp-prospects"]:visible').count() == 1, "MSP Prospecting is back in the Operator menu")
+    ok(in_menu(pg, "operator-msp-prospects"), "MSP Prospecting is back in the Operator menu")
     nav(pg, "operator-msp-prospects")
     ok(visible_screen(pg) == ["scr-operator-msp-prospects"], "MSP Prospecting screen opens")
     cards = pg.locator("#mspProspectsList .msp-card")
@@ -116,7 +116,7 @@ with sync_playwright() as p:
 
     # partner collaborations
     role(pg, "partner")
-    ok(pg.locator('[data-screen="partner-collaboration-finder"]:visible').count() == 1, "Partner Collaborations back in the Partner menu")
+    ok(in_menu(pg, "partner-collaboration-finder"), "Partner Collaborations back in the Partner menu")
     nav(pg, "partner-collaboration-finder")
     cc = pg.locator("#partnerCollaborationList .msp-card")
     ok(cc.count() == 5, "5 collaboration posts restored")

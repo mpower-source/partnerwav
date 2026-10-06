@@ -6,7 +6,7 @@ with sync_playwright() as p:
     b, pg = open_page(p)
     for r in ["partner", "vendor", "affiliate", "operator"]:
         role(pg, r)
-        ok(pg.locator('[data-screen="channels"]:visible').count() == 1, f"'WhatsApp & LINE' in the {r} menu")
+        open_menu(pg, "channels"); ok(pg.locator('[data-screen="channels"]:visible').count() == 1, f"'WhatsApp & LINE' in the {r} menu")
     # ----- partner: contact details
     role(pg, "partner"); nav(pg, "channels")
     pg.click('[data-ch-tab="contact"]'); pg.wait_for_timeout(150)

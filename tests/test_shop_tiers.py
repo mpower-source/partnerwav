@@ -5,7 +5,7 @@ with sync_playwright() as p:
 
     # ===== Operator: Shop Manager =====
     role(pg, "operator")
-    ok(pg.locator('[data-screen="operator-shop"]:visible').count() == 1, "Shop Manager in the Operator menu")
+    ok(in_menu(pg, "operator-shop"), "Shop Manager in the Operator menu")
     nav(pg, "operator-shop")
     rows = pg.locator("[data-opshop-row]")
     ok(rows.count() == 9, "9 starter products: " + str(rows.count()))
@@ -31,7 +31,7 @@ with sync_playwright() as p:
 
     # ===== Partner: browse + buy =====
     role(pg, "partner")
-    ok(pg.locator('[data-screen="shop"]:visible').count() == 1, "Training & Shop in the Partner menu")
+    ok(in_menu(pg, "shop"), "Training & Shop in the Partner menu")
     nav(pg, "shop")
     cards = pg.locator("[data-shop-card]")
     n = cards.count()

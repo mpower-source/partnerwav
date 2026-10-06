@@ -27,7 +27,7 @@ with sync_playwright() as p:
     o = " | ".join(pg.locator("#msgList [data-open-convo]").all_inner_texts())
     ok("Hello CloudWAV" in o and "branch 3" not in o, "Operator inbox has messages to CloudWAV only")
     role(pg, "affiliate")
-    ok(pg.locator('[data-screen="partner-messages"]:visible').count() == 1, "Affiliates have Messages too")
+    ok(in_menu(pg, "partner-messages"), "Affiliates have Messages too")
     pg.reload(); pg.wait_for_timeout(700); role(pg, "partner"); nav(pg, "partner-messages")
     ok("Hello CloudWAV" in pg.inner_text("#msgList"), "Messages persist (demo: this browser)")
     pg.set_viewport_size({"width": 390, "height": 844}); pg.wait_for_timeout(200)

@@ -4,7 +4,7 @@ with sync_playwright() as p:
     b, pg = open_page(p)
     role(pg, "operator")
     for scr in ("operator-msp-engagements", "operator-landing-pages"):
-        ok(pg.locator(f'[data-screen="{scr}"]:visible').count() == 1, f"{scr} is in the Operator menu")
+        ok(in_menu(pg, scr), f"{scr} is in the Operator menu")
 
     # --- engagement tracker starts empty and explains how to fill it
     nav(pg, "operator-msp-engagements")

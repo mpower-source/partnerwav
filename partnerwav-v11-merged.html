@@ -209,6 +209,20 @@
   .navlink:hover{ background:var(--surface); color:var(--ink); }
   .navlink[aria-current="true"]{ background:var(--accent-soft); color:var(--accent-strong); }
   .navlink .ic{ width:17px; height:17px; flex-shrink:0; }
+  .navsec{ display:flex; flex-direction:column; gap:2px; }
+  .navsec-head{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; cursor:pointer;
+    color:var(--ink); font-size:.88rem; font-weight:700; border:none; background:transparent; width:100%; text-align:left;
+  }
+  .navsec-head:hover{ background:var(--surface); }
+  .navsec-head .ic{ width:17px; height:17px; flex-shrink:0; }
+  .navsec-name{ flex:1; min-width:0; }
+  .navsec-caret{ color:var(--ink-faint); font-size:.8rem; transition:transform .15s; }
+  .navsec-head[aria-expanded="true"] .navsec-caret{ transform:rotate(90deg); }
+  .navsec-head[data-active="true"]{ color:var(--accent-strong); }
+  .navsec-items{ display:flex; flex-direction:column; gap:2px; margin-left:14px; padding-left:6px; border-left:1px solid var(--line); }
+  .navsec-items[hidden]{ display:none; }
+  .navsec-items .navlink{ padding:7px 10px; font-size:.85rem; }
 
   .sidebar-foot{ margin-top:auto; display:flex; flex-direction:column; gap:8px; }
   .theme-row{
@@ -647,6 +661,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     .navgroup{ flex-direction:row; flex-wrap:wrap; order:2; width:100%; gap:6px; }
     .navgroup-label{ display:none; }
     .navlink{ white-space:nowrap; padding:7px 10px; }
+    .navlink, .navsec-head{ width:auto; }
+    .navsec{ display:contents; }
+    .navsec-head{ white-space:nowrap; padding:7px 10px; background:var(--surface); }
+    .navsec-items{ flex-direction:row; flex-wrap:wrap; width:100%; margin-left:0; padding:0 0 4px 8px; gap:6px; }
     .sidebar-foot{ display:none; }
     .main{ overflow-y:visible; }
     .topbar{ position:static; }
@@ -681,86 +699,176 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     <nav class="navgroup" id="navPartner">
       <div class="navgroup-label">Partner</div>
       <button class="navlink" data-screen="partner-overview"><span class="ic">📊</span>Overview</button>
-      <button class="navlink" data-screen="partner-profile-editor"><span class="ic">👤</span>My Profile</button>
-      <button class="navlink" data-screen="partner-directory"><span class="ic">🎯</span>Program Directory</button>
-      <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
-      <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
-      <button class="navlink" data-screen="partner-my-leads"><span class="ic">💼</span>My Leads</button>
-      <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
-      <button class="navlink" data-screen="partner-community"><span class="ic">👥</span>Community</button>
-      <button class="navlink" data-screen="partner-network"><span class="ic">🤝</span>Partner Network</button>
-      <button class="navlink" data-screen="partner-collaboration-finder"><span class="ic">🎯</span>Partner Collaborations</button>
-      <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
-      <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
-      <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
-      <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
-      <button class="navlink" data-screen="training"><span class="ic">🎓</span>Training</button>
-      <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
-      <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
-      <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
-      <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
-      <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
+      <div class="navsec" data-sec="business">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💼</span><span class="navsec-name">My Business</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="partner-profile-editor"><span class="ic">👤</span>My Profile</button>
+          <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
+          <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
+          <button class="navlink" data-screen="partner-my-leads"><span class="ic">💼</span>My Leads</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="programs">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">🎯</span><span class="navsec-name">Programs &amp; Offers</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="partner-directory"><span class="ic">🎯</span>Program Directory</button>
+          <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
+          <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
+          <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="collab">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">🤝</span><span class="navsec-name">Collaborate</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
+          <button class="navlink" data-screen="partner-community"><span class="ic">👥</span>Community</button>
+          <button class="navlink" data-screen="partner-network"><span class="ic">🤝</span>Partner Network</button>
+          <button class="navlink" data-screen="partner-collaboration-finder"><span class="ic">🎯</span>Partner Collaborations</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="learn">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">🎓</span><span class="navsec-name">Learn</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
+          <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
+          <button class="navlink" data-screen="training"><span class="ic">🎓</span>Training</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="connect">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💬</span><span class="navsec-name">Connect</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+          <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
+          <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
+          <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
+        </div>
+      </div>
     </nav>
 
     <nav class="navgroup" id="navVendor" hidden>
       <div class="navgroup-label">Vendor</div>
       <button class="navlink" data-screen="vendor-overview"><span class="ic">📊</span>Overview</button>
-      <button class="navlink" data-screen="vendor-program-editor"><span class="ic">📝</span>My Program Listing</button>
-      <button class="navlink" data-screen="vendor-hardware-offerings"><span class="ic">📦</span>Hardware Offerings</button>
-      <button class="navlink" data-screen="vendor-incentives"><span class="ic">🎁</span>Partner Incentives</button>
-      <button class="navlink" data-screen="vendor-partners"><span class="ic">👨‍💼</span>Partners in My Program</button>
-      <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
-      <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
-      <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
-      <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
-      <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
-      <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
-      <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
-      <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
-      <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
-      <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
+      <div class="navsec" data-sec="program">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">📝</span><span class="navsec-name">My Program</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="vendor-program-editor"><span class="ic">📝</span>My Program Listing</button>
+          <button class="navlink" data-screen="vendor-hardware-offerings"><span class="ic">📦</span>Hardware Offerings</button>
+          <button class="navlink" data-screen="vendor-incentives"><span class="ic">🎁</span>Partner Incentives</button>
+          <button class="navlink" data-screen="vendor-partners"><span class="ic">👨‍💼</span>Partners in My Program</button>
+          <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="grow">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">🚀</span><span class="navsec-name">Grow</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
+          <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
+          <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="learn">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">🎓</span><span class="navsec-name">Learn</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
+          <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="connect">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💬</span><span class="navsec-name">Connect</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+          <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
+          <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
+          <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
+        </div>
+      </div>
     </nav>
 
     <nav class="navgroup" id="navAffiliate" hidden>
       <div class="navgroup-label">Affiliate</div>
       <button class="navlink" data-screen="affiliate-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="affiliate-profile-editor"><span class="ic">👤</span>My Profile</button>
-      <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
-      <button class="navlink" data-screen="affiliate-projects"><span class="ic">📋</span>Partner Projects</button>
-      <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
-      <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
-      <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
-      <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
-      <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
-      <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
-      <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
+      <div class="navsec" data-sec="offers">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">🛍️</span><span class="navsec-name">Offers &amp; Projects</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
+          <button class="navlink" data-screen="affiliate-projects"><span class="ic">📋</span>Partner Projects</button>
+          <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="learn">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">🎓</span><span class="navsec-name">Learn</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="resource-browse"><span class="ic">📚</span>Resource Library</button>
+          <button class="navlink" data-screen="shop"><span class="ic">🛒</span>Training &amp; Shop</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="connect">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💬</span><span class="navsec-name">Connect</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+          <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
+          <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
+          <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
+        </div>
+      </div>
     </nav>
 
     <nav class="navgroup" id="navOperator" hidden>
       <div class="navgroup-label">Program Operator</div>
       <button class="navlink" data-screen="operator-overview"><span class="ic">📊</span>Overview</button>
-      <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
-      <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
-      <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
-      <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
-      <button class="navlink" data-screen="operator-programs"><span class="ic">⚙️</span>Manage Programs</button>
-      <button class="navlink" data-screen="operator-partners"><span class="ic">👨‍💼</span>Partners &amp; Tiers</button>
-      <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
-      <button class="navlink" data-screen="operator-approvals"><span class="ic">✅</span>Deal Approvals</button>
-      <button class="navlink" data-screen="resource-approvals"><span class="ic">📚</span>Resource Approvals</button>
-      <button class="navlink" data-screen="operator-marketing-approvals"><span class="ic">📢</span>Marketing Approvals</button>
-      <button class="navlink" data-screen="operator-partner-map"><span class="ic">🗺️</span>Partner Discovery Map</button>
-      <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
-      <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
-      <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
-      <button class="navlink" data-screen="operator-assessments"><span class="ic">🧭</span>Vendor Assessments</button>
-      <button class="navlink" data-own-partner><span class="ic">🤝</span>CloudWAV as Partner</button>
-      <button class="navlink" data-screen="operator-agreements"><span class="ic">📝</span>Agreements</button>
-      <button class="navlink" data-screen="operator-revenue"><span class="ic">💰</span>CloudWAV Revenue</button>
-      <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
-      <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Offers</button>
-      <button class="navlink" data-screen="operator-shop"><span class="ic">🛒</span>Shop Manager</button>
-      <button class="navlink" data-screen="operator-data"><span class="ic">☁️</span>Cloud Data</button>
+      <div class="navsec" data-sec="vendors">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">🏢</span><span class="navsec-name">Vendors &amp; Programs</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="operator-programs"><span class="ic">⚙️</span>Manage Programs</button>
+          <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
+          <button class="navlink" data-screen="operator-assessments"><span class="ic">🧭</span>Vendor Assessments</button>
+          <button class="navlink" data-screen="operator-agreements"><span class="ic">📝</span>Agreements</button>
+          <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="partners">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">👨‍💼</span><span class="navsec-name">Partners</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="operator-partners"><span class="ic">👨‍💼</span>Partners &amp; Tiers</button>
+          <button class="navlink" data-screen="operator-partner-map"><span class="ic">🗺️</span>Partner Discovery Map</button>
+          <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
+          <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
+          <button class="navlink" data-own-partner><span class="ic">🤝</span>CloudWAV as Partner</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="approvals">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">✅</span><span class="navsec-name">Approvals</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="operator-approvals"><span class="ic">✅</span>Deal Approvals</button>
+          <button class="navlink" data-screen="resource-approvals"><span class="ic">📚</span>Resource Approvals</button>
+          <button class="navlink" data-screen="operator-marketing-approvals"><span class="ic">📢</span>Marketing Approvals</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="revenue">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💰</span><span class="navsec-name">Revenue</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="operator-revenue"><span class="ic">💰</span>CloudWAV Revenue</button>
+          <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
+          <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Offers</button>
+          <button class="navlink" data-screen="operator-shop"><span class="ic">🛒</span>Shop Manager</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="comms">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💬</span><span class="navsec-name">Communication</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+          <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
+          <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="settings">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">⚙️</span><span class="navsec-name">Settings</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
+          <button class="navlink" data-screen="operator-data"><span class="ic">☁️</span>Cloud Data</button>
+        </div>
+      </div>
     </nav>
 
     <div class="sidebar-foot">
@@ -4772,7 +4880,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     // screens
     document.querySelectorAll("[id^='scr-']").forEach(function(s){ s.hidden = (s.id !== "scr-"+state.screen); });
     document.querySelectorAll(".navlink").forEach(function(b){
-      b.setAttribute("aria-current", (b.getAttribute("data-screen")===state.screen && !b.closest("[hidden]")) ? "true":"false");
+      b.setAttribute("aria-current", (b.getAttribute("data-screen")===state.screen && !b.closest("nav[hidden]")) ? "true":"false");
+    });
+    // collapsible menu sections: the section holding the current screen opens itself
+    var navKey = state.role + "|" + state.screen;
+    var navFollow = state.navSeenKey !== navKey;
+    state.navSeenKey = navKey;
+    state.navOpen = state.navOpen || {};
+    document.querySelectorAll(".navsec").forEach(function(sec){
+      if (sec.closest("nav[hidden]")) return;
+      var id = sec.getAttribute("data-sec");
+      var holds = !!sec.querySelector('.navlink[aria-current="true"]');
+      if (navFollow && holds) state.navOpen[state.role] = id;
+      var open = state.navOpen[state.role] === id;
+      var head = sec.querySelector(".navsec-head");
+      head.setAttribute("aria-expanded", open ? "true" : "false");
+      head.setAttribute("data-active", holds && !open ? "true" : "false");
+      sec.querySelector(".navsec-items").hidden = !open;
     });
     document.getElementById("topEyebrow").textContent = roleLabel(state.role);
     document.getElementById("topTitle").textContent = titles[state.screen] || "";
@@ -12031,6 +12155,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       console.log("Role button clicked");
       state.role = roleBtn.getAttribute("data-role");
       state.screen = state.role === "partner" ? "partner-overview" : (state.role === "vendor" ? "vendor-overview" : (state.role === "affiliate" ? "affiliate-overview" : "operator-overview"));
+      render();
+      return;
+    }
+    var navSecHead = e.target.closest(".navsec-head");
+    if (navSecHead){
+      var navSecId = navSecHead.parentNode.getAttribute("data-sec");
+      state.navOpen = state.navOpen || {};
+      state.navOpen[state.role] = state.navOpen[state.role] === navSecId ? "" : navSecId;
       render();
       return;
     }

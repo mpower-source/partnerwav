@@ -4,7 +4,7 @@ import urllib.parse
 with sync_playwright() as p:
     b, pg = open_page(p)
     for r in ["partner", "vendor", "operator"]:
-        role(pg, r); ok(pg.locator('[data-screen="calendar"]:visible').count() == 1, f"{r.title()} menu has Events & Calendar")
+        role(pg, r); open_menu(pg, "calendar"); ok(pg.locator('[data-screen="calendar"]:visible').count() == 1, f"{r.title()} menu has Events & Calendar")
     ok(pg.locator('#navAffiliate [data-screen="calendar"]').count() == 1, "Affiliate menu has Events & Calendar")
 
     # ----- a vendor adds a training

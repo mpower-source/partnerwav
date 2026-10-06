@@ -4,7 +4,7 @@ with sync_playwright() as p:
     b, pg = open_page(p)
     for r in ["partner", "vendor", "operator"]:
         role(pg, r)
-        ok(pg.locator('[data-screen="integrations"]:visible').count() == 1, f"{r.title()} menu has Integrations")
+        open_menu(pg, "integrations"); ok(pg.locator('[data-screen="integrations"]:visible').count() == 1, f"{r.title()} menu has Integrations")
     role(pg, "affiliate"); ok(pg.locator('#navAffiliate [data-screen="integrations"]').count() == 1, "Affiliate menu has Integrations")
 
     # ----- vendor: Calendly
