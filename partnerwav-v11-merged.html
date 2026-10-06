@@ -698,6 +698,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
       <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
+      <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
       <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
     </nav>
 
@@ -716,6 +717,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
       <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
+      <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
       <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
     </nav>
 
@@ -730,6 +732,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
       <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
+      <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
       <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
     </nav>
 
@@ -739,6 +742,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="channels"><span class="ic">📣</span>WhatsApp &amp; LINE</button>
       <button class="navlink" data-screen="integrations"><span class="ic">🔌</span>Integrations</button>
+      <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
       <button class="navlink" data-screen="operator-programs"><span class="ic">⚙️</span>Manage Programs</button>
       <button class="navlink" data-screen="operator-partners"><span class="ic">👨‍💼</span>Partners &amp; Tiers</button>
       <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
@@ -2075,6 +2079,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="operatorAgreementsContent"></div>
       </section>
 
+      <!-- ===== ALL ROLES: EVENTS & CALENDAR (trainings, in-person events; add to Google / Outlook / Apple) ===== -->
+      <section id="scr-calendar" hidden>
+        <div class="section-head"><h2>Events &amp; Calendar</h2><span class="hint">Vendor trainings, PartnerWAV trainings, meetups and in-person events -- add any of them to your own calendar</span></div>
+        <div style="height:14px"></div>
+        <div id="calendarContent"></div>
+      </section>
+
       <!-- ===== ALL ROLES: INTEGRATIONS (Calendly, HubSpot, ...) ===== -->
       <section id="scr-integrations" hidden>
         <div class="section-head"><h2>Integrations</h2><span class="hint">Connect the tools you already use, so PartnerWAV fits how your company works</span></div>
@@ -3297,6 +3308,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-revenue":"CloudWAV Revenue",
     "channels":"WhatsApp & LINE",
     "integrations":"Integrations",
+    "calendar":"Events & Calendar",
     "referrals":"Software Referrals",
     "referral-view":"Software Referral",
     "operator-shop-editor":"Shop Product",
@@ -4185,7 +4197,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return '<button class="btn ghost sm" data-va-list>← All assessments</button>'
       + '<div class="card card-pad" style="margin-top:14px;display:flex;flex-direction:column;gap:14px;" data-va-detail="'+esc(a.id)+'">'
         + '<div class="profile-header"><div><h2 style="font-size:1.25rem;">'+esc(a.company)+'</h2><div class="thread-meta">'+esc([a.contactName, a.contactRole].filter(Boolean).join(", "))+' · '+esc(a.source === "vendor-link" ? "Sent from the vendor link" : "Taken on a call")+' · '+esc(a.createdAt || "")+'</div></div>'
-          + '<div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><span class="badge '+st.cls+'">'+esc(st.label)+'</span>'
+          + '<div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'+(a.bookedAt ? '<span class="badge good" data-va-booked title="Booked from the thank-you page">Call booked '+esc(a.bookedAt)+'</span>' : '')+'<span class="badge '+st.cls+'">'+esc(st.label)+'</span>'
           + '<select id="vaStatus" class="filter app-select" aria-label="Status">'+Object.keys(VA_STATUS).map(function(k){ return '<option value="'+k+'"'+(k === a.status ? ' selected' : '')+'>'+esc(VA_STATUS[k].label)+'</option>'; }).join("")+'</select></div></div>'
         + '<div class="va-two">'
           + '<div><div class="aff-section-title">Contact</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">'
@@ -4295,7 +4307,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="filter-row" style="margin-bottom:10px;">'+[["open","Open"],["new","New"],["quoted","Quoted"],["won","Signed up"],["lost","Not going ahead"],["all","All"]].map(function(o){ return '<button type="button" class="btn '+(f === o[0] ? 'primary' : 'secondary')+' sm" data-va-filter="'+o[0]+'">'+o[1]+'</button>'; }).join("")+'</div>'
       + '<div style="display:flex;flex-direction:column;gap:10px;" id="vaList">'+(shown.length ? shown.map(function(x){
           var st = VA_STATUS[x.status] || VA_STATUS["new"], rec = vaRecommend(x), q = x.quote ? vaQuoteLines(x.quote) : null;
-          return '<div class="msp-card" data-va-row="'+esc(x.id)+'"><div class="msp-main"><div class="msp-name">'+esc(x.company)+' <span class="badge '+st.cls+'">'+esc(st.label)+'</span></div>'
+          return '<div class="msp-card" data-va-row="'+esc(x.id)+'"><div class="msp-main"><div class="msp-name">'+esc(x.company)+' <span class="badge '+st.cls+'">'+esc(st.label)+'</span>'+(x.bookedAt ? ' <span class="badge good">Call booked</span>' : '')+'</div>'
             + '<div class="msp-meta">'+esc([x.contactName, x.email].filter(Boolean).join(" · "))+'</div>'
             + '<div class="msp-meta">'+esc(x.source === "vendor-link" ? "Vendor link" : "Call")+' · '+esc(x.createdAt || "")+' · '+esc(x.partners ? x.partners + " partners" : "")+' · fits '+esc(pmItem("plans", (x.quote && x.quote.planId) || rec.plan).name)
               + ((x.addons || []).length ? ' + '+x.addons.map(function(id){ var p2 = pmItem("addons", id); return p2 ? p2.name : id; }).join(", ") : '')+'</div></div>'
@@ -4368,13 +4380,32 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("click", function(ev){
     var a = ev.target.closest && ev.target.closest("[data-contact-book], [data-va-book], [data-int-test]"); if (!a) return;
     var url = a.getAttribute("href") || a.getAttribute("data-int-test"), key = a.getAttribute("data-contact-book");
+    state.bookingCtx = a.hasAttribute("data-va-book") ? { assessmentId: state.vaPublicDone ? state.vaPublicDone.id : "" } : key ? { ownerKey:key } : {};
     if (openBooking(url, key ? keyName(key) : (a.hasAttribute("data-va-book") ? "CloudWAV" : ""))) ev.preventDefault();
     else if (a.hasAttribute("data-int-test") && safeLink(url)) window.open(url, "_blank", "noopener");
   });
-  // Calendly tells the page when a time has been booked
+  // Calendly tells the page when a time has been booked. Bookings made through PartnerWAV are saved here:
+  // signed-in members get a booking record both sides can see; a vendor on the assessment thank-you page
+  // (not signed in) gets it noted on their assessment. Calendly's message carries no meeting time, so we record
+  // when it was booked; the time itself is in the Calendly confirmation email.
+  var bookings = [];
+  function recordBooking(payload){
+    var ctx = state.bookingCtx || {}, at = nowStamp();
+    if (ctx.assessmentId){
+      var va = vaById(ctx.assessmentId); if (va && !va.bookedAt){ va.bookedAt = at; try { lsSet(VA_KEY, JSON.stringify(vendorAssessments)); } catch(e){} }
+      if (supabase && !DEMO_MODE) supabase.rpc("mark_assessment_booked", { p_id: ctx.assessmentId }).then(function(){}, function(){});
+      return;
+    }
+    var me = chMe(); if (!me || !ctx.ownerKey || ctx.ownerKey === me) return;
+    bookings.unshift({ id:"bk-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ownerKey:ctx.ownerKey, bookedBy:me, bookedByName:keyName(me), at:at,
+      eventUri: payload && payload.event ? String(payload.event.uri || "").slice(0, 200) : "" });
+    saveCalendar();
+  }
   window.addEventListener("message", function(ev){
     if (!/^https:\/\/(www\.)?calendly\.com$/.test(ev.origin || "") || !ev.data || ev.data.event !== "calendly.event_scheduled") return;
-    state.bookingMade = true; toast("Call booked -- check your email for the invite");
+    if (!state.bookingCtx) return;                       // one record per time the scheduler was opened
+    recordBooking(ev.data.payload || {}); state.bookingCtx = null; state.bookingMade = true;
+    toast("Call booked -- check your email for the invite");
     var b = document.querySelector("[data-va-book]"); if (b){ b.textContent = "Call booked ✓"; }
   });
   function integrationsFor(me){ var c = contactFor(me) || {}; return c.integrations || {}; }
@@ -4383,7 +4414,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!box || state.screen !== "integrations") return;
     var me = chMe();
     if (!me){ box.innerHTML = '<div class="empty">Create your profile first -- then you can connect your tools.</div>'; return; }
-    var c = contactFor(me) || {}, ig = c.integrations || {}, hs = ig.hubspot || {}, key = me + ":" + (state.intV || 0);
+    var c = contactFor(me) || {}, ig = c.integrations || {}, hs = ig.hubspot || {}, key = me + ":" + (state.intV || 0) + ":" + bookings.length;
     if (!force && box.getAttribute("data-int-key") === key) return;   // keep what's being typed
     box.setAttribute("data-int-key", key);
     var badge = function(on, yes, no){ return '<span class="badge '+(on ? 'good' : 'neutral')+'">'+(on ? yes : no)+'</span>'; };
@@ -4400,7 +4431,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="aff-section-title" style="margin-top:4px;">Where it shows</div><ul class="shop-list" style="margin:0;"><li>A "Book a call" button on your profile and in Messages, next to WhatsApp and LINE</li>'
           + (isOperator ? '<li>"Book a call now" on the thank-you page of the vendor assessment</li>' : '')+'</ul>'
         + '<p class="field-note" style="margin:0;">Other scheduling tools (Cal.com, Google Calendar booking pages, HubSpot Meetings) work too -- they open in a new tab.</p>'
-        + '<p class="field-note" style="margin:0;"><b>Coming next:</b> bookings recorded in PartnerWAV automatically. That needs a server connection to your Calendly account, set up with CloudWAV.</p></div>'
+        + (function(){ var mine = bookings.filter(function(x){ return x.ownerKey === me; }), made = bookings.filter(function(x){ return x.bookedBy === me; });
+            return '<div class="aff-section-title" style="margin-top:4px;">Booked through PartnerWAV <span class="field-note">('+mine.length+')</span></div>'
+              + (mine.length ? '<ul class="shop-list" style="margin:0;" data-int-bookings>'+mine.slice(0, 8).map(function(x){ return '<li><b>'+esc(x.bookedByName || keyName(x.bookedBy))+'</b> booked a call <span class="field-note">'+esc(x.at)+'</span></li>'; }).join("")+'</ul>'
+                : '<p class="field-note" style="margin:0;">When someone books with you from PartnerWAV it is listed here. The meeting time is in your Calendly confirmation.</p>')
+              + (made.length ? '<p class="field-note" style="margin:0;" data-int-made>You booked: '+made.slice(0, 5).map(function(x){ return esc(keyName(x.ownerKey))+' ('+esc(x.at.slice(0, 10))+')'; }).join(", ")+'</p>' : ''); })()
+        + '<p class="field-note" style="margin:0;">Bookings made outside PartnerWAV (from your own Calendly page) are not listed -- that needs a paid Calendly plan and a server connection.</p></div>'
       // --- HubSpot
       + '<div class="card card-pad int-card" data-int="hubspot"><div class="int-head"><span class="int-logo" style="background:#ff7a59;">H</span><h3>HubSpot</h3>'+(hs.requested ? '<span class="badge warn">Setup requested</span>' : '<span class="badge neutral">Not connected</span>')+'</div>'
         + '<p class="field-note" style="margin:0;">Keep your HubSpot CRM and marketing in step with PartnerWAV. Tick what you want synced and CloudWAV will set up the connection with you.</p>'
@@ -4444,6 +4480,114 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var x = ev.target.closest && ev.target.closest("[data-int-cancel]");
     if (x){ var rec = contactFor(chMe()); if (rec && rec.integrations){ delete rec.integrations.hubspot; saveChannels(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast("Request cancelled"); renderIntegrations(true); } }
   });
+
+  // ===== EVENTS & CALENDAR (all roles) =====
+  // Trainings and events anyone signed in can see, each with "Add to calendar": a Google Calendar link, an Outlook
+  // link and a calendar file (.ics) that Apple Calendar and desktop Outlook open. No calendar account is connected.
+  // Times are stored in UTC and shown in each viewer's own timezone.
+  var calendarEvents = [];
+  var CAL_KEY = "partnerWAV_calendar";
+  var CAL_TYPES = ["Vendor training","PartnerWAV training","Webinar","In-person event","Meetup","Demo","Other"];
+  function saveCalendar(){ try { lsSet(CAL_KEY, JSON.stringify({ events:calendarEvents, bookings:bookings })); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function loadCalendar(){ try { var d = JSON.parse(lsGet(CAL_KEY) || "null"); if (d){ if (Array.isArray(d.events)) calendarEvents = d.events; if (Array.isArray(d.bookings)) bookings = d.bookings; } } catch(e){} }
+  function calEnd(ev){ return new Date(new Date(ev.start).getTime() + (Number(ev.durationMin) || 60) * 60000); }
+  function calStamp(d){ return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); }   // 20261006T090000Z
+  function calDetails(ev){ return [ev.desc, ev.link ? "Join: " + ev.link : "", "Hosted by " + keyName(ev.ownerKey) + " on PartnerWAV"].filter(Boolean).join("\n\n"); }
+  function calWhere(ev){ return ev.location || ev.link || ""; }
+  function calGoogleUrl(ev){ return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(ev.title) + "&dates=" + calStamp(new Date(ev.start)) + "/" + calStamp(calEnd(ev))
+    + "&details=" + encodeURIComponent(calDetails(ev)) + "&location=" + encodeURIComponent(calWhere(ev)); }
+  function calOutlookUrl(ev){ return "https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=" + encodeURIComponent(ev.title)
+    + "&startdt=" + encodeURIComponent(new Date(ev.start).toISOString()) + "&enddt=" + encodeURIComponent(calEnd(ev).toISOString()) + "&body=" + encodeURIComponent(calDetails(ev)) + "&location=" + encodeURIComponent(calWhere(ev)); }
+  function icsText(v){ return String(v || "").replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/([,;])/g, "\\$1"); }
+  function calIcs(ev){
+    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CloudWAV//PartnerWAV//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+      "UID:" + ev.id + "@partnerwav", "DTSTAMP:" + calStamp(new Date()), "DTSTART:" + calStamp(new Date(ev.start)), "DTEND:" + calStamp(calEnd(ev)),
+      "SUMMARY:" + icsText(ev.title), "DESCRIPTION:" + icsText(calDetails(ev)), "LOCATION:" + icsText(calWhere(ev))].concat(ev.link ? ["URL:" + ev.link] : []).concat(["END:VEVENT", "END:VCALENDAR"]).join("\r\n");
+  }
+  function calWhen(ev){
+    var d = new Date(ev.start), e = calEnd(ev), tz = "";
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch(x){}
+    var day = d.toLocaleDateString(undefined, { weekday:"short", day:"numeric", month:"short", year:"numeric" }), t = function(x){ return x.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" }); };
+    return day + " · " + t(d) + " - " + t(e) + (tz ? " (" + tz.replace(/_/g, " ") + ")" : "");
+  }
+  function calLocalInput(iso){ var d = new Date(iso), z = function(n){ return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()) + "T" + z(d.getHours()) + ":" + z(d.getMinutes()); }
+  function calCardHtml(ev, me){
+    var mine = ev.ownerKey === me || state.role === "operator", past = calEnd(ev) < new Date();
+    return '<div class="msp-card" data-cal-event="'+esc(ev.id)+'"><div class="msp-main"><div class="msp-name">'+esc(ev.title)+' <span class="badge accent">'+esc(ev.type || "Event")+'</span>'+(past ? ' <span class="badge neutral">Past</span>' : '')+'</div>'
+      + '<div class="msp-meta" data-cal-when>📅 '+esc(calWhen(ev))+'</div>'
+      + (calWhere(ev) ? '<div class="msp-meta">📍 '+esc(ev.location || "Online")+(safeLink(ev.link) ? ' · <a href="'+attr(ev.link)+'" target="_blank" rel="noopener noreferrer">Join link</a>' : '')+'</div>' : '')
+      + (ev.desc ? '<div class="msp-meta">'+esc(ev.desc)+'</div>' : '')
+      + '<div class="msp-meta">Hosted by '+esc(keyName(ev.ownerKey))+'</div></div>'
+      + '<div class="msp-side" style="flex-basis:200px;min-width:180px;">'
+        + '<a class="btn primary sm" href="'+attr(calGoogleUrl(ev))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;text-align:center;" data-cal-google>Add to Google Calendar</a>'
+        + '<a class="btn secondary sm" href="'+attr(calOutlookUrl(ev))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;text-align:center;" data-cal-outlook>Add to Outlook</a>'
+        + '<button type="button" class="btn secondary sm" data-cal-ics="'+esc(ev.id)+'">Apple / other (.ics file)</button>'
+        + (mine ? '<div style="display:flex;gap:6px;"><button type="button" class="btn ghost sm" data-cal-edit="'+esc(ev.id)+'">Edit</button><button type="button" class="btn ghost sm" data-cal-delete="'+esc(ev.id)+'">Delete</button></div>' : '')
+      + '</div></div>';
+  }
+  function renderCalendar(force){
+    var box = document.getElementById("calendarContent");
+    if (!box || state.screen !== "calendar") return;
+    var me = chMe(), key = (state.calEditing || "list") + ":" + (state.calV || 0) + ":" + calendarEvents.length + ":" + (state.calTab || "upcoming") + ":" + (state.calType || "") + ":" + (me || "") + ":" + state.role;
+    if (!force && box.getAttribute("data-cal-key") === key) return;   // keep what's being typed in the form
+    box.setAttribute("data-cal-key", key);
+    if (state.calEditing){
+      var ev = state.calEditing === "new" ? { type:CAL_TYPES[0], durationMin:60, start:new Date(Math.ceil((Date.now() + 86400000) / 3600000) * 3600000).toISOString() } : calendarEvents.filter(function(x){ return x.id === state.calEditing; })[0];
+      if (!ev){ state.calEditing = null; return renderCalendar(true); }
+      var f = function(id, label, val, type, ph){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="'+(type || "text")+'" id="'+id+'" value="'+attr(val || "")+'" placeholder="'+attr(ph || "")+'"></div>'; };
+      var tzName = ""; try { tzName = Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, " "); } catch(x){}
+      box.innerHTML = '<button class="btn ghost sm" data-cal-cancel>← Back to events</button><form class="card card-pad" id="calForm" style="margin-top:14px;display:flex;flex-direction:column;gap:12px;max-width:760px;" onsubmit="return false;">'
+        + '<h2 style="margin:0;font-size:1.1rem;">'+(state.calEditing === "new" ? "Add an event" : "Edit event")+'</h2>'
+        + f("calTitle", "Title *", ev.title, "text", "e.g. Unisense AI partner training")
+        + '<div class="form-grid"><div class="field-row"><label for="calType">Type</label><select id="calType" class="filter app-select">'+CAL_TYPES.map(function(t){ return '<option'+(t === ev.type ? ' selected' : '')+'>'+esc(t)+'</option>'; }).join("")+'</select></div>'
+          + f("calStart", "Starts * (your time: "+esc(tzName || "local")+")", calLocalInput(ev.start), "datetime-local")
+          + f("calDuration", "Length (minutes)", ev.durationMin || 60, "number") + f("calLocation", "Where (venue and city, or leave blank for online)", ev.location, "text", "e.g. True Digital Park, Bangkok") + '</div>'
+        + f("calLink", "Online or registration link", ev.link, "url", "https://")
+        + '<div class="field-row"><label for="calDesc">Details</label><textarea id="calDesc" rows="3" maxlength="1500">'+esc(ev.desc || "")+'</textarea></div>'
+        + '<p class="field-note" style="margin:0;">Everyone signed in to PartnerWAV sees this event, in their own timezone, and can add it to their calendar.</p>'
+        + '<div id="calError" class="login-msg bad" role="alert" hidden></div>'
+        + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-cal-save>Save event</button><button type="button" class="btn secondary sm" data-cal-cancel>Cancel</button></div></form>';
+      return;
+    }
+    var tab = state.calTab || "upcoming", now = new Date(), tf = state.calType || "";
+    var list = calendarEvents.filter(function(x){ return (tab === "upcoming" ? calEnd(x) >= now : calEnd(x) < now) && (!tf || x.type === tf); })
+      .sort(function(a, b2){ return tab === "upcoming" ? new Date(a.start) - new Date(b2.start) : new Date(b2.start) - new Date(a.start); });
+    box.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">'+(me ? '<button type="button" class="btn primary" data-cal-new>+ Add an event</button>' : '')
+      + '<button type="button" class="btn '+(tab === "upcoming" ? "primary" : "secondary")+' sm" data-cal-tab="upcoming">Upcoming</button><button type="button" class="btn '+(tab === "past" ? "primary" : "secondary")+' sm" data-cal-tab="past">Past</button>'
+      + '<select id="calTypeFilter" class="filter app-select" aria-label="Type"><option value="">All types</option>'+CAL_TYPES.map(function(t){ return '<option'+(t === tf ? ' selected' : '')+'>'+esc(t)+'</option>'; }).join("")+'</select></div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px;" id="calList">'+(list.length ? list.map(function(x){ return calCardHtml(x, me); }).join("")
+        : '<div class="empty">'+(tab === "upcoming" ? "No upcoming events yet. Add a training, webinar or in-person event and everyone can put it on their calendar." : "No past events.")+'</div>')+'</div>';
+  }
+  function saveCalEvent(){
+    var me = chMe(); if (!me) return;
+    var g = function(id){ return document.getElementById(id).value.trim(); }, err = document.getElementById("calError"), probs = [];
+    var title = g("calTitle"), startRaw = g("calStart"), start = startRaw ? new Date(startRaw) : null, dur = Number(g("calDuration")) || 60, link = g("calLink");
+    if (!title) probs.push("Give the event a title.");
+    if (!start || isNaN(start.getTime())) probs.push("Choose the start date and time.");
+    if (dur < 5 || dur > 1440 * 7) probs.push("Length should be between 5 minutes and 7 days.");
+    if (link && !/^https?:\/\//i.test(link) && /^[^\s\/]+\.\S+/.test(link)) link = "https://" + link;
+    if (link && !/^https:\/\/\S+\.\S+/i.test(link)) probs.push("The link needs to be a secure web address (https://...).");
+    if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+    var ev = state.calEditing === "new" ? null : calendarEvents.filter(function(x){ return x.id === state.calEditing; })[0];
+    if (!ev){ ev = { id:"ev-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ownerKey:me, createdAt:nowStamp() }; calendarEvents.push(ev); }
+    ev.title = title; ev.type = g("calType"); ev.start = start.toISOString(); ev.durationMin = dur; ev.location = g("calLocation"); ev.link = link; ev.desc = g("calDesc"); ev.updatedAt = nowStamp();
+    saveCalendar(); state.calEditing = null; state.calTab = calEnd(ev) >= new Date() ? "upcoming" : "past"; state.calV = (state.calV || 0) + 1; toast("Event saved"); renderCalendar(true);
+  }
+  document.addEventListener("click", function(ev){
+    var t = ev.target.closest ? ev.target : null; if (!t) return; var b;
+    if (t.closest("[data-cal-new]")){ state.calEditing = "new"; renderCalendar(true); return; }
+    if (t.closest("[data-cal-cancel]")){ state.calEditing = null; renderCalendar(true); return; }
+    if (t.closest("[data-cal-save]")){ saveCalEvent(); return; }
+    if ((b = t.closest("[data-cal-tab]"))){ state.calTab = b.getAttribute("data-cal-tab"); renderCalendar(true); return; }
+    if ((b = t.closest("[data-cal-edit]"))){ state.calEditing = b.getAttribute("data-cal-edit"); renderCalendar(true); return; }
+    if ((b = t.closest("[data-cal-delete]"))){ var id = b.getAttribute("data-cal-delete"), e1 = calendarEvents.filter(function(x){ return x.id === id; })[0];
+      if (e1 && confirm("Delete \"" + e1.title + "\"?")){ calendarEvents.splice(calendarEvents.indexOf(e1), 1); saveCalendar(); state.calV = (state.calV || 0) + 1; toast("Event deleted"); renderCalendar(true); } return; }
+    if ((b = t.closest("[data-cal-ics]"))){ var e2 = calendarEvents.filter(function(x){ return x.id === b.getAttribute("data-cal-ics"); })[0]; if (!e2) return;
+      var blob = new Blob([calIcs(e2)], { type:"text/calendar;charset=utf-8" }), link = document.createElement("a");
+      link.href = URL.createObjectURL(blob); link.download = (e2.title || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) + ".ics";
+      document.body.appendChild(link); link.click(); setTimeout(function(){ URL.revokeObjectURL(link.href); link.remove(); }, 500); return; }
+  });
+  document.addEventListener("change", function(ev){ if (ev.target.id === "calTypeFilter"){ state.calType = ev.target.value; renderCalendar(true); } });
 
   function renderAffiliateManage(){
     var box = document.getElementById("affiliateManageContent");
@@ -4736,6 +4880,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderOperatorRevenue();
     renderChannels();
     renderIntegrations();
+    renderCalendar();
     renderReferrals();
     renderReferralView();
     renderShop();
@@ -9192,6 +9337,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ return { readers:[r.ownerKey], writers:[r.ownerKey] }; } },
     { name:"affiliateSignups", mode:"replace", get:function(){ return affiliateSignups; }, set:function(a){ affiliateSignups = a; },
       access:function(r){ return { readers:["vendor:" + r.vendorId], writers:[] }; } },
+    { name:"calendarEvents", mode:"replace", get:function(){ return calendarEvents; }, set:function(a){ calendarEvents = a; },
+      access:function(r){ return { readers:EVERYONE, writers:[r.ownerKey] }; } },
+    { name:"bookings", mode:"replace", get:function(){ return bookings; }, set:function(a){ bookings = a; },
+      access:function(r){ return { readers:[r.ownerKey, r.bookedBy], writers:[r.bookedBy] }; } },
     { name:"vendorAssessments", mode:"replace", get:function(){ return vendorAssessments; }, set:function(a){ vendorAssessments = a; },
       access:function(){ return { readers:[], writers:[] }; } },
     { name:"pricingModel", mode:"replace", get:function(){ return isOp() ? [pricingModel] : []; }, set:function(a){ if (a[0]) pricingModel = mergePricing(a[0]); },
@@ -13593,6 +13742,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadChannels();
   loadSignups();
   loadAssessments();
+  loadCalendar();
   loadShop();
   loadLevels();
   loadEngagementsAndPages();

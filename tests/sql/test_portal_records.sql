@@ -228,4 +228,25 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authent
 select t('CloudWAV reads the assessment; public form could not set status or a quote', (select count(*) from portal_records where collection='vendorAssessments' and data->>'status'='new' and data->>'source'='vendor-link' and not (data ? 'quote') and data->>'email'='ann@acme.io' and data->>'partners'='11-50') = 1);
 reset role;
 
+-- ===== calendar events, bookings, and marking an assessment as booked
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('calendarEvents','ev-1','{"id":"ev-1","ownerKey":"vendor:intelsense","title":"Training"}','{*}','{vendor:intelsense}');
+select t('vendor adds its own event', (select count(*) from portal_records where collection='calendarEvents') = 1);
+select t('vendor cannot add an event as someone else', fails($$insert into portal_records(collection,id,data,readers,writers) values ('calendarEvents','ev-2','{"id":"ev-2","ownerKey":"vendor:botnoi"}','{*}','{vendor:intelsense}')$$));
+select t('a booking cannot be recorded in someone else''s name', fails($$insert into portal_records(collection,id,data,readers,writers) values ('bookings','bk-1','{"id":"bk-1","bookedBy":"partner:siam-digital","ownerKey":"vendor:botnoi"}','{vendor:botnoi}','{vendor:intelsense}')$$));
+insert into portal_records(collection,id,data,readers,writers) values ('bookings','bk-2','{"id":"bk-2","bookedBy":"vendor:intelsense","ownerKey":"vendor:botnoi"}','{vendor:botnoi,vendor:intelsense}','{vendor:intelsense}');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+update portal_records set data = data || '{"title":"x"}' where id='ev-1';
+select t('everyone signed in sees the event; partners cannot edit it', (select data->>'title' from portal_records where collection='calendarEvents') = 'Training');
+select t('a booking is seen only by the two sides', (select count(*) from portal_records where collection='bookings') = 0);
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('anon marks their own assessment as booked', public.mark_assessment_booked((select public.submit_vendor_assessment('{"company":"Book Co","contactName":"Bo","email":"bo@book.co","consent":true}'))));
+select t('unknown or malformed ids do nothing', not public.mark_assessment_booked('va-00000000000000000000000000000000') and not public.mark_assessment_booked('x'));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV sees the booking on the assessment', (select count(*) from portal_records where collection='vendorAssessments' and data->>'company'='Book Co' and data ? 'bookedAt') = 1);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

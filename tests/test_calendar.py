@@ -1,0 +1,92 @@
+from harness import *
+import urllib.parse
+
+with sync_playwright() as p:
+    b, pg = open_page(p)
+    for r in ["partner", "vendor", "operator"]:
+        role(pg, r); ok(pg.locator('[data-screen="calendar"]:visible').count() == 1, f"{r.title()} menu has Events & Calendar")
+    ok(pg.locator('#navAffiliate [data-screen="calendar"]').count() == 1, "Affiliate menu has Events & Calendar")
+
+    # ----- a vendor adds a training
+    role(pg, "vendor"); nav(pg, "calendar")
+    ok("No upcoming events yet" in pg.inner_text("#calendarContent"), "Empty to start")
+    pg.click("[data-cal-new]"); pg.wait_for_timeout(200)
+    pg.click("[data-cal-save]"); pg.wait_for_timeout(150)
+    ok("Give the event a title" in pg.inner_text("#calError"), "Needs a title")
+    pg.fill("#calTitle", "Unisense AI partner training")
+    pg.evaluate("document.querySelector('[data-screen=\"calendar\"]').click()"); pg.wait_for_timeout(150)
+    ok(pg.input_value("#calTitle") == "Unisense AI partner training", "A background refresh doesn't wipe the form")
+    pg.select_option("#calType", "Vendor training"); pg.fill("#calStart", "2030-03-15T14:00"); pg.fill("#calDuration", "90")
+    pg.fill("#calLocation", "True Digital Park, Bangkok"); pg.fill("#calLink", "meet.example.com/unisense"); pg.fill("#calDesc", "Product walk-through; bring questions, please")
+    pg.click("[data-cal-save]"); pg.wait_for_timeout(300)
+    card = pg.locator("[data-cal-event]")
+    ok(card.count() == 1 and "Unisense AI partner training" in card.inner_text() and "VENDOR TRAINING" in card.inner_text().upper() and "Hosted by Intelsense" in card.inner_text(), "Event listed with type and host")
+    ok("15 Mar 2030" in card.inner_text() or "Mar 15, 2030" in card.inner_text(), "Shows the date: " + card.locator("[data-cal-when]").inner_text())
+    start_utc = pg.evaluate("new Date('2030-03-15T14:00').toISOString().replace(/[-:]/g,'').replace(/\\.\\d{3}/,'')")
+    end_utc = pg.evaluate("new Date(new Date('2030-03-15T14:00').getTime() + 90*60000).toISOString().replace(/[-:]/g,'').replace(/\\.\\d{3}/,'')")
+    g = urllib.parse.parse_qs(urllib.parse.urlparse(card.locator("[data-cal-google]").get_attribute("href")).query)
+    ok(g["action"] == ["TEMPLATE"] and g["text"] == ["Unisense AI partner training"] and g["dates"] == [start_utc + "/" + end_utc] and g["location"] == ["True Digital Park, Bangkok"] and "https://meet.example.com/unisense" in g["details"][0],
+       "Add to Google Calendar link: title, start/end in UTC (90 minutes), place and join link")
+    o = urllib.parse.parse_qs(urllib.parse.urlparse(card.locator("[data-cal-outlook]").get_attribute("href")).query)
+    ok(o["subject"] == ["Unisense AI partner training"] and o["startdt"][0].startswith("2030-03-1") and o["rru"] == ["addevent"], "Add to Outlook link")
+    with pg.expect_download() as dl:
+        card.locator("[data-cal-ics]").click()
+    ics = open(dl.value.path(), encoding="utf-8", newline="").read()
+    ok(dl.value.suggested_filename == "unisense-ai-partner-training.ics" and ics.startswith("BEGIN:VCALENDAR\r\n") and "DTSTART:" + start_utc in ics and "DTEND:" + end_utc in ics
+       and "SUMMARY:Unisense AI partner training" in ics and "LOCATION:True Digital Park\\, Bangkok" in ics and "bring questions\\, please" in ics and ics.rstrip().endswith("END:VCALENDAR"),
+       "Calendar file (.ics): valid, UTC times, commas escaped")
+
+    # ----- others see it and can add it; only the host (or CloudWAV) can edit
+    role(pg, "partner"); nav(pg, "calendar")
+    c2 = pg.locator("[data-cal-event]")
+    ok(c2.count() == 1 and c2.locator("[data-cal-google]").count() == 1 and c2.locator("[data-cal-edit]").count() == 0, "Partners see the event and the add buttons, not Edit")
+    pg.click("[data-cal-new]"); pg.fill("#calTitle", "Bangkok MSP meetup"); pg.select_option("#calType", "Meetup"); pg.fill("#calStart", "2020-01-10T18:00"); pg.click("[data-cal-save]"); pg.wait_for_timeout(300)
+    ok("Bangkok MSP meetup" in pg.inner_text("#calList") and "PAST" in pg.inner_text("#calList").upper() and pg.locator("[data-cal-event]").count() == 1, "A past-dated event goes under Past")
+    pg.click('[data-cal-tab="upcoming"]'); pg.wait_for_timeout(150)
+    pg.select_option("#calTypeFilter", "Meetup"); pg.wait_for_timeout(150)
+    ok(pg.locator("[data-cal-event]").count() == 0, "Filter by type")
+    pg.select_option("#calTypeFilter", ""); pg.wait_for_timeout(150)
+    role(pg, "operator"); nav(pg, "calendar")
+    ok(pg.locator("[data-cal-event] [data-cal-edit]").count() == 1, "CloudWAV can edit any event")
+    pg.click("[data-cal-new]"); pg.fill("#calTitle", "PartnerWAV onboarding"); pg.select_option("#calType", "PartnerWAV training"); pg.fill("#calStart", "2030-02-01T09:00"); pg.click("[data-cal-save]"); pg.wait_for_timeout(300)
+    titles = [c.locator(".msp-name").inner_text() for c in pg.locator("[data-cal-event]").all()]
+    ok(len(titles) == 2 and titles[0].startswith("PartnerWAV onboarding"), "CloudWAV's own training added; soonest first")
+    pg.reload(); pg.wait_for_timeout(600); role(pg, "vendor"); nav(pg, "calendar")
+    ok(pg.locator("[data-cal-event]").count() == 2, "Kept after reload")
+    pg.locator("[data-cal-event]").filter(has_text="Unisense").locator("[data-cal-delete]").click(); pg.wait_for_timeout(300)
+    ok(pg.locator("[data-cal-event]").count() == 1, "Host can delete its event")
+
+    # ----- Calendly bookings made through PartnerWAV are saved
+    nav(pg, "integrations"); pg.fill("#intBooking", "https://calendly.com/intelsense/demo"); pg.click('[data-int-save="calendly"]'); pg.wait_for_timeout(300)
+    ok("is listed here" in pg.locator('[data-int="calendly"]').inner_text(), "Calendly card explains where bookings will show")
+    role(pg, "partner"); nav(pg, "partner-messages") if False else None
+    role(pg, "operator"); nav(pg, "vendor-network"); pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(300)
+    pg.click('#vendorProfileContent [data-contact-book="vendor:intelsense"]'); pg.wait_for_timeout(300)
+    fire = "window.dispatchEvent(new MessageEvent('message', { origin:'https://calendly.com', data:{ event:'calendly.event_scheduled', payload:{ event:{ uri:'https://api.calendly.com/scheduled_events/ABC' }, invitee:{ uri:'https://api.calendly.com/x' } } } }))"
+    pg.evaluate(fire); pg.evaluate(fire); pg.wait_for_timeout(200)
+    pg.click(".modal [data-modal-ok]"); pg.wait_for_timeout(150)
+    nav(pg, "integrations")
+    ok("You booked: Intelsense" in pg.locator('[data-int="calendly"]').inner_text(), "The person who booked sees it under their Calendly card")
+    role(pg, "vendor"); nav(pg, "integrations")
+    bl = pg.locator("[data-int-bookings] li")
+    ok(bl.count() == 1 and "booked a call" in bl.inner_text(), "The vendor sees one booking made through PartnerWAV (Calendly's repeat message isn't double-counted)")
+
+    # ----- a vendor booking from the assessment thank-you page is noted on the assessment
+    role(pg, "operator"); nav(pg, "integrations"); pg.fill("#intBooking", "https://calendly.com/cloudwav/intro"); pg.click('[data-int-save="calendly"]'); pg.wait_for_timeout(300)
+    pg.goto(URL + "?assess=1"); pg.wait_for_timeout(600)
+    pg.fill("#va_company", "Acme"); pg.fill("#va_contactName", "Ann Lee"); pg.fill("#va_email", "ann@acme.example"); pg.check('[data-va-k="companyStage"][value="Established"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(150)
+    pg.fill("#va_productSummary", "Sensors"); pg.click("[data-va-next]"); pg.wait_for_timeout(150)
+    pg.check('[data-va-k="programStage"][value="No partner program yet"]'); pg.check('[data-va-k="partners"][value="0"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(150)
+    pg.check('[data-va-k="support"][value="self"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(150)
+    pg.click("[data-va-next]"); pg.wait_for_timeout(150); pg.check('[data-va-k="consent"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(500)
+    pg.click("[data-va-book]"); pg.wait_for_timeout(300)
+    ok(pg.locator(".modal [data-book-frame]").count() == 1, "'Book a call now' opens the scheduler on the thank-you page")
+    pg.evaluate(fire); pg.wait_for_timeout(200)
+    ok("Call booked" in pg.inner_text("[data-va-book]"), "Button changes to 'Call booked'")
+    pg.goto(URL + "?demo=1"); pg.wait_for_timeout(500); role(pg, "operator"); nav(pg, "operator-assessments"); pg.wait_for_timeout(200)
+    row = pg.locator("[data-va-row]").filter(has_text="Acme")
+    ok("CALL BOOKED" in row.inner_text().upper(), "Assessment list shows 'Call booked'")
+    row.locator("[data-va-open]").click(); pg.wait_for_timeout(250)
+    ok(pg.locator("[data-va-booked]").count() == 1, "Assessment shows when the call was booked")
+    b.close()
+report()

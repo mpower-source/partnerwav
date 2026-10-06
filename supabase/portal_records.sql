@@ -160,7 +160,7 @@ begin
   if new.collection = 'affiliateSignups' and tg_op = 'INSERT'
      and current_setting('portal.affiliate_signup', true) = 'on' then return new; end if;
   -- a vendor's fit assessment sent from the public form arrives through submit_vendor_assessment() below
-  if new.collection = 'vendorAssessments' and tg_op = 'INSERT'
+  if new.collection = 'vendorAssessments'
      and current_setting('portal.vendor_assessment', true) = 'on' then return new; end if;
   if k is null then raise exception 'This account has no PartnerWAV role'; end if;
 
@@ -185,6 +185,13 @@ begin
   end if;
   if new.collection in ('socialGroups', 'broadcasts') and (new.data ->> 'ownerKey') is distinct from k then
     raise exception 'You can only save your own groups';
+  end if;
+  -- calendar events belong to whoever created them; a booking is recorded by the person who booked
+  if new.collection = 'calendarEvents' and (new.data ->> 'ownerKey') is distinct from k then
+    raise exception 'You can only save your own events';
+  end if;
+  if new.collection = 'bookings' and (new.data ->> 'bookedBy') is distinct from k then
+    raise exception 'A booking is recorded by the person who made it';
   end if;
 
   -- nobody can post a message as someone else
@@ -327,6 +334,25 @@ begin
 end $$;
 revoke all on function public.submit_vendor_assessment(jsonb) from public;
 grant execute on function public.submit_vendor_assessment(jsonb) to anon, authenticated;
+
+-- A vendor who books a call from the assessment's thank-you page (not signed in): note it on their assessment.
+-- Only the assessment's own id (a long random value they were just given) can mark it, and only for a week.
+create or replace function public.mark_assessment_booked(p_id text)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if p_id is null or p_id !~ '^va-[0-9a-f]{32}$' then return false; end if;
+  perform set_config('portal.vendor_assessment', 'on', true);
+  update public.portal_records
+     set data = data || jsonb_build_object('bookedAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI'))
+   where collection = 'vendorAssessments' and id = p_id and not (data ? 'bookedAt')
+     and updated_at > now() - interval '7 days';
+  get diagnostics n = row_count;
+  perform set_config('portal.vendor_assessment', 'off', true);
+  return n > 0;
+end $$;
+revoke all on function public.mark_assessment_booked(text) from public;
+grant execute on function public.mark_assessment_booked(text) to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 6. Live updates: other people's changes show up without reloading
