@@ -22,6 +22,11 @@
   .ref-fee-table{ min-width:0; width:100%; } .ref-fee-table th, .ref-fee-table td{ padding:6px 8px !important; font-size:.84rem; white-space:nowrap; }
   .agr-doc-wrap{ max-height:62vh; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:4px 18px; background:var(--surface); }
   .agr-doc h1{ font-size:1.25rem; } .agr-doc h2{ font-size:.98rem; margin:18px 0 6px; } .agr-doc p{ font-size:.9rem; line-height:1.5; margin:6px 0; }
+  .agr-filled{ background:var(--accent-soft); border-radius:3px; padding:0 3px; }
+  .agr-blank{ border-bottom:1.5px solid var(--bad); color:var(--bad); padding:0 3px; white-space:nowrap; }
+  input.agr-field{ font:inherit; color:var(--ink); border:none; border-bottom:1.5px solid var(--accent); background:var(--accent-soft); padding:1px 5px; border-radius:3px 3px 0 0; min-width:210px; max-width:100%; }
+  input.agr-field[type="text"]{ width:min(520px, 100%); }
+  input.agr-field.empty{ border-bottom-color:var(--bad); background:var(--warn-soft); }
   .agr-note{ background:var(--warn-soft); color:var(--warn); padding:8px 10px; border-radius:6px; font-size:.82rem; }
   .agr-table{ width:100%; border-collapse:collapse; font-size:.86rem; } .agr-table th, .agr-table td{ border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; } .agr-table th{ width:36%; }
   /* ===== Shop + partner levels ===== */
@@ -7087,6 +7092,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }).join("");
     var back = openModal(
       '<div class="modal-head"><div><div class="eyebrow" style="margin-bottom:6px;">'+relBadges(p.relationships)+'</div><h2>'+esc(p.name)+' -- '+esc(typeName || p.agreement.type)+'</h2></div><button class="modal-close" aria-label="Close">×</button></div>'
+      + (typeName && typeof AGR_TEMPLATES !== "undefined" && !AGR_TEMPLATES[typeName] ? '<p class="agr-note" data-agr-no-text style="margin:10px 0;">The full text of the '+esc(typeName)+' has not been loaded into the portal yet, so only its commercial terms are shown here.</p>' : '')
       + '<div class="tier-line"><span>Agreement status</span><b>'+statusPill(p.agreement.status)+'</b></div>'
       + '<div style="display:flex;flex-direction:column;gap:8px;">'+tiersHtml+'</div>'
       + feeHtml
@@ -9559,6 +9565,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ return { readers: r.visibility === "public" ? EVERYONE : [r.id], writers:[r.id] }; } },
     { name:"bookings", mode:"replace", get:function(){ return bookings; }, set:function(a){ bookings = a; },
       access:function(r){ return { readers:[r.ownerKey, r.bookedBy], writers:[r.bookedBy] }; } },
+    { name:"operatorSettings", mode:"replace", get:function(){ return operatorSettings; }, set:function(a){ operatorSettings = a; },
+      access:function(){ return { readers:[], writers:[] }; } },
     { name:"agreementReviews", mode:"replace", get:function(){ return agreementReviews; }, set:function(a){ agreementReviews = a; },
       access:function(){ return { readers:[], writers:[] }; } },
     { name:"vendorAssessments", mode:"replace", get:function(){ return vendorAssessments; }, set:function(a){ vendorAssessments = a; },
@@ -10141,6 +10149,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var pr = programById(String(key || "").split(":")[1]);
     return (pr && pr.agreement && pr.agreement.type) || "Vendor Program Agreement";
   }
+  var operatorSettings = [];   // CloudWAV-only settings; "legal" = the entity details printed in agreements
+  function agrLegal(){ return operatorSettings.filter(function(x){ return x.id === "legal"; })[0] || { id:"legal" }; }
   var agreementReviews = [];   // CloudWAV's private notes on outside agreements (never shared with the other side)
   function agrReviewNote(id){ var r = agreementReviews.filter(function(x){ return x.id === id; })[0]; return r ? r.note || "" : ""; }
   function agrSetReviewNote(id, note){ agreementReviews = agreementReviews.filter(function(x){ return x.id !== id; }); if (note) agreementReviews.push({ id:id, note:note, updatedAt:todayIso() }); }
@@ -10158,7 +10168,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     agreementsList.push({ id:"agr-referral-sh-demo", kind:"referral", type:"Software Project Referral Agreement", partyKey:"house:sh-demo", houseId:"sh-demo", status:"signed", createdAt:"2026-06-20", sentAt:"2026-06-21", signedAt:"2026-06-25", signers:[{ name:"CloudWAV", signed:true }, { name:"Demo Software House Co.", signed:true }], history:[] });
   })();
   var REFERRALS_KEY = "partnerWAV_softwareReferrals";
-  function saveReferrals(){ lsSet(REFERRALS_KEY, JSON.stringify({ houses:softwareHouses, referrals:projectReferrals, agreements:agreementsList, agreementReviews:agreementReviews })); }
+  function saveReferrals(){ lsSet(REFERRALS_KEY, JSON.stringify({ houses:softwareHouses, referrals:projectReferrals, agreements:agreementsList, agreementReviews:agreementReviews, operatorSettings:operatorSettings })); }
   function loadReferrals(){
     try {
       var d = JSON.parse(lsGet(REFERRALS_KEY) || "null"); if (!d) return;
@@ -10166,6 +10176,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (Array.isArray(d.referrals)) projectReferrals = d.referrals;
       if (Array.isArray(d.agreements)) agreementsList = d.agreements;
       if (Array.isArray(d.agreementReviews)) agreementReviews = d.agreementReviews;
+      if (Array.isArray(d.operatorSettings)) operatorSettings = d.operatorSettings;
     } catch(e){ console.log("Could not load referrals:", e); }
   }
   function houseById(id){ return softwareHouses.filter(function(h){ return h.id === id; })[0] || null; }
@@ -10293,6 +10304,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<button type="button" class="map-stat stat-btn" data-agr-filter="sent"><b>'+cnt("sent")+'</b>out for signature</button>'
         + '<button type="button" class="map-stat stat-btn" data-agr-filter="signed"><b>'+cnt("signed")+'</b>signed</button>'
         + '<button type="button" class="map-stat stat-btn" data-agr-filter=""><b>'+agreementsList.length+'</b>all</button></div>'
+      + '<div class="cfg-actions" style="margin-bottom:12px;"><button type="button" class="btn secondary sm" data-agr-legal-open>CloudWAV legal details</button><span class="field-note" data-agr-legal-state>' + (agrLegal().entity ? "Filled into every agreement." : "Not entered yet -- add them once and they fill into every agreement.") + '</span></div>'
       + '<div class="card card-pad" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">'
         + '<div class="field-row" style="flex:1;min-width:220px;"><label for="agrNewParty">New agreement with</label><select id="agrNewParty"><option value="">Choose…</option>'+partyOpts.map(function(o){ return '<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>'; }).join("")+'</select></div>'
         + '<div class="field-row" style="flex:1;min-width:180px;"><label for="agrNewProgram">Program (partners)</label><select id="agrNewProgram"><option value="">--</option>'+programs.map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'; }).join("")+'</select></div>'
@@ -10316,6 +10328,116 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '</tbody></table></div></div>'
       + '<p class="field-note">E-signature isn\'t connected yet: "Send for signature" records that it went out (e.g. by SignWell or email); "Mark signed" once the signed copy is back. If a company will only sign its own agreement, choose "Their own agreement", upload it, and review it before it goes out.</p>';
   }
+  // ----- the full agreement, filled in like a fillable PDF -----
+  // Templates with their full text in the portal. Everything the portal knows is filled in; what it cannot know is a
+  // field CloudWAV types into before sending. Sending for signature freezes the filled text on the agreement.
+  var AGR_TEMPLATES = { "Software Project Referral Agreement": SRA_TEMPLATE };
+  var AGR_FILL_FIELDS = {
+    effectiveDate:   { label:"Effective date", type:"date" },
+    cloudwavEntity:  { label:"CloudWAV legal entity, registration no. and address" },
+    houseContact:    { label:"Their contact for notices (name, email)" },
+    cloudwavContact: { label:"CloudWAV contact for notices" }
+  };
+  function agrHasDoc(a){ return !!(a && a.source !== "outside" && AGR_TEMPLATES[a.type]); }
+  function agrIsBlank(v){ return v == null || v === "" || /_{4,}|\[.+\]|to be confirmed/i.test(String(v)); }
+  function agrDocValues(a){
+    if (a.filled) return a.filled;   // sent or signed: exactly what went out
+    var h = a.kind === "referral" ? houseById(a.houseId) : null, v = sraValues(h), L = agrLegal(), f = a.fields || {};
+    if (a.kind !== "referral"){ v.houseName = agrParty(a); v.houseAddressText = ""; }
+    if (L.entity) v.cloudwavEntity = L.entity;
+    if (L.contact) v.cloudwavContact = L.contact;
+    Object.keys(AGR_FILL_FIELDS).forEach(function(k){ if (f[k]) v[k] = f[k]; });
+    return v;
+  }
+  function agrMissing(a){ var v = agrDocValues(a); return Object.keys(AGR_FILL_FIELDS).filter(function(k){ return agrIsBlank(v[k]); }); }
+  // mode: "edit" (CloudWAV, before sending: blanks are inputs), "read" (on screen), "print" (plain text)
+  function agrDocHtml(a, mode){
+    var T = AGR_TEMPLATES[a.type], v = agrDocValues(a), signedMap = {};
+    (a.signers || []).forEach(function(x){ signedMap[x.name] = x; });
+    var fill = function(text){
+      var raw = String(text).replace(/\{\{(\w+)\}\}/g, function(_, k){ return "\u0001" + k + "\u0002"; });
+      return esc(raw).replace(/\u0001(\w+)\u0002/g, function(_, k){
+        var val = v[k], field = AGR_FILL_FIELDS[k];
+        if (val == null) return "";
+        if (field && mode === "edit"){
+          var blank = agrIsBlank(val);
+          return '<input class="agr-field' + (blank ? " empty" : "") + '" type="' + (field.type === "date" ? "date" : "text") + '" data-agr-field="' + k + '" value="' + esc(blank ? "" : val).replace(/"/g, "&quot;") + '" placeholder="' + esc(field.label) + '" aria-label="' + esc(field.label) + '">';
+        }
+        if (field && agrIsBlank(val)) return mode === "print" ? "________________" : '<span class="agr-blank">' + esc(field.label) + ' -- to be filled in</span>';
+        return mode === "print" || val === "" ? esc(val) : '<span class="agr-filled">' + esc(val) + '</span>';
+      });
+    };
+    var sigLine = function(name){
+      var x = signedMap[name] || (name !== "CloudWAV" ? (a.signers || [])[1] : null);
+      return x && x.signed ? "Signed " + esc(x.signedAt || a.signedAt || "") : "Name / title / date: ______________________";
+    };
+    return '<article class="agr-doc">'
+      + '<h1>' + esc(T.title) + '</h1>'
+      + (a.status === "signed" ? '' : '<p class="agr-note">' + esc(T.note) + '</p>')
+      + T.parties.map(function(x){ return '<p>' + fill(x) + '</p>'; }).join("")
+      + T.sections.map(function(sec, i){
+          return '<h2>' + (i + 1) + '. ' + esc(sec.title) + '</h2>' + sec.clauses.map(function(c, j){ var txt = fill(c).trim(); return txt ? '<p><b>' + (i + 1) + '.' + (j + 1) + '</b> ' + txt + '</p>' : ''; }).join("");
+        }).join("")
+      + '<h2>Schedule A -- Commercial terms</h2><table class="agr-table"><tbody>' + T.schedule.map(function(r){ return '<tr><th>' + esc(r[0]) + '</th><td>' + fill(r[1]) + '</td></tr>'; }).join("") + '</tbody></table>'
+      + '<h2>Signatures</h2><table class="agr-table"><tbody><tr><th>For CloudWAV</th><td>' + sigLine("CloudWAV") + '</td></tr><tr><th>For ' + esc(v.houseName) + '</th><td>' + sigLine(v.houseName) + '</td></tr></tbody></table>'
+      + '</article>';
+  }
+  function agrDocModal(a){
+    var op = state.role === "operator", editable = op && !a.filled && (a.status === "draft" || a.status === "requested");
+    var miss = agrMissing(a);
+    var back = openModal('<div class="modal-head"><div><div class="eyebrow" style="margin-bottom:6px;">' + agrBadge(a) + '</div><h2>' + esc(a.type) + ' -- ' + esc(agrParty(a)) + '</h2></div><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div data-agr-doc="' + esc(a.id) + '">'
+      + (editable ? '<p class="field-note" id="agrDocStatus" style="margin:10px 0;"></p>'
+          : '<p class="field-note" style="margin:10px 0;">' + (a.status === "signed" ? "Signed " + esc(a.signedAt || "") + ". This is the text that was signed." : a.status === "sent" ? "Out for signature. Read it through before you sign -- the highlighted parts were filled in for this agreement." : "Draft -- CloudWAV is still completing this agreement.") + '</p>')
+      + '<div class="cfg-actions" style="margin-bottom:10px;flex-wrap:wrap;">'
+      + (editable ? '<button type="button" class="btn primary sm" data-agr-doc-send>Send for signature</button>' : '')
+      + '<button type="button" class="btn secondary sm" data-agr-doc-print>Print / save as PDF</button><button type="button" class="btn ghost sm" data-agr-doc-word>Download for Word</button></div>'
+      + '<div class="agr-doc-wrap">' + agrDocHtml(a, editable ? "edit" : "read") + '</div></div>');
+    var mEl = back.querySelector(".modal"); if (mEl){ mEl.style.maxWidth = "880px"; mEl.style.width = "94vw"; }
+    var note = function(){
+      var el = back.querySelector("#agrDocStatus"); if (!el) return;
+      var m = agrMissing(a);
+      el.innerHTML = m.length ? '<b>' + m.length + ' field' + (m.length > 1 ? 's' : '') + ' still to fill in</b> (shown in red): ' + m.map(function(k){ return esc(AGR_FILL_FIELDS[k].label); }).join("; ") + '. Everything highlighted was filled in from the portal.'
+        : '<b>All fields are filled in.</b> Read the rest of the agreement through, then send it for signature.';
+    };
+    note();
+    back.addEventListener("change", function(ev){
+      var inp = ev.target.closest && ev.target.closest("[data-agr-field]"); if (!inp || !editable) return;
+      var k = inp.getAttribute("data-agr-field"), val = inp.value.trim();
+      a.fields = a.fields || {}; if (val) a.fields[k] = val; else delete a.fields[k];
+      // the same field can appear more than once in the text: keep the copies in step
+      back.querySelectorAll('[data-agr-field="' + k + '"]').forEach(function(o){ if (o !== inp) o.value = val; o.classList.toggle("empty", !val); });
+      inp.classList.toggle("empty", !val);
+      saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule(); note();
+    });
+    var plain = function(){ return agrDocHtml(a, "print"); };
+    back.querySelector("[data-agr-doc-print]").addEventListener("click", function(){
+      var w = window.open("", "_blank"); if (!w){ toast("Allow pop-ups to print"); return; }
+      w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + esc(a.type) + '</title><style>body{font-family:Georgia,serif;max-width:760px;margin:30px auto;line-height:1.5;color:#111} h1{font-size:22px} h2{font-size:15px;margin-top:22px} .agr-note{background:#fff7e0;padding:8px 10px;font-size:13px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #999;padding:6px 8px;text-align:left;vertical-align:top;font-size:13px} th{width:34%}</style></head><body>' + plain() + '</body></html>');
+      w.document.close(); w.focus(); setTimeout(function(){ try { w.print(); } catch(e){} }, 300);
+    });
+    back.querySelector("[data-agr-doc-word]").addEventListener("click", function(){
+      var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>' + esc(a.type) + '</title></head><body>' + plain() + '</body></html>';
+      var el = document.createElement("a"); el.href = URL.createObjectURL(new Blob(["\ufeff", html], { type:"application/msword" }));
+      el.download = String(a.type + "-" + agrParty(a)).replace(/[^a-z0-9]+/gi, "-") + ".doc"; document.body.appendChild(el); el.click(); el.remove();
+    });
+    var send = back.querySelector("[data-agr-doc-send]");
+    if (send) send.addEventListener("click", function(){
+      var m = agrMissing(a);
+      if (m.length){ toast("Fill in the " + m.length + " remaining field" + (m.length > 1 ? "s" : "") + " first"); var first = back.querySelector("input.agr-field.empty"); if (first){ first.scrollIntoView({ block:"center" }); first.focus(); } return; }
+      closeModal(); agreementAction(a.id, "sent");
+    });
+  }
+  function agrLegalModal(){
+    var L = agrLegal(), a = function(x){ return esc(x || "").replace(/"/g, "&quot;"); };
+    openModal('<div class="modal-head"><h2>CloudWAV legal details</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;" data-agr-legal>'
+      + '<span class="field-note">Entered once and filled into every agreement. Only CloudWAV can see or change this; the other side sees it only inside an agreement you send them.</span>'
+      + '<div class="field-row"><label for="legalEntity">Legal entity, registration no. and address</label><textarea id="legalEntity" placeholder="e.g. [Company name] LLC, a Wyoming limited liability company (ID no. ...), of [address]">' + esc(L.entity || "") + '</textarea></div>'
+      + '<div class="field-row"><label for="legalContact">Contact for notices</label><input type="text" id="legalContact" value="' + a(L.contact) + '" placeholder="Name, email"></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-agr-legal-save>Save</button><button type="button" class="btn secondary sm" data-agr-modal-close>Cancel</button></div></div>');
+  }
+
   // ----- outside agreements: the other side's own paper, uploaded by CloudWAV and reviewed before it goes out -----
   var AGR_FILE_TYPES = /\.(pdf|docx?)$/i;
   function agrPaperNote(a){
@@ -10417,7 +10539,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       a.status = st; changes.push("status");
       if (st === "sent" && !a.sentAt) a.sentAt = now;
       if (st === "signed"){ a.signedAt = a.signedAt || now; if (!a.signers || !a.signers.length) a.signers = [{ name:"CloudWAV", signed:true }, { name:agrParty(a), signed:true }]; a.signers.forEach(function(x){ x.signed = true; x.signedAt = x.signedAt || now; }); }
-      if (st === "draft" || st === "requested"){ a.sentAt = ""; a.signedAt = ""; (a.signers || []).forEach(function(x){ x.signed = false; delete x.signedAt; }); }
+      if (st === "draft" || st === "requested"){ delete a.filled; a.sentAt = ""; a.signedAt = ""; (a.signers || []).forEach(function(x){ x.signed = false; delete x.signedAt; }); }
       if (st === "terminated") a.endedAt = now;
     }
     if (changes.length){ a.history = a.history || []; a.history.push({ at:now, text:"Edited: " + changes.join(", ") }); }
@@ -10443,6 +10565,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var a = agrById(id); if (!a || state.role !== "operator") return;
     var now = todayIso();
     if (act === "sent" && a.source === "outside" && a.review !== "reviewed"){ toast("Review their agreement before sending it for signature"); return; }
+    if (act === "sent" && agrHasDoc(a)){
+      var miss = agrMissing(a);
+      if (miss.length){ toast("Open the agreement and fill in the " + miss.length + " remaining field" + (miss.length > 1 ? "s" : "") + " first"); agrDocModal(a); return; }
+      a.filled = JSON.parse(JSON.stringify(agrDocValues(a)));
+    }
     if (act === "sent"){ a.status = "sent"; a.sentAt = now; if (!a.signers || !a.signers.length) a.signers = [{ name:"CloudWAV", signed:false }, { name:agrParty(a), signed:false }]; }
     if (act === "signed"){ a.status = "signed"; a.signedAt = now; (a.signers || []).forEach(function(s){ s.signed = true; s.signedAt = s.signedAt || now; }); }
     if (act === "terminated"){ a.status = "terminated"; a.endedAt = now; }
@@ -10452,6 +10579,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function viewAgreement(id){
     var a = agrById(id); if (!a) return;
     if (a.source === "outside"){ agrOutsideModal(a); return; }
+    if (agrHasDoc(a)){ agrDocModal(a); return; }
     if (a.kind === "referral"){ showAgreementDocument(houseById(a.houseId)); return; }
     if (a.programId && programById(a.programId)){ showAgreementDetail(a.programId, a.kind, a.type); return; }
   }
@@ -10663,6 +10791,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("[data-agr-edit-save]")){ agrEditSave(); return; }
     if ((b = t.closest("[data-agr-delete]")) && state.role === "operator"){ var da = agrById(b.getAttribute("data-agr-delete")); if (da) agrDeleteModal(da); return; }
     if ((b = t.closest("[data-agr-delete-go]"))){ agrDelete(b.getAttribute("data-agr-delete-go")); return; }
+    if (t.closest("[data-agr-legal-open]") && state.role === "operator"){ agrLegalModal(); return; }
+    if (t.closest("[data-agr-legal-save]") && state.role === "operator"){
+      var le = (document.getElementById("legalEntity") || {}).value || "", lc = (document.getElementById("legalContact") || {}).value || "";
+      operatorSettings = operatorSettings.filter(function(x){ return x.id !== "legal"; });
+      operatorSettings.push({ id:"legal", entity:le.trim().replace(/\s+/g, " "), contact:lc.trim(), updatedAt:todayIso() });
+      closeModal(); saveReferrals(); toast("Legal details saved"); render(); return;
+    }
     if ((b = t.closest("[data-agr-review]"))){ var ra = agrById(b.getAttribute("data-agr-review")); if (ra) agrOutsideModal(ra); return; }
     if ((b = t.closest("[data-agr-outside]")) && state.role === "operator"){
       var oa = agrById(b.getAttribute("data-agr-outside")); if (!oa) return;
