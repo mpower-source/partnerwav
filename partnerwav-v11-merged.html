@@ -708,8 +708,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div class="navsec-items" hidden>
           <button class="navlink" data-screen="partner-profile-editor"><span class="ic">👤</span>My Profile</button>
           <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
-          <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
           <button class="navlink" data-screen="partner-my-leads"><span class="ic">💼</span>My Leads</button>
+          <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
         </div>
       </div>
       <div class="navsec" data-sec="programs">
@@ -824,11 +824,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <div class="navsec" data-sec="vendors">
         <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">🏢</span><span class="navsec-name">Vendors &amp; Programs</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
         <div class="navsec-items" hidden>
-          <button class="navlink" data-screen="operator-programs"><span class="ic">⚙️</span>Manage Programs</button>
-          <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
           <button class="navlink" data-screen="operator-assessments"><span class="ic">🧭</span>Vendor Assessments</button>
+          <button class="navlink" data-screen="operator-programs"><span class="ic">⚙️</span>Manage Programs</button>
           <button class="navlink" data-screen="operator-agreements"><span class="ic">📝</span>Agreements</button>
           <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
+          <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
         </div>
       </div>
       <div class="navsec" data-sec="partners">
@@ -2821,7 +2821,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         { tier:"Reseller", rate:"25% of subscription value, life of account", base:"Monthly recurring subscription revenue" }
       ], agreement:{ type:"SaaS Reseller Agreement", status:"draft" }, status:"onboarding",
       logo:INTELSENSE_PRODUCT_LOGOS["unisense-ai"], logoSetup:1, website:"https://intelsense.ai/unisense",
-      social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] }
+      social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
+    { id:"cloudwav", name:"CloudWAV Consulting", vertical:"Fractional technology leadership", origin:"USA", desc:"AI-powered technology leadership for startups and scaling companies -- fractional CIO, CTO, CISO and CAIO services covering AI strategy and governance, cybersecurity, compliance, DevSecOps and cloud transformation.", relationships:["Vendor Program"], tiers:[
+        { tier:"Referral partner", rate:"To be agreed", base:"To be agreed" }
+      ], agreement:{ type:"Vendor Program Agreement", status:"draft" }, status:"active",
+      logo:"", logoSetup:2, website:"",
+      social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[], products:[] }
   ];
 
   var trainingPrograms = [
@@ -5636,7 +5641,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     // a program that is really one of another vendor's products (e.g. Unisense = Intelsense's Unisense AI)
     // is shown once, in that product's place right after its vendor
     var shownIds = netFiltered.map(function(q){ return q.id; }), linkedIds = {};
-    programs.forEach(function(v){ (v.products || []).forEach(function(prod){ var q = linkedProgramFor(prod, v); if (q && shownIds.indexOf(v.id) > -1) linkedIds[q.id] = true; }); });
+    programs.forEach(function(v){ (v.products || []).forEach(function(prod){ var q = linkedProgramFor(prod, v); if (q) linkedIds[q.id] = true; }); });
     var vendorCard = function(p){
       var mine = state.role === "vendor" && p.id === state.myVendorId;
       var actionBtn = mine
@@ -5653,9 +5658,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + actionBtn
         + '</div></div>';
     };
-    grid.innerHTML = netFiltered.length ? netFiltered.filter(function(p){ return !linkedIds[p.id]; }).map(function(p){
-      return vendorCard(p) + productCardsHtml(p, { linkedCard: function(q){ return shownIds.indexOf(q.id) > -1 ? vendorCard(q) : ""; } });
-    }).join("") : '<div class="empty">No vendors match that relationship type yet.</div>';
+    // every vendor is walked: its own tile shows when the vendor matches the filter, each product when the product does
+    var netHtml = programs.filter(function(p){ return !linkedIds[p.id]; }).map(function(p){
+      return (shownIds.indexOf(p.id) > -1 ? vendorCard(p) : "") + productCardsHtml(p, { linkedCard: function(q){ return shownIds.indexOf(q.id) > -1 ? vendorCard(q) : ""; } });
+    }).join("");
+    grid.innerHTML = netHtml || '<div class="empty">No vendors match that relationship type yet.</div>';
   }
 
   function renderTraining(){
@@ -9552,6 +9559,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ return { readers: r.visibility === "public" ? EVERYONE : [r.id], writers:[r.id] }; } },
     { name:"bookings", mode:"replace", get:function(){ return bookings; }, set:function(a){ bookings = a; },
       access:function(r){ return { readers:[r.ownerKey, r.bookedBy], writers:[r.bookedBy] }; } },
+    { name:"agreementReviews", mode:"replace", get:function(){ return agreementReviews; }, set:function(a){ agreementReviews = a; },
+      access:function(){ return { readers:[], writers:[] }; } },
     { name:"vendorAssessments", mode:"replace", get:function(){ return vendorAssessments; }, set:function(a){ vendorAssessments = a; },
       access:function(){ return { readers:[], writers:[] }; } },
     { name:"pricingModel", mode:"replace", get:function(){ return isOp() ? [pricingModel] : []; }, set:function(a){ if (a[0]) pricingModel = mergePricing(a[0]); },
@@ -10119,9 +10128,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       payouts:[ { id:"po-1", date:"2026-09-30", amount:28000, note:"August" } ], thread:[], termsSnapshot: JSON.parse(JSON.stringify(DEFAULT_REFERRAL_TERMS)) }
   ];
   var agreementsList = [];
+  var agreementReviews = [];   // CloudWAV's private notes on outside agreements (never shared with the other side)
+  function agrReviewNote(id){ var r = agreementReviews.filter(function(x){ return x.id === id; })[0]; return r ? r.note || "" : ""; }
+  function agrSetReviewNote(id, note){ agreementReviews = agreementReviews.filter(function(x){ return x.id !== id; }); if (note) agreementReviews.push({ id:id, note:note, updatedAt:todayIso() }); }
   (function seedAgreements(){
     var map = { active:"signed", pending:"sent", draft:"draft" };
     programs.forEach(function(p){
+      if (p.id === "cloudwav") return;   // CloudWAV's own services: no vendor agreement with itself
       var st = map[(p.agreement || {}).status] || "draft";
       agreementsList.push({ id:"agr-vendor-" + p.id, kind:"vendor", type:(p.agreement || {}).type || "Vendor Program Agreement", partyKey:"vendor:" + p.id, programId:p.id,
         status:st, createdAt:"2026-09-01", sentAt: st !== "draft" ? "2026-09-05" : "", signedAt: st === "signed" ? "2026-09-10" : "",
@@ -10132,13 +10145,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     agreementsList.push({ id:"agr-referral-sh-demo", kind:"referral", type:"Software Project Referral Agreement", partyKey:"house:sh-demo", houseId:"sh-demo", status:"signed", createdAt:"2026-06-20", sentAt:"2026-06-21", signedAt:"2026-06-25", signers:[{ name:"CloudWAV", signed:true }, { name:"Demo Software House Co.", signed:true }], history:[] });
   })();
   var REFERRALS_KEY = "partnerWAV_softwareReferrals";
-  function saveReferrals(){ lsSet(REFERRALS_KEY, JSON.stringify({ houses:softwareHouses, referrals:projectReferrals, agreements:agreementsList })); }
+  function saveReferrals(){ lsSet(REFERRALS_KEY, JSON.stringify({ houses:softwareHouses, referrals:projectReferrals, agreements:agreementsList, agreementReviews:agreementReviews })); }
   function loadReferrals(){
     try {
       var d = JSON.parse(lsGet(REFERRALS_KEY) || "null"); if (!d) return;
       if (Array.isArray(d.houses)) softwareHouses = d.houses;
       if (Array.isArray(d.referrals)) projectReferrals = d.referrals;
       if (Array.isArray(d.agreements)) agreementsList = d.agreements;
+      if (Array.isArray(d.agreementReviews)) agreementReviews = d.agreementReviews;
     } catch(e){ console.log("Could not load referrals:", e); }
   }
   function houseById(id){ return softwareHouses.filter(function(h){ return h.id === id; })[0] || null; }
@@ -10244,7 +10258,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + (list.length ? '<div class="card"><div class="table-scroll"><table><thead><tr><th>With</th><th>For</th><th>Agreement</th><th>Status</th><th>Signatures</th><th></th></tr></thead><tbody>'
         + list.map(function(a){
             var signed = (a.signers || []).filter(function(s){ return s.signed; }).length;
-            return '<tr data-agr-row="'+esc(a.id)+'"><td>'+esc(a.partyKey === me ? "CloudWAV" : agrParty(a))+'</td><td>'+esc(agrSubject(a))+'</td><td>'+esc(a.type)+'</td><td>'+agrBadge(a)+'</td>'
+            return '<tr data-agr-row="'+esc(a.id)+'"><td>'+esc(a.partyKey === me ? "CloudWAV" : agrParty(a))+'</td><td>'+esc(agrSubject(a))+'</td><td>'+esc(a.type)+(a.source === "outside" ? '<div class="field-note">Outside agreement'+(a.fileName ? ' · '+esc(a.fileName) : '')+'</div>' : '')+'</td><td>'+agrBadge(a)+'</td>'
               + '<td>'+(a.status === "signed" ? "Signed "+esc(a.signedAt || "") : a.status === "sent" ? "Out for signature ("+signed+"/"+(a.signers || []).length+")" : a.status === "requested" ? "Waiting for CloudWAV" : "--")+'</td>'
               + '<td class="row-actions"><button type="button" class="btn ghost sm" data-agr-view="'+esc(a.id)+'">View</button></td></tr>';
           }).join("") + '</tbody></table></div></div>'
@@ -10257,8 +10271,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var list = agreementsList.filter(function(a){ return !f || a.status === f || a.kind === f; });
     var cnt = function(st){ return agreementsList.filter(function(a){ return a.status === st; }).length; };
     var partyOpts = []
-      .concat(partnerProfiles.filter(function(p){ return !p.archivedAt; }).map(function(p){ return ["partner|partner:" + p.id, p.name + " · Partner"]; }))
-      .concat(programs.map(function(p){ return ["vendor|vendor:" + p.id, p.name + " · Vendor"]; }))
+      .concat(partnerById("cloudwav-consulting") ? [] : [["partner|partner:cloudwav-consulting", "CloudWAV Consulting · Partner (our own practice)"]])
+      .concat(partnerProfiles.filter(function(p){ return !p.archivedAt; }).map(function(p){ return ["partner|partner:" + p.id, p.name + (p.id === "cloudwav-consulting" ? " · Partner (our own practice)" : " · Partner")]; }))
+      .concat(programs.filter(function(p){ return p.id !== "cloudwav"; }).map(function(p){ return ["vendor|vendor:" + p.id, p.name + " · Vendor"]; }))
       .concat(softwareHouses.map(function(h){ return ["referral|house:" + h.id, h.name + " · Software house"]; }));
     box.innerHTML = '<div class="map-stats" style="margin-bottom:12px;">'
         + '<button type="button" class="map-stat stat-btn" data-agr-filter="requested"><b>'+cnt("requested")+'</b>requested</button>'
@@ -10268,22 +10283,100 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="card card-pad" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">'
         + '<div class="field-row" style="flex:1;min-width:220px;"><label for="agrNewParty">New agreement with</label><select id="agrNewParty"><option value="">Choose…</option>'+partyOpts.map(function(o){ return '<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>'; }).join("")+'</select></div>'
         + '<div class="field-row" style="flex:1;min-width:180px;"><label for="agrNewProgram">Program (partners)</label><select id="agrNewProgram"><option value="">--</option>'+programs.map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row" style="flex:1;min-width:200px;"><label for="agrNewPaper">Whose agreement</label><select id="agrNewPaper"><option value="">CloudWAV\'s agreement</option><option value="outside">Their own agreement (upload)</option></select></div>'
+        + '<div class="field-row" id="agrNewFileRow" style="flex:1;min-width:220px;" hidden><label for="agrNewFile">Their agreement file</label><input type="file" id="agrNewFile" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></div>'
         + '<button type="button" class="btn primary sm" data-agr-create>Create draft</button></div>'
       + '<div class="card"><div class="table-scroll"><table><thead><tr><th>With</th><th>Kind</th><th>For</th><th>Agreement</th><th>Status</th><th></th></tr></thead><tbody>'
       + (list.length ? list.map(function(a){
-          return '<tr data-agr-row="'+esc(a.id)+'"><td>'+esc(agrParty(a))+'</td><td>'+esc(AGR_KIND[a.kind] || a.kind)+'</td><td>'+esc(agrSubject(a))+'</td><td>'+esc(a.type)+'</td><td>'+agrBadge(a)+'</td>'
+          return '<tr data-agr-row="'+esc(a.id)+'"><td>'+esc(agrParty(a))+'</td><td>'+esc(AGR_KIND[a.kind] || a.kind)+'</td><td>'+esc(agrSubject(a))+'</td><td>'+esc(a.type)+agrPaperNote(a)+'</td><td>'+agrBadge(a)+'</td>'
             + '<td class="row-actions">'
             + '<button type="button" class="btn ghost sm" data-agr-view="'+esc(a.id)+'">View</button>'
+            + (a.source === "outside" && a.review !== "reviewed" && a.status !== "terminated" ? '<button type="button" class="btn secondary sm" data-agr-review="'+esc(a.id)+'">Review</button>' : '')
+            + (a.source !== "outside" && (a.status === "draft" || a.status === "requested") ? '<button type="button" class="btn ghost sm" data-agr-outside="'+esc(a.id)+'">Use their agreement</button>' : '')
             + ((a.status === "draft" || a.status === "requested") ? '<button type="button" class="btn secondary sm" data-agr-act="sent" data-agr-id="'+esc(a.id)+'">Send for signature</button>' : '')
             + (a.status === "sent" ? '<button type="button" class="btn primary sm" data-agr-act="signed" data-agr-id="'+esc(a.id)+'">Mark signed</button>' : '')
             + (a.status === "signed" ? '<button type="button" class="btn ghost sm" data-agr-act="terminated" data-agr-id="'+esc(a.id)+'">End</button>' : '')
             + '</td></tr>'; }).join("") : '<tr><td colspan="6"><div class="empty">No agreements match.</div></td></tr>')
       + '</tbody></table></div></div>'
-      + '<p class="field-note">E-signature isn\'t connected yet: "Send for signature" records that it went out (e.g. by SignWell or email); "Mark signed" once the signed copy is back.</p>';
+      + '<p class="field-note">E-signature isn\'t connected yet: "Send for signature" records that it went out (e.g. by SignWell or email); "Mark signed" once the signed copy is back. If a company will only sign its own agreement, choose "Their own agreement", upload it, and review it before it goes out.</p>';
+  }
+  // ----- outside agreements: the other side's own paper, uploaded by CloudWAV and reviewed before it goes out -----
+  var AGR_FILE_TYPES = /\.(pdf|docx?)$/i;
+  function agrPaperNote(a){
+    if (a.source !== "outside") return "";
+    return '<div class="field-note" data-agr-paper>Their own agreement' + (a.fileName ? ' · ' + esc(a.fileName) : ' · no file yet')
+      + ' · <b style="color:' + (a.review === "reviewed" ? 'var(--good)' : 'var(--warn, #b26a00)') + ';">' + (a.review === "reviewed" ? "Reviewed" : "Needs review") + '</b>'
+      + (a.uploadError ? ' · <span style="color:var(--bad);">Upload failed: ' + esc(a.uploadError) + '</span>' : '') + (a.fileUploading ? ' · uploading...' : '') + '</div>';
+  }
+  // Keep the file: signed in -> Supabase Storage (agreements/<id>/<file>); demo -> in this browser
+  function agrAttachFile(a, file, done){
+    if (!file){ done && done(); return; }
+    if (!AGR_FILE_TYPES.test(file.name)){ toast("Upload a PDF or Word file"); done && done(false); return; }
+    var live = !!(supabase && state.account && CLOUD.loaded);
+    if (file.size > (live ? CLOUD_MAX_UPLOAD_BYTES : MAX_UPLOAD_BYTES)){ toast("That file is too large (limit " + humanSize(live ? CLOUD_MAX_UPLOAD_BYTES : MAX_UPLOAD_BYTES) + ")"); done && done(false); return; }
+    a.fileName = file.name; a.fileSize = file.size; a.fileMime = file.type || "application/octet-stream"; delete a.uploadError;
+    if (!live){
+      var fr = new FileReader();
+      fr.onload = function(){ a.fileData = String(fr.result); saveReferrals(); render(); done && done(true); };
+      fr.onerror = function(){ a.uploadError = "could not read the file"; saveReferrals(); render(); done && done(false); };
+      fr.readAsDataURL(file); return;
+    }
+    a.fileUploading = true; saveReferrals(); render();
+    (async function(){
+      var path = "agreements/" + a.id + "/" + safeFileName(file.name);
+      try {
+        await cloudFlushNow();   // the agreement record must exist first (the storage rule checks it)
+        var r = await supabase.storage.from(STORAGE_BUCKET).upload(path, await file.arrayBuffer(), { upsert:true, contentType: a.fileMime });
+        if (r.error) throw r.error;
+        a.filePath = path;
+      } catch(e){ a.uploadError = (e && e.message) || String(e); toast("The file didn't upload: " + a.uploadError); }
+      delete a.fileUploading; saveReferrals(); render(); done && done(!a.uploadError);
+    })();
+  }
+  async function agrOpenFile(a){
+    if (a.fileData){ var w0 = window.open(dataUrlToBlobUrl(a.fileData) || a.fileData, "_blank"); if (!w0) toast("Allow pop-ups to open the file"); return; }
+    if (a.filePath && supabase){
+      var w = window.open("", "_blank");
+      var r = await supabase.storage.from(STORAGE_BUCKET).createSignedUrl(a.filePath, 600);
+      if (r.error || !r.data){ if (w) w.close(); toast("Couldn't open the file: " + ((r.error && r.error.message) || "not available")); return; }
+      if (w) w.location = r.data.signedUrl; else toast("Allow pop-ups to open the file");
+      return;
+    }
+    toast("No file has been uploaded for this agreement yet");
+  }
+  function agrOutsideModal(a, reviewing){
+    var op = state.role === "operator", canReview = op && a.status !== "terminated";
+    openModal('<div class="modal-head"><div><div class="eyebrow" style="margin-bottom:6px;">Their own agreement</div><h2>' + esc(agrParty(a)) + ' -- ' + esc(a.type) + '</h2></div><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;" data-agr-outside-modal="' + esc(a.id) + '">'
+      + '<div class="tier-line"><span>For</span><b>' + esc(agrSubject(a)) + '</b></div>'
+      + '<div class="tier-line"><span>Status</span><b>' + agrBadge(a) + '</b></div>'
+      + '<div class="tier-line"><span>File</span><b>' + (a.fileName ? esc(a.fileName) + (a.fileSize ? ' (' + humanSize(a.fileSize) + ')' : '') : "No file yet") + '</b></div>'
+      + (op ? '<div class="tier-line"><span>CloudWAV review</span><b>' + (a.review === "reviewed" ? "Reviewed " + esc(a.reviewedAt || "") : "Needs review") + '</b></div>' : '')
+      + ((a.fileData || a.filePath) ? '<div><button type="button" class="btn secondary sm" data-agr-file="' + esc(a.id) + '">Open the file</button></div>' : '')
+      + (op ? '<div class="field-row"><label for="agrFileReplace">' + (a.fileName ? "Replace the file" : "Upload their agreement") + '</label><input type="file" id="agrFileReplace" accept=".pdf,.doc,.docx"></div>' : '')
+      + (canReview ? '<div class="field-row"><label for="agrReviewNote">Review notes -- how we handle their terms</label><textarea id="agrReviewNote" placeholder="e.g. Their commission, payment terms and liability clauses compared with ours; what we accepted and what we changed.">' + esc(agrReviewNote(a.id)) + '</textarea>'
+          + '<span class="field-note">Only CloudWAV sees these notes. Their agreement can be sent for signature once it is marked reviewed.</span></div>'
+        : (op && agrReviewNote(a.id) ? '<div class="field-note">' + esc(agrReviewNote(a.id)) + '</div>' : ''))
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + (canReview ? '<button type="button" class="btn primary sm" data-agr-review-save="reviewed">' + (a.review === "reviewed" ? "Save" : "Mark reviewed") + '</button><button type="button" class="btn secondary sm" data-agr-review-save="needed">Save notes, still needs review</button>' : '')
+      + '<button type="button" class="btn secondary sm" data-agr-modal-close>Close</button></div></div>');
+  }
+  function agrReviewSave(mark){
+    var box = document.querySelector("[data-agr-outside-modal]"); if (!box || state.role !== "operator") return;
+    var a = agrById(box.getAttribute("data-agr-outside-modal")); if (!a) return;
+    var note = (document.getElementById("agrReviewNote") || {}).value || "", fi = document.getElementById("agrFileReplace"), file = fi && fi.files && fi.files[0];
+    if (mark === "reviewed" && !a.fileName && !file){ toast("Upload their agreement before marking it reviewed"); return; }
+    agrSetReviewNote(a.id, note.trim());
+    if (file) a.review = "needed";   // a new file always needs a fresh look
+    if (mark === "reviewed"){ a.review = "reviewed"; a.reviewedAt = todayIso(); a.history = a.history || []; a.history.push({ at:todayIso(), text:"Outside agreement reviewed" }); }
+    else a.review = "needed";
+    closeModal(); saveReferrals();
+    if (file) agrAttachFile(a, file); else render();
+    toast(a.review === "reviewed" ? "Marked reviewed" : "Notes saved");
   }
   function agreementAction(id, act){
     var a = agrById(id); if (!a || state.role !== "operator") return;
     var now = todayIso();
+    if (act === "sent" && a.source === "outside" && a.review !== "reviewed"){ toast("Review their agreement before sending it for signature"); return; }
     if (act === "sent"){ a.status = "sent"; a.sentAt = now; if (!a.signers || !a.signers.length) a.signers = [{ name:"CloudWAV", signed:false }, { name:agrParty(a), signed:false }]; }
     if (act === "signed"){ a.status = "signed"; a.signedAt = now; (a.signers || []).forEach(function(s){ s.signed = true; s.signedAt = s.signedAt || now; }); }
     if (act === "terminated"){ a.status = "terminated"; a.endedAt = now; }
@@ -10292,6 +10385,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function viewAgreement(id){
     var a = agrById(id); if (!a) return;
+    if (a.source === "outside"){ agrOutsideModal(a); return; }
     if (a.kind === "referral"){ showAgreementDocument(houseById(a.houseId)); return; }
     if (a.programId && programById(a.programId)){ showAgreementDetail(a.programId, a.kind); return; }
   }
@@ -10499,6 +10593,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-agr-view]"))){ viewAgreement(b.getAttribute("data-agr-view")); return; }
     if ((b = t.closest("[data-agr-act]"))){ agreementAction(b.getAttribute("data-agr-id"), b.getAttribute("data-agr-act")); return; }
     if ((b = t.closest("[data-agr-filter]"))){ state.agrFilter = b.getAttribute("data-agr-filter"); renderOperatorAgreements(); return; }
+    if ((b = t.closest("[data-agr-review]"))){ var ra = agrById(b.getAttribute("data-agr-review")); if (ra) agrOutsideModal(ra); return; }
+    if ((b = t.closest("[data-agr-outside]")) && state.role === "operator"){
+      var oa = agrById(b.getAttribute("data-agr-outside")); if (!oa) return;
+      oa.source = "outside"; oa.review = "needed"; oa.history = oa.history || []; oa.history.push({ at:todayIso(), text:"Switched to their own agreement" });
+      saveReferrals(); render(); agrOutsideModal(oa); return;
+    }
+    if ((b = t.closest("[data-agr-file]"))){ var fa = agrById(b.getAttribute("data-agr-file")); if (fa) agrOpenFile(fa); return; }
+    if ((b = t.closest("[data-agr-review-save]"))){ agrReviewSave(b.getAttribute("data-agr-review-save")); return; }
+    if (t.closest("[data-agr-modal-close]")){ closeModal(); return; }
     if (t.closest("[data-agr-request]")){
       var pid = (document.getElementById("agrReqProgram") || {}).value; if (!pid){ toast("Choose a program first"); return; }
       agreementsList.push({ id:"agr-partner-" + String(myMsgKey()).split(":")[1] + "-" + pid, kind:"partner", type:"Partner Reseller Agreement", partyKey:myMsgKey(), programId:pid, status:"requested", createdAt:todayIso(), sentAt:"", signedAt:"", signers:[], history:[] });
@@ -10509,11 +10612,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (!pv){ toast("Choose who the agreement is with"); return; }
       var kind = pv.split("|")[0], key = pv.split("|")[1];
       if (kind === "partner" && !prog){ toast("Choose the program for a partner agreement"); return; }
+      var paper = (document.getElementById("agrNewPaper") || {}).value || "", nf = document.getElementById("agrNewFile"), newFile = nf && nf.files && nf.files[0];
+      if (paper === "outside" && newFile && !AGR_FILE_TYPES.test(newFile.name)){ toast("Upload a PDF or Word file"); return; }
+      if (key === "partner:cloudwav-consulting" && typeof ensureOwnPartner === "function") ensureOwnPartner();
       var rec = { id:"agr-" + kind + "-" + Date.now().toString(36), kind:kind, partyKey:key, status:"draft", createdAt:todayIso(), sentAt:"", signedAt:"", signers:[], history:[] };
       if (kind === "partner"){ rec.type = "Partner Reseller Agreement"; rec.programId = prog; }
       if (kind === "vendor"){ rec.programId = key.split(":")[1]; rec.type = ((programById(rec.programId) || {}).agreement || {}).type || "Vendor Program Agreement"; }
       if (kind === "referral"){ rec.houseId = key.split(":")[1]; rec.type = "Software Project Referral Agreement"; }
-      agreementsList.push(rec); saveReferrals(); toast("Draft agreement created"); renderOperatorAgreements(); return;
+      if (paper === "outside"){ rec.source = "outside"; rec.review = "needed"; rec.history.push({ at:todayIso(), text:"Their own agreement" }); }
+      agreementsList.push(rec); saveReferrals(); toast(paper === "outside" ? "Draft created -- their agreement needs review" : "Draft agreement created");
+      if (paper === "outside" && newFile) agrAttachFile(rec, newFile); else render();
+      return;
     }
     if ((b = t.closest("[data-ref-tab]"))){ state.refTab = b.getAttribute("data-ref-tab"); renderReferrals(); return; }
     if (t.closest("[data-ref-new]")){ showReferralForm(); return; }
@@ -14480,6 +14589,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     });
   }
   document.addEventListener("change", function(ev){ if (ev.target && ev.target.id === "fundStatus") fundingSyncFields(); });
+  document.addEventListener("change", function(ev){ if (ev.target && ev.target.id === "agrNewPaper"){ var fr = document.getElementById("agrNewFileRow"); if (fr) fr.hidden = ev.target.value !== "outside"; } });
   document.addEventListener("click", function(ev){
     var t = ev.target;
     if (t.closest("[data-funding-edit]")){ state.fundingEdit = chMe(); renderFunding(); return; }

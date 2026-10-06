@@ -53,13 +53,13 @@ with sync_playwright() as p:
     ok("Bangkok Bank" not in pg.inner_text("#scr-operator-approvals"), "Demo deals are not shown in a signed-in session")
     nav(pg, "operator-shop")
     ok(pg.locator("[data-opshop-row]").count() == 9, "Real starter products available")
-    ok(len(db("programs")) == 6 and len(db("shopProducts")) == 9, "Operator's first sign-in shares the starter records automatically")
+    ok(len(db("programs")) == 7 and len(db("shopProducts")) == 9, "Operator's first sign-in shares the starter records automatically")
     nav(pg, "operator-data")
     ok("portal_records" in pg.inner_text("#cloudDataContent"), "Cloud Data screen")
     pg.click("[data-cloud-seed]"); pg.wait_for_timeout(2500)
     cols = {r["collection"] for r in db()}
     ok({"programs", "shopProducts", "levelRules", "mspProspects", "affiliatePrograms", "landingPages"} <= cols, "Starter records saved to Supabase: " + ", ".join(sorted(cols)))
-    ok(len(db("mspProspects")) == 61 and len(db("programs")) == 6, "All 61 prospects and 6 vendor programs stored")
+    ok(len(db("mspProspects")) == 61 and len(db("programs")) == 7, "All 61 prospects and 7 vendor programs stored")
     ok(all(r["is_public"] for r in db("programs")) and all(r["writers"] == ["vendor:" + r["id"]] for r in db("programs")), "Programs: public, each editable by its vendor")
     paid = [r for r in db("shopProducts") if r["data"].get("price")]
     ok(all(r["data"].get("accessLink", "") == "" for r in paid), "Paid products' access links are not stored on the public product")

@@ -136,7 +136,7 @@ returns boolean language sql immutable as $$
   select c = any (array['mspProspects','mspEngagements','landingPages',
                         'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
                         'programFees','platformFees','affiliateSignups',
-                        'vendorAssessments','pricingModel'])
+                        'vendorAssessments','pricingModel','agreementReviews'])
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -453,20 +453,26 @@ drop policy if exists "portal-files delete" on storage.objects;
 create policy "portal-files read" on storage.objects
   for select to authenticated using (
     bucket_id = 'portal-files'
-    and exists (select 1 from public.portal_records r            -- RLS on portal_records applies here
-                where r.collection in ('resources', 'pendingResources')
-                  and r.id = (storage.foldername(name))[2])
+    and (exists (select 1 from public.portal_records r            -- RLS on portal_records applies here
+                 where r.collection in ('resources', 'pendingResources')
+                   and r.id = (storage.foldername(name))[2])
+         -- an uploaded outside agreement: whoever can see the agreement record can open its file
+         or ((storage.foldername(name))[1] = 'agreements'
+             and exists (select 1 from public.portal_records r
+                         where r.collection = 'agreements' and r.id = (storage.foldername(name))[2])))
   );
 
 create policy "portal-files upload" on storage.objects
   for insert to authenticated with check (
     bucket_id = 'portal-files'
-    and (storage.foldername(name))[1] = 'resources'
-    and (public.is_portal_operator()
-         or exists (select 1 from public.portal_records r
-                    where r.collection in ('resources', 'pendingResources')
-                      and r.id = (storage.foldername(name))[2]
-                      and public.portal_key() = any(r.writers)))
+    and (((storage.foldername(name))[1] = 'resources'
+          and (public.is_portal_operator()
+               or exists (select 1 from public.portal_records r
+                          where r.collection in ('resources', 'pendingResources')
+                            and r.id = (storage.foldername(name))[2]
+                            and public.portal_key() = any(r.writers))))
+         -- outside agreements are uploaded by CloudWAV only
+         or ((storage.foldername(name))[1] = 'agreements' and public.is_portal_operator()))
   );
 
 create policy "portal-files update" on storage.objects

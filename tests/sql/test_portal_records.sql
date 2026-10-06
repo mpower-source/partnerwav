@@ -249,6 +249,23 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authent
 select t('CloudWAV sees the booking on the assessment', (select count(*) from portal_records where collection='vendorAssessments' and data->>'company'='Book Co' and data ? 'bookedAt') = 1);
 reset role;
 
+-- ===== outside agreements: file storage and CloudWAV's private review notes
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('agreements','agr-out-1','{"id":"agr-out-1","kind":"vendor","partyKey":"vendor:intelsense","source":"outside","status":"draft"}','{vendor:intelsense}','{}');
+insert into portal_records(collection,id,data,readers,writers) values ('agreementReviews','agr-out-1','{"id":"agr-out-1","note":"Their liability cap is lower than ours"}','{}','{}');
+insert into storage.objects(bucket_id,name) values ('portal-files','agreements/agr-out-1/their-msa.pdf');
+select t('CloudWAV uploads an outside agreement file', (select count(*) from storage.objects where name like 'agreements/%') = 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('the vendor on the agreement can open its file', (select count(*) from storage.objects where name like 'agreements/%') = 1);
+select t('the vendor cannot upload or replace agreement files', fails($$insert into storage.objects(bucket_id,name) values ('portal-files','agreements/agr-out-1/swap.pdf')$$));
+select t('the vendor never sees CloudWAV''s review notes', (select count(*) from portal_records where collection='agreementReviews') = 0);
+select t('the vendor cannot write review notes', fails($$insert into portal_records(collection,id,data,readers,writers) values ('agreementReviews','agr-out-1x','{}','{vendor:intelsense}','{vendor:intelsense}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authenticated;
+select t('another vendor cannot open the file', (select count(*) from storage.objects where name like 'agreements/%') = 0);
+reset role;
+
 -- ===== accounts set up by CloudWAV, and investment round details
 insert into auth.users(id, email) values ('00000000-0000-0000-0000-000000000007', 'new@agentid.test');
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
