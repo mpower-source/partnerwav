@@ -12,7 +12,7 @@ def ink_share(pg, sel):
 with sync_playwright() as p:
     b, pg = open_page(p)
     role(pg, "vendor"); nav(pg, "vendor-overview"); pg.click("#vendorOverviewEditBtn"); pg.wait_for_timeout(300)
-    ok(all(pg.locator(f"#vpProd{i}LogoPreview img").count() == 0 for i in range(4)), "No built-in product logos (the vendor supplies its own)")
+    ok(all(pg.locator(f"#vpProd{i}LogoPreview img").count() == 1 for i in range(4)), "Intelsense products start with their built-in symbols")
     # symbol + words PNG -> just the symbol
     pg.set_input_files("#vpLogoFile", os.path.join(F, "logo_symbol_words.png")); pg.wait_for_timeout(700)
     w, h = dims(pg, "#vpLogo")
@@ -45,6 +45,6 @@ with sync_playwright() as p:
     pg.locator('#vendorOverviewEditForm [data-vendor-edit-save="intelsense"]').first.click(); pg.wait_for_timeout(300)
     # product tiles on the profile show the symbols
     pg.click("#vendorOverviewViewBtn"); pg.wait_for_timeout(300)
-    ok(pg.locator("[data-product-tile] img.entity-logo-img").count() == 3, "Uploaded product logos show on their tiles (3 of 4 uploaded)")
+    ok(pg.locator("[data-product-tile] img.entity-logo-img").count() == 4, "Every product tile shows a logo (uploaded or built-in)")
     b.close()
 report()

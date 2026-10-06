@@ -209,6 +209,10 @@
   .navlink:hover{ background:var(--surface); color:var(--ink); }
   .navlink[aria-current="true"]{ background:var(--accent-soft); color:var(--accent-strong); }
   .navlink .ic{ width:17px; height:17px; flex-shrink:0; }
+  .op-prog-name{ display:flex; align-items:center; gap:10px; }
+  #operatorProgramRows .row-actions{ white-space:nowrap; }
+  .op-logo{ width:34px; height:34px; border-radius:8px; border:1px solid var(--line); object-fit:cover; flex-shrink:0; background:#fff; }
+  .op-logo-empty{ display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--ink-faint); background:var(--surface); }
   .navsec{ display:flex; flex-direction:column; gap:2px; }
   .navsec-head{
     display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; cursor:pointer;
@@ -1746,6 +1750,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
               <option value="inactive">Inactive</option>
               <option value="archived">Archived</option>
             </select></div>
+            <div id="opProgramLogoSlot"></div>
             <div><label>Website</label><input type="url" id="opProgramWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div><label>Agreement Type (e.g., Vendor Program Agreement)</label><input type="text" id="opProgramAgreementType" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div><label>Agreement Status</label><select id="opProgramAgreementStatus" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;">
@@ -2747,6 +2752,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     + '<circle cx="80.5" cy="16.5" r="8.5"/><circle cx="53" cy="75" r="9"/><circle cx="108" cy="75" r="9"/>'
     + '<rect x="12" y="65" width="8" height="23" rx="4"/><rect x="141" y="65" width="8.5" height="23" rx="4"/></g>'
     + '<rect x="27.5" y="35.5" width="107" height="78" rx="19.5" fill="none" stroke="#38b6ff" stroke-width="9"/></svg>');
+  // Vendor symbols supplied by CloudWAV (symbol only, no wordmark). Intelsense: the "AI" from its site logo.
+  // Cross Connect: its symbol keeps the pale brand green, so it sits on a dark tile to stay visible.
+  var VENDOR_LOGOS = {
+    "intelsense": "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="186.9 -9.96 44 44" width="400" height="400">'
+      + '<rect x="186.9" y="-9.96" width="44" height="44" fill="#fff"/><path fill="#6CC5ED" d="M194.265 23.938L203.556 0.150391H206.977L215.575 23.938H209.94L208.531 19.9275H201.406L199.901 23.938H194.265ZM203.491 14.6855H206.663L205.158 10.4805L203.491 14.6855Z"/><path fill="#6CC5ED" d="M218.053 23.938V0.645996H223.505V23.938H218.053Z"/></svg>'),
+    "crossconnect": "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="254 -10 150 150" width="400" height="400">'
+      + '<rect x="254" y="-10" width="150" height="150" fill="#1d2a25"/><path fill="#c7d6ce" d="M365.3,88.92c6.72.38,9.38,5.35,5.99,11.06-7.36,12.39-22.81,18.4-40.67,18.4-25,0-45.27-11.76-45.27-36.32,0-10.8,3.92-22.28,10.44-31.75,4.37-6.34,10.4-5.79,13.14,1.38,5.33,13.95,11.01,25.11,18.42,30.46,8.61,6.23,20.11,5.75,37.95,6.77ZM339.99,44.83c2.72-1.61,4.86-3.76,6.41-6.44,1.55-2.68,2.32-5.65,2.32-8.92s-.77-6.25-2.32-8.96c-1.55-2.7-3.68-4.86-6.41-6.47-2.72-1.61-5.85-2.42-9.38-2.42s-6.6.81-9.35,2.42c-2.75,1.61-4.89,3.77-6.44,6.47-1.55,2.7-2.32,5.69-2.32,8.96s.77,6.24,2.32,8.92c1.55,2.68,3.69,4.83,6.44,6.44,2.75,1.61,5.86,2.42,9.35,2.42s6.66-.81,9.38-2.42Z"/></svg>'),
+    "portonics-dev": "data:image/png;base64,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",
+    "zipevent": "data:image/png;base64,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"
+  };
+  var VENDOR_LOGO_PLACEHOLDERS = { "intelsense": dataLogo("I","#5b3df5"), "crossconnect": dataLogo("C","#7a9c00") };
   // Botnoi's program: reseller first, then channel manager, then the joint venture (rates still to be agreed)
   var BOTNOI_TIERS = [
     { tier:"Reseller", rate:"To be agreed with Botnoi", base:"Net revenue" },
@@ -2758,7 +2774,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         { tier:"Reseller", rate:"15% + 5%", base:"Net revenue" },
         { tier:"Channel Manager", rate:"15% + 5% + 5% override", base:"Sub-reseller revenue" }
       ], agreement:{ type:"Vendor Program Agreement", status:"active" }, status:"active",
-      logo:dataLogo("I","#5b3df5"), website:"https://intelsense.ai",
+      logo:VENDOR_LOGOS["intelsense"], logoSetup:1, website:"https://intelsense.ai",
       social:{ linkedin:"https://linkedin.com/company/intelsense-ai", twitter:"https://x.com/intelsenseai", facebook:"" },
       referralPartners:[
         { name:"TechBridge Solutions", country:"USA", status:"pending" },
@@ -2773,7 +2789,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"crossconnect", name:"Cross Connect", vertical:"Consumer hardware", origin:"USA · via Portonics Ltd.", desc:"Prayer Pendant™ wearable -- ships direct to the customer, no install required (Model B fulfillment).", relationships:["Vendor Program"], tiers:[
         { tier:"Affiliate", rate:"12% on hardware sale + attach bonus", base:"Gross sale price" }
       ], agreement:{ type:"Vendor Program Agreement", status:"active" }, status:"active",
-      logo:dataLogo("C","#7a9c00"), website:"https://crossconnectapp.com",
+      logo:VENDOR_LOGOS["crossconnect"], logoSetup:1, website:"https://crossconnectapp.com",
       social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
     { id:"botnoi", name:"Botnoi Voice", vertical:"Conversational AI (voice)", origin:"Thailand", desc:"Thai voice/conversational-AI platform expanding into the US market -- open to a straight Vendor Program relationship or a deeper Joint Venture, depending on the partner.", relationships:["Vendor Program","Joint Venture"], tiersSetup:1, tiers:BOTNOI_TIERS.map(function(t){ return Object.assign({}, t); }),
       agreement:{ type:"Joint Venture Agreement", status:"pending" }, status:"onboarding",
@@ -2782,12 +2798,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"zipevent", name:"ZipEvent", vertical:"Events & marketing (Thailand)", origin:"Thailand", desc:"Thailand's largest AI/tech event platform -- a co-marketing relationship, not a reseller program.", relationships:["Custom Marketing"], tiers:[
         { tier:"Marketing partner", rate:"Per-campaign MDF, 50/50 upfront/milestone", base:"Approved campaign budget" }
       ], agreement:{ type:"Custom Marketing Agreement", status:"draft" }, status:"onboarding",
-      logo:"", website:"https://services.zipeventapp.com",
+      logo:VENDOR_LOGOS["zipevent"], logoSetup:1, website:"https://services.zipeventapp.com",
       social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[] },
     { id:"portonics-dev", _rev:2, name:"Portonics Ltd.", vertical:"Custom Software Development", origin:"Bangladesh (dev team) · Thailand & USA (client-facing)", desc:"Custom software shop that builds and co-owns bespoke platforms with MSPs and VARs entering Thailand or the US -- a Joint Venture, not a commission payout.", relationships:["Joint Venture"], tiers:[
         { tier:"Channel Manager", rate:"Per JV profit-allocation schedule", base:"Per Joint Venture Agreement, Schedule C" }
       ], agreement:{ type:"Joint Venture Agreement", status:"draft" }, status:"onboarding",
-      logo:"", website:"",
+      logo:VENDOR_LOGOS["portonics-dev"], logoSetup:1, website:"",
       social:{ linkedin:"", twitter:"", facebook:"" },
       partnerProfileId:"portonics", referralPartners:[] },
     { id:"unisense", _rev:2, name:"Unisense", vertical:"Sales & Marketing SaaS", origin:"Bangladesh (via Intelsense AI)", desc:"Intelsense AI's sales-and-marketing SaaS platform, resold as a recurring subscription to your own customers -- the higher-margin model next to Intelsense's core program.", relationships:["SaaS Resale"], tiers:[
@@ -2948,7 +2964,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         { name:"Enterprise VoIP migration", program:"Intelsense AI", desc:"Closed Aug 2026 -- full-site VoIP + AI-IVR migration for a Dhaka enterprise client." },
         { name:"Regional clinic wearable pilot (advisory)", program:"Cross Connect", desc:"Shared activation-webhook guidance with Gulf Coast VAR." }
       ],
-      logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" },
+      logo:VENDOR_LOGOS["portonics-dev"], logoSetup:1, website:"", social:{ linkedin:"", twitter:"", facebook:"" },
       vendorProgramId:"portonics-dev" },
     { id:"riverside", name:"Riverside Telco", init:"RT", country:"USA", tagline:"Telecom and voice-AI channel manager building a Thai-vendor bench for US carriers.",
       specialties:["Telecom / UCaaS","Channel Management","Voice AI"],
@@ -4996,8 +5012,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       opRows.innerHTML = programs.map(function(p){
         var firstTier = p.tiers && p.tiers[0] ? esc(p.tiers[0].tier)+": "+esc(p.tiers[0].rate) : "--";
         var cfgNote = p.terms && p.terms.updatedAt ? "<div class='field-note'>Configured "+esc(p.terms.updatedAt)+"</div>" : "";
-        return "<tr><td>"+esc(p.name)+cfgNote+"</td><td>"+esc(p.vertical)+"</td><td>"+relBadges(p.relationships)+"</td><td style='font-size:.82rem;'>"+firstTier+"</td><td>"+statusPill(p.status)+"</td>"
-          + "<td class='row-actions'><button class='btn secondary sm' data-configure='"+p.id+"'>Configure</button></td></tr>";
+        var opLogo = p.logo ? "<img class='op-logo' src='"+esc(p.logo)+"' alt=''>" : "<span class='op-logo op-logo-empty' aria-hidden='true'>"+esc((p.name || "?").charAt(0))+"</span>";
+        return "<tr><td><div class='op-prog-name'>"+opLogo+"<div>"+esc(p.name)+cfgNote+"</div></div></td><td>"+esc(p.vertical)+"</td><td>"+relBadges(p.relationships)+"</td><td style='font-size:.82rem;'>"+firstTier+"</td><td>"+statusPill(p.status)+"</td>"
+          + "<td class='row-actions'><button class='btn secondary sm' data-op-logo='"+p.id+"'>"+(p.logo ? "Change logo" : "Add logo")+"</button> <button class='btn secondary sm' data-configure='"+p.id+"'>Configure</button></td></tr>";
       }).join("");
     }
 
@@ -5671,9 +5688,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         out[pg.id] = o;
       });
       lsSet(VENDOR_EDITS_KEY, JSON.stringify(out));
+      lsSet(VENDOR_ADDED_KEY, JSON.stringify(programs.filter(function(pg){ return pg._added; })));
     } catch(e){ console.log("Could not save vendor profile edits:", e); }
   }
+  var VENDOR_ADDED_KEY = "partnerWAV_addedVendors";
   function loadVendorEdits(){
+    try {
+      (JSON.parse(lsGet(VENDOR_ADDED_KEY) || "[]") || []).forEach(function(a){ if (a && a.id && !programById(a.id)) programs.push(a); });
+    } catch(e){ console.log("Could not load added vendors:", e); }
     try {
       var saved = JSON.parse(lsGet(VENDOR_EDITS_KEY) || "null");
       if (!saved) return;
@@ -5778,6 +5800,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     if (u && !u.logoSetup){ if (!u.logo) u.logo = INTELSENSE_PRODUCT_LOGOS["unisense-ai"]; u.logoSetup = 1; u._edited = true; changed = true; }
     if (changed) saveVendorEdits();
+    return changed;
+  }
+  // One-time: saved copies of these vendors get the supplied symbol, unless a logo was uploaded for them.
+  function ensureVendorLogos(){
+    var changed = false;
+    Object.keys(VENDOR_LOGOS).forEach(function(id){
+      var p = programById(id); if (!p || (p.logoSetup || 0) >= 1) return;
+      if (!p.logo || p.logo === VENDOR_LOGO_PLACEHOLDERS[id]) p.logo = VENDOR_LOGOS[id];
+      p.logoSetup = 1; p._edited = true; changed = true;
+    });
+    var pp = partnerProfiles.filter(function(x){ return x.id === "portonics"; })[0];
+    if (pp && !pp.logoSetup){ if (!pp.logo) pp.logo = VENDOR_LOGOS["portonics-dev"]; pp.logoSetup = 1; changed = true; }
+    if (changed){ saveVendorEdits(); saveVendorData(); }
     return changed;
   }
   function ensureBotnoiLogo(){
@@ -9601,7 +9636,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var missing = CLOUD_COLLECTIONS.some(function(c){ return c.mode === "merge" && !Object.keys(CLOUD.inCloud[c.name] || {}).length; });
       if (isOp() && missing) await cloudSeed(true);
       if (isOp()) addIntelsenseSamples(true);
-      if (isOp()){ ensureOwnPartner(); ensureBotnoiTiers(); ensureBotnoiLogo(); ensureIntelsenseProductLogos(); cloudSchedule(); }
+      if (isOp()){ ensureOwnPartner(); ensureBotnoiTiers(); ensureBotnoiLogo(); ensureIntelsenseProductLogos(); ensureVendorLogos(); cloudSchedule(); }
     } catch(e){
       console.warn("Cloud load failed:", e);
       CLOUD.loadFails = (CLOUD.loadFails || 0) + 1;
@@ -12010,6 +12045,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("opProgramWebsite").value = program ? program.website : "";
     document.getElementById("opProgramAgreementType").value = program ? program.agreementType : "";
     document.getElementById("opProgramAgreementStatus").value = program ? program.agreementStatus : "";
+    var logoSlot = document.getElementById("opProgramLogoSlot");
+    if (logoSlot) logoSlot.innerHTML = logoFieldHtml("opp", program ? (program.logo || "") : "", "Logo") + '<span class="field-note">Square PNG, JPG, WEBP or SVG, ideally 400x400px. You can add or change it later from Manage programs.</span>';
     var deleteBtn = document.getElementById("deleteOperatorProgramBtn");
     deleteBtn.style.display = program ? "block" : "none";
     if (program) deleteBtn.setAttribute("data-program-id", programId);
@@ -12043,13 +12080,18 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         toast("Program updated");
       }
     } else {
-      var newId = "oprog-" + Date.now();
-      operatorPrograms.push({
-        id: newId, programName: programName, vertical: vertical, origin: origin, desc: desc,
-        relationshipType: relationshipType, status: status, website: website,
-        agreementType: agreementType, agreementStatus: agreementStatus, archivedAt: null
+      // a new vendor program: listed everywhere the others are (Manage programs, Vendor Network, Program Directory)
+      var oppLogo = document.getElementById("oppLogo");
+      var firstTier = { "Joint Venture":"Joint Venture", "Custom Marketing":"Marketing partner" }[relationshipType] || "Reseller";
+      programs.push({
+        id: "vendor-" + Date.now(), _added: true, _edited: true, name: programName, vertical: vertical, origin: origin, desc: desc,
+        relationships: [relationshipType], tiers: [{ tier: firstTier, rate: "To be agreed", base: "To be agreed" }],
+        agreement: { type: agreementType || (relationshipType + " Agreement"), status: agreementStatus || "draft" }, status: status,
+        logo: oppLogo ? oppLogo.value : "", logoSetup: 2, website: website,
+        social: { linkedin: "", twitter: "", facebook: "" }, referralPartners: [], products: []
       });
-      toast("Program created");
+      saveVendorEdits();
+      toast("Vendor program added");
     }
     state.editingOperatorProgramId = null;
     state.screen = "operator-programs";
@@ -12370,6 +12412,26 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
 
+    var opLogoBtn = e.target.closest("[data-op-logo]");
+    if (opLogoBtn && state.role === "operator"){
+      var olp = programById(opLogoBtn.getAttribute("data-op-logo")); if (!olp) return;
+      openModal('<div class="modal-head"><h2>Logo for '+esc(olp.name)+'</h2><button class="modal-close" aria-label="Close">&times;</button></div>'
+        + '<div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">' + logoFieldHtml("opl", olp.logo || "", "Vendor logo")
+        + '<span class="field-note">Square PNG, JPG, WEBP or SVG, ideally 400x400px. If the file is a wide logo with the name in it, only the symbol is kept.</span>'
+        + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-op-logo-save="'+esc(olp.id)+'">Save logo</button>'
+        + '<button type="button" class="btn secondary sm" data-op-logo-cancel>Cancel</button></div></div>');
+      return;
+    }
+    if (e.target.closest("[data-op-logo-cancel]")){ closeModal(); return; }
+    var opLogoSave = e.target.closest("[data-op-logo-save]");
+    if (opLogoSave && state.role === "operator"){
+      var osp = programById(opLogoSave.getAttribute("data-op-logo-save")), osv = document.getElementById("oplLogo");
+      if (osp && osv){
+        osp.logo = osv.value; osp.logoSetup = Math.max(osp.logoSetup || 0, 2); osp._edited = true;
+        saveVendorEdits(); closeModal(); toast(osp.logo ? "Logo saved" : "Logo removed"); render();
+      }
+      return;
+    }
     var removeLogoBtn = e.target.closest("[data-remove-logo]");
     if (removeLogoBtn){
       setLogoValue(removeLogoBtn.getAttribute("data-remove-logo"), "");
@@ -13889,6 +13951,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   ensureBotnoiTiers();
   ensureBotnoiLogo();
   ensureIntelsenseProductLogos();
+  ensureVendorLogos();
   loadDeals();
   loadMspProspects();
   loadIncentives();
