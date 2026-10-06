@@ -66,7 +66,11 @@ with sync_playwright() as p:
     nav(pg, "operator-agreements")
     ok("1requested" in pg.inner_text("#operatorAgreementsContent").replace("\n", "").replace(" ", ""), "Operator sees the partner's request")
     row = pg.locator("[data-agr-row]").filter(has_text="Siam Digital MSP")
-    row.locator('[data-agr-act="sent"]').click(); pg.wait_for_timeout(200)
+    row.locator('[data-agr-act="sent"]').click(); pg.wait_for_timeout(300)
+    pg.evaluate("""() => { for (let i = 0; i < 40; i++) { const el = document.querySelector('input.agr-field.empty'); if (!el) break;
+        el.value = el.type === 'date' ? '2026-11-01' : 'Test value'; el.dispatchEvent(new Event('change', { bubbles: true })); } }""")
+    pg.wait_for_timeout(200); pg.click("[data-agr-doc-send]"); pg.wait_for_timeout(400); settle(pg)
+    ok((db("agreements")[0]["data"].get("filled") or {}).get("partyEntity") == "Test value", "The filled-in text is stored on the agreement when it goes out")
     pg.locator("[data-agr-row]").filter(has_text="Siam Digital MSP").locator('[data-agr-act="signed"]').click(); pg.wait_for_timeout(300); settle(pg)
     b.close()
 

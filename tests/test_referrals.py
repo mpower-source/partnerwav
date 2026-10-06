@@ -12,7 +12,11 @@ with sync_playwright() as p:
     pg.select_option("#agrNewProgram", "crossconnect"); pg.click("[data-agr-create]"); pg.wait_for_timeout(200)
     row = pg.locator("[data-agr-row]").filter(has_text="Gulf Coast VAR")
     ok(row.count() == 1 and "DRAFT" in row.inner_text().upper(), "Draft partner agreement created")
-    row.locator('[data-agr-act="sent"]').click(); pg.wait_for_timeout(200)
+    row.locator('[data-agr-act="sent"]').click(); pg.wait_for_timeout(300)
+    ok(pg.locator("[data-agr-doc]").count() == 1 and "still to fill in" in pg.inner_text("#agrDocStatus"), "Sending opens the full agreement while fields are still empty")
+    pg.evaluate("""() => { for (let i = 0; i < 40; i++) { const el = document.querySelector('input.agr-field.empty'); if (!el) break;
+        el.value = el.type === 'date' ? '2026-11-01' : 'Test value'; el.dispatchEvent(new Event('change', { bubbles: true })); } }""")
+    pg.wait_for_timeout(200); pg.click("[data-agr-doc-send]"); pg.wait_for_timeout(300)
     row = pg.locator("[data-agr-row]").filter(has_text="Gulf Coast VAR")
     ok("OUT FOR SIGNATURE" in row.inner_text().upper(), "Sent for signature")
     row.locator('[data-agr-act="signed"]').click(); pg.wait_for_timeout(200)

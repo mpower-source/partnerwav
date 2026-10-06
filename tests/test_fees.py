@@ -92,7 +92,7 @@ with sync_playwright() as p:
     vc = pg.inner_text("#vendorFeeCard")
     ok("CLOUDWAV PLATFORM FEE" in vc.upper() and "Vendor Program Agreement" in vc and "Bangkok Bank branch rollout" in vc and "$2,520" in vc and "never reduces" in vc, "Vendor sees the platform fee under Agreements, as part of the Vendor Program Agreement")
     pg.locator('[data-agr-row="agr-vendor-intelsense"] [data-agr-view]').click(); pg.wait_for_timeout(250)
-    ok(pg.locator(".modal [data-agr-fee-terms]").count() == 1 and "Partners CloudWAV brought in" in pg.inner_text(".modal"), "The fee is in the vendor agreement's details")
+    ok("platform fee of" in pg.inner_text(".modal .agr-doc") and "Partners CloudWAV brought in" in pg.inner_text(".modal") and "never reduces what a Partner earns" in pg.inner_text(".modal"), "The fee is written into the vendor's full agreement")
     pg.click(".modal .modal-close"); pg.wait_for_timeout(150)
     pg.locator('[data-agr-row="agr-partner-siam-digital-intelsense"] [data-agr-view]').click(); pg.wait_for_timeout(250)
     ok(pg.locator(".modal [data-agr-fee-terms]").count() == 0, "...but not in a partner's agreement for the same program")

@@ -26,6 +26,8 @@
   .agr-blank{ border-bottom:1.5px solid var(--bad); color:var(--bad); padding:0 3px; white-space:nowrap; }
   input.agr-field{ font:inherit; color:var(--ink); border:none; border-bottom:1.5px solid var(--accent); background:var(--accent-soft); padding:1px 5px; border-radius:3px 3px 0 0; min-width:210px; max-width:100%; }
   input.agr-field[type="text"]{ width:min(520px, 100%); }
+  input.agr-field.short{ width:84px; min-width:60px; }
+  .agr-doc td .agr-table{ margin:2px 0; }
   input.agr-field.empty{ border-bottom-color:var(--bad); background:var(--warn-soft); }
   .agr-note{ background:var(--warn-soft); color:var(--warn); padding:8px 10px; border-radius:6px; font-size:.82rem; }
   .agr-table{ width:100%; border-collapse:collapse; font-size:.86rem; } .agr-table th, .agr-table td{ border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; } .agr-table th{ width:36%; }
@@ -10331,42 +10333,1328 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ----- the full agreement, filled in like a fillable PDF -----
   // Templates with their full text in the portal. Everything the portal knows is filled in; what it cannot know is a
   // field CloudWAV types into before sending. Sending for signature freezes the filled text on the agreement.
-  var AGR_TEMPLATES = { "Software Project Referral Agreement": SRA_TEMPLATE };
   var AGR_FILL_FIELDS = {
     effectiveDate:   { label:"Effective date", type:"date" },
     cloudwavEntity:  { label:"CloudWAV legal entity, registration no. and address" },
     houseContact:    { label:"Their contact for notices (name, email)" },
     cloudwavContact: { label:"CloudWAV contact for notices" }
   };
+  // Vendor Program, Joint Venture, Custom Marketing and Reseller agreements: full text written out from CloudWAV's
+  // agreement outlines (project docs 01-04). {{name}} is filled by the portal; "fields" are what CloudWAV completes.
+  var AGR_TEMPLATE_TEXT = {
+ "Vendor Program Agreement": {
+  "title": "PartnerWAV Vendor Program Agreement",
+  "note": "DRAFT -- not for execution until both parties and their counsel have reviewed it. Highlighted text was filled in by PartnerWAV for this agreement.",
+  "parties": [
+   "This Vendor Program Agreement (the \"Agreement\") is made on {{effectiveDate}} between:",
+   "(1) {{cloudwavEntity}} (\"CloudWAV\" or the \"Program Operator\"); and",
+   "(2) {{partyEntity}} (\"{{partyName}}\" or the \"Vendor\").",
+   "CloudWAV operates the PartnerWAV platform, through which vendors run partner programs and resellers, affiliates, channel managers and certified installers sell and deliver vendors' products. The Vendor wishes to run its program, {{programName}}, on PartnerWAV with CloudWAV as Program Operator. The parties agree as follows."
+  ],
+  "sections": [
+   {
+    "title": "Appointment and Program scope",
+    "clauses": [
+     "The Vendor appoints CloudWAV as Program Operator of the {{programName}} program (the \"Program\") on PartnerWAV, covering the products and services described in Schedule A (the \"Products\").",
+     "The Program operates in the territory stated in Schedule D (the \"Territory\"). The appointment is {{exclusivity}} in the Territory.",
+     "As Program Operator, CloudWAV recruits, enrolls, enables and manages Partners for the Program, operates deal registration and commission tracking, and manages the Certified Installer Network where Schedule C applies.",
+     "The Vendor remains responsible for the Products, their pricing, their terms of sale to customers, and customer support, unless a Schedule says otherwise.",
+     "\"Partner\" means a reseller, affiliate, referral partner, channel manager or certified installer enrolled in the Program through PartnerWAV. \"Customer\" means an end customer that buys the Products through or as a result of a Partner or CloudWAV."
+    ]
+   },
+   {
+    "title": "The tier ladder",
+    "clauses": [
+     "The Program may offer these tiers: (a) Affiliate / Referral -- the lightest tier, paid a flat or percentage payout per referral with no negotiated contract; (b) Reseller -- registers deals and earns Commission on the agreed base for the agreed duration; (c) Channel Manager / Master Agent -- recruits and manages sub-resellers and earns an Override in addition to the base rate.",
+     "The tiers the Vendor makes available for this Program, and the rate and base for each, are set out in Schedule B. The Vendor may open or close a tier for new enrollments on 30 days' notice; Partners already enrolled keep their tier and rates for deals registered before the change.",
+     "Partners join the Program under CloudWAV's master Reseller Agreement, which incorporates the rates in Schedule B by reference. The Vendor will not require a Partner to sign separate terms that conflict with this Agreement."
+    ]
+   },
+   {
+    "title": "Commission",
+    "clauses": [
+     "The Vendor pays Commission on every sale of the Products to a Customer that is attributable to a Partner or to CloudWAV, at the rates in Schedule B.",
+     "Commission is calculated on {{revenueBaseText}}.",
+     "\"Net Revenue\" means the amounts actually invoiced to and collected from the Customer for the Products, less only these deductions: {{deductionsText}}. Every deduction must be itemized line by line on the commission statement and supported by documents the Vendor provides on request. No deduction that is not listed here may be taken without CloudWAV's prior written agreement.",
+     "Commission on renewals and recurring revenue continues for {{renewalDuration}} from the Customer's first purchase, at the renewal rate in Schedule B.",
+     "Discounts the Vendor chooses to give a Customer reduce the revenue on which Commission is calculated only to the extent they reduce what the Customer actually pays; they are not otherwise deducted."
+    ]
+   },
+   {
+    "title": "Override, installer margin and CloudWAV's compensation",
+    "clauses": [
+     "A Channel Manager earns the Override in Schedule B on sales made by the sub-resellers it recruited. The Override is paid on top of the sub-reseller's Commission and is never taken out of it.",
+     "CloudWAV acts as Channel Manager for Partners it recruits into the Program and earns the Override on their sales.",
+     "{{installerMarginText}}",
+     "{{platformFeeText}} CloudWAV's compensation for operating the Program is the Override, any Installer Network margin and the platform fee stated in this clause. No other platform, listing or set-up fee is payable unless the parties agree it in writing.",
+     "The Vendor issues a statement for each payout period showing, for each Customer, the invoices issued, amounts collected, deductions taken, the Commission and Override due and the Partner credited. Payment is made {{payoutSchedule}}, in {{currency}}, with a minimum payout of {{minPayout}} {{currency}}; smaller amounts carry over to the next period.",
+     "CloudWAV may, once a year on 30 days' notice, have an independent accountant review the Vendor's records for the Program. If the review shows an underpayment of more than 5%, the Vendor pays the shortfall and the reasonable cost of the review.",
+     "Each party is responsible for its own taxes. Where the law requires tax to be withheld from a payment, the payer withholds it, pays it to the authority on time and gives the payee the certificate."
+    ]
+   },
+   {
+    "title": "Deal registration and conflicts",
+    "clauses": [
+     "Partners register deals through PartnerWAV. The Vendor will approve or challenge a registration within {{approvalSlaDays}} business days; a registration not challenged in that time is treated as approved.",
+     "The Vendor may challenge a registration only where the customer is an existing customer of the Vendor for the same Product or is in documented active discussions with the Vendor or another Partner that registered first, and must share reasonable evidence.",
+     "An approved registration is protected for {{dealProtectionDays}} days. If the Customer buys within that period, the registering Partner earns the Commission whichever channel takes the order. Protection extends while there is documented active engagement with the Customer.",
+     "{{nonCircumventionText}}",
+     "Where two Partners claim the same Customer, the earlier approved registration prevails. CloudWAV decides conflicts between Partners after hearing both, and the Vendor will follow that decision for Commission purposes."
+    ]
+   },
+   {
+    "title": "Certified Installer Network",
+    "clauses": [
+     "Where the Products include hardware that needs on-site installation (Model A), installation jobs are posted, claimed, delivered and signed off through PartnerWAV by installers certified under Schedule C. The installer is paid the fee stated for the job, and CloudWAV earns the Installer Network margin on installer billings.",
+     "Where hardware ships direct to the Customer with no installation (Model B), no installer is involved and Commission runs through the Reseller or Affiliate line in Schedule B.",
+     "Certification requirements, countries covered, job types and the payout cycle for installers are set out in Schedule C. If Schedule C is marked not applicable, this clause does not apply to the Program."
+    ]
+   },
+   {
+    "title": "Vendor Resource Library and marketing materials",
+    "clauses": [
+     "The Vendor will provide and keep current the training, product and marketing materials Partners reasonably need to sell the Products, and upload them to the Vendor Resource Library on PartnerWAV.",
+     "The Vendor grants CloudWAV and enrolled Partners a non-exclusive, royalty-free license for the term of this Agreement to use, reproduce and display those materials and the Vendor's names and logos to market and sell the Products, following the Vendor's brand guidelines.",
+     "CloudWAV reviews uploads before they are published to check they are marketing or training content and not internal or confidential documents. The review standard and turnaround are in Schedule E."
+    ]
+   },
+   {
+    "title": "Professional services",
+    "clauses": [
+     "{{proServicesText}}",
+     "Fees for professional services belong to whoever delivers them and are not Net Revenue, unless the Vendor itself invoices them as part of a Product sale."
+    ]
+   },
+   {
+    "title": "Data, confidentiality and feedback",
+    "clauses": [
+     "Each party will keep the other's confidential information confidential, use it only for this Agreement, and protect it with reasonable care. This does not apply to information that is public, already known, independently developed or lawfully received from someone else, or that must be disclosed by law.",
+     "Partner contact data, deal registration history and performance data generated on PartnerWAV are held by CloudWAV. The Vendor may use the data relating to its own Program to run and improve the Program and to serve Customers, and for no other purpose.",
+     "Each party will comply with the data protection laws that apply to it, including the GDPR, Thailand's PDPA and US state privacy laws where relevant, and will tell the other without undue delay of any data breach affecting the other's data.",
+     "The Vendor will consider in good faith product feedback and feature requests passed on by CloudWAV and Partners. Feedback may be used freely by the Vendor without payment.",
+     "Confidentiality obligations continue for 3 years after this Agreement ends. On request after termination each party returns or deletes the other's confidential information, except what it must keep by law."
+    ]
+   },
+   {
+    "title": "Intellectual property",
+    "clauses": [
+     "The Vendor keeps all rights in the Products, their documentation and its training and marketing materials. CloudWAV keeps all rights in PartnerWAV, its processes, content and data model. Partners keep the rights in their own marketing and their customer relationships.",
+     "No license is granted beyond what is needed to market, sell and support the Products and to use the Resource Library under this Agreement.",
+     "The Vendor warrants that it has the right to sell the Products and license the materials in the Territory, and that their marketing and sale as contemplated here do not infringe third-party rights."
+    ]
+   },
+   {
+    "title": "Compliance",
+    "clauses": [
+     "Each party is responsible for complying with the laws that apply to its own business in its own jurisdictions, including anti-bribery, export control and sanctions laws.",
+     "Each party confirms that neither it nor its owners or directors are on any applicable sanctions list.",
+     "The Vendor warrants that the Products are lawful to sell in the Territory and will hold the approvals and maintain the insurance set out in Schedule F."
+    ]
+   },
+   {
+    "title": "Term and termination",
+    "clauses": [
+     "This Agreement starts on the Effective Date and runs for an initial term of {{termMonths}} months. {{renewalText}}",
+     "Either party may terminate for convenience on {{terminationNoticeDays}} days' written notice. The notice period is the same for both parties.",
+     "Either party may terminate immediately by written notice if the other commits a material breach and does not cure it within {{cureDays}} days of written notice, or becomes insolvent.",
+     "After termination: (a) deals registered before the termination date remain protected and commissionable until they close or their protection ends; (b) Commission and Override on Customers won before termination continue to be paid for {{commissionTailMonths}} months; (c) the parties cooperate on an orderly wind-down and a joint communication to Partners.",
+     "Any post-termination restriction on either party is limited to {{postTerminationMonths}} months and to not soliciting the other's Partners or Customers introduced under the Program. No broader non-compete applies."
+    ]
+   },
+   {
+    "title": "Liability and indemnities",
+    "clauses": [
+     "Each party indemnifies the other against third-party claims arising from its infringement of intellectual property rights, its breach of confidentiality or data protection obligations, or its negligence or wilful misconduct.",
+     "Neither party is liable for indirect or consequential loss or loss of profit. Each party's total liability under this Agreement is limited to {{liabilityCap}}. These limits do not apply to the indemnities above, to unpaid Commission, Override or fees, or to liability that cannot be limited by law."
+    ]
+   },
+   {
+    "title": "Dispute resolution and governing law",
+    "clauses": [
+     "The parties will first try to resolve any dispute through their named business contacts within 15 business days of written notice of the dispute.",
+     "If that fails, the dispute goes to mediation with a neutral mediator, the cost shared equally.",
+     "If mediation does not resolve the dispute within 45 days, it is finally settled by binding arbitration: {{arbitrationSeat}}. The arbitration is conducted in English. Each party bears its own legal costs unless the arbitrator finds a party acted in bad faith.",
+     "This Agreement is governed by {{governingLaw}}.",
+     "Nothing in this clause stops a party from seeking urgent interim relief from a court to protect its confidential information or intellectual property."
+    ]
+   },
+   {
+    "title": "General",
+    "clauses": [
+     "Notices under this Agreement are sent in writing to: CloudWAV -- {{cloudwavContact}}; {{partyName}} -- {{partyContact}}. A party may change its contact by written notice.",
+     "This Agreement, with its Schedules, is the whole agreement between the parties on its subject and replaces earlier discussions and drafts. It can be changed only in writing signed by both parties; the Schedules can be updated through the PartnerWAV portal where this Agreement says so.",
+     "Neither party may assign this Agreement without the other's written consent, which will not be unreasonably withheld, except to a successor to all or substantially all of its business.",
+     "The parties are independent contractors. Nothing in this Agreement creates an employment, agency or franchise relationship, and neither party may bind the other.",
+     "If a provision is found unenforceable, the rest of the Agreement stays in force. A failure to enforce a right is not a waiver of it.",
+     "Neither party is liable for delay or failure caused by events beyond its reasonable control, for as long as the event lasts.",
+     "This Agreement may be signed electronically and in counterparts."
+    ]
+   }
+  ],
+  "schedules": [
+   {
+    "title": "Schedule A -- Program details",
+    "rows": [
+     [
+      "Vendor",
+      "{{partyName}}"
+     ],
+     [
+      "Program",
+      "{{programName}}"
+     ],
+     [
+      "Vertical",
+      "{{vertical}}"
+     ],
+     [
+      "Products",
+      "{{productsText}}"
+     ],
+     [
+      "Relationship type",
+      "{{relationshipsText}}"
+     ],
+     [
+      "Launch date",
+      "{{effectiveDate}}"
+     ]
+    ]
+   },
+   {
+    "title": "Schedule B -- Commission and Override economics",
+    "rows": [
+     [
+      "Tiers, rates and bases",
+      "{{tiersTable}}"
+     ],
+     [
+      "Revenue base",
+      "{{revenueBaseText}}"
+     ],
+     [
+      "Permitted deductions",
+      "{{deductionsText}}"
+     ],
+     [
+      "Renewal / recurring duration",
+      "{{renewalDuration}}"
+     ],
+     [
+      "Payout schedule",
+      "{{payoutSchedule}}"
+     ],
+     [
+      "Currency and minimum payout",
+      "{{currency}}; minimum {{minPayout}} {{currency}}"
+     ],
+     [
+      "Platform fee",
+      "{{platformFeeShort}}"
+     ],
+     [
+      "Deal protection",
+      "{{dealProtectionDays}} days from approval; approval within {{approvalSlaDays}} business days"
+     ]
+    ]
+   },
+   {
+    "title": "Schedule C -- Installer Network",
+    "rows": [
+     [
+      "Installer Network",
+      "{{installerScheduleText}}"
+     ],
+     [
+      "Certification, countries and job types",
+      "{{installerDetails}}"
+     ]
+    ]
+   },
+   {
+    "title": "Schedule D -- Territory and exclusivity",
+    "rows": [
+     [
+      "Territory",
+      "{{territory}}"
+     ],
+     [
+      "Exclusivity",
+      "{{exclusivity}}"
+     ]
+    ]
+   },
+   {
+    "title": "Schedule E -- Resource Library guidelines",
+    "rows": [
+     [
+      "Approved content",
+      "Training recordings, product documentation, marketing collateral, case studies and approved messaging. No internal or confidential documents."
+     ],
+     [
+      "Review turnaround",
+      "CloudWAV reviews uploads within 3 business days."
+     ],
+     [
+      "Use",
+      "Customer-facing and internal sales enablement by enrolled Partners, with the Vendor's attribution and brand guidelines."
+     ]
+    ]
+   },
+   {
+    "title": "Schedule F -- Insurance and compliance",
+    "rows": [
+     [
+      "Insurance and approvals",
+      "{{insurance}}"
+     ],
+     [
+      "Breach notification",
+      "Without undue delay, and in any case within 72 hours of becoming aware."
+     ]
+    ]
+   }
+  ],
+  "html": [
+   "tiersTable"
+  ],
+  "fields": {
+   "effectiveDate": {
+    "label": "Effective date",
+    "type": "date"
+   },
+   "cloudwavEntity": {
+    "label": "CloudWAV legal entity, registration no. and address"
+   },
+   "partyEntity": {
+    "label": "Their legal entity, registration no. and address"
+   },
+   "governingLaw": {
+    "label": "Governing law (e.g. the laws of the State of Wyoming, USA)"
+   },
+   "arbitrationSeat": {
+    "label": "Seat and rules of arbitration"
+   },
+   "cloudwavContact": {
+    "label": "CloudWAV contact for notices"
+   },
+   "partyContact": {
+    "label": "Their contact for notices (name, email)"
+   },
+   "territory": {
+    "label": "Territory (countries or regions)"
+   },
+   "exclusivity": {
+    "label": "Exclusivity",
+    "def": "non-exclusive"
+   },
+   "cureDays": {
+    "label": "Cure period (days)",
+    "def": "30"
+   },
+   "liabilityCap": {
+    "label": "Liability cap",
+    "def": "the total Commission, Override and fees paid or payable under this Agreement in the 12 months before the claim"
+   },
+   "installerDetails": {
+    "label": "Installer certification, countries and job types",
+    "def": "Not applicable unless the parties complete this Schedule"
+   },
+   "insurance": {
+    "label": "Insurance and approvals the Vendor maintains",
+    "def": "As required by law for the Products in the Territory, and as the parties agree in writing"
+   }
+  }
+ },
+ "Joint Venture Agreement": {
+  "title": "PartnerWAV Joint Venture Agreement",
+  "note": "DRAFT -- not for execution until both parties and their counsel have reviewed it. Highlighted text was filled in by PartnerWAV for this agreement.",
+  "parties": [
+   "This Joint Venture Agreement (the \"Agreement\") is made on {{effectiveDate}} between:",
+   "(1) {{cloudwavEntity}} (\"CloudWAV\"); and",
+   "(2) {{partyEntity}} (\"{{partyName}}\").",
+   "{{partyName}} wishes to build a business in the Territory, and CloudWAV brings local channel access, market presence and operating expertise there. Rather than a vendor program that pays commission on sales, the parties wish to share ownership, governance and results in a joint enterprise (the \"Venture\"). The parties agree as follows."
+  ],
+  "sections": [
+   {
+    "title": "Purpose and scope",
+    "clauses": [
+     "The purpose of the Venture is: {{purpose}} (the \"Purpose\").",
+     "The Venture operates in {{territory}} (the \"Territory\").",
+     "The Venture's business model, first products, target customers and go-to-market plan are described in Schedule A. Each party will act in good faith to advance the Purpose."
+    ]
+   },
+   {
+    "title": "Structure",
+    "clauses": [
+     "The Venture is structured as: {{structure}}.",
+     "Under a contractual joint venture, no separate legal entity is formed. Each party carries on its part of the Venture through its own company, keeps its own books for it, and is responsible for its own staff and obligations, while the parties share governance of the matters in the clause on governance and share results under the clause on profit and loss.",
+     "The parties may at any time agree in writing to move the Venture into a jointly owned legal entity. If they do, they will sign the constitutional and shareholder documents needed to carry these terms across, and this Agreement continues to apply to the extent it is consistent with them."
+    ]
+   },
+   {
+    "title": "Contributions",
+    "clauses": [
+     "CloudWAV contributes: {{cloudwavContribution}}.",
+     "{{partyName}} contributes: {{partyContribution}}.",
+     "The agreed value of each contribution and any vesting conditions are recorded in Schedule D.",
+     "Neither party is required to contribute further capital. If the approved business plan needs more capital, the parties may contribute in proportion to their Ownership Percentages; if one party does not take up its share, the other may contribute it, and the Ownership Percentages are adjusted on the basis in Schedule D unless the parties agree otherwise."
+    ]
+   },
+   {
+    "title": "Ownership percentages",
+    "clauses": [
+     "The parties' interests in the Venture (the \"Ownership Percentages\") are: CloudWAV {{cloudwavShare}}% and {{partyName}} {{partyShare}}%.",
+     "The Ownership Percentages apply to the sharing of profit and loss, to Venture IP, and to the value of the Venture on exit, unless this Agreement says otherwise.",
+     "The Ownership Percentages may be agreed independently of the value of the contributions and change only as this Agreement provides or the parties agree in writing."
+    ]
+   },
+   {
+    "title": "Governance and Reserved Matters",
+    "clauses": [
+     "Day-to-day decisions within the approved budget and business plan are delegated to the operating committee, which has an equal number of representatives from each party and meets at least monthly. Delegated decisions include hiring within budget, marketing spend within budget and approval of individual deals.",
+     "The parties' senior representatives meet at least quarterly to review performance against the business plan.",
+     "The following \"Reserved Matters\" need the written consent of both parties: (a) the annual budget and business plan; (b) new product launches or major feature additions; (c) changes to go-to-market strategy, pricing or territories; (d) raising external capital or taking on material debt; (e) licensing intellectual property to third parties; (f) terminating or materially amending a major contract; (g) changes to ownership or governance; (h) transactions with a party's related parties. The full matrix is in Schedule C.",
+     "If the parties cannot agree on a Reserved Matter within 30 days, it is escalated to their chief executives, then to mediation. If it remains unresolved 60 days after mediation starts, either party may start the exit process in the clause on exit."
+    ]
+   },
+   {
+    "title": "Profit and loss",
+    "clauses": [
+     "Revenue of the Venture is: {{revenueSplit}}.",
+     "Expenses in the approved budget are shared in the Ownership Percentages, unless the budget attributes a cost to one party. Each party bears its own costs outside the budget.",
+     "Net profit is distributed {{distributionSchedule}}. Reinvestment: {{reinvestment}}.",
+     "Each party is responsible for its own taxes on its share. Each party keeps accurate records of Venture revenue and costs and gives the other access to them on reasonable notice."
+    ]
+   },
+   {
+    "title": "Staffing and operations",
+    "clauses": [
+     "Each party provides the people and resources described in Schedule A. People remain employed or engaged by the party that provides them.",
+     "Neither party will solicit for employment the other's staff working on the Venture during the term and for 12 months afterwards, without the other's consent. General recruitment advertising is not solicitation."
+    ]
+   },
+   {
+    "title": "Intellectual property",
+    "clauses": [
+     "\"Background IP\" is the intellectual property each party owned or developed before this Agreement or independently of the Venture. Each party keeps its Background IP, listed in Schedule F.",
+     "Each party grants the other a non-exclusive, royalty-free license to use its Background IP only for the Purpose in the Territory and only during the term. Neither party may use the other's Background IP for any other business without written consent.",
+     "\"Venture IP\" is intellectual property created by or for the Venture after the Effective Date. Venture IP is owned by the parties in their Ownership Percentages. Either party may use Venture IP outside the Venture only with the other's written consent.",
+     "If the Venture ends, Venture IP is dealt with under Schedule E: the continuing party may buy out the other's share at the exit valuation, failing which each party receives a non-exclusive license to use it."
+    ]
+   },
+   {
+    "title": "Confidentiality",
+    "clauses": [
+     "Each party will keep confidential the other's confidential information, including customer lists, pricing, product roadmaps and technology, and use it only for the Venture.",
+     "This does not apply to information that is public, already known, independently developed, or required to be disclosed by law.",
+     "These obligations continue for {{confidentialityYears}} years after this Agreement ends. A breach entitles the other party to seek an injunction as well as damages."
+    ]
+   },
+   {
+    "title": "Non-compete",
+    "clauses": [
+     "During the term, neither party will, without the other's written consent, carry on in the Territory a business that competes with the Purpose. For CloudWAV this means operating a program for a directly competing product in the Territory; for {{partyName}} it means launching its own direct sales operation in the Territory that competes with the Venture.",
+     "The restriction is limited to the Purpose and the Territory. Each party remains free to carry on its other products, programs and territories.",
+     "After termination the restriction continues for {{nonCompeteYears}} years in this form: in the first year the departing party will not actively solicit the Venture's customers, though existing customers may choose to stay with either party; after that no restriction applies.",
+     "The agreed remedy for a breach of this clause is liquidated damages of {{liquidatedDamages}}, which the parties accept is a genuine pre-estimate of loss."
+    ]
+   },
+   {
+    "title": "Term and termination",
+    "clauses": [
+     "This Agreement starts on the Effective Date and runs for an initial term of {{termYears}} years. It renews automatically for successive 12-month periods unless either party gives at least {{renewalNoticeDays}} days' notice before the end of the current term.",
+     "Either party may terminate for material breach that is not cured within {{cureDays}} days of written notice, or if the other becomes insolvent.",
+     "Either party may leave the Venture for convenience on {{renewalNoticeDays}} days' written notice, in which case the clause on exit applies.",
+     "On termination the parties carry out an orderly wind-down over 90 to 180 days, including a customer transition plan and the handover of intellectual property under Schedule E."
+    ]
+   },
+   {
+    "title": "Exit, buy-sell and valuation",
+    "clauses": [
+     "The exit process starts when: (a) the parties agree to dissolve the Venture; (b) one party wishes to leave and the other to continue; (c) a Reserved Matter remains deadlocked after mediation; or (d) a major market change or force majeure event makes the Purpose impracticable.",
+     "The exit method is: {{exitMethod}}. Under an independent valuation, a neutral appraiser the parties agree on (or, failing agreement, one nominated by the arbitration body) values the Venture, and the continuing party may buy the other's interest at its Ownership Percentage of that value.",
+     "The valuation basis is {{valuationBasis}}.",
+     "The price is paid in cash on completion unless the parties agree an earn-out or other terms in writing.",
+     "If neither party buys, the parties wind the Venture up, notify customers, hand over intellectual property under Schedule E and share any remaining net assets in their Ownership Percentages."
+    ]
+   },
+   {
+    "title": "Liability",
+    "clauses": [
+     "Each party is responsible for its own acts and its own staff. Neither party is liable to the other for indirect or consequential loss or loss of profit.",
+     "Each party indemnifies the other against third-party claims arising from its breach of this Agreement, its negligence or its infringement of intellectual property rights.",
+     "Except for the indemnities, breach of confidentiality and liability that cannot be limited by law, each party's total liability under this Agreement is limited to {{liabilityCap}}."
+    ]
+   },
+   {
+    "title": "Dispute resolution and governing law",
+    "clauses": [
+     "The parties will first try to resolve any dispute through their named business contacts within 15 business days of written notice of the dispute.",
+     "If that fails, the dispute goes to mediation with a neutral mediator, the cost shared equally.",
+     "If mediation does not resolve the dispute within 45 days, it is finally settled by binding arbitration: {{arbitrationSeat}}. The arbitration is conducted in English. Each party bears its own legal costs unless the arbitrator finds a party acted in bad faith.",
+     "This Agreement is governed by {{governingLaw}}.",
+     "Nothing in this clause stops a party from seeking urgent interim relief from a court to protect its confidential information or intellectual property."
+    ]
+   },
+   {
+    "title": "General",
+    "clauses": [
+     "Notices under this Agreement are sent in writing to: CloudWAV -- {{cloudwavContact}}; {{partyName}} -- {{partyContact}}. A party may change its contact by written notice.",
+     "This Agreement, with its Schedules, is the whole agreement between the parties on its subject and replaces earlier discussions and drafts. It can be changed only in writing signed by both parties; the Schedules can be updated through the PartnerWAV portal where this Agreement says so.",
+     "Neither party may assign this Agreement without the other's written consent, which will not be unreasonably withheld, except to a successor to all or substantially all of its business.",
+     "The parties are independent contractors. Nothing in this Agreement creates an employment, agency or franchise relationship, and neither party may bind the other.",
+     "If a provision is found unenforceable, the rest of the Agreement stays in force. A failure to enforce a right is not a waiver of it.",
+     "Neither party is liable for delay or failure caused by events beyond its reasonable control, for as long as the event lasts.",
+     "This Agreement may be signed electronically and in counterparts."
+    ]
+   }
+  ],
+  "schedules": [
+   {
+    "title": "Schedule A -- The Venture",
+    "rows": [
+     [
+      "Purpose",
+      "{{purpose}}"
+     ],
+     [
+      "Territory",
+      "{{territory}}"
+     ],
+     [
+      "Business model and first products",
+      "{{businessModel}}"
+     ],
+     [
+      "Structure",
+      "{{structure}}"
+     ]
+    ]
+   },
+   {
+    "title": "Schedule B -- Financial plan",
+    "rows": [
+     [
+      "Three-year plan",
+      "{{financialPlan}}"
+     ]
+    ]
+   },
+   {
+    "title": "Schedule C -- Governance matrix",
+    "rows": [
+     [
+      "Delegated to the operating committee",
+      "Hiring, marketing spend and operating costs within the approved budget; approval of individual deals; day-to-day operations."
+     ],
+     [
+      "Reserved Matters (both parties)",
+      "Annual budget and business plan; new products or major features; go-to-market, pricing or territory changes; external capital or material debt; IP licensing to third parties; major contracts; ownership or governance changes; related-party transactions."
+     ],
+     [
+      "Meetings",
+      "Operating committee monthly; senior representatives quarterly."
+     ]
+    ]
+   },
+   {
+    "title": "Schedule D -- Contributions",
+    "rows": [
+     [
+      "CloudWAV",
+      "{{cloudwavContribution}}"
+     ],
+     [
+      "{{partyName}}",
+      "{{partyContribution}}"
+     ],
+     [
+      "Ownership Percentages",
+      "CloudWAV {{cloudwavShare}}% / {{partyName}} {{partyShare}}%"
+     ],
+     [
+      "Vesting and further contributions",
+      "{{vesting}}"
+     ]
+    ]
+   },
+   {
+    "title": "Schedule E -- Exit mechanics",
+    "rows": [
+     [
+      "Method",
+      "{{exitMethod}}"
+     ],
+     [
+      "Valuation basis",
+      "{{valuationBasis}}"
+     ],
+     [
+      "Venture IP on exit",
+      "Buy-out by the continuing party at the exit valuation; otherwise a non-exclusive license to each party."
+     ]
+    ]
+   },
+   {
+    "title": "Schedule F -- Intellectual property",
+    "rows": [
+     [
+      "CloudWAV Background IP",
+      "The PartnerWAV platform, its software, processes, content and data; CloudWAV's partner and channel relationships."
+     ],
+     [
+      "{{partyName}} Background IP",
+      "{{partyBackgroundIp}}"
+     ],
+     [
+      "Venture IP",
+      "Owned in the Ownership Percentages."
+     ]
+    ]
+   }
+  ],
+  "html": [],
+  "fields": {
+   "effectiveDate": {
+    "label": "Effective date",
+    "type": "date"
+   },
+   "cloudwavEntity": {
+    "label": "CloudWAV legal entity, registration no. and address"
+   },
+   "partyEntity": {
+    "label": "Their legal entity, registration no. and address"
+   },
+   "governingLaw": {
+    "label": "Governing law (e.g. the laws of the State of Wyoming, USA)"
+   },
+   "arbitrationSeat": {
+    "label": "Seat and rules of arbitration"
+   },
+   "cloudwavContact": {
+    "label": "CloudWAV contact for notices"
+   },
+   "partyContact": {
+    "label": "Their contact for notices (name, email)"
+   },
+   "purpose": {
+    "label": "Purpose of the Venture"
+   },
+   "territory": {
+    "label": "Territory"
+   },
+   "businessModel": {
+    "label": "Business model and first products"
+   },
+   "structure": {
+    "label": "Structure",
+    "def": "a contractual joint venture"
+   },
+   "cloudwavContribution": {
+    "label": "What CloudWAV contributes"
+   },
+   "partyContribution": {
+    "label": "What they contribute"
+   },
+   "cloudwavShare": {
+    "label": "CloudWAV %"
+   },
+   "partyShare": {
+    "label": "Their %"
+   },
+   "vesting": {
+    "label": "Vesting and further contributions",
+    "def": "No vesting. Further contributions adjust the Ownership Percentages at the latest agreed valuation."
+   },
+   "revenueSplit": {
+    "label": "How revenue is attributed or split"
+   },
+   "distributionSchedule": {
+    "label": "Distribution schedule",
+    "def": "quarterly"
+   },
+   "reinvestment": {
+    "label": "Reinvestment policy",
+    "def": "all net profit is reinvested for the first 2 years; after that half is distributed and half retained"
+   },
+   "financialPlan": {
+    "label": "Three-year financial plan",
+    "def": "As set out in the business plan approved by both parties"
+   },
+   "partyBackgroundIp": {
+    "label": "Their Background IP",
+    "def": "Its products, technology, documentation and brands"
+   },
+   "confidentialityYears": {
+    "label": "Confidentiality period after termination (years)",
+    "def": "3"
+   },
+   "nonCompeteYears": {
+    "label": "Post-termination restriction (years)",
+    "def": "2"
+   },
+   "liquidatedDamages": {
+    "label": "Liquidated damages for breach of non-compete"
+   },
+   "termYears": {
+    "label": "Initial term (years)",
+    "def": "3"
+   },
+   "renewalNoticeDays": {
+    "label": "Notice period (days)",
+    "def": "180"
+   },
+   "cureDays": {
+    "label": "Cure period (days)",
+    "def": "60"
+   },
+   "exitMethod": {
+    "label": "Exit method",
+    "def": "independent valuation"
+   },
+   "valuationBasis": {
+    "label": "Valuation basis",
+    "def": "a multiple of forward EBITDA determined by the appraiser, cross-checked against discounted cash flow"
+   },
+   "liabilityCap": {
+    "label": "Liability cap",
+    "def": "the value of that party's contributions to the Venture"
+   }
+  }
+ },
+ "Custom Marketing Agreement": {
+  "title": "PartnerWAV Custom Marketing Agreement",
+  "note": "DRAFT -- not for execution until both parties and their counsel have reviewed it. Highlighted text was filled in by PartnerWAV for this agreement.",
+  "parties": [
+   "This Custom Marketing Agreement (the \"Agreement\") is made on {{effectiveDate}} between:",
+   "(1) {{cloudwavEntity}} (\"CloudWAV\"); and",
+   "(2) {{partyEntity}} (\"{{partyName}}\").",
+   "The parties wish to carry out joint marketing, market development fund (\"MDF\") and event-support activities without setting up a full vendor program. Where {{partyName}} also has a Vendor Program Agreement with CloudWAV, this Agreement sits alongside it and does not replace it: commission and override under that agreement do not apply to leads generated here, and MDF is a separate cost from commission. Where there is no Vendor Program Agreement, this Agreement is the only contract between the parties for these activities and creates no commission, override or reseller relationship. The parties agree as follows."
+  ],
+  "sections": [
+   {
+    "title": "Purpose and scope",
+    "clauses": [
+     "The parties will work together on the marketing activities described in Schedule A (the \"Activities\"): {{campaign}}.",
+     "This Agreement is {{exclusivity}}: it does not stop either party from marketing with others unless Schedule A says so.",
+     "Each party will carry out its part of the Activities with reasonable skill and care and on the timeline in Schedule A."
+    ]
+   },
+   {
+    "title": "Term",
+    "clauses": [
+     "This Agreement starts on the Effective Date and runs for {{termMonths}} months. It may be extended by written agreement.",
+     "Either party may end it early on {{noticeDays}} days' written notice."
+    ]
+   },
+   {
+    "title": "Each party's commitments",
+    "clauses": [
+     "CloudWAV will: {{cloudwavCommitment}}.",
+     "{{partyName}} will: {{partyCommitment}}.",
+     "Key dates and milestones are in Schedule A. A party that expects to miss a milestone will tell the other promptly."
+    ]
+   },
+   {
+    "title": "Marketing development fund",
+    "clauses": [
+     "The parties commit these budgets to the Activities: CloudWAV {{cloudwavFund}} and {{partyName}} {{partyFund}}, in {{currency}} (together the \"Fund\").",
+     "The Fund is spent by proposal, not freely. Before an activity, the spending party sends a short proposal describing the activity, date, expected audience and cost breakdown. The other party approves or rejects it within {{approvalDays}} business days.",
+     "After the activity, the spending party submits its claim within {{claimDays}} days of completion, with itemized receipts, supplier invoices and proof of performance such as attendee lists or campaign metrics. Claims made later than that may be refused.",
+     "An approved claim is reimbursed within {{reimburseDays}} days of receipt. If the documents are incomplete, the reimbursing party says so within 10 days and the period runs from when they are completed.",
+     "Only the expense categories listed as eligible in Schedule B are reimbursable, up to any cap stated there.",
+     "Budget not used by the end of the term lapses and does not carry over."
+    ]
+   },
+   {
+    "title": "Campaigns and lead sharing",
+    "clauses": [
+     "Each party keeps the leads that come directly from its own channels and lists.",
+     "A lead sourced jointly belongs to the party with an existing relationship with that customer; if neither has one, the parties share it equally and agree who follows up.",
+     "Neither party will use the other's leads for anything other than follow-up on the Activity that produced them."
+    ]
+   },
+   {
+    "title": "Brand use and co-branding",
+    "clauses": [
+     "Each party grants the other a limited, non-exclusive license for the term to use its names, logos and brand guidelines in the co-marketing materials for the Activities.",
+     "All co-branded materials need both parties' approval before publication. Each party will respond to a request for approval within {{reviewDays}} business days.",
+     "Co-branded materials show both parties' names and logos with similar prominence. Neither party will alter the other's marks, suggest an exclusive relationship or a wider endorsement, or create confusion about who supplies a product.",
+     "The license ends when this Agreement ends. Materials already published in print need not be recalled, but neither party will reprint or republish them."
+    ]
+   },
+   {
+    "title": "Performance and reporting",
+    "clauses": [
+     "Each party reports on the Activities it runs: event attendance and profile, webinar registrations and attendance, impressions and engagement for digital campaigns, email open and click rates, and the number and quality of leads.",
+     "Reports are provided {{reportingFrequency}} and on completion of each Activity.",
+     "If an Activity falls well short of the targets in Schedule D, either party may ask for a review, and the parties will adjust the next Activity in good faith."
+    ]
+   },
+   {
+    "title": "Confidentiality",
+    "clauses": [
+     "Neither party will disclose the other's pricing, product roadmap, customer lists or the financial terms of this Agreement.",
+     "The existence of the collaboration and each party's presence at a public event are not confidential, and either party may mention the collaboration in its marketing.",
+     "These obligations continue for {{confidentialityYears}} years after this Agreement ends."
+    ]
+   },
+   {
+    "title": "Data and lead handling",
+    "clauses": [
+     "Personal data collected through the Activities is handled under the privacy laws that apply, including the GDPR, Thailand's PDPA and US state privacy laws where relevant.",
+     "The party that collects participant data may use it for follow-up on the topic of that Activity only. It will not sell it, share it for unrelated marketing or add it to third-party databases without consent.",
+     "Leads are owned by the party with the first-party relationship. The other party has only the limited right to use them stated in the clause on campaigns and lead sharing."
+    ]
+   },
+   {
+    "title": "Termination and wind-down",
+    "clauses": [
+     "On early termination, budget not yet committed to an approved proposal is released and is not paid out.",
+     "Activities already approved and under way are completed, and claims for them are reimbursed, unless the parties agree otherwise.",
+     "Either party may terminate immediately for material breach not cured within 15 days of written notice."
+    ]
+   },
+   {
+    "title": "Liability",
+    "clauses": [
+     "Neither party is liable to the other for indirect or consequential loss or loss of profit.",
+     "Each party's total liability under this Agreement is limited to the amount of the Fund it committed, except for breach of confidentiality, misuse of the other's brand or data, and liability that cannot be limited by law."
+    ]
+   },
+   {
+    "title": "Dispute resolution and governing law",
+    "clauses": [
+     "The parties will first try to resolve any dispute through their named business contacts within 15 business days of written notice of the dispute.",
+     "If that fails, the dispute goes to mediation with a neutral mediator, the cost shared equally.",
+     "If mediation does not resolve the dispute within 45 days, it is finally settled by binding arbitration: {{arbitrationSeat}}. The arbitration is conducted in English. Each party bears its own legal costs unless the arbitrator finds a party acted in bad faith.",
+     "This Agreement is governed by {{governingLaw}}.",
+     "Nothing in this clause stops a party from seeking urgent interim relief from a court to protect its confidential information or intellectual property."
+    ]
+   },
+   {
+    "title": "General",
+    "clauses": [
+     "Notices under this Agreement are sent in writing to: CloudWAV -- {{cloudwavContact}}; {{partyName}} -- {{partyContact}}. A party may change its contact by written notice.",
+     "This Agreement, with its Schedules, is the whole agreement between the parties on its subject and replaces earlier discussions and drafts. It can be changed only in writing signed by both parties; the Schedules can be updated through the PartnerWAV portal where this Agreement says so.",
+     "Neither party may assign this Agreement without the other's written consent, which will not be unreasonably withheld, except to a successor to all or substantially all of its business.",
+     "The parties are independent contractors. Nothing in this Agreement creates an employment, agency or franchise relationship, and neither party may bind the other.",
+     "If a provision is found unenforceable, the rest of the Agreement stays in force. A failure to enforce a right is not a waiver of it.",
+     "Neither party is liable for delay or failure caused by events beyond its reasonable control, for as long as the event lasts.",
+     "This Agreement may be signed electronically and in counterparts."
+    ]
+   }
+  ],
+  "schedules": [
+   {
+    "title": "Schedule A -- Campaign details",
+    "rows": [
+     [
+      "Activities",
+      "{{campaign}}"
+     ],
+     [
+      "Timeline and milestones",
+      "{{timeline}}"
+     ],
+     [
+      "Expected audience, venue or platform",
+      "{{audience}}"
+     ],
+     [
+      "CloudWAV commitment",
+      "{{cloudwavCommitment}}"
+     ],
+     [
+      "{{partyName}} commitment",
+      "{{partyCommitment}}"
+     ],
+     [
+      "Budgets",
+      "CloudWAV {{cloudwavFund}}; {{partyName}} {{partyFund}} ({{currency}})"
+     ],
+     [
+      "Portal record",
+      "{{portalTerms}}"
+     ]
+    ]
+   },
+   {
+    "title": "Schedule B -- MDF expense categories",
+    "rows": [
+     [
+      "Eligible",
+      "Event sponsorship (booth, speaking slot, attendee passes); print production of co-branded collateral; digital advertising promoting the collaboration; joint webinars and virtual events (platform, speaker fees); co-sent email campaigns or limited list rental; trade show and conference passes and logistics."
+     ],
+     [
+      "Not eligible",
+      "Product development or engineering; sales salaries or commissions; either party's own staff time; general overhead; expenses that benefit only one party; food and drink outside an event or above an agreed per-head limit; travel and accommodation, except for event speakers where agreed; purchase of contact lists."
+     ],
+     [
+      "Caps",
+      "{{mdfCaps}}"
+     ]
+    ]
+   },
+   {
+    "title": "Schedule C -- Brand guidelines",
+    "rows": [
+     [
+      "Approval",
+      "Both parties, within {{reviewDays}} business days."
+     ],
+     [
+      "Attribution",
+      "Both names and logos with similar prominence; each party's own brand guidelines apply to its marks."
+     ]
+    ]
+   },
+   {
+    "title": "Schedule D -- Performance targets",
+    "rows": [
+     [
+      "Targets",
+      "{{targets}}"
+     ],
+     [
+      "Reporting",
+      "{{reportingFrequency}} and on completion of each Activity."
+     ]
+    ]
+   }
+  ],
+  "html": [],
+  "fields": {
+   "effectiveDate": {
+    "label": "Effective date",
+    "type": "date"
+   },
+   "cloudwavEntity": {
+    "label": "CloudWAV legal entity, registration no. and address"
+   },
+   "partyEntity": {
+    "label": "Their legal entity, registration no. and address"
+   },
+   "governingLaw": {
+    "label": "Governing law (e.g. the laws of the State of Wyoming, USA)"
+   },
+   "arbitrationSeat": {
+    "label": "Seat and rules of arbitration"
+   },
+   "cloudwavContact": {
+    "label": "CloudWAV contact for notices"
+   },
+   "partyContact": {
+    "label": "Their contact for notices (name, email)"
+   },
+   "campaign": {
+    "label": "The marketing activities"
+   },
+   "timeline": {
+    "label": "Timeline and milestones"
+   },
+   "audience": {
+    "label": "Expected audience, venue or platform"
+   },
+   "cloudwavCommitment": {
+    "label": "What CloudWAV will do"
+   },
+   "partyCommitment": {
+    "label": "What they will do"
+   },
+   "cloudwavFund": {
+    "label": "CloudWAV budget"
+   },
+   "partyFund": {
+    "label": "Their budget"
+   },
+   "currency": {
+    "label": "Currency",
+    "def": "USD"
+   },
+   "exclusivity": {
+    "label": "Exclusivity",
+    "def": "non-exclusive"
+   },
+   "termMonths": {
+    "label": "Term (months)",
+    "def": "12"
+   },
+   "noticeDays": {
+    "label": "Early termination notice (days)",
+    "def": "30"
+   },
+   "approvalDays": {
+    "label": "Proposal approval (business days)",
+    "def": "5"
+   },
+   "claimDays": {
+    "label": "Claim window (days)",
+    "def": "30"
+   },
+   "reimburseDays": {
+    "label": "Reimbursement (days)",
+    "def": "30"
+   },
+   "reviewDays": {
+    "label": "Brand review (business days)",
+    "def": "3"
+   },
+   "reportingFrequency": {
+    "label": "Reporting frequency",
+    "def": "monthly"
+   },
+   "confidentialityYears": {
+    "label": "Confidentiality period (years)",
+    "def": "2"
+   },
+   "mdfCaps": {
+    "label": "Per-item caps",
+    "def": "As stated in each approved proposal"
+   },
+   "targets": {
+    "label": "Performance targets"
+   }
+  }
+ },
+ "Partner Reseller Agreement": {
+  "title": "PartnerWAV Reseller Agreement",
+  "note": "DRAFT -- not for execution until both parties and their counsel have reviewed it. Highlighted text was filled in by PartnerWAV for this agreement.",
+  "parties": [
+   "This Reseller Agreement (the \"Agreement\") is made on {{effectiveDate}} between:",
+   "(1) {{cloudwavEntity}} (\"CloudWAV\"); and",
+   "(2) {{partyEntity}} (\"{{partyName}}\" or the \"Partner\").",
+   "CloudWAV operates the PartnerWAV platform, on which vendors run partner programs (each a \"Program\"). The Partner is a reseller, affiliate or referral partner that wishes to enroll in one or more Programs. This is a master agreement: the Partner signs it once, and it governs every Program the Partner joins. Where the Partner also has a Custom Marketing Agreement with CloudWAV, this Agreement sits alongside it. The parties agree as follows."
+  ],
+  "sections": [
+   {
+    "title": "Purpose and scope",
+    "clauses": [
+     "This Agreement sets the terms on which the Partner enrolls in Programs on PartnerWAV and markets, refers or resells the vendors' products.",
+     "CloudWAV operates the platform, tracks deals and commission, pays the Partner what it has earned and helps resolve disputes between the Partner and vendors.",
+     "The Partner is authorized to sell in {{territory}}, unless a Program states a different territory in Schedule A.",
+     "The tiers the Partner can hold (Affiliate / Referral, Reseller, Channel Manager) are defined by each Program. The Partner's tier in each Program is recorded in Schedule A."
+    ]
+   },
+   {
+    "title": "One account, many programs",
+    "clauses": [
+     "The Partner signs this Agreement once. Each Program the Partner joins afterwards is added as a row in Schedule A through the PartnerWAV portal and needs no new signature.",
+     "Schedule A as shown in the Partner's PartnerWAV account at any time is the current Schedule A.",
+     "The commission rates and other economics of a Program are those in that Program's economics schedule under the vendor's agreement with CloudWAV, and are incorporated into this Agreement by reference. They are shown to the Partner in the portal before it enrolls. If a vendor changes its rates, the change applies to deals registered after the Partner is notified, not to deals already registered."
+    ]
+   },
+   {
+    "title": "Partner profile",
+    "clauses": [
+     "The Partner's public profile -- company name, country, tagline, specialties, credentials, past projects and the contact person for vendors -- is shown in the Partner Network and to vendors. The Partner may edit it at any time and confirms it is accurate.",
+     "The Partner's private details -- legal name, phone, email, billing address, bank and payment details, tax ID and any insurance details -- are visible only to the Partner and CloudWAV and are not shared with vendors unless the Partner agrees or a payment or legal requirement needs it.",
+     "Changes to payment or tax details are verified by CloudWAV before they take effect. Schedule B lists the public and private fields."
+    ]
+   },
+   {
+    "title": "Enrollment in programs",
+    "clauses": [
+     "The Partner chooses a Program and tier in the portal, reads the Program's terms and enrolls. Open tiers are available immediately.",
+     "For restricted tiers the vendor may ask for company information or references and will approve or decline within 5 business days.",
+     "Once enrolled, the Partner has access to that vendor's Resource Library, commission tracking, deal registration for Reseller and Channel Manager tiers, and the Channel Manager tools where it holds that tier."
+    ]
+   },
+   {
+    "title": "Commission, override and payment",
+    "clauses": [
+     "The Partner earns commission on its sales and referrals at the rate for its tier in each Program, as incorporated by reference under the clause on one account, many programs.",
+     "Where the Partner holds a Channel Manager tier, it also earns the Program's override on the sales of the sub-resellers it recruited. The override is paid on top of the sub-reseller's commission, never out of it.",
+     "CloudWAV pays commission and override within {{payoutDays}} days after the end of the month in which the vendor's payment for the sale was received, on the same schedule for every Program.",
+     "The Partner chooses one payout currency: {{payoutCurrency}}. Amounts earned in other currencies are converted at the mid-market rate on the payment date, and CloudWAV bears the conversion fee.",
+     "CloudWAV applies any withholding tax the law requires and gives the Partner the certificate. The Partner provides its tax ID and any documents needed for treaty relief. Each party is responsible for its own income taxes.",
+     "If a customer is refunded, the related commission may be deducted from the next payment. Commission statements are available in the portal; the Partner should raise any query within 60 days of a statement."
+    ]
+   },
+   {
+    "title": "Deal registration and non-circumvention",
+    "clauses": [
+     "In Reseller and Channel Manager tiers, the Partner registers each qualified deal in the portal, with the customer's name, the expected value and close date and scoping notes, before proposing to the customer.",
+     "The vendor may challenge a registration within the period stated for the Program (5 business days unless stated otherwise) for a conflict with an existing deal or customer. If it does not, the deal is approved.",
+     "An approved deal is protected for the Program's protection period. If the customer buys within that period, the Partner earns the commission whichever channel takes the order.",
+     "The Partner is free to use the Partner Network and direct messaging to find, coordinate and work with other partners. The Partner will not deliberately route a registered deal around deal registration in order to avoid a vendor's or another partner's entitlement. If it does, it forfeits its commission on that deal.",
+     "The Partner will tell CloudWAV if a customer is owned or controlled by the Partner or its owners. The vendor may require approval or apply different terms to such deals.",
+     "Protection periods, processing times and the conflict process for each Program are summarized in Schedule C."
+    ]
+   },
+   {
+    "title": "Platform use and community guidelines",
+    "clauses": [
+     "The Partner may use the Partner Network, community groups, the industry feed and training for its business: finding collaborators, sharing project results with customer names removed, asking for staffing or subcontractor referrals, and coordinating sales and delivery.",
+     "The Partner will not: harass, threaten or discriminate against others; send spam or promotion outside the channels meant for it; post customers' personal data, pricing or deal terms without the customer's consent; copy, scrape or reverse-engineer the platform or other partners' profiles; or misstate its credentials or past projects.",
+     "CloudWAV may warn the Partner, suspend its account or, for serious or repeated breaches, terminate this Agreement."
+    ]
+   },
+   {
+    "title": "Confidentiality and data",
+    "clauses": [
+     "CloudWAV holds the Partner's profile, commission history and deal history. A vendor can see the Partner's public profile and, for its own Program only, the Partner's enrollment, commission statements and deal history. A vendor cannot see the Partner's results with other vendors or its private details.",
+     "The Partner will keep vendors' pricing, training materials and customer lists confidential and will not share them with anyone not enrolled in the Program.",
+     "The Partner is responsible for protecting the end-customer data it collects and for complying with the privacy laws that apply to it.",
+     "Confidentiality obligations continue for {{confidentialityYears}} years after the Partner leaves a Program or this Agreement ends."
+    ]
+   },
+   {
+    "title": "Training and certification",
+    "clauses": [
+     "A Program may require the Partner to complete training or certification before it registers deals. The requirement is shown in the Program's terms.",
+     "The Partner's certifications are recorded by CloudWAV and shown on its profile. A vendor may update its curriculum and require recertification within a reasonable period, normally 30 days."
+    ]
+   },
+   {
+    "title": "Term and termination",
+    "clauses": [
+     "This Agreement has no fixed term. It continues until terminated under this clause.",
+     "The Partner may leave a Program at any time on 30 days' notice, or immediately if it has no active registered deals. After leaving it can register no new deals in that Program; deals already registered stay commissionable until they close or their protection ends, and commission already earned is paid.",
+     "The Partner may terminate this Agreement at any time on {{partnerNoticeDays}} days' written notice.",
+     "CloudWAV may terminate this Agreement on {{cloudwavNoticeDays}} days' written notice if the Partner materially breaches it, no longer operates as a reseller, service provider or affiliate, or becomes insolvent. CloudWAV may suspend the account immediately where needed to protect others on the platform.",
+     "On termination the Partner leaves all Programs and loses access to its account. Commission on deals registered before termination continues to be paid when those deals close. Vendors have 30 days to arrange handover of the Partner's open deals."
+    ]
+   },
+   {
+    "title": "Liability",
+    "clauses": [
+     "CloudWAV is not liable for a vendor's acts or omissions, including a vendor's failure to pay, the quality of its products or its service levels. CloudWAV will use reasonable efforts to recover commission a vendor owes the Partner.",
+     "CloudWAV is responsible for its own commission processing errors, which it will correct within 30 days of being told; for keeping the platform available, with a target of 99.5% uptime; and for unauthorized access to the Partner's confidential information caused by CloudWAV's failure.",
+     "Neither party is liable for indirect or consequential loss or loss of profit. Each party's total liability under this Agreement is limited to the greater of the commission paid to the Partner in the 12 months before the claim and {{liabilityFloor}}.",
+     "The Partner indemnifies CloudWAV against third-party claims arising from the Partner's misrepresentation, breach of confidentiality or breach of the platform guidelines."
+    ]
+   },
+   {
+    "title": "Disputes with vendors",
+    "clauses": [
+     "If the Partner and a vendor disagree about a commission amount, a deal conflict or a rejected registration, either may refer it to CloudWAV. CloudWAV reviews both sides' evidence and gives its determination within 15 business days.",
+     "If the Partner or the vendor does not accept the determination, either may take the matter to mediation, sharing the cost equally."
+    ]
+   },
+   {
+    "title": "Dispute resolution and governing law",
+    "clauses": [
+     "The parties will first try to resolve any dispute through their named business contacts within 15 business days of written notice of the dispute.",
+     "If that fails, the dispute goes to mediation with a neutral mediator, the cost shared equally.",
+     "If mediation does not resolve the dispute within 45 days, it is finally settled by binding arbitration: {{arbitrationSeat}}. The arbitration is conducted in English. Each party bears its own legal costs unless the arbitrator finds a party acted in bad faith.",
+     "This Agreement is governed by {{governingLaw}}.",
+     "Nothing in this clause stops a party from seeking urgent interim relief from a court to protect its confidential information or intellectual property."
+    ]
+   },
+   {
+    "title": "General",
+    "clauses": [
+     "Notices under this Agreement are sent in writing to: CloudWAV -- {{cloudwavContact}}; {{partyName}} -- {{partyContact}}. A party may change its contact by written notice.",
+     "This Agreement, with its Schedules, is the whole agreement between the parties on its subject and replaces earlier discussions and drafts. It can be changed only in writing signed by both parties; the Schedules can be updated through the PartnerWAV portal where this Agreement says so.",
+     "Neither party may assign this Agreement without the other's written consent, which will not be unreasonably withheld, except to a successor to all or substantially all of its business.",
+     "The parties are independent contractors. Nothing in this Agreement creates an employment, agency or franchise relationship, and neither party may bind the other.",
+     "If a provision is found unenforceable, the rest of the Agreement stays in force. A failure to enforce a right is not a waiver of it.",
+     "Neither party is liable for delay or failure caused by events beyond its reasonable control, for as long as the event lasts.",
+     "This Agreement may be signed electronically and in counterparts."
+    ]
+   }
+  ],
+  "schedules": [
+   {
+    "title": "Schedule A -- Programs enrolled",
+    "rows": [
+     [
+      "Programs at the date of this Agreement",
+      "{{programsTable}}"
+     ],
+     [
+      "Later programs",
+      "Added through the PartnerWAV portal when the Partner enrolls; no new signature needed."
+     ],
+     [
+      "Commission",
+      "Per each Program's economics schedule, incorporated by reference and shown in the portal."
+     ]
+    ]
+   },
+   {
+    "title": "Schedule B -- Partner profile",
+    "rows": [
+     [
+      "Public",
+      "Company name: {{partyName}}. Country: {{partnerCountry}}. Tagline, specialties, credentials, past projects and vendor contact as shown on the Partner's PartnerWAV profile."
+     ],
+     [
+      "Private",
+      "Legal name, phone, email, billing address, bank and payment details, tax ID and insurance details. Visible to the Partner and CloudWAV only."
+     ]
+    ]
+   },
+   {
+    "title": "Schedule C -- Deal registration",
+    "rows": [
+     [
+      "Vendor response",
+      "5 business days unless the Program states otherwise."
+     ],
+     [
+      "Protection period",
+      "As stated for each Program and tier (typically 30 to 90 days)."
+     ],
+     [
+      "Conflicts",
+      "Earlier approved registration prevails; CloudWAV determines disputes within 15 business days."
+     ],
+     [
+      "After leaving a Program",
+      "Registered deals stay commissionable until they close or protection ends."
+     ]
+    ]
+   }
+  ],
+  "html": [
+   "programsTable"
+  ],
+  "fields": {
+   "effectiveDate": {
+    "label": "Effective date",
+    "type": "date"
+   },
+   "cloudwavEntity": {
+    "label": "CloudWAV legal entity, registration no. and address"
+   },
+   "partyEntity": {
+    "label": "Their legal entity, registration no. and address"
+   },
+   "governingLaw": {
+    "label": "Governing law (e.g. the laws of the State of Wyoming, USA)"
+   },
+   "arbitrationSeat": {
+    "label": "Seat and rules of arbitration"
+   },
+   "cloudwavContact": {
+    "label": "CloudWAV contact for notices"
+   },
+   "partyContact": {
+    "label": "Their contact for notices (name, email)"
+   },
+   "territory": {
+    "label": "Territory the Partner sells in"
+   },
+   "payoutDays": {
+    "label": "Payout (days after month end)",
+    "def": "30"
+   },
+   "payoutCurrency": {
+    "label": "Payout currency",
+    "def": "USD"
+   },
+   "confidentialityYears": {
+    "label": "Confidentiality period (years)",
+    "def": "2"
+   },
+   "partnerNoticeDays": {
+    "label": "Partner's notice to terminate (days)",
+    "def": "30"
+   },
+   "cloudwavNoticeDays": {
+    "label": "CloudWAV's notice to terminate (days)",
+    "def": "60"
+   },
+   "liabilityFloor": {
+    "label": "Liability floor",
+    "def": "USD 50,000"
+   }
+  }
+ }
+};
+  var AGR_TEMPLATES = { "Software Project Referral Agreement": {
+    title:SRA_TEMPLATE.title, note:SRA_TEMPLATE.note, parties:SRA_TEMPLATE.parties, sections:SRA_TEMPLATE.sections,
+    schedules:[{ title:"Schedule A -- Commercial terms", rows:SRA_TEMPLATE.schedule }], html:[], fields:AGR_FILL_FIELDS } };
+  Object.keys(AGR_TEMPLATE_TEXT).forEach(function(k){ AGR_TEMPLATES[k] = AGR_TEMPLATE_TEXT[k]; });
+  function agrFields(a){ var T = AGR_TEMPLATES[a.type]; return (T && T.fields) || {}; }
   function agrHasDoc(a){ return !!(a && a.source !== "outside" && AGR_TEMPLATES[a.type]); }
   function agrIsBlank(v){ return v == null || v === "" || /_{4,}|\[.+\]|to be confirmed/i.test(String(v)); }
-  function agrDocValues(a){
-    if (a.filled) return a.filled;   // sent or signed: exactly what went out
-    var h = a.kind === "referral" ? houseById(a.houseId) : null, v = sraValues(h), L = agrLegal(), f = a.fields || {};
-    if (a.kind !== "referral"){ v.houseName = agrParty(a); v.houseAddressText = ""; }
-    if (L.entity) v.cloudwavEntity = L.entity;
-    if (L.contact) v.cloudwavContact = L.contact;
-    Object.keys(AGR_FILL_FIELDS).forEach(function(k){ if (f[k]) v[k] = f[k]; });
+  // Everything the portal already knows about this agreement
+  function agrBaseValues(a){
+    var L = agrLegal(), pid = String(a.partyKey || "").split(":")[1];
+    var v = { effectiveDate:"", cloudwavEntity:L.entity || "", cloudwavContact:L.contact || "", governingLaw:L.law || "", arbitrationSeat:L.seat || "",
+      partyName:agrParty(a), partyEntity:"", partyContact:"" };
+    var cell = function(x){ return '<td>' + esc(x == null ? "" : x) + '</td>'; };
+    if (a.type === "Software Project Referral Agreement"){
+      var sv = sraValues(a.kind === "referral" ? houseById(a.houseId) : null);
+      Object.keys(sv).forEach(function(k){ v[k] = sv[k]; });
+      if (a.kind !== "referral"){ v.houseName = agrParty(a); v.houseAddressText = ""; }
+      if (L.entity) v.cloudwavEntity = L.entity;
+      if (L.contact) v.cloudwavContact = L.contact;
+      v.partyName = v.houseName;
+      return v;
+    }
+    var p = programById(a.programId) || (a.kind === "vendor" ? programById(pid) : null);
+    if (a.type === "Vendor Program Agreement"){
+      v.programName = p ? p.name : agrParty(a); v.vertical = (p && p.vertical) || "--";
+      v.productsText = p && (p.products || []).length ? p.products.map(function(x){ return x.name; }).join(", ") : v.programName;
+      v.relationshipsText = p ? (p.relationships || []).join(", ") : "Vendor Program";
+      var t = p ? termsFor(p) : defaultTerms({ tiers:[] }), fee = p ? feeFor(p.id) : { enabled:false }, net = t.revenueBase !== "gross";
+      v.revenueBaseText = net ? "Net Revenue" : "Gross Revenue (the amounts invoiced to the Customer for the Products, before any deduction)";
+      v.deductionsText = net ? ((t.deductions || []).length ? t.deductions.join("; ") : "none") : "not applicable, because Commission is calculated on Gross Revenue";
+      v.renewalDuration = /life of account/i.test(t.renewalDuration) ? "the life of the Customer account" : t.renewalDuration;
+      v.currency = t.currency; v.payoutSchedule = String(t.payoutSchedule || "").toLowerCase(); v.minPayout = t.minPayout;
+      v.dealProtectionDays = t.dealProtectionDays; v.approvalSlaDays = t.approvalSlaDays; v.termMonths = t.termMonths;
+      v.terminationNoticeDays = t.terminationNoticeDays; v.postTerminationMonths = t.postTerminationMonths; v.commissionTailMonths = t.commissionTailMonths;
+      v.renewalText = t.autoRenew ? "It then renews automatically for successive 12-month periods unless either party gives notice of non-renewal at least " + t.terminationNoticeDays + " days before the end of the current term." : "It does not renew automatically.";
+      v.installerMarginText = t.installerMargin ? "On jobs delivered through the Certified Installer Network, CloudWAV earns an Installer Network margin of " + t.installerMargin + " on installer billings, separate from Commission." : "No Installer Network margin applies to this Program unless Schedule C is completed.";
+      v.installerScheduleText = t.installerMargin ? "Applies. CloudWAV margin: " + t.installerMargin : "Not applicable to this Program at the Effective Date.";
+      v.platformFeeText = fee.enabled ? "The Vendor pays CloudWAV a platform fee of " + feeRateText(fee, false) + " of deal value on sales by Partners the Vendor brought to the Program and " + feeRateText(fee, true) + " on sales by Partners CloudWAV brought in, "
+          + (fee.basis === "contract" ? "invoiced on the full deal value when the deal is approved" : "invoiced as the Vendor collects from the Customer") + ". The platform fee is paid by the Vendor in addition to Commission and never reduces what a Partner earns."
+        : "No platform fee applies to this Program.";
+      v.platformFeeShort = fee.enabled ? feeRateText(fee, false) + " (Vendor's own partners); " + feeRateText(fee, true) + " (partners CloudWAV brought in); " + String(FEE_BASIS[fee.basis] || "").toLowerCase() : "None";
+      v.nonCircumventionText = t.nonCircumvention ? "The Vendor will not deal directly with a Customer or prospect introduced through a registered deal, or route such a deal through another channel, in order to avoid Commission, Override or fees under this Agreement. If it does, the amounts that would have been due remain payable."
+        : "The parties have agreed that no non-circumvention clause applies to this Program.";
+      v.proServicesText = t.proServicesAllowed ? "CloudWAV, Partners and certified installers may provide consulting, implementation, integration, training and other professional services to Customers in connection with the Products, on their own terms. The Vendor will not block or restrict this, and may also offer its own services."
+        : "Professional services for the Products are provided by the Vendor only, unless the Vendor agrees otherwise in writing for a Customer.";
+      v.tiersTable = '<table class="agr-table"><thead><tr><th>Tier</th><th>Rate</th><th>Base</th></tr></thead><tbody>'
+        + ((p && p.tiers) || []).map(function(x){ return '<tr>' + cell(x.tier) + cell(x.rate) + cell(x.base) + '</tr>'; }).join("") + '</tbody></table>';
+      if (t.effectiveDate) v.effectiveDate = t.effectiveDate;
+    }
+    if (a.type === "Partner Reseller Agreement"){
+      var pp = a.kind === "partner" ? partnerById(pid) : null;
+      v.partnerCountry = (pp && pp.country) || "--"; if (pp && pp.country) v.territory = pp.country;
+      var rows = enrollments.filter(function(e){ return e.partnerId === pid; }).map(function(e){ return { id:e.programId, tier:e.tier, joined:e.joined }; });
+      if (a.programId && !rows.some(function(r){ return r.id === a.programId; })) rows.push({ id:a.programId, tier:"As chosen at enrollment", joined:"On signature" });
+      v.programsTable = rows.length ? '<table class="agr-table"><thead><tr><th>Program</th><th>Tier</th><th>Commission</th><th>Enrolled</th></tr></thead><tbody>'
+        + rows.map(function(r){ var pr = programById(r.id); return '<tr>' + cell(pr ? pr.name : r.id) + cell(r.tier) + cell("Per the Program's economics schedule") + cell(r.joined) + '</tr>'; }).join("") + '</tbody></table>' : "None yet.";
+    }
+    if (a.type === "Custom Marketing Agreement") v.portalTerms = p && (p.tiers || []).length ? p.tiers.map(function(x){ return x.tier + ": " + x.rate; }).join("; ") : "--";
     return v;
   }
-  function agrMissing(a){ var v = agrDocValues(a); return Object.keys(AGR_FILL_FIELDS).filter(function(k){ return agrIsBlank(v[k]); }); }
-  // mode: "edit" (CloudWAV, before sending: blanks are inputs), "read" (on screen), "print" (plain text)
+  function agrDocValues(a){
+    if (a.filled) return a.filled;   // sent or signed: exactly what went out
+    var v = agrBaseValues(a), f = a.fields || {}, FF = agrFields(a);
+    Object.keys(FF).forEach(function(k){
+      if (f[k]) v[k] = f[k];
+      else if (agrIsBlank(v[k]) && FF[k].def != null) v[k] = FF[k].def;
+      else if (v[k] == null) v[k] = "";
+    });
+    return v;
+  }
+  function agrMissing(a){ var v = agrDocValues(a); return Object.keys(agrFields(a)).filter(function(k){ return agrIsBlank(v[k]); }); }
+  // mode: "edit" (CloudWAV, before sending: fields are inputs), "read" (on screen), "print" (plain text)
   function agrDocHtml(a, mode){
-    var T = AGR_TEMPLATES[a.type], v = agrDocValues(a), signedMap = {};
+    var T = AGR_TEMPLATES[a.type], v = agrDocValues(a), FF = agrFields(a), raw = T.html || [], signedMap = {};
     (a.signers || []).forEach(function(x){ signedMap[x.name] = x; });
     var fill = function(text){
-      var raw = String(text).replace(/\{\{(\w+)\}\}/g, function(_, k){ return "\u0001" + k + "\u0002"; });
-      return esc(raw).replace(/\u0001(\w+)\u0002/g, function(_, k){
-        var val = v[k], field = AGR_FILL_FIELDS[k];
+      var marked = String(text).replace(/\{\{(\w+)\}\}/g, function(_, k){ return "\u0001" + k + "\u0002"; });
+      return esc(marked).replace(/\u0001(\w+)\u0002/g, function(_, k){
+        var val = v[k], field = FF[k];
+        if (raw.indexOf(k) > -1) return val || "";
         if (val == null) return "";
         if (field && mode === "edit"){
-          var blank = agrIsBlank(val);
-          return '<input class="agr-field' + (blank ? " empty" : "") + '" type="' + (field.type === "date" ? "date" : "text") + '" data-agr-field="' + k + '" value="' + esc(blank ? "" : val).replace(/"/g, "&quot;") + '" placeholder="' + esc(field.label) + '" aria-label="' + esc(field.label) + '">';
+          var blank = agrIsBlank(val), short = field.type !== "date" && String(field.def || "x".repeat(20)).length < 8;
+          return '<input class="agr-field' + (blank ? " empty" : "") + (short ? " short" : "") + '" type="' + (field.type === "date" ? "date" : "text") + '" data-agr-field="' + k + '" value="' + esc(blank ? "" : val).replace(/"/g, "&quot;") + '" placeholder="' + esc(field.label) + '" title="' + esc(field.label) + '" aria-label="' + esc(field.label) + '">';
         }
         if (field && agrIsBlank(val)) return mode === "print" ? "________________" : '<span class="agr-blank">' + esc(field.label) + ' -- to be filled in</span>';
         return mode === "print" || val === "" ? esc(val) : '<span class="agr-filled">' + esc(val) + '</span>';
       });
     };
+    var party = v.partyName || v.houseName || agrParty(a);
     var sigLine = function(name){
       var x = signedMap[name] || (name !== "CloudWAV" ? (a.signers || [])[1] : null);
       return x && x.signed ? "Signed " + esc(x.signedAt || a.signedAt || "") : "Name / title / date: ______________________";
@@ -10378,8 +11666,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + T.sections.map(function(sec, i){
           return '<h2>' + (i + 1) + '. ' + esc(sec.title) + '</h2>' + sec.clauses.map(function(c, j){ var txt = fill(c).trim(); return txt ? '<p><b>' + (i + 1) + '.' + (j + 1) + '</b> ' + txt + '</p>' : ''; }).join("");
         }).join("")
-      + '<h2>Schedule A -- Commercial terms</h2><table class="agr-table"><tbody>' + T.schedule.map(function(r){ return '<tr><th>' + esc(r[0]) + '</th><td>' + fill(r[1]) + '</td></tr>'; }).join("") + '</tbody></table>'
-      + '<h2>Signatures</h2><table class="agr-table"><tbody><tr><th>For CloudWAV</th><td>' + sigLine("CloudWAV") + '</td></tr><tr><th>For ' + esc(v.houseName) + '</th><td>' + sigLine(v.houseName) + '</td></tr></tbody></table>'
+      + (T.schedules || []).map(function(sc){
+          return '<h2>' + fill(sc.title) + '</h2><table class="agr-table"><tbody>' + sc.rows.map(function(r){ return '<tr><th>' + fill(r[0]) + '</th><td>' + fill(r[1]) + '</td></tr>'; }).join("") + '</tbody></table>';
+        }).join("")
+      + '<h2>Signatures</h2><table class="agr-table"><tbody><tr><th>For CloudWAV</th><td>' + sigLine("CloudWAV") + '</td></tr><tr><th>For ' + esc(party) + '</th><td>' + sigLine(party) + '</td></tr></tbody></table>'
       + '</article>';
   }
   function agrDocModal(a){
@@ -10397,7 +11687,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var note = function(){
       var el = back.querySelector("#agrDocStatus"); if (!el) return;
       var m = agrMissing(a);
-      el.innerHTML = m.length ? '<b>' + m.length + ' field' + (m.length > 1 ? 's' : '') + ' still to fill in</b> (shown in red): ' + m.map(function(k){ return esc(AGR_FILL_FIELDS[k].label); }).join("; ") + '. Everything highlighted was filled in from the portal.'
+      var FF = agrFields(a), names = m.slice(0, 6).map(function(k){ return esc(FF[k].label); }).join("; ") + (m.length > 6 ? "; and " + (m.length - 6) + " more" : "");
+      el.innerHTML = m.length ? '<b>' + m.length + ' field' + (m.length > 1 ? 's' : '') + ' still to fill in</b> (shown in red): ' + names + '. Everything highlighted was filled in from the portal; the other fields hold a standard value you can change.'
         : '<b>All fields are filled in.</b> Read the rest of the agreement through, then send it for signature.';
     };
     note();
@@ -10435,6 +11726,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<span class="field-note">Entered once and filled into every agreement. Only CloudWAV can see or change this; the other side sees it only inside an agreement you send them.</span>'
       + '<div class="field-row"><label for="legalEntity">Legal entity, registration no. and address</label><textarea id="legalEntity" placeholder="e.g. [Company name] LLC, a Wyoming limited liability company (ID no. ...), of [address]">' + esc(L.entity || "") + '</textarea></div>'
       + '<div class="field-row"><label for="legalContact">Contact for notices</label><input type="text" id="legalContact" value="' + a(L.contact) + '" placeholder="Name, email"></div>'
+      + '<div class="field-row"><label for="legalLaw">Usual governing law</label><input type="text" id="legalLaw" value="' + a(L.law) + '" placeholder="e.g. the laws of the State of Wyoming, USA"></div>'
+      + '<div class="field-row"><label for="legalSeat">Usual seat and rules of arbitration</label><input type="text" id="legalSeat" value="' + a(L.seat) + '" placeholder="e.g. seat, institution and rules"><span class="field-note">Both can be changed on any single agreement. The Software Project Referral Agreement keeps its own Thai law clause.</span></div>'
       + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-agr-legal-save>Save</button><button type="button" class="btn secondary sm" data-agr-modal-close>Cancel</button></div></div>');
   }
 
@@ -10794,8 +12087,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("[data-agr-legal-open]") && state.role === "operator"){ agrLegalModal(); return; }
     if (t.closest("[data-agr-legal-save]") && state.role === "operator"){
       var le = (document.getElementById("legalEntity") || {}).value || "", lc = (document.getElementById("legalContact") || {}).value || "";
+      var ll = (document.getElementById("legalLaw") || {}).value || "", ls = (document.getElementById("legalSeat") || {}).value || "";
       operatorSettings = operatorSettings.filter(function(x){ return x.id !== "legal"; });
-      operatorSettings.push({ id:"legal", entity:le.trim().replace(/\s+/g, " "), contact:lc.trim(), updatedAt:todayIso() });
+      operatorSettings.push({ id:"legal", entity:le.trim().replace(/\s+/g, " "), contact:lc.trim(), law:ll.trim(), seat:ls.trim(), updatedAt:todayIso() });
       closeModal(); saveReferrals(); toast("Legal details saved"); render(); return;
     }
     if ((b = t.closest("[data-agr-review]"))){ var ra = agrById(b.getAttribute("data-agr-review")); if (ra) agrOutsideModal(ra); return; }

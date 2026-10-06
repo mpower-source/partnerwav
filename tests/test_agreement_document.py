@@ -51,10 +51,51 @@ with sync_playwright() as p:
     ok("CloudWAV Test LLC" in pg.inner_text(".agr-doc") and "CloudWAV Real LLC" not in pg.inner_text(".agr-doc"), "The agreement already sent keeps the text it went out with")
     pg.click(".modal-close"); pg.wait_for_timeout(200)
 
-    # agreements whose text is not in the portal say so
-    pg.locator('#operatorAgreementsContent tr[data-agr-row="agr-vendor-intelsense"] [data-agr-view]').click(); pg.wait_for_timeout(300)
-    ok(pg.locator("[data-agr-no-text]").count() == 1 and "Vendor Program Agreement" in pg.inner_text("[data-agr-no-text]"), "An agreement without its text in the portal says so plainly")
+    # the one agreement type with no text yet says so
+    pg.locator('#operatorAgreementsContent tr[data-agr-row="agr-vendor-unisense"] [data-agr-view]').click(); pg.wait_for_timeout(300)
+    ok(pg.locator("[data-agr-no-text]").count() == 1 and "SaaS Reseller Agreement" in pg.inner_text("[data-agr-no-text]"), "SaaS Reseller Agreement (no text written yet) says so plainly")
     pg.click("#modalClose2"); pg.wait_for_timeout(150)
+
+    # ----- Vendor Program Agreement: full text, filled from the program's configuration
+    pg.locator('#operatorAgreementsContent tr[data-agr-row="agr-vendor-crossconnect"] [data-agr-edit]').click(); pg.wait_for_timeout(200)
+    pg.select_option("#agrEditStatus", "draft"); pg.click("[data-agr-edit-save]"); pg.wait_for_timeout(300)
+    pg.locator('#operatorAgreementsContent tr[data-agr-row="agr-vendor-crossconnect"] [data-agr-view]').click(); pg.wait_for_timeout(400)
+    d = pg.locator(".agr-doc"); t = d.inner_text()
+    ok("PartnerWAV Vendor Program Agreement" in t and d.locator("h2").count() >= 20 and all(x in t for x in ["The tier ladder", "Deal registration and conflicts", "Certified Installer Network", "Professional services", "Schedule B", "Schedule F", "Signatures"]), "Vendor Program Agreement shows in full: 15 sections and Schedules A-F")
+    ok(d.locator(".agr-table .agr-table td", has_text="Affiliate").count() >= 1 and "12% on hardware sale" in t and "Cross Connect" in t, "Schedule B carries the program's own tiers and rates")
+    ok("90 days" in t and "Net Revenue" not in d.locator("p", has_text="Commission is calculated on").first.inner_text() and "Gross Revenue" in t, "Protection window and revenue base come from the program's configuration (Cross Connect pays on gross)")
+    ok("platform fee of 3%" in t and "6%" in t, "The platform fee clause reflects the fee set in the portal")
+    ok(pg.input_value('input[data-agr-field="cloudwavEntity"] >> nth=0') == "CloudWAV Real LLC, a Wyoming limited liability company" and pg.input_value('input[data-agr-field="cureDays"]') == "30", "CloudWAV details and standard values are pre-filled, and stay editable")
+    miss = pg.inner_text("#agrDocStatus")
+    ok("still to fill in" in miss and "Territory" in miss and "Their legal entity" in miss, "It lists what only you can supply (their legal entity, territory, governing law...)")
+    for k, val in [("effectiveDate", "2026-11-01"), ("partyEntity", "Cross Connect Inc., a Delaware corporation"), ("territory", "United States and Thailand"), ("governingLaw", "the laws of the State of Wyoming, USA"), ("arbitrationSeat", "seated in Cheyenne, Wyoming under the AAA Commercial Rules"), ("partyContact", "Dana, dana@crossconnect.example")]:
+        f = pg.locator(f'input[data-agr-field="{k}"]').first; f.fill(val); f.dispatch_event("change")
+    pg.wait_for_timeout(200)
+    ok("All fields are filled in" in pg.inner_text("#agrDocStatus"), "Filling them clears the list")
+    ok(pg.locator('input[data-agr-field="effectiveDate"]').count() >= 2 and all(v == "2026-11-01" for v in pg.locator('input[data-agr-field="effectiveDate"]').evaluate_all("els => els.map(e => e.value)")), "A field that appears twice (opening line and schedule) stays in step")
+    pg.click("[data-agr-doc-send]"); pg.wait_for_timeout(400)
+    pg.locator('#operatorAgreementsContent tr[data-agr-row="agr-vendor-crossconnect"] [data-agr-view]').click(); pg.wait_for_timeout(300)
+    t = pg.inner_text(".agr-doc")
+    ok(pg.locator(".agr-doc input").count() == 0 and "Cross Connect Inc., a Delaware corporation" in t and "United States and Thailand" in t and "{{" not in t and "undefined" not in t, "Sent: fixed text, nothing left unfilled, no stray placeholders")
+    pg.click(".modal-close"); pg.wait_for_timeout(200)
+
+    # ----- the other three open in full too, with no stray placeholders
+    for rowid, title, must in [("agr-vendor-botnoi", "PartnerWAV Joint Venture Agreement", ["Governance and Reserved Matters", "Exit, buy-sell and valuation", "Schedule F"]),
+                               ("agr-vendor-zipevent", "PartnerWAV Custom Marketing Agreement", ["Marketing development fund", "Brand use and co-branding", "Schedule B -- MDF expense categories"]),
+                               ("agr-partner-siam-digital-botnoi", "PartnerWAV Reseller Agreement", ["One account, many programs", "Deal registration and non-circumvention", "Schedule A -- Programs enrolled"])]:
+        pg.locator(f'#operatorAgreementsContent tr[data-agr-row="{rowid}"] [data-agr-view]').click(); pg.wait_for_timeout(300)
+        t = pg.inner_text(".agr-doc")
+        ok(title in t and all(m in t for m in must) and "{{" not in t and "undefined" not in t and "Signatures" in t, title + " opens in full")
+        pg.click(".modal-close"); pg.wait_for_timeout(150)
+    pg.locator('#operatorAgreementsContent tr[data-agr-row="agr-partner-siam-digital-botnoi"] [data-agr-view]').click(); pg.wait_for_timeout(300)
+    t = pg.inner_text(".agr-doc")
+    ok("Intelsense AI" in t and "Botnoi Voice" in t and "Thailand" in t, "Reseller Agreement lists the partner's enrolled programs and country")
+    pg.click(".modal-close"); pg.wait_for_timeout(150)
+    # the partner reads the same document, read-only
+    role(pg, "partner"); nav(pg, "partner-agreements")
+    pg.locator('#agreementsContent tr[data-agr-row="agr-partner-siam-digital-botnoi"] [data-agr-view]').click(); pg.wait_for_timeout(300)
+    ok("PartnerWAV Reseller Agreement" in pg.inner_text(".agr-doc") and pg.locator(".agr-doc input").count() == 0 and pg.locator("[data-agr-doc-send]").count() == 0, "The partner sees the full agreement, read-only")
+    pg.click(".modal-close"); pg.wait_for_timeout(150)
     pg.reload(); pg.wait_for_timeout(900); role(pg, "operator"); nav(pg, "operator-agreements")
     pg.locator(f'#operatorAgreementsContent tr[data-agr-row="{aid}"] [data-agr-view]').click(); pg.wait_for_timeout(300)
     ok("CloudWAV Test LLC" in pg.inner_text(".agr-doc"), "Everything is still there after a reload")
