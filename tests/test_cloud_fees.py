@@ -59,8 +59,7 @@ with sync_playwright() as p:
     b.close()
 
     b, ctx, pg = session(p, "vendor@intelsense.test"); nav(pg, "partner-agreements"); pg.wait_for_timeout(300)
-    vc = pg.inner_text("#vendorFeeCard")
-    ok("Chiang Mai hospital voice bot" in vc and "$2,000" in vc and "2.5%" in vc, "Vendor sees the fee and their rate")
+    ok(pg.locator("#vendorFeeCard").count() == 0 and "Chiang Mai hospital voice bot" not in pg.inner_text("#scr-partner-agreements"), "No platform fee summary on the vendor's Agreements page")
     b.close()
 
     sel = "select id from portal_records where collection in ('platformFees','programFees')"
