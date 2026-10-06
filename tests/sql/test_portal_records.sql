@@ -260,6 +260,7 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authent
 select t('the vendor on the agreement can open its file', (select count(*) from storage.objects where name like 'agreements/%') = 1);
 select t('the vendor cannot upload or replace agreement files', fails($$insert into storage.objects(bucket_id,name) values ('portal-files','agreements/agr-out-1/swap.pdf')$$));
 select t('the vendor never sees CloudWAV''s review notes', (select count(*) from portal_records where collection='agreementReviews') = 0);
+select t('a vendor cannot plant CloudWAV settings or vendor introductions', fails($$insert into portal_records(collection,id,data,readers,writers) values ('operatorSettings','legal','{"id":"legal","entity":"Fake LLC"}','{vendor:intelsense}','{vendor:intelsense}')$$) and fails($$insert into portal_records(collection,id,data,readers,writers) values ('vendorReferrals','botnoi','{"id":"botnoi"}','{vendor:intelsense}','{vendor:intelsense}')$$));
 select t('the vendor cannot write review notes', fails($$insert into portal_records(collection,id,data,readers,writers) values ('agreementReviews','agr-out-1x','{}','{vendor:intelsense}','{vendor:intelsense}')$$));
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authenticated;

@@ -14,6 +14,7 @@ const v = {
   houseName: "[Software house legal name]", houseAddressText: " of [address]",
   referralRate: T.referralRate, windowMonths: T.windowMonths, stepDownRate: T.stepDownRate, stepDownMonths: T.stepDownMonths,
   cosellRate: T.cosellRate, cosellMonths: T.cosellMonths, resellDiscount: T.resellDiscount,
+  vendorReferralRate: T.vendorReferralRate, vendorReferralMonths: T.vendorReferralMonths,
   maintenanceText: T.maintenanceHalf ? "half the applicable rate" : "the full applicable rate",
   minFeeText: T.minFee ? "The minimum fee for each won Project is " + money(T.minFee) + ". " : "",
   capText: T.capPerYear ? "Fees for any one Client are capped at " + money(T.capPerYear) + " per 12 months." : "There is no minimum fee and no cap.",

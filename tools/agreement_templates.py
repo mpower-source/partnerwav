@@ -75,11 +75,12 @@ T["Vendor Program Agreement"] = {
     "The Vendor pays Commission on every sale of the Products to a Customer that is attributable to a Partner or to CloudWAV, at the rates in Schedule B.",
     "Commission is calculated on {{revenueBaseText}}, as defined in clause 5.4.",
     "Commission on renewals and recurring revenue continues for {{renewalDuration}} from the Customer's first purchase, at the renewal rate in Schedule B.",
-    "Discounts the Vendor chooses to give a Customer reduce the revenue on which Commission is calculated only to the extent they reduce what the Customer actually pays; they are not otherwise deducted."
+    "Discounts the Vendor chooses to give a Customer reduce the revenue on which Commission is calculated only to the extent they reduce what the Customer actually pays; they are not otherwise deducted.",
+    "Any rate agreed for a named Partner that differs from the tier rates is stated in Schedule B under Special terms and applies only to that Partner."
   ]},
   {"title": "Override, installer margin, CloudWAV's compensation and Net Revenue", "clauses": [
-    "A Channel Manager earns the Override in Schedule B on sales made by the sub-resellers it recruited. CloudWAV acts as Channel Manager for the Partners it recruits into the Program and earns the Override on their sales.",
-    "The Override is additive: it is paid on top of the sub-reseller's Commission as a separate line and is never taken out of it. CloudWAV's compensation for operating the Program is the Override, the platform operator fee and, where Schedule C applies, the Installer Network margin. {{platformFeeText}} The Vendor also pays the monthly PartnerWAV subscription stated in Schedule B for its use of the platform. No other platform, listing or set-up fee is payable unless the parties agree it in writing.",
+    "A Partner in the Channel Manager tier earns the Override in Schedule B on sales made by the sub-resellers it recruited.",
+    "The Override is additive: it is paid on top of the sub-reseller's Commission as a separate line and is never taken out of it. CloudWAV's compensation for operating the Program is the platform operator fee and, where Schedule C applies, the Installer Network margin; CloudWAV does not also take an Override on the Partners it brings to the Program. {{platformFeeText}} The Vendor also pays the monthly PartnerWAV subscription stated in Schedule B for its use of the platform. No other platform, listing or set-up fee is payable unless the parties agree it in writing.",
     "{{installerMarginText}}",
     "\"Net Revenue\" means the amounts actually invoiced to and collected from the Customer for the Products, less only these deductions: {{deductionsText}}. Every deduction must be itemized line by line on the commission statement, supported by documents the Vendor provides on request, and of a kind approved in advance in Schedule B. No deduction that is not listed there may be taken without CloudWAV's prior written agreement.",
     "The Vendor issues a statement for each payout period showing, for each Customer, the invoices issued, amounts collected, deductions taken, the Commission and Override due and the Partner credited.",
@@ -145,7 +146,7 @@ T["Vendor Program Agreement"] = {
   {"title": "Schedule B -- Commission and Override economics", "rows": [
     ["Tiers, rates and bases", "{{tiersTable}}"], ["Revenue base", "{{revenueBaseText}}"], ["Permitted deductions", "{{deductionsText}}"],
     ["Renewal / recurring duration", "{{renewalDuration}}"], ["Payout schedule", "{{payoutSchedule}}"], ["Currency and minimum payout", "{{currency}}; minimum {{minPayout}} {{currency}}"],
-    ["Platform operator fee", "{{platformFeeShort}}"], ["PartnerWAV subscription", "{{planFee}}"], ["Deal protection", "{{dealProtectionDays}} days from approval; approval within {{approvalSlaDays}} business days"]]},
+    ["Special terms", "{{specialTerms}}"], ["Platform operator fee", "{{platformFeeShort}}"], ["PartnerWAV subscription", "{{planFee}}"], ["Deal protection", "{{dealProtectionDays}} days from approval; approval within {{approvalSlaDays}} business days"]]},
   {"title": "Schedule C -- Installer Network", "rows": [
     ["Installer Network", "{{installerScheduleText}}"], ["Certification, countries and job types", "{{installerDetails}}"]]},
   {"title": "Schedule D -- Territory and exclusivity", "rows": [
@@ -161,6 +162,7 @@ T["Vendor Program Agreement"] = {
  "fields": F({
   "territory": {"label": "Territory (countries or regions)"},
   "planFee": {"label": "PartnerWAV plan and monthly fee (e.g. Growth plan, USD 1,497 a month)"},
+  "specialTerms": {"label": "Special terms for named Partners", "def": "None"},
   "exclusivity": {"label": "Exclusivity", "def": "non-exclusive"},
   "cureDays": {"label": "Cure period (days)", "def": "30"},
   "liabilityCap": {"label": "Liability cap", "def": "the total Commission, Override and fees paid or payable under this Agreement in the 12 months before the claim"},

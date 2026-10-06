@@ -136,7 +136,8 @@ returns boolean language sql immutable as $$
   select c = any (array['mspProspects','mspEngagements','landingPages',
                         'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
                         'programFees','platformFees','affiliateSignups',
-                        'vendorAssessments','pricingModel','agreementReviews'])
+                        'vendorAssessments','pricingModel','agreementReviews',
+                        'operatorSettings','vendorReferrals'])
 $$;
 
 -- ---------------------------------------------------------------------------
