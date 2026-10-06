@@ -7072,7 +7072,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + signerRows + footer;
   }
 
-  function showAgreementDetail(id, kind){
+  function showAgreementDetail(id, kind, typeName){
     var p = programById(id);
     if (!p) return;
     // the platform fee is a term between CloudWAV and the vendor -- never shown on partner agreements
@@ -7086,7 +7086,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return '<div class="tier-line"><span>'+esc(t.tier)+' <span style="color:var(--ink-faint)">· '+esc(t.base)+'</span></span><b>'+esc(t.rate)+'</b></div>';
     }).join("");
     var back = openModal(
-      '<div class="modal-head"><div><div class="eyebrow" style="margin-bottom:6px;">'+relBadges(p.relationships)+'</div><h2>'+esc(p.name)+' -- '+esc(p.agreement.type)+'</h2></div><button class="modal-close" aria-label="Close">×</button></div>'
+      '<div class="modal-head"><div><div class="eyebrow" style="margin-bottom:6px;">'+relBadges(p.relationships)+'</div><h2>'+esc(p.name)+' -- '+esc(typeName || p.agreement.type)+'</h2></div><button class="modal-close" aria-label="Close">×</button></div>'
       + '<div class="tier-line"><span>Agreement status</span><b>'+statusPill(p.agreement.status)+'</b></div>'
       + '<div style="display:flex;flex-direction:column;gap:8px;">'+tiersHtml+'</div>'
       + feeHtml
@@ -10128,6 +10128,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       payouts:[ { id:"po-1", date:"2026-09-30", amount:28000, note:"August" } ], thread:[], termsSnapshot: JSON.parse(JSON.stringify(DEFAULT_REFERRAL_TERMS)) }
   ];
   var agreementsList = [];
+  // The agreements CloudWAV already has drawn up; any of them can be chosen for an agreement, whoever's paper is signed
+  var AGR_PREMADE = ["Vendor Program Agreement", "Joint Venture Agreement", "Custom Marketing Agreement", "SaaS Reseller Agreement", "Partner Reseller Agreement", "Software Project Referral Agreement"];
+  function agrTypeOptions(cur){
+    var list = AGR_PREMADE.slice(); if (cur && list.indexOf(cur) < 0) list.unshift(cur);
+    return list.map(function(x){ return '<option value="' + esc(x) + '"' + (x === cur ? " selected" : "") + '>' + esc(x) + '</option>'; }).join("");
+  }
+  // the agreement that normally goes with this kind of party
+  function agrDefaultType(kind, key){
+    if (kind === "partner") return "Partner Reseller Agreement";
+    if (kind === "referral") return "Software Project Referral Agreement";
+    var pr = programById(String(key || "").split(":")[1]);
+    return (pr && pr.agreement && pr.agreement.type) || "Vendor Program Agreement";
+  }
   var agreementReviews = [];   // CloudWAV's private notes on outside agreements (never shared with the other side)
   function agrReviewNote(id){ var r = agreementReviews.filter(function(x){ return x.id === id; })[0]; return r ? r.note || "" : ""; }
   function agrSetReviewNote(id, note){ agreementReviews = agreementReviews.filter(function(x){ return x.id !== id; }); if (note) agreementReviews.push({ id:id, note:note, updatedAt:todayIso() }); }
@@ -10283,7 +10296,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="card card-pad" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">'
         + '<div class="field-row" style="flex:1;min-width:220px;"><label for="agrNewParty">New agreement with</label><select id="agrNewParty"><option value="">Choose…</option>'+partyOpts.map(function(o){ return '<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>'; }).join("")+'</select></div>'
         + '<div class="field-row" style="flex:1;min-width:180px;"><label for="agrNewProgram">Program (partners)</label><select id="agrNewProgram"><option value="">--</option>'+programs.map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'; }).join("")+'</select></div>'
-        + '<div class="field-row" style="flex:1;min-width:200px;"><label for="agrNewPaper">Whose agreement</label><select id="agrNewPaper"><option value="">CloudWAV\'s agreement</option><option value="outside">Their own agreement (upload)</option></select></div>'
+        + '<div class="field-row" style="flex:1;min-width:220px;"><label for="agrNewType">Agreement</label><select id="agrNewType"><option value="">Choose one of ours...</option>'+agrTypeOptions("")+'</select></div>'
+        + '<div class="field-row" style="flex:1;min-width:200px;"><label for="agrNewPaper">They sign</label><select id="agrNewPaper"><option value="">Our agreement (as chosen)</option><option value="outside">Their own agreement (upload)</option></select></div>'
         + '<div class="field-row" id="agrNewFileRow" style="flex:1;min-width:220px;" hidden><label for="agrNewFile">Their agreement file</label><input type="file" id="agrNewFile" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></div>'
         + '<button type="button" class="btn primary sm" data-agr-create>Create draft</button></div>'
       + '<div class="card"><div class="table-scroll"><table><thead><tr><th>With</th><th>Kind</th><th>For</th><th>Agreement</th><th>Status</th><th></th></tr></thead><tbody>'
@@ -10296,6 +10310,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + ((a.status === "draft" || a.status === "requested") ? '<button type="button" class="btn secondary sm" data-agr-act="sent" data-agr-id="'+esc(a.id)+'">Send for signature</button>' : '')
             + (a.status === "sent" ? '<button type="button" class="btn primary sm" data-agr-act="signed" data-agr-id="'+esc(a.id)+'">Mark signed</button>' : '')
             + (a.status === "signed" ? '<button type="button" class="btn ghost sm" data-agr-act="terminated" data-agr-id="'+esc(a.id)+'">End</button>' : '')
+            + '<button type="button" class="btn ghost sm" data-agr-edit="'+esc(a.id)+'">Edit</button>'
+            + '<button type="button" class="btn ghost sm" data-agr-delete="'+esc(a.id)+'" style="color:var(--bad);">Delete</button>'
             + '</td></tr>'; }).join("") : '<tr><td colspan="6"><div class="empty">No agreements match.</div></td></tr>')
       + '</tbody></table></div></div>'
       + '<p class="field-note">E-signature isn\'t connected yet: "Send for signature" records that it went out (e.g. by SignWell or email); "Mark signed" once the signed copy is back. If a company will only sign its own agreement, choose "Their own agreement", upload it, and review it before it goes out.</p>';
@@ -10304,7 +10320,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var AGR_FILE_TYPES = /\.(pdf|docx?)$/i;
   function agrPaperNote(a){
     if (a.source !== "outside") return "";
-    return '<div class="field-note" data-agr-paper>Their own agreement' + (a.fileName ? ' · ' + esc(a.fileName) : ' · no file yet')
+    return '<div class="field-note" data-agr-paper>Their own agreement, in place of ours' + (a.fileName ? ' · ' + esc(a.fileName) : ' · no file yet')
       + ' · <b style="color:' + (a.review === "reviewed" ? 'var(--good)' : 'var(--warn, #b26a00)') + ';">' + (a.review === "reviewed" ? "Reviewed" : "Needs review") + '</b>'
       + (a.uploadError ? ' · <span style="color:var(--bad);">Upload failed: ' + esc(a.uploadError) + '</span>' : '') + (a.fileUploading ? ' · uploading...' : '') + '</div>';
   }
@@ -10373,6 +10389,56 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (file) agrAttachFile(a, file); else render();
     toast(a.review === "reviewed" ? "Marked reviewed" : "Notes saved");
   }
+  // ----- edit or delete any agreement, including one that is already signed -----
+  function agrEditModal(a){
+    var opt = function(v, l, cur){ return '<option value="' + esc(v) + '"' + (v === cur ? " selected" : "") + '>' + esc(l) + '</option>'; };
+    openModal('<div class="modal-head"><div><div class="eyebrow" style="margin-bottom:6px;">' + esc(AGR_KIND[a.kind] || a.kind) + '</div><h2>Edit agreement with ' + esc(agrParty(a)) + '</h2></div><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;" data-agr-edit-modal="' + esc(a.id) + '">'
+      + '<div class="field-row"><label for="agrEditType">Agreement</label><select id="agrEditType" class="filter app-select">' + agrTypeOptions(a.type) + '</select></div>'
+      + (a.kind === "partner" ? '<div class="field-row"><label for="agrEditProgram">Program</label><select id="agrEditProgram" class="filter app-select">' + programs.map(function(pr){ return opt(pr.id, pr.name, a.programId); }).join("") + '</select></div>' : '')
+      + '<div class="field-row"><label for="agrEditPaper">They sign</label><select id="agrEditPaper" class="filter app-select">' + opt("", "Our agreement (as chosen)", a.source === "outside" ? "outside" : "") + opt("outside", "Their own agreement (upload)", a.source === "outside" ? "outside" : "") + '</select></div>'
+      + '<div class="field-row"><label for="agrEditStatus">Status</label><select id="agrEditStatus" class="filter app-select">' + Object.keys(AGR_STATUS).map(function(k){ return opt(k, AGR_STATUS[k].label, a.status); }).join("") + '</select></div>'
+      + (a.status === "signed" ? '<span class="field-note">This agreement is signed. Changing it here only corrects the record in PartnerWAV -- it does not change what was signed.</span>' : '')
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-agr-edit-save>Save changes</button><button type="button" class="btn secondary sm" data-agr-modal-close>Cancel</button></div></div>');
+  }
+  function agrEditSave(){
+    var box = document.querySelector("[data-agr-edit-modal]"); if (!box || state.role !== "operator") return;
+    var a = agrById(box.getAttribute("data-agr-edit-modal")); if (!a) return;
+    var v = function(id){ var el = document.getElementById(id); return el ? el.value : null; };
+    var now = todayIso(), changes = [];
+    var ty = v("agrEditType"); if (ty && ty !== a.type){ a.type = ty; changes.push("agreement"); }
+    var pr = v("agrEditProgram"); if (pr && pr !== a.programId){ a.programId = pr; changes.push("program"); }
+    var paper = v("agrEditPaper");
+    if (paper === "outside" && a.source !== "outside"){ a.source = "outside"; a.review = "needed"; changes.push("their own agreement"); }
+    if (paper === "" && a.source === "outside"){ delete a.source; delete a.review; delete a.reviewedAt; changes.push("our agreement"); }
+    var st = v("agrEditStatus");
+    if (st && st !== a.status){
+      if (st === "sent" && a.source === "outside" && a.review !== "reviewed"){ toast("Review their agreement before it goes out for signature"); return; }
+      a.status = st; changes.push("status");
+      if (st === "sent" && !a.sentAt) a.sentAt = now;
+      if (st === "signed"){ a.signedAt = a.signedAt || now; if (!a.signers || !a.signers.length) a.signers = [{ name:"CloudWAV", signed:true }, { name:agrParty(a), signed:true }]; a.signers.forEach(function(x){ x.signed = true; x.signedAt = x.signedAt || now; }); }
+      if (st === "draft" || st === "requested"){ a.sentAt = ""; a.signedAt = ""; (a.signers || []).forEach(function(x){ x.signed = false; delete x.signedAt; }); }
+      if (st === "terminated") a.endedAt = now;
+    }
+    if (changes.length){ a.history = a.history || []; a.history.push({ at:now, text:"Edited: " + changes.join(", ") }); }
+    closeModal(); saveReferrals(); toast(changes.length ? "Agreement updated" : "No changes"); render();
+    if (paper === "outside" && !a.fileName) agrOutsideModal(a);
+  }
+  function agrDeleteModal(a){
+    var live = a.status === "signed" || a.status === "sent";
+    openModal('<div class="modal-head"><h2>Delete this agreement?</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<p style="margin:14px 0 6px;"><b>' + esc(a.type) + '</b> with <b>' + esc(agrParty(a)) + '</b>' + (agrSubject(a) ? ' for ' + esc(agrSubject(a)) : '') + '</p>'
+      + '<p style="margin:0 0 14px;color:var(--ink-soft);">' + (live ? 'This agreement is ' + (a.status === "signed" ? 'signed and active' : 'out for signature') + '. Deleting it removes the record from PartnerWAV for both sides; it does not cancel the signed contract itself. To keep the history, use "End" instead. ' : '')
+      + (a.fileName ? 'The uploaded file (' + esc(a.fileName) + ') and your review notes are deleted too. ' : '') + 'This cannot be undone.</p>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" style="background:var(--bad);border-color:var(--bad);" data-agr-delete-go="' + esc(a.id) + '">Delete agreement</button><button type="button" class="btn secondary sm" data-agr-modal-close>Cancel</button></div>');
+  }
+  function agrDelete(id){
+    var a = agrById(id); if (!a || state.role !== "operator") return;
+    if (a.filePath && supabase && state.account){ supabase.storage.from(STORAGE_BUCKET).remove([a.filePath]).then(function(r){ if (r && r.error) console.warn("Agreement file not removed:", r.error.message); }); }
+    agreementsList = agreementsList.filter(function(x){ return x.id !== id; });
+    agrSetReviewNote(id, "");
+    closeModal(); saveReferrals(); toast("Agreement deleted"); render();
+  }
   function agreementAction(id, act){
     var a = agrById(id); if (!a || state.role !== "operator") return;
     var now = todayIso();
@@ -10387,7 +10453,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var a = agrById(id); if (!a) return;
     if (a.source === "outside"){ agrOutsideModal(a); return; }
     if (a.kind === "referral"){ showAgreementDocument(houseById(a.houseId)); return; }
-    if (a.programId && programById(a.programId)){ showAgreementDetail(a.programId, a.kind); return; }
+    if (a.programId && programById(a.programId)){ showAgreementDetail(a.programId, a.kind, a.type); return; }
   }
 
   // ----- software referrals: partner side -----
@@ -10593,6 +10659,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-agr-view]"))){ viewAgreement(b.getAttribute("data-agr-view")); return; }
     if ((b = t.closest("[data-agr-act]"))){ agreementAction(b.getAttribute("data-agr-id"), b.getAttribute("data-agr-act")); return; }
     if ((b = t.closest("[data-agr-filter]"))){ state.agrFilter = b.getAttribute("data-agr-filter"); renderOperatorAgreements(); return; }
+    if ((b = t.closest("[data-agr-edit]")) && state.role === "operator"){ var ea = agrById(b.getAttribute("data-agr-edit")); if (ea) agrEditModal(ea); return; }
+    if (t.closest("[data-agr-edit-save]")){ agrEditSave(); return; }
+    if ((b = t.closest("[data-agr-delete]")) && state.role === "operator"){ var da = agrById(b.getAttribute("data-agr-delete")); if (da) agrDeleteModal(da); return; }
+    if ((b = t.closest("[data-agr-delete-go]"))){ agrDelete(b.getAttribute("data-agr-delete-go")); return; }
     if ((b = t.closest("[data-agr-review]"))){ var ra = agrById(b.getAttribute("data-agr-review")); if (ra) agrOutsideModal(ra); return; }
     if ((b = t.closest("[data-agr-outside]")) && state.role === "operator"){
       var oa = agrById(b.getAttribute("data-agr-outside")); if (!oa) return;
@@ -10612,6 +10682,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (!pv){ toast("Choose who the agreement is with"); return; }
       var kind = pv.split("|")[0], key = pv.split("|")[1];
       if (kind === "partner" && !prog){ toast("Choose the program for a partner agreement"); return; }
+      var chosenType = (document.getElementById("agrNewType") || {}).value || "";
       var paper = (document.getElementById("agrNewPaper") || {}).value || "", nf = document.getElementById("agrNewFile"), newFile = nf && nf.files && nf.files[0];
       if (paper === "outside" && newFile && !AGR_FILE_TYPES.test(newFile.name)){ toast("Upload a PDF or Word file"); return; }
       if (key === "partner:cloudwav-consulting" && typeof ensureOwnPartner === "function") ensureOwnPartner();
@@ -10620,6 +10691,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (kind === "vendor"){ rec.programId = key.split(":")[1]; rec.type = ((programById(rec.programId) || {}).agreement || {}).type || "Vendor Program Agreement"; }
       if (kind === "referral"){ rec.houseId = key.split(":")[1]; rec.type = "Software Project Referral Agreement"; }
       if (paper === "outside"){ rec.source = "outside"; rec.review = "needed"; rec.history.push({ at:todayIso(), text:"Their own agreement" }); }
+      if (chosenType) rec.type = chosenType;
       agreementsList.push(rec); saveReferrals(); toast(paper === "outside" ? "Draft created -- their agreement needs review" : "Draft agreement created");
       if (paper === "outside" && newFile) agrAttachFile(rec, newFile); else render();
       return;
@@ -14589,6 +14661,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     });
   }
   document.addEventListener("change", function(ev){ if (ev.target && ev.target.id === "fundStatus") fundingSyncFields(); });
+  // picking who the agreement is with pre-selects the agreement that normally goes with them (it can be changed)
+  document.addEventListener("change", function(ev){
+    if (!ev.target || ev.target.id !== "agrNewParty") return;
+    var ty = document.getElementById("agrNewType"), pv = ev.target.value; if (!ty || !pv) return;
+    var want = agrDefaultType(pv.split("|")[0], pv.split("|")[1]);
+    if (!Array.prototype.some.call(ty.options, function(o){ return o.value === want; })){ var o2 = document.createElement("option"); o2.value = want; o2.textContent = want; ty.appendChild(o2); }
+    ty.value = want;
+  });
   document.addEventListener("change", function(ev){ if (ev.target && ev.target.id === "agrNewPaper"){ var fr = document.getElementById("agrNewFileRow"); if (fr) fr.hidden = ev.target.value !== "outside"; } });
   document.addEventListener("click", function(ev){
     var t = ev.target;
