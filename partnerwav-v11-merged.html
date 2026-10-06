@@ -5578,12 +5578,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!row) return;
     var v = programById(state.myVendorId);
     if (!v){ row.innerHTML = ""; return; }
-    var myPartners = vendorPartnerList(v).filter(function(r){ return r.status === "active"; });
-    var pendingForMe = state.approvals.filter(function(a){ return a.program === v.name && (a.status || "pending") === "pending"; });
+    // Tiles that show the channel working: all from the program's own enrollments and registered deals
+    var ens = enrollments.filter(function(e){ return e.programId === v.id && e.status !== "declined"; });
+    var active = ens.filter(function(e){ return e.status === "active"; });
+    var waiting = ens.filter(function(e){ return e.status === "pending" || e.status === "draft"; });
+    var recent = active.filter(function(e){ return e.joined && (Date.now() - new Date(e.joined + "T00:00:00").getTime()) / 86400000 <= 30; });
+    var revenue = 0, closed = 0;
+    ens.forEach(function(e){ var st = enStats(e); revenue += st.revenue; closed += st.deals; });
+    var open = state.approvals.filter(function(a){ return (a.programId === v.id || a.program === v.name) && (a.status || "pending") === "pending"; });
+    var bySym = {}; open.forEach(function(a){ var n = dealAmount(a.value); if (n){ var sy = dealCurrencySymbol(a.value) || "$"; bySym[sy] = (bySym[sy] || 0) + n; } });
+    var pipeline = Object.keys(bySym).map(function(sy){ return fmtAmount(sy, bySym[sy]); }).join(" + ");
+    var countries = []; active.forEach(function(e){ var c = (partnerById(e.partnerId) || {}).country || e.country; if (c && countries.indexOf(c) < 0) countries.push(c); });
+    var vTile = function(key, label, value, trend){ return '<div class="stat-tile" data-vstat="'+key+'"><span class="stat-label">'+label+'</span><span class="stat-value">'+value+'</span><span class="stat-trend">'+esc(trend)+'</span></div>'; };
     row.innerHTML =
-      '<div class="stat-tile"><span class="stat-label">Partners reselling you</span><span class="stat-value">'+myPartners.length+'</span><span class="stat-trend">Across all tiers</span></div>'
-      + '<div class="stat-tile"><span class="stat-label">Program status</span><span class="stat-value" style="font-size:1rem;">'+statusPill(v.status)+'</span><span class="stat-trend">'+esc(v.relationships.join(" + "))+'</span></div>'
-      + '<div class="stat-tile"><span class="stat-label">Deals awaiting review</span><span class="stat-value">'+pendingForMe.length+'</span><span class="stat-trend'+(pendingForMe.length?" down":"")+'">'+(pendingForMe.length?"Needs Program Operator review":"All clear")+'</span></div>';
+      vTile("partners", "Active partners", active.length, recent.length ? "\u2191 " + recent.length + " joined in the last 30 days" : waiting.length ? waiting.length + " more being onboarded" : "Across all tiers")
+      + vTile("revenue", "Partner-sold revenue", money(revenue), closed + " deal" + (closed === 1 ? "" : "s") + " closed · last 12 months")
+      + vTile("deals", "Open deals", open.length, open.length ? (pipeline ? pipeline + " in the pipeline" : "In review with CloudWAV") : "None in review right now")
+      + vTile("countries", "Countries reached", countries.length, countries.length ? countries.slice(0, 3).join(", ") + (countries.length > 3 ? " +" + (countries.length - 3) : "") : "Through your partners");
     var grid = document.getElementById("vendorOwnProgramGrid");
     if (grid) grid.innerHTML = programCard(v, { hideAction:true }) + productCardsHtml(v, { overview:true });
     var ed = document.getElementById("vendorOverviewEdit"), editing = state.vendorOverviewEdit === v.id;
