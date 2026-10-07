@@ -1212,6 +1212,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <!-- ===== VENDOR: OVERVIEW ===== -->
       <section id="scr-vendor-overview" hidden>
         <div class="stat-row" id="vendorStatRow"></div>
+        <p class="field-note" id="vendorStatNote" hidden style="margin:8px 0 0;">Tiles marked Sample show example figures. Each one switches to your own numbers as soon as you have some.</p>
         <div class="card card-pad">
           <div class="section-head"><h2>My Program</h2><span class="hint">How partners see your tile</span></div>
           <div style="height:12px"></div>
@@ -5589,12 +5590,38 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var bySym = {}; open.forEach(function(a){ var n = dealAmount(a.value); if (n){ var sy = dealCurrencySymbol(a.value) || "$"; bySym[sy] = (bySym[sy] || 0) + n; } });
     var pipeline = Object.keys(bySym).map(function(sy){ return fmtAmount(sy, bySym[sy]); }).join(" + ");
     var countries = []; active.forEach(function(e){ var c = (partnerById(e.partnerId) || {}).country || e.country; if (c && countries.indexOf(c) < 0) countries.push(c); });
-    var vTile = function(key, label, value, trend){ return '<div class="stat-tile" data-vstat="'+key+'"><span class="stat-label">'+label+'</span><span class="stat-value">'+value+'</span><span class="stat-trend">'+esc(trend)+'</span></div>'; };
+    // partner applications still waiting for an answer: from the referral link, plus enrollments not yet approved
+    var apps = (v.referralPartners || []).filter(function(x){ return String(x.status || "pending").toLowerCase() === "pending"; }).map(function(x){ return x.name; })
+      .concat(ens.filter(function(e){ return e.status === "pending"; }).map(function(e){ return e.partner; }));
+    // demos this calendar month: Demo events the vendor scheduled, plus meetings booked on its scheduling link
+    var vKey = "vendor:" + v.id, nowD = new Date(), sameMonth = function(x){ var d = new Date(String(x).replace(" ", "T")); return !isNaN(d) && d.getFullYear() === nowD.getFullYear() && d.getMonth() === nowD.getMonth(); };
+    var demos = calendarEvents.filter(function(ev){ return ev.ownerKey === vKey && ev.type === "Demo" && sameMonth(ev.start); }).length
+      + bookings.filter(function(bk){ return bk.ownerKey === vKey && sameMonth(bk.at); }).length;
+    // commission partners have earned on deals CloudWAV approved (first-year rate; payouts themselves are not recorded in the portal)
+    var comSym = {}, comDeals = 0;
+    state.approvals.forEach(function(a){
+      if (!(a.programId === v.id || a.program === v.name) || a.status !== "approved") return;
+      var est = dealCommissionEstimate(a), amt = dealAmount(a.value); if (!est || amt === null) return;
+      var sy = dealCurrencySymbol(a.value) || "$"; comSym[sy] = (comSym[sy] || 0) + amt * est.rate / 100; comDeals++;
+    });
+    var commission = Object.keys(comSym).map(function(sy){ return fmtAmount(sy, comSym[sy]); }).join(" + ");
+    var anySample = false;
+    // real = there is something of the vendor's own to show; otherwise the tile shows an example, marked Sample
+    var vTile = function(key, label, real, value, trend, sample){
+      var smp = !real && !!sample; if (smp) anySample = true;
+      return '<div class="stat-tile" data-vstat="'+key+'"'+(smp ? ' data-sample="1"' : '')+'><span class="stat-label">'+label+(smp ? ' <span class="badge neutral" style="font-size:.58rem;vertical-align:middle;">Sample</span>' : '')+'</span>'
+        + '<span class="stat-value">'+(smp ? sample[0] : value)+'</span><span class="stat-trend">'+esc(smp ? sample[1] : trend)+'</span></div>';
+    };
+    var plural = function(n, w){ return n + " " + w + (n === 1 ? "" : "s"); };
     row.innerHTML =
-      vTile("partners", "Active partners", active.length, recent.length ? "\u2191 " + recent.length + " joined in the last 30 days" : waiting.length ? waiting.length + " more being onboarded" : "Across all tiers")
-      + vTile("revenue", "Partner-sold revenue", money(revenue), closed + " deal" + (closed === 1 ? "" : "s") + " closed · last 12 months")
-      + vTile("deals", "Open deals", open.length, open.length ? (pipeline ? pipeline + " in the pipeline" : "In review with CloudWAV") : "None in review right now")
-      + vTile("countries", "Countries reached", countries.length, countries.length ? countries.slice(0, 3).join(", ") + (countries.length > 3 ? " +" + (countries.length - 3) : "") : "Through your partners");
+      vTile("partners", "Active partners", active.length > 0, active.length, recent.length ? "\u2191 " + recent.length + " joined in the last 30 days" : waiting.length ? waiting.length + " more being onboarded" : "Across all tiers", ["3", "\u2191 1 joined in the last 30 days"])
+      + vTile("revenue", "Partner-sold revenue", revenue > 0 || closed > 0, money(revenue), plural(closed, "deal") + " closed · last 12 months", ["$243,000", "13 deals closed · last 12 months"])
+      + vTile("deals", "Open deals", open.length > 0, open.length, pipeline ? pipeline + " in the pipeline" : "In review with CloudWAV", ["3", "$61,500 in the pipeline"])
+      + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$51,360", "Earned on 13 approved deals"])
+      + vTile("applications", "Partner applications waiting", apps.length > 0, apps.length, apps.slice(0, 2).join(", ") + (apps.length > 2 ? " +" + (apps.length - 2) : ""), ["2", "Ready for your review"])
+      + vTile("demos", "Demos booked this month", demos > 0, demos, "From your calendar and scheduling link", ["4", "\u2191 1 this week"])
+      + vTile("countries", "Countries reached", countries.length > 0, countries.length, countries.slice(0, 3).join(", ") + (countries.length > 3 ? " +" + (countries.length - 3) : ""), ["2", "Thailand, Bangladesh"]);
+    var note = document.getElementById("vendorStatNote"); if (note) note.hidden = !anySample;
     var grid = document.getElementById("vendorOwnProgramGrid");
     if (grid) grid.innerHTML = programCard(v, { hideAction:true }) + productCardsHtml(v, { overview:true });
     var ed = document.getElementById("vendorOverviewEdit"), editing = state.vendorOverviewEdit === v.id;
