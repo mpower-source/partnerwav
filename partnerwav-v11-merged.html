@@ -278,7 +278,7 @@
   .roi-big{ font-family:"IBM Plex Mono"; font-weight:700; font-size:2.7rem; line-height:1; font-variant-numeric:tabular-nums; white-space:nowrap; }
   .roi-note{ font-size:.78rem; opacity:.85; }
   .roi-facts{ display:flex; gap:14px; flex-wrap:wrap; flex:1.4 1 480px; }
-  .roi-fact{ background:rgba(255,255,255,.14); border-radius:14px; padding:15px 17px; flex:1 1 140px; min-width:130px; display:flex; flex-direction:column; gap:8px; }
+  .roi-fact{ background:rgba(255,255,255,.14); border-radius:14px; padding:15px 17px; flex:1 1 150px; min-width:140px; display:flex; flex-direction:column; gap:8px; }
   .roi-fact b{ font-family:"IBM Plex Mono"; font-weight:600; font-size:1.4rem; font-variant-numeric:tabular-nums; }
   .roi-fact span{ font-size:.76rem; font-weight:600; opacity:.9; }
   .roi-sample{ background:rgba(255,255,255,.22); border-radius:999px; padding:2px 9px; font-size:.66rem; font-weight:700; letter-spacing:.04em; margin-left:8px; vertical-align:middle; }
@@ -12722,7 +12722,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + cfgInput("cfgFeeStart","Subscription started",n(f.subscriptionStart),"date","")
         + '<div><label for="cfgFeeBasis">Invoiced</label><select id="cfgFeeBasis">'+Object.keys(FEE_BASIS).map(function(k){ return '<option value="'+k+'"'+(f.basis === k ? " selected" : "")+'>'+esc(FEE_BASIS[k])+'</option>'; }).join("")+'</select></div>'
       + '</div>'
-      + '<p class="field-note" style="margin:0;">The subscription and its start date are what the "Return on PartnerWAV" figure on the vendor\'s Overview is worked out from.</p>'
+      + '<p class="field-note" style="margin:0;">The subscription and its start date feed the ROI figure on the vendor\'s Overview: partner sales, less partner commissions and what the vendor spends on PartnerWAV.</p>'
       + '<p class="field-note" style="margin:0;">Only the part of a deal above the threshold gets the lower rate. Whether a partner was sourced by CloudWAV is set per partner in Partners &amp; Tiers.</p>'
       + '<div><label>Examples</label><div class="cfg-preview" id="cfgFeePreview"></div></div>'
       + (f.configured ? '' : '<span class="field-note">Using the recommended defaults -- save to confirm them for this program.</span>')
@@ -12764,18 +12764,29 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
 
   // ===== RETURN ON PARTNERWAV =====
-  // Vendor: partner-sold revenue (last 12 months) for every $1 spent on PartnerWAV (subscription + platform operator fees).
-  // Partner: commission earned on approved deals, against anything spent in the Shop (PartnerWAV itself is free to partners).
-  // Operator: the same vendor figure for every vendor, and all vendors together. US dollar amounts only.
-  // Until there are real numbers on both sides, the card shows an example and says so.
+  // Vendor ROI, last 12 months, US dollar amounts only:
+  //   net return = partner-sold revenue - partner commissions - PartnerWAV spend (subscription + platform operator fees)
+  //   ROI %      = net return / PartnerWAV spend
+  // Commission and operator fees on registered deals come from the deal records; on earlier partner sales
+  // (an enrollment's 12-month figure) they are estimated at the program's first-year rate and fee rates.
+  // Partner: commission earned on approved deals, less anything spent in the Shop (PartnerWAV itself is free to partners).
+  // Operator: the same vendor figures for every vendor, and all vendors together.
+  // Until there are real numbers, the card shows an example and says so.
   function roiVendor(p){
     var f = feeFor(p.id), monthly = Number(f.monthlyFee) || 0, start = f.subscriptionStart || "";
     var months = monthly ? (start ? Math.max(1, Math.min(12, monthsBetween(start, todayIso()) + 1)) : 12) : 0;
-    var revenue = 0, deals = 0;
-    enrollments.forEach(function(e){ if (e.programId === p.id && e.status !== "declined"){ var st = enStats(e); revenue += st.revenue; deals += st.deals; } });
-    var fees = platformFees.filter(function(x){ return x.programId === p.id && x.status !== "waived" && (!x.sym || x.sym === "$"); }).reduce(function(t, x){ return t + (Number(x.amount) || 0); }, 0);
-    var sub = monthly * months, cost = sub + fees;
-    return { revenue:revenue, deals:deals, sub:sub, fees:fees, cost:cost, months:months, ratio: cost > 0 && revenue > 0 ? revenue / cost : 0, known: monthly > 0 };
+    var t0 = (p.terms && p.terms.tiers && p.terms.tiers[0]) || (p.tiers && p.tiers[0] ? parseTierRate(p.tiers[0]) : null), rate = t0 && t0.firstYear !== "" ? Number(t0.firstYear) || 0 : 0;
+    var revenue = 0, deals = 0, commission = 0, fees = 0;
+    enrollments.forEach(function(e){
+      if (e.programId !== p.id || e.status === "declined") return;
+      var st = enStats(e), hist = Number(e.revenue12m) || 0; revenue += st.revenue; deals += st.deals;
+      commission += hist * rate / 100;
+      if (f.enabled) fees += hist * (Number(e.source === "cloudwav" ? f.sourcedPct : f.basePct) || 0) / 100;
+      st.liveDeals.forEach(function(d){ if (dealCurrencySymbol(d.value) !== "$") return; var est = dealCommissionEstimate(d), amt = dealAmount(d.value); if (est && amt !== null) commission += amt * est.rate / 100; });
+    });
+    fees += platformFees.filter(function(x){ return x.programId === p.id && x.status !== "waived" && (!x.sym || x.sym === "$"); }).reduce(function(t, x){ return t + (Number(x.amount) || 0); }, 0);
+    var sub = monthly * months, spend = sub + fees, net = revenue - commission - spend, real = monthly > 0 && revenue > 0;
+    return { revenue:revenue, deals:deals, commission:commission, sub:sub, fees:fees, spend:spend, net:net, months:months, known: monthly > 0, real:real, roi: real && spend > 0 ? net / spend * 100 : 0 };
   }
   function roiPartner(partnerId){
     var earned = 0, deals = 0;
@@ -12785,9 +12796,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       earned += amt * est.rate / 100; deals++;
     });
     var spent = shopOrders.filter(function(o){ return o.buyer === "partner:" + partnerId && o.status === "paid"; }).reduce(function(t, o){ return t + (Number(o.price) || 0); }, 0);
-    return { earned:earned, deals:deals, spent:spent, ratio: spent > 0 && earned > 0 ? earned / spent : 0 };
+    return { earned:earned, deals:deals, spent:spent, net:earned - spent };
   }
-  function roiMoney(n){ return "$" + (n >= 100 ? Math.round(n).toLocaleString("en-US") : (Math.round(n * 100) / 100).toFixed(2)); }
+  function roiPct(n){ return Math.round(n).toLocaleString("en-US") + "%"; }
   function roiCardHtml(o){
     return '<div class="roi-card" data-roi="'+o.key+'"'+(o.sample ? ' data-roi-sample="1"' : '')+'>'
       + '<div class="roi-main"><span class="roi-kicker">'+esc(o.kicker)+(o.sample ? '<span class="roi-sample">SAMPLE</span>' : '')+'</span>'
@@ -12795,52 +12806,50 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<span class="roi-note">'+esc(o.note)+'</span></div>'
       + '<div class="roi-facts">'+o.facts.map(function(x){ return '<div class="roi-fact"><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></div>'; }).join("")+'</div></div>';
   }
+  var ROI_FORMULA = "ROI = (partner sales - partner commissions - PartnerWAV costs) / PartnerWAV costs. Last 12 months.";
   function renderRoiCards(){
     var v = document.getElementById("vendorRoiCard"), pr = document.getElementById("partnerRoiCard"), op = document.getElementById("operatorRoiCard");
     if (v){
       var p = programById(state.myVendorId);
       if (!p) v.innerHTML = "";
       else {
-        var r = roiVendor(p), real = r.ratio > 0;
-        v.innerHTML = roiCardHtml(real
-          ? { key:"vendor", kicker:"Your return on PartnerWAV", before:"For every $1 you spend on PartnerWAV, your partners sell", big:roiMoney(r.ratio), after:"of your product.",
-              note:"Last 12 months. Updates as partners register and close deals.",
-              facts:[[money(r.revenue), "sold by partners"], [money(r.cost), "spent on PartnerWAV"], [r.deals + "", "deal" + (r.deals === 1 ? "" : "s") + " closed"]] }
-          : { key:"vendor", sample:true, kicker:"Your return on PartnerWAV", before:"For every $1 you spend on PartnerWAV, your partners sell", big:"$20.00", after:"of your product.",
-              note: r.known ? "An example. Your own figure appears with your first partner sale." : "An example. Your own figure appears once your subscription and first partner sales are recorded.",
-              facts:[["$127,000", "sold by partners"], ["$6,350", "spent on PartnerWAV"], ["13", "deals closed"]] });
+        var r = roiVendor(p);
+        v.innerHTML = roiCardHtml(r.real
+          ? { key:"vendor", kicker:"Your return on PartnerWAV", before:"Your partner channel returned", big:roiPct(r.roi) + " ROI", after:"You kept " + money(r.net) + " after partner commissions and PartnerWAV costs.",
+              note:ROI_FORMULA + " Updates as partners register and close deals.",
+              facts:[[money(r.revenue), "sold by partners"], [money(r.commission), "partner commissions"], [money(r.spend), "spent on PartnerWAV"], [money(r.net), "net return"]] }
+          : { key:"vendor", sample:true, kicker:"Your return on PartnerWAV", before:"Your partner channel returned", big:"777% ROI", after:"You kept $95,636 after partner commissions and PartnerWAV costs.",
+              note:"An example. " + (r.known ? "Your own figure appears with your first partner sale." : "Your own figure appears once your subscription and first partner sales are recorded."),
+              facts:[["$127,000", "sold by partners"], ["$19,050", "partner commissions"], ["$12,314", "spent on PartnerWAV"], ["$95,636", "net return"]] });
       }
     }
     if (pr){
       var q = roiPartner(state.myProfileId);
-      pr.innerHTML = roiCardHtml(q.ratio > 0
-        ? { key:"partner", kicker:"Your return on PartnerWAV", before:"For every $1 you have spent on training, you have earned", big:roiMoney(q.ratio), after:"in commission.",
-            note:"On approved deals. PartnerWAV itself is free for partners.", facts:[[money(q.earned), "commission earned"], [money(q.spent), "spent on training"], [q.deals + "", "approved deal" + (q.deals === 1 ? "" : "s")]] }
-        : q.earned > 0
-        ? { key:"partner", kicker:"Your return on PartnerWAV", before:"You have earned", big:money(q.earned), after:"in commission through PartnerWAV, at no cost to you.",
-            note:"On approved deals. PartnerWAV is free for partners.", facts:[[q.deals + "", "approved deal" + (q.deals === 1 ? "" : "s")], ["$0", "paid to PartnerWAV"]] }
+      pr.innerHTML = roiCardHtml(q.earned > 0
+        ? { key:"partner", kicker:"Your return on PartnerWAV", before:"You have earned", big:money(q.earned), after: q.spent > 0 ? "in commission, " + money(q.net) + " after what you spent on training." : "in commission through PartnerWAV, at no cost to you.",
+            note:"On approved deals. PartnerWAV is free for partners.", facts:[[q.deals + "", "approved deal" + (q.deals === 1 ? "" : "s")], [money(q.spent), q.spent > 0 ? "spent on training" : "paid to PartnerWAV"]] }
         : { key:"partner", sample:true, kicker:"Your return on PartnerWAV", before:"You have earned", big:"$19,050", after:"in commission through PartnerWAV, at no cost to you.",
             note:"An example. Your own figure appears when your first deal is approved.", facts:[["13", "approved deals"], ["$0", "paid to PartnerWAV"]] });
     }
     if (op){
       var rows = programs.filter(function(x){ return x.id !== "cloudwav"; }).map(function(x){ return { p:x, r:roiVendor(x) }; });
-      var counted = rows.filter(function(x){ return x.r.ratio > 0; });
-      var rev = counted.reduce(function(t, x){ return t + x.r.revenue; }, 0), cost = counted.reduce(function(t, x){ return t + x.r.cost; }, 0);
-      op.innerHTML = roiCardHtml(counted.length
-        ? { key:"operator", kicker:"Return across all vendors", before:"For every $1 vendors spend on PartnerWAV, partners sell", big:roiMoney(rev / cost), after:"of their products.",
-            note:"Last 12 months, for the " + counted.length + " vendor" + (counted.length === 1 ? "" : "s") + " with a subscription and partner sales recorded.",
-            facts:[[money(rev), "sold by partners"], [money(cost), "paid to PartnerWAV"], [counted.length + " of " + rows.length, "vendors counted"]] }
-        : { key:"operator", sample:true, kicker:"Return across all vendors", before:"For every $1 vendors spend on PartnerWAV, partners sell", big:"$20.00", after:"of their products.",
+      var counted = rows.filter(function(x){ return x.r.real; }), sum = function(k){ return counted.reduce(function(t, x){ return t + x.r[k]; }, 0); };
+      op.innerHTML = roiCardHtml(counted.length && sum("spend") > 0
+        ? { key:"operator", kicker:"Return across all vendors", before:"Vendors' partner channels returned", big:roiPct(sum("net") / sum("spend") * 100) + " ROI", after:"Vendors kept " + money(sum("net")) + " after partner commissions and PartnerWAV costs.",
+            note:ROI_FORMULA + " Counts the " + counted.length + " of " + rows.length + " vendor" + (rows.length === 1 ? "" : "s") + " with a subscription and partner sales recorded.",
+            facts:[[money(sum("revenue")), "sold by partners"], [money(sum("commission")), "partner commissions"], [money(sum("spend")), "paid to PartnerWAV"], [money(sum("net")), "net return"]] }
+        : { key:"operator", sample:true, kicker:"Return across all vendors", before:"Vendors' partner channels returned", big:"777% ROI", after:"Vendors kept $95,636 after partner commissions and PartnerWAV costs.",
             note:"An example. Enter each vendor's subscription under Manage programs > Configure to see the real figure.",
-            facts:[["$127,000", "sold by partners"], ["$6,350", "paid to PartnerWAV"], ["0 of " + rows.length, "vendors counted"]] });
+            facts:[["$127,000", "sold by partners"], ["$19,050", "partner commissions"], ["$12,314", "paid to PartnerWAV"], ["$95,636", "net return"]] });
       var tb = document.getElementById("operatorRoiTable");
       if (tb){
         tb.hidden = false;
-        tb.innerHTML = '<div class="section-head"><h2>Return by vendor</h2><span class="hint">Partner-sold revenue for every $1 the vendor spends on PartnerWAV, last 12 months</span></div>'
-          + '<div class="table-scroll" style="margin-top:10px;"><table><thead><tr><th>Vendor</th><th style="text-align:right">Sold by partners</th><th style="text-align:right">Spent on PartnerWAV</th><th style="text-align:right">Return per $1</th></tr></thead><tbody>'
+        var num = function(x){ return '<td class="mono-num" style="text-align:right">'+x+'</td>'; };
+        tb.innerHTML = '<div class="section-head"><h2>Return by vendor</h2><span class="hint">Partner sales less partner commissions and PartnerWAV costs, last 12 months</span></div>'
+          + '<div class="table-scroll" style="margin-top:10px;"><table><thead><tr><th>Vendor</th><th style="text-align:right">Sold by partners</th><th style="text-align:right">Commissions</th><th style="text-align:right">PartnerWAV</th><th style="text-align:right">Net return</th><th style="text-align:right">ROI</th></tr></thead><tbody>'
           + rows.map(function(x){ var r = x.r;
-              return '<tr data-roi-row="'+attr(x.p.id)+'"><td>'+esc(x.p.name)+'</td><td class="mono-num" style="text-align:right">'+money(r.revenue)+'</td><td class="mono-num" style="text-align:right">'+(r.cost > 0 ? money(r.cost) : '--')+'</td>'
-                + '<td class="mono-num" style="text-align:right">'+(r.ratio > 0 ? '<b>'+roiMoney(r.ratio)+'</b>' : '<span class="field-note">'+(r.known ? "No partner sales yet" : "Subscription not entered")+'</span>')+'</td></tr>'; }).join("")
+              return '<tr data-roi-row="'+attr(x.p.id)+'"><td>'+esc(x.p.name)+'</td>'+num(money(r.revenue))+num(r.revenue > 0 ? money(r.commission) : '--')+num(r.known ? money(r.spend) : '--')+num(r.real ? money(r.net) : '--')
+                + num(r.real ? '<b>'+roiPct(r.roi)+'</b>' : '<span class="field-note">'+(r.known ? "No partner sales yet" : "Subscription not entered")+'</span>')+'</tr>'; }).join("")
           + '</tbody></table></div>';
       }
     }
