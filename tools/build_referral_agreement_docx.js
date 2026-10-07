@@ -6,7 +6,8 @@ const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, Tab
 const html = fs.readFileSync(path.join(__dirname, "..", "partnerwav-v11-merged.html"), "utf8");
 const block = html.slice(html.indexOf("/*SRA-START*/"), html.indexOf("/*SRA-END*/"));
 const termsSrc = html.slice(html.indexOf("var DEFAULT_REFERRAL_TERMS"), html.indexOf("};", html.indexOf("var DEFAULT_REFERRAL_TERMS")) + 2);
-const SRA_TEMPLATE = new Function(block + "; return SRA_TEMPLATE;")();
+// third argument "saas" builds the SaaS Growth Partner Agreement instead
+const SRA_TEMPLATE = new Function(block + "; return " + (process.argv[3] === "saas" ? "GPA_TEMPLATE" : "SRA_TEMPLATE") + ";")();
 const T = new Function(termsSrc + "; return DEFAULT_REFERRAL_TERMS;")();
 const money = n => "THB " + Number(n).toLocaleString("en-US");
 const v = {

@@ -78,7 +78,7 @@ with sync_playwright() as p:
 
     # ----- choose one of our premade agreements, in both scenarios
     types = [o for o in pg.locator("#agrNewType option").all_inner_texts() if "Choose" not in o]
-    ok(types == ["Vendor Program Agreement", "Joint Venture Agreement", "Custom Marketing Agreement", "SaaS Reseller Agreement", "Partner Reseller Agreement", "Software Project Referral Agreement"], "All six premade agreements can be selected")
+    ok(types == ["Vendor Program Agreement", "Joint Venture Agreement", "Custom Marketing Agreement", "SaaS Reseller Agreement", "Partner Reseller Agreement", "Software Project Referral Agreement", "SaaS Growth Partner Agreement"], "All six premade agreements can be selected")
     pg.select_option("#agrNewParty", "vendor|vendor:zipevent"); pg.wait_for_timeout(100)
     ok(pg.input_value("#agrNewType") == "Custom Marketing Agreement", "Picking the company pre-selects its usual agreement")
     pg.select_option("#agrNewType", "SaaS Reseller Agreement"); pg.click("[data-agr-create]"); pg.wait_for_timeout(300)

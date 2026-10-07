@@ -10161,15 +10161,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ]},
       { title: "Vendor introductions to PartnerWAV", clauses: [
         "The Developer may introduce to CloudWAV a client or other company that has its own software product and wishes to sell it through partners (a \"Vendor Lead\"), by registering it through the PartnerWAV portal or in writing. CloudWAV may decline a Vendor Lead within {{acceptDays}} business days if the company is already a PartnerWAV vendor or is in documented discussions with CloudWAV.",
-        "If a Vendor Lead signs a PartnerWAV vendor agreement within {{protectionMonths}} months of the introduction, CloudWAV pays the Developer an introduction fee of {{vendorReferralRate}}% of the monthly PartnerWAV subscription fees CloudWAV collects from that vendor during the first {{vendorReferralMonths}} months of its subscription. The introduction fee is calculated on subscription fees only.",
-        "Advisory share. If a vendor introduced under this clause engages CloudWAV or its affiliate CloudWAV Consulting for fractional technology leadership (for example a fractional CTO, CAIO, CIO or CISO), CloudWAV pays the Developer {{advisoryShareRate}}% of the advisory fees it collects from that vendor during the first {{advisoryShareMonths}} months of the engagement.",
-        "Originator share. CloudWAV also pays the Developer {{originatorShareRate}}% of the platform operator fees CloudWAV collects on sales of that vendor's products by partners, for {{originatorMonths}} months from the vendor's first partner sale. The originator share is calculated on the platform operator fees CloudWAV actually receives, not on the sale price, and never reduces a partner's commission or the vendor's revenue.",
-        "CloudWAV pays the introduction fee, the advisory share and the originator share within {{paymentDays}} days after the end of the month in which it collected the related fees, with a statement of the fees collected for each vendor. If CloudWAV refunds a vendor within {{clawbackDays}} days of collection, the related amount may be deducted from the next payment.",
-        "Engineering stays with the Developer. While a vendor introduced under this clause is on PartnerWAV and for {{tailMonths}} months afterwards, CloudWAV will not itself design, build or maintain that vendor's software product, and will not introduce another development firm to that vendor for that work, unless the Developer declines the work or cannot start it within a reasonable time, or the vendor asks in writing for another firm. Where CloudWAV's advisory work or a partner's request identifies development work for that vendor, CloudWAV will refer it to the Developer first. Advice, architecture review and security review by CloudWAV are not development work for this clause.",
-        "Audit. CloudWAV offers each Vendor Lead a go-to-market and technical scalability audit at no charge and gives the Developer a co-branded link through which Vendor Leads are registered. The Developer may attend audit meetings. The Developer will tell each Vendor Lead that it may receive fees from CloudWAV under this clause.",
-        "Reseller Ready. Where CloudWAV's review confirms that a product built by the Developer meets CloudWAV's published Reseller Ready checklist, CloudWAV may show a \"Reseller Ready\" mark and a credit to the Developer on that vendor's PartnerWAV listing. CloudWAV may withdraw the mark if the product stops meeting the checklist. The mark is not a warranty by either party.",
+        "If a Vendor Lead signs a PartnerWAV vendor agreement within {{protectionMonths}} months of the introduction, CloudWAV pays the Developer an introduction fee of {{vendorReferralRate}}% of the monthly PartnerWAV subscription fees CloudWAV collects from that vendor during the first {{vendorReferralMonths}} months of its subscription. The fee is calculated on subscription fees only, not on platform operator fees, commissions or any other amount.",
+        "CloudWAV pays the introduction fee within {{paymentDays}} days after the end of the month in which it collected the subscription fees, with a statement of the fees collected. If CloudWAV refunds a vendor within {{clawbackDays}} days of collection, the related introduction fee may be deducted from the next payment.",
         "A company introduced under this clause becomes a vendor on PartnerWAV on CloudWAV's standard vendor terms. The Developer is not a party to that agreement and may not make promises about PartnerWAV's price or terms on CloudWAV's behalf.",
-        "Amounts payable under this clause and referral fees under clause 5 are separate obligations. Neither party may set one off against the other. This clause does not change how Projects are referred, or the fees on them."
+        "Introduction fees under this clause and referral fees under clause 5 are separate obligations. Neither party may set one off against the other. This clause does not change how Projects are referred, or the fees on them."
       ]}
     ],
     schedule: [
@@ -10177,9 +10172,6 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ["Co-Sell fee", "{{cosellRate}}% of Collected Fees for {{cosellMonths}} months from the first invoice to the Client"],
       ["Resell discount", "{{resellDiscount}}% off the Developer's standard rates"],
       ["Vendor introduction fee (paid by CloudWAV)", "{{vendorReferralRate}}% of the PartnerWAV subscription fees collected from an introduced vendor, for the first {{vendorReferralMonths}} months of its subscription"],
-      ["Advisory share (paid by CloudWAV)", "{{advisoryShareRate}}% of the fractional technology leadership fees collected from an introduced vendor, for the first {{advisoryShareMonths}} months of the engagement"],
-      ["Originator share (paid by CloudWAV)", "{{originatorShareRate}}% of the platform operator fees collected on partner sales of an introduced vendor's products, for {{originatorMonths}} months from its first partner sale"],
-      ["Engineering protection", "CloudWAV does not build an introduced vendor's product while it is on PartnerWAV and for {{tailMonths}} months afterwards"],
       ["Maintenance, support and retainers", "{{maintenanceText}}"],
       ["Minimum fee per won Project", "{{minFeeSchedule}}"],
       ["Cap", "{{capSchedule}}"],
@@ -10192,6 +10184,203 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ["Developer contact", "{{houseContact}}"],
       ["CloudWAV contact", "{{cloudwavContact}}"]
     ]
+  };
+    // SaaS Growth Partner Agreement -- a software house introduces the SaaS clients it builds for to PartnerWAV.
+  // A separate service from software project referrals, with its own agreement. Same {{placeholders}} (the software house's terms).
+  var GPA_TEMPLATE = {
+   "title": "SaaS Growth Partner Agreement",
+   "note": "Template for discussion. Have counsel review before signing, and confirm which CloudWAV company is the contracting party, the governing law and the payment currency for the Developer's country.",
+   "parties": [
+    "This SaaS Growth Partner Agreement (the \"Agreement\") is made on {{effectiveDate}} between:",
+    "(1) {{cloudwavEntity}} (\"CloudWAV\"); and",
+    "(2) {{houseName}}{{houseAddressText}} (the \"Developer\").",
+    "CloudWAV operates the PartnerWAV partner platform, through which software vendors sell through resellers and other partners, and provides fractional technology leadership through CloudWAV Consulting. The Developer designs and builds software for clients, some of which have their own software product. The Developer wishes to introduce those clients to CloudWAV so that they can grow through partners. The parties agree as follows."
+   ],
+   "sections": [
+    {
+     "title": "Definitions",
+     "clauses": [
+      "\"SaaS Client\" means a client of the Developer, or another company the Developer knows, that has its own software product and wishes to sell it through partners.",
+      "\"Introduction\" means a SaaS Client registered with CloudWAV by the Developer under clause 3 and not declined.",
+      "\"Introduced Vendor\" means a SaaS Client that, following an Introduction, signs a PartnerWAV vendor agreement with CloudWAV within the Protection Period.",
+      "\"Subscription Fees\" means the monthly PartnerWAV subscription fees CloudWAV actually receives from an Introduced Vendor.",
+      "\"Advisory Fees\" means the fees CloudWAV or its affiliate CloudWAV Consulting actually receives from an Introduced Vendor for fractional technology leadership, for example a fractional CTO, CAIO, CIO or CISO.",
+      "\"Operator Fees\" means the platform operator fees CloudWAV actually receives on sales of an Introduced Vendor's products by partners through PartnerWAV.",
+      "Each of these amounts excludes VAT, withholding tax, other government charges, and refunds and credits actually given. \"Protection Period\" has the meaning in Schedule A."
+     ]
+    },
+    {
+     "title": "Purpose and relationship",
+     "clauses": [
+      "The Developer may introduce SaaS Clients to CloudWAV. The arrangement is non-exclusive: nothing in this Agreement stops either party from working with others.",
+      "The parties are independent contractors. The Developer may not bind CloudWAV, or make promises about PartnerWAV's price, terms or results on CloudWAV's behalf.",
+      "This Agreement covers introductions of SaaS Clients to PartnerWAV only. Referrals of custom software projects to the Developer are a separate service under a separate agreement, and nothing in this Agreement changes it."
+     ]
+    },
+    {
+     "title": "Introducing SaaS Clients",
+     "clauses": [
+      "The Developer registers each SaaS Client through the co-branded link CloudWAV provides, or in writing to CloudWAV, with the company's name, a contact and a short description of its product. The registration time is recorded by the portal.",
+      "CloudWAV may decline an Introduction within {{acceptDays}} business days if the company is already a PartnerWAV vendor or has been in documented discussions with CloudWAV during the previous 6 months, and will share reasonable written evidence. An Introduction not declined in time is accepted.",
+      "An accepted Introduction is protected for {{protectionMonths}} months (the \"Protection Period\"), extended while there is documented active engagement with the SaaS Client. If two parties introduce the same company, the Introduction registered first takes priority.",
+      "The Developer chooses which clients to introduce and when. CloudWAV may decline to admit a SaaS Client to PartnerWAV that it considers not ready to be sold through partners, and will tell the Developer why."
+     ]
+    },
+    {
+     "title": "The audit and joining PartnerWAV",
+     "clauses": [
+      "CloudWAV offers each SaaS Client a go-to-market and technical scalability audit at no charge: a short questionnaire and a review with a CloudWAV fractional technology leader of how the product is sold and whether it is ready to be resold. The SaaS Client receives written findings whether or not it joins PartnerWAV.",
+      "The Developer may attend audit meetings. CloudWAV will not approach a registered SaaS Client about other services before the audit without telling the Developer.",
+      "A SaaS Client that joins PartnerWAV does so on CloudWAV's standard vendor terms and pricing. The Developer is not a party to that agreement."
+     ]
+    },
+    {
+     "title": "What CloudWAV pays the Developer",
+     "clauses": [
+      "Introduction fee. CloudWAV pays the Developer {{vendorReferralRate}}% of the Subscription Fees from each Introduced Vendor during the first {{vendorReferralMonths}} months of its subscription.",
+      "Advisory share. CloudWAV pays the Developer {{advisoryShareRate}}% of the Advisory Fees from each Introduced Vendor during the first {{advisoryShareMonths}} months of the advisory engagement.",
+      "Originator share. CloudWAV pays the Developer {{originatorShareRate}}% of the Operator Fees for each Introduced Vendor, for {{originatorMonths}} months from that vendor's first partner sale. The originator share is calculated on the Operator Fees CloudWAV actually receives, not on the sale price, and never reduces a partner's commission or the vendor's revenue.",
+      "These amounts are paid by CloudWAV out of what it receives. Nothing is payable by the SaaS Client to the Developer, or by the Developer to CloudWAV, under this Agreement.",
+      "Where the parties also have a Software Project Referral Agreement that provides for an introduction fee on the same vendor's subscription, the introduction fee is paid once, under this Agreement."
+     ]
+    },
+    {
+     "title": "Statements and payment",
+     "clauses": [
+      "Within 10 business days after the end of each month, CloudWAV sends the Developer a statement for each Introduced Vendor showing the Subscription Fees, Advisory Fees and Operator Fees received and the amounts due.",
+      "CloudWAV pays within {{paymentDays}} days after the end of the month in which it received the related fees, by bank transfer to the account the Developer nominates, in {{currency}} unless the parties agree otherwise.",
+      "If CloudWAV refunds or credits an Introduced Vendor within {{clawbackDays}} days of receipt, the related amount may be deducted from the next payment. No other set-off or clawback applies, and amounts under this Agreement are not set off against amounts under any other agreement between the parties.",
+      "Late payments carry interest at the rate permitted by law or 1% per month, whichever is lower."
+     ]
+    },
+    {
+     "title": "Engineering stays with the Developer",
+     "clauses": [
+      "The Developer remains the Introduced Vendor's engineering partner. While an Introduced Vendor is on PartnerWAV and for {{tailMonths}} months afterwards, CloudWAV will not itself design, build or maintain that vendor's software product, and will not introduce another development firm to that vendor for that work.",
+      "Clause 7.1 does not apply where the Developer declines the work or cannot start it within a reasonable time, or where the vendor asks in writing for another firm.",
+      "Where CloudWAV's advisory work or a partner's request identifies development work for an Introduced Vendor, CloudWAV will refer it to the Developer first. The Developer contracts with the vendor for that work at its own rates, and no fee is due to CloudWAV on it under this Agreement.",
+      "Advice, architecture review and security review by CloudWAV are not development work for this clause."
+     ]
+    },
+    {
+     "title": "Reseller Ready",
+     "clauses": [
+      "CloudWAV publishes a Reseller Ready checklist describing what a product needs in order to be sold and supported by partners. Where CloudWAV's review confirms that a product built by the Developer meets it, CloudWAV may show a \"Reseller Ready\" mark and a credit to the Developer on that vendor's PartnerWAV listing.",
+      "Where a product does not yet meet the checklist, CloudWAV gives the vendor and the Developer a list of what is missing.",
+      "CloudWAV may withdraw the mark if the product stops meeting the checklist. The mark is not a warranty by either party."
+     ]
+    },
+    {
+     "title": "Enablement, names and logos",
+     "clauses": [
+      "CloudWAV gives the Developer a listing on PartnerWAV at no charge, the co-branded audit link, and email templates and case studies for introducing SaaS Clients.",
+      "Each party may use the other's name and logo to describe this relationship, in line with any brand guidelines the other provides, and will stop on request. A case study naming a SaaS Client needs that client's approval."
+     ]
+    },
+    {
+     "title": "Disclosure and conduct",
+     "clauses": [
+      "The Developer will tell each SaaS Client that it may receive fees from CloudWAV under this Agreement.",
+      "Each party will describe the other's services accurately and will not disparage the other to SaaS Clients or partners."
+     ]
+    },
+    {
+     "title": "Taxes",
+     "clauses": [
+      "Amounts are exclusive of VAT, which is added where it applies. Where the law requires CloudWAV to withhold tax from a payment, it will do so, pay it to the tax authority on time and give the Developer the certificate. The parties will cooperate to apply any available double-tax-treaty relief.",
+      "Each party is responsible for its own income taxes."
+     ]
+    },
+    {
+     "title": "Records and review",
+     "clauses": [
+      "CloudWAV keeps accurate records of the Subscription Fees, Advisory Fees and Operator Fees received from each Introduced Vendor for at least 3 years.",
+      "Once a year, on 30 days' notice, the Developer may have an independent accountant review those records. If the review shows an underpayment of more than 5%, CloudWAV pays the underpayment and the reasonable cost of the review."
+     ]
+    },
+    {
+     "title": "Confidentiality and personal data",
+     "clauses": [
+      "Each party keeps the other's confidential information, including SaaS Client details and commercial terms, confidential and uses it only for this Agreement, during this Agreement and for 3 years after it ends.",
+      "Each party complies with the privacy laws that apply to it when sharing contact details, and shares only what is needed to make and follow up an Introduction."
+     ]
+    },
+    {
+     "title": "Term and termination",
+     "clauses": [
+      "This Agreement starts on the date above and continues for {{termMonths}} months, then renews automatically for further 12-month periods unless either party gives notice.",
+      "Either party may end this Agreement on {{noticeDays}} days' written notice, or immediately if the other party materially breaches it and does not fix the breach within 30 days of notice.",
+      "After termination, CloudWAV continues to pay the amounts in clause 5 for vendors introduced before termination, for the rest of their periods, and clauses 5 to 7 and 11 to 13 continue to apply."
+     ]
+    },
+    {
+     "title": "Liability",
+     "clauses": [
+      "Introductions are made in good faith without any warranty about a SaaS Client's product, budget or creditworthiness. CloudWAV makes no promise that an Introduced Vendor will win partners or sales.",
+      "Neither party is liable for indirect or consequential loss or loss of profit. Each party's total liability under this Agreement is limited to the amounts paid or payable under it in the 12 months before the claim, except for unpaid amounts, breach of confidentiality, or fraud."
+     ]
+    },
+    {
+     "title": "General",
+     "clauses": [
+      "This Agreement is the entire agreement about its subject and replaces earlier discussions. Changes must be in writing and signed (including electronically) by both parties.",
+      "Neither party may assign this Agreement without the other's written consent, except to a successor of its whole business.",
+      "Notices are sent by email to the contacts in Schedule A and are effective on the next business day.",
+      "This Agreement is governed by {{governingLaw}}. The parties will first try to settle any dispute through senior management within 30 days; failing that, {{disputeText}}",
+      "This Agreement may be signed electronically and in counterparts. It is written in English; if it is translated, the English version prevails."
+     ]
+    }
+   ],
+   "schedule": [
+    [
+     "Introduction fee",
+     "{{vendorReferralRate}}% of Subscription Fees for the first {{vendorReferralMonths}} months of the vendor's subscription"
+    ],
+    [
+     "Advisory share",
+     "{{advisoryShareRate}}% of Advisory Fees for the first {{advisoryShareMonths}} months of the engagement"
+    ],
+    [
+     "Originator share",
+     "{{originatorShareRate}}% of Operator Fees for {{originatorMonths}} months from the vendor's first partner sale"
+    ],
+    [
+     "Engineering protection",
+     "While the vendor is on PartnerWAV and for {{tailMonths}} months afterwards"
+    ],
+    [
+     "Audit",
+     "Go-to-market and technical scalability audit at no charge for each SaaS Client"
+    ],
+    [
+     "Time to decline an Introduction",
+     "{{acceptDays}} business days after registration"
+    ],
+    [
+     "Protection Period",
+     "{{protectionMonths}} months after acceptance, extended while there is active engagement"
+    ],
+    [
+     "Payment",
+     "Within {{paymentDays}} days after the end of the month in which fees are received, in {{currency}}"
+    ],
+    [
+     "Refund clawback window",
+     "{{clawbackDays}} days"
+    ],
+    [
+     "Term and notice",
+     "{{termMonths}} months, renewing yearly; {{noticeDays}} days' notice"
+    ],
+    [
+     "Developer contact",
+     "{{houseContact}}"
+    ],
+    [
+     "CloudWAV contact",
+     "{{cloudwavContact}}"
+    ]
+   ]
   };
   /*SRA-END*/
   // ===== AGREEMENTS + SOFTWARE PROJECT REFERRALS =====
@@ -10247,7 +10436,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   ];
   var agreementsList = [];
   // The agreements CloudWAV already has drawn up; any of them can be chosen for an agreement, whoever's paper is signed
-  var AGR_PREMADE = ["Vendor Program Agreement", "Joint Venture Agreement", "Custom Marketing Agreement", "SaaS Reseller Agreement", "Partner Reseller Agreement", "Software Project Referral Agreement"];
+  var AGR_PREMADE = ["Vendor Program Agreement", "Joint Venture Agreement", "Custom Marketing Agreement", "SaaS Reseller Agreement", "Partner Reseller Agreement", "Software Project Referral Agreement", "SaaS Growth Partner Agreement"];
   function agrTypeOptions(cur){
     var list = AGR_PREMADE.slice(); if (cur && list.indexOf(cur) < 0) list.unshift(cur);
     return list.map(function(x){ return '<option value="' + esc(x) + '"' + (x === cur ? " selected" : "") + '>' + esc(x) + '</option>'; }).join("");
@@ -10379,8 +10568,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     };
   }
   function sraFill(text, v){ return String(text).replace(/\{\{(\w+)\}\}/g, function(_, k){ return v[k] != null ? v[k] : "{{" + k + "}}"; }); }
-  function sraHtml(h){
-    var v = sraValues(h), T = SRA_TEMPLATE;
+  function sraHtml(h, T){
+    var v = sraValues(h); T = T || SRA_TEMPLATE;
     return '<article class="agr-doc">'
       + '<h1>'+esc(T.title)+'</h1>'
       + '<p class="agr-note">'+esc(T.note)+'</p>'
@@ -10392,19 +10581,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<h2>Signatures</h2><table class="agr-table"><tbody><tr><th>For CloudWAV</th><td>Name / title / date: ______________________</td></tr><tr><th>For '+esc(v.houseName)+'</th><td>Name / title / date: ______________________</td></tr></tbody></table>'
       + '</article>';
   }
-  function showAgreementDocument(house){
-    var back = openModal('<div class="modal-head"><h2>Software Project Referral Agreement</h2><button class="modal-close" aria-label="Close">×</button></div>'
+  function showAgreementDocument(house, T){
+    T = T || SRA_TEMPLATE;
+    var back = openModal('<div class="modal-head"><h2>'+esc(T.title)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
       + '<div class="cfg-actions" style="margin-bottom:10px;"><button type="button" class="btn secondary sm" data-agr-print>Print / save as PDF</button><button type="button" class="btn ghost sm" data-agr-word>Download for Word</button></div>'
-      + '<div class="agr-doc-wrap">'+sraHtml(house)+'</div>');
+      + '<div class="agr-doc-wrap">'+sraHtml(house, T)+'</div>');
     back.querySelector("[data-agr-print]").addEventListener("click", function(){
       var w = window.open("", "_blank"); if (!w){ toast("Allow pop-ups to print"); return; }
-      w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Software Project Referral Agreement</title><style>body{font-family:Georgia,serif;max-width:760px;margin:30px auto;line-height:1.5;color:#111} h1{font-size:22px} h2{font-size:15px;margin-top:22px} .agr-note{background:#fff7e0;padding:8px 10px;font-size:12px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top;font-size:13px} th{width:34%}</style></head><body>'+sraHtml(house)+'<script>setTimeout(function(){print()},300)<\/script></body></html>');
+      w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(T.title)+'</title><style>body{font-family:Georgia,serif;max-width:760px;margin:30px auto;line-height:1.5;color:#111} h1{font-size:22px} h2{font-size:15px;margin-top:22px} .agr-note{background:#fff7e0;padding:8px 10px;font-size:12px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top;font-size:13px} th{width:34%}</style></head><body>'+sraHtml(house, T)+'<script>setTimeout(function(){print()},300)<\/script></body></html>');
       w.document.close();
     });
     back.querySelector("[data-agr-word]").addEventListener("click", function(){
-      var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Software Project Referral Agreement</title></head><body>'+sraHtml(house)+'</body></html>';
+      var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>'+esc(T.title)+'</title></head><body>'+sraHtml(house, T)+'</body></html>';
       var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿", html], { type:"application/msword" }));
-      a.download = "Software-Project-Referral-Agreement-" + String(house ? house.name : "template").replace(/[^a-z0-9]+/gi, "-") + ".doc"; document.body.appendChild(a); a.click(); a.remove();
+      a.download = T.title.replace(/[^a-z0-9]+/gi, "-") + "-" + String(house ? house.name : "template").replace(/[^a-z0-9]+/gi, "-") + ".doc"; document.body.appendChild(a); a.click(); a.remove();
     });
   }
 
@@ -11747,7 +11937,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 };
   var AGR_TEMPLATES = { "Software Project Referral Agreement": {
     title:SRA_TEMPLATE.title, note:SRA_TEMPLATE.note, parties:SRA_TEMPLATE.parties, sections:SRA_TEMPLATE.sections,
-    schedules:[{ title:"Schedule A -- Commercial terms", rows:SRA_TEMPLATE.schedule }], html:[], fields:AGR_FILL_FIELDS } };
+    schedules:[{ title:"Schedule A -- Commercial terms", rows:SRA_TEMPLATE.schedule }], html:[], fields:AGR_FILL_FIELDS },
+   "SaaS Growth Partner Agreement": {
+    title:GPA_TEMPLATE.title, note:GPA_TEMPLATE.note, parties:GPA_TEMPLATE.parties, sections:GPA_TEMPLATE.sections,
+    schedules:[{ title:"Schedule A -- Commercial terms", rows:GPA_TEMPLATE.schedule }], html:[], fields:AGR_FILL_FIELDS } };
   Object.keys(AGR_TEMPLATE_TEXT).forEach(function(k){ AGR_TEMPLATES[k] = AGR_TEMPLATE_TEXT[k]; });
   function agrFields(a){ var T = AGR_TEMPLATES[a.type]; return (T && T.fields) || {}; }
   function agrHasDoc(a){ return !!(a && a.source !== "outside" && AGR_TEMPLATES[a.type]); }
@@ -11758,7 +11951,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var v = { effectiveDate:"", cloudwavEntity:L.entity || "", cloudwavContact:L.contact || "", governingLaw:L.law || "", arbitrationSeat:L.seat || "",
       partyName:agrParty(a), partyEntity:"", partyContact:"" };
     var cell = function(x){ return '<td>' + esc(x == null ? "" : x) + '</td>'; };
-    if (a.type === "Software Project Referral Agreement"){
+    if (a.type === "Software Project Referral Agreement" || a.type === "SaaS Growth Partner Agreement"){
       var sv = sraValues(a.kind === "referral" ? houseById(a.houseId) : null);
       Object.keys(sv).forEach(function(k){ v[k] = sv[k]; });
       if (a.kind !== "referral"){ v.houseName = agrParty(a); v.houseAddressText = ""; }
@@ -12168,7 +12361,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + '<span class="field-note" style="display:block;font-weight:400;">Referral '+t.referralRate+'% / '+t.windowMonths+' mo (then '+t.stepDownRate+'%) · Co-sell '+t.cosellRate+'% / '+t.cosellMonths+' mo · Resell '+t.resellDiscount+'% discount · partners get '+t.partnerShare+'%</span></span>'
             + '<span class="badge '+(h.status === "active" ? "good" : "neutral")+'">'+(h.status === "active" ? "Active" : h.status === "paused" ? "Paused" : "Negotiating")+'</span>'
             + (ag ? agrBadge(ag) : '<span class="badge neutral">No agreement</span>')
-            + '<button type="button" class="btn ghost sm" data-house-doc="'+esc(h.id)+'">Agreement</button>'
+            + '<button type="button" class="btn ghost sm" data-house-doc="'+esc(h.id)+'" title="Software Project Referral Agreement">Agreement</button>'
+            + '<button type="button" class="btn ghost sm" data-house-saas="'+esc(h.id)+'" title="SaaS Growth Partner Agreement: for the SaaS clients they introduce to PartnerWAV">SaaS agreement</button>'
             + '<button type="button" class="btn ghost sm" data-house-audit="'+esc(h.id)+'" title="Their co-branded link to the free audit; every client who starts from it is recorded as their introduction">Copy audit link</button>'
             + '<button type="button" class="btn secondary sm" data-house-edit="'+esc(h.id)+'">Edit</button></div>';
         }).join("") + '</div>' : '<div class="empty">No software houses yet.</div>');
@@ -12308,7 +12502,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="aff-section-title" style="margin-top:6px;">Rules</div>'
       + '<div class="vp-grid">'+n("acceptDays", "Accept / reject within (business days)")+n("protectionMonths", "Protection after acceptance (months)")+n("tailMonths", "Non-circumvention tail (months)")+n("paymentDays", "Pay within days after month end")+n("clawbackDays", "Refund clawback window (days)")+n("termMonths", "Term (months)")+n("noticeDays", "Notice to end (days)")
         + '<div class="field-row"><label for="ht_currency">Currency</label><select id="ht_currency"><option>THB</option><option>USD</option></select></div></div>'
-      + '<div class="aff-section-title" style="margin-top:6px;">Vendor introductions (CloudWAV pays them, clause 17)</div>'
+      + '<div class="aff-section-title" style="margin-top:6px;">SaaS client introductions (CloudWAV pays them -- SaaS Growth Partner Agreement)</div>'
       + '<div class="vp-grid">'+n("vendorReferralRate", "% of the vendor\'s subscription")+n("vendorReferralMonths", "…for months")+n("advisoryShareRate", "% of advisory fees")+n("advisoryShareMonths", "…for months")+n("originatorShareRate", "% of platform operator fees")+n("originatorMonths", "…for months")+'</div>'
       + '<div class="aff-section-title" style="margin-top:6px;">Partner payout (CloudWAV ↔ partner, not in this agreement)</div>'
       + '<div class="vp-grid">'+n("partnerShare", "Partner share of referral fees %")+n("cosellPartnerLeadShare", "Co-sell, partner leads %")+n("cosellCloudwavLeadShare", "Co-sell, CloudWAV leads %")+'</div>'
@@ -12423,6 +12617,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-house-audit]"))){ var hh = houseById(b.getAttribute("data-house-audit")); if (hh) copyText(vaAuditUrl(hh), "Audit link for " + hh.name + " copied"); return; }
     if ((b = t.closest("[data-house-edit]"))){ showHouseEditor(b.getAttribute("data-house-edit") || null); return; }
     if ((b = t.closest("[data-house-doc]"))){ showAgreementDocument(houseById(b.getAttribute("data-house-doc"))); return; }
+    if ((b = t.closest("[data-house-saas]"))){ showAgreementDocument(houseById(b.getAttribute("data-house-saas")), GPA_TEMPLATE); return; }
     if ((b = t.closest("[data-msp-house]"))){ var ex = softwareHouses.filter(function(h){ return h.prospectId === b.getAttribute("data-msp-house"); })[0]; showHouseEditor(ex ? ex.id : null, ex ? null : b.getAttribute("data-msp-house")); return; }
   });
 
