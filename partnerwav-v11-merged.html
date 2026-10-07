@@ -4513,6 +4513,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // PartnerWAV (Calendly's own inline embed, an iframe). HubSpot needs a server-side connection (the HubSpot token
   // must never sit in this page), so here an account says what it wants synced and CloudWAV sets up the connection.
   var HUBSPOT_SYNC = [["contacts","Contacts and companies (partners, vendors, prospects)"],["deals","Registered deals and their status"],["leads","Leads from invite pages, landing pages and assessments"],["marketing","Marketing lists and email campaigns"]];
+  // Notion is where the fundraising work happens (investor database, tracker, data room). Like HubSpot, its key has
+  // to stay on a server, so an account records what it wants brought across and CloudWAV sets up the connection.
+  var NOTION_SYNC = [["shortlist","Investor shortlists for a raise"],["pipeline","Fundraising pipeline: stage, last touch and next step for each investor"],["dataroom","Pitch materials and data room checklist"],["tasks","Next steps and meeting notes"]];
+  var NOTION_DIR = [["from-notion","Notion \u2192 PartnerWAV"],["both","Both ways"]];
   function isCalendly(u){ return /^https:\/\/(www\.)?calendly\.com\//i.test(String(u || "")); }
   function bookingEmbedUrl(u){ return u + (u.indexOf("?") > -1 ? "&" : "?") + "embed_domain=" + encodeURIComponent(window.location.hostname || "localhost") + "&embed_type=Inline&hide_gdpr_banner=1"; }
   function bookingOwner(url){ return contactChannels.filter(function(c){ return c.booking === url; })[0] || null; }
@@ -4565,12 +4569,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!box || state.screen !== "integrations") return;
     var me = chMe();
     if (!me){ box.innerHTML = '<div class="empty">Create your profile first -- then you can connect your tools.</div>'; return; }
-    var c = contactFor(me) || {}, ig = c.integrations || {}, hs = ig.hubspot || {}, key = me + ":" + (state.intV || 0) + ":" + bookings.length;
+    var c = contactFor(me) || {}, ig = c.integrations || {}, hs = ig.hubspot || {}, nt = ig.notion || {}, key = me + ":" + (state.intV || 0) + ":" + bookings.length;
     if (!force && box.getAttribute("data-int-key") === key) return;   // keep what's being typed
     box.setAttribute("data-int-key", key);
     var badge = function(on, yes, no){ return '<span class="badge '+(on ? 'good' : 'neutral')+'">'+(on ? yes : no)+'</span>'; };
     var isOperator = me === "operator:";
     var requests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.hubspot && x.integrations.hubspot.requested; }) : [];
+    var notionRequests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.notion && x.integrations.notion.requested; }) : [];
     box.innerHTML = '<div class="int-grid">'
       // --- Calendly
       + '<div class="card card-pad int-card" data-int="calendly"><div class="int-head"><span class="int-logo" style="background:#006bff;">C</span><h3>Calendly</h3>'+badge(!!safeLink(c.booking), "Connected", "Not set up")+'</div>'
@@ -4596,17 +4601,30 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div id="intHsError" class="login-msg bad" hidden></div>'
         + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="hubspot">'+(hs.requested ? "Update request" : "Request connection")+'</button>'+(hs.requested ? '<button type="button" class="btn ghost sm" data-int-cancel="hubspot">Cancel request</button><span class="field-note">Requested '+esc(hs.requestedAt || "")+'</span>' : '')+'</div>'
         + '<p class="field-note" style="margin:0;">Why a request, not a button: HubSpot needs a private access key, and that key must be kept on a server, never in a web page. CloudWAV sets that up once per HubSpot account.</p></div>'
+      // --- Notion
+      + '<div class="card card-pad int-card" data-int="notion"><div class="int-head"><span class="int-logo" style="background:#191919;">N</span><h3>Notion</h3>'+(nt.requested ? '<span class="badge warn">'+(isOperator ? "Setup planned" : "Setup requested")+'</span>' : '<span class="badge neutral">Not connected</span>')+'</div>'
+        + '<p class="field-note" style="margin:0;">'+(isOperator ? 'For the Funding service: the investor work stays in Notion, and PartnerWAV shows each vendor the result. Tick what should come across.' : 'If your fundraising or project work lives in Notion, PartnerWAV can show its progress here. Tick what you want brought across and CloudWAV will set up the connection with you.')+'</p>'
+        + '<div class="va-opts col">'+NOTION_SYNC.map(function(o){ var on = (nt.sync || []).indexOf(o[0]) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-int-nt="'+o[0]+'"'+(on ? ' checked' : '')+'><span><b>'+esc(o[1])+'</b></span></label>'; }).join("")+'</div>'
+        + '<div class="field-row"><label for="intNtDir">Direction</label><select id="intNtDir" class="filter app-select">'+NOTION_DIR.map(function(o){ return '<option value="'+o[0]+'"'+((nt.direction || "from-notion") === o[0] ? ' selected' : '')+'>'+o[1]+'</option>'; }).join("")+'</select></div>'
+        + '<div id="intNtError" class="login-msg bad" hidden></div>'
+        + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="notion">'+(isOperator ? (nt.requested ? "Update plan" : "Save plan") : (nt.requested ? "Update request" : "Request connection"))+'</button>'+(nt.requested ? '<button type="button" class="btn ghost sm" data-int-cancel="notion">'+(isOperator ? "Clear plan" : "Cancel request")+'</button><span class="field-note">'+(isOperator ? "Saved " : "Requested ")+esc(nt.requestedAt || "")+'</span>' : '')+'</div>'
+        + '<ul class="shop-list" style="margin:0;"><li>Only the shortlist for a raise comes across, never a full investor database.</li><li>A vendor sees investors only after CloudWAV releases them.</li><li>The Notion key is kept on a server, never in a web page.</li></ul>'
+        + '<p class="field-note" style="margin:0;">Not live yet: this records what to connect. Until the Funding section is built, shortlists come across as a CSV export from Notion.</p></div>'
       // --- already connected / planned
       + '<div class="card card-pad int-card" data-int="chat"><div class="int-head"><span class="int-logo" style="background:#25d366;">W</span><h3>WhatsApp &amp; LINE</h3>'+badge(!!(c.whatsapp || c.line), "Set up", "Not set up")+'</div>'
         + '<p class="field-note" style="margin:0;">Your number, LINE ID and groups, with share buttons for announcements and event updates.</p>'
         + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-goto-screen="channels">Open WhatsApp &amp; LINE</button></div></div>'
       + '<div class="card card-pad int-card" data-int="planned"><div class="int-head"><span class="int-logo" style="background:#8a84a8;">+</span><h3>Planned</h3><span class="badge neutral">Not yet</span></div>'
-        + '<ul class="shop-list" style="margin:0;"><li>Luma, Eventbrite and ZipEvent -- event listings and registrations</li><li>Notion -- investor shortlists and fundraising pipeline</li><li>Salesforce and Zoho CRM</li><li>Slack and Microsoft Teams announcements</li></ul>'
+        + '<ul class="shop-list" style="margin:0;"><li>Luma, Eventbrite and ZipEvent -- event listings and registrations</li><li>Salesforce and Zoho CRM</li><li>Slack and Microsoft Teams announcements</li></ul>'
         + '<p class="field-note" style="margin:0;">Need one of these sooner, or something else? Message CloudWAV.</p></div>'
       + '</div>'
       + (isOperator ? '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1rem;">HubSpot connection requests</h2><span class="hint">Accounts that asked to be connected</span></div>'
         + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;" id="intRequests">'+(requests.length ? requests.map(function(x){ var h = x.integrations.hubspot;
             return '<div class="deal-row" data-int-req="'+attr(x.id)+'"><span class="deal-row-name">'+esc(keyName(x.id))+'<span class="field-note" style="display:block;font-weight:400;">'+esc((h.sync || []).map(function(k){ var o = HUBSPOT_SYNC.filter(function(y){ return y[0] === k; })[0]; return o ? o[1].split(" (")[0] : k; }).join(" · "))+' · '+esc(h.direction || "")+' · requested '+esc(h.requestedAt || "")+'</span></span></div>'; }).join("")
+          : '<div class="empty" style="padding:12px;">No requests yet.</div>')+'</div>'
+        + '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1rem;">Notion connection requests</h2><span class="hint">Accounts that asked to be connected</span></div>'
+        + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;" id="intNotionRequests">'+(notionRequests.length ? notionRequests.map(function(x){ var h = x.integrations.notion;
+            return '<div class="deal-row" data-int-req-notion="'+attr(x.id)+'"><span class="deal-row-name">'+esc(keyName(x.id))+'<span class="field-note" style="display:block;font-weight:400;">'+esc((h.sync || []).map(function(k){ var o = NOTION_SYNC.filter(function(y){ return y[0] === k; })[0]; return o ? o[1].split(":")[0] : k; }).join(" · "))+' · '+esc(h.direction || "")+' · requested '+esc(h.requestedAt || "")+'</span></span></div>'; }).join("")
           : '<div class="empty" style="padding:12px;">No requests yet.</div>')+'</div>' : '');
   }
   function saveIntegration(which){
@@ -4618,6 +4636,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (u && !/^https:\/\/\S+\.\S+/i.test(u)){ err.textContent = "The link needs to be a secure web address, like https://calendly.com/your-name/30min."; err.hidden = false; return; }
       rec.booking = u; rec.bookingEmbed = document.getElementById("intEmbed").checked; rec.updatedAt = nowStamp();
       toast(u ? "Calendly link saved" : "Booking link removed");
+    } else if (which === "notion"){
+      var nsync = [].slice.call(document.querySelectorAll("[data-int-nt]")).filter(function(x){ return x.checked; }).map(function(x){ return x.getAttribute("data-int-nt"); }), e3 = document.getElementById("intNtError");
+      if (!nsync.length){ e3.textContent = "Tick at least one thing to bring across."; e3.hidden = false; return; }
+      rec.integrations = rec.integrations || {}; rec.integrations.notion = { requested:true, sync:nsync, direction:document.getElementById("intNtDir").value, requestedAt:(rec.integrations.notion && rec.integrations.notion.requestedAt) || nowStamp().slice(0, 10) };
+      rec.updatedAt = nowStamp(); toast(me === "operator:" ? "Notion plan saved" : "Request sent -- CloudWAV will contact you to connect Notion");
     } else {
       var sync = [].slice.call(document.querySelectorAll("[data-int-hs]")).filter(function(x){ return x.checked; }).map(function(x){ return x.getAttribute("data-int-hs"); }), e2 = document.getElementById("intHsError");
       if (!sync.length){ e2.textContent = "Tick at least one thing to sync."; e2.hidden = false; return; }
@@ -4629,7 +4652,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("click", function(ev){
     var b = ev.target.closest && ev.target.closest("[data-int-save]"); if (b){ saveIntegration(b.getAttribute("data-int-save")); return; }
     var x = ev.target.closest && ev.target.closest("[data-int-cancel]");
-    if (x){ var rec = contactFor(chMe()); if (rec && rec.integrations){ delete rec.integrations.hubspot; saveChannels(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast("Request cancelled"); renderIntegrations(true); } }
+    if (x){ var rec = contactFor(chMe()); if (rec && rec.integrations){ delete rec.integrations[x.getAttribute("data-int-cancel") === "notion" ? "notion" : "hubspot"]; saveChannels(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast(chMe() === "operator:" && x.getAttribute("data-int-cancel") === "notion" ? "Plan cleared" : "Request cancelled"); renderIntegrations(true); } }
   });
 
   // ===== EVENTS & CALENDAR (all roles) =====
