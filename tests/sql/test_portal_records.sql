@@ -97,6 +97,7 @@ select t('vendor cannot edit partner deals', (select count(*) from (select 1) x 
 update portal_records set data = jsonb_set(data,'{name}','"Intelsense AI (edited)"') where collection='programs' and id='intelsense';
 select t('vendor can edit their own profile', (select data->>'name' from portal_records where collection='programs' and id='intelsense') = 'Intelsense AI (edited)');
 select t('vendor cannot change their commission tiers', fails($$update portal_records set data = jsonb_set(data,'{tiers}','[99]') where collection='programs' and id='intelsense'$$));
+select t('vendor cannot award itself the Reseller Ready badge', fails($$update portal_records set data = data || '{"resellerReady":{"at":"2026-10-07","builtBy":"Us"}}' where collection='programs' and id='intelsense'$$));
 select t('vendor cannot edit another vendor', (select count(*) from (select 1) x where not fails($$update portal_records set data='{}' where collection='programs' and id='botnoi'$$)) = 1 and (select data->>'name' from portal_records where collection='programs' and id='botnoi') = 'Botnoi');
 insert into portal_records(collection,id,data,readers,writers) values ('incentives','i1','{"id":"i1","status":"pending","vendorId":"intelsense"}','{vendor:intelsense}','{vendor:intelsense}');
 select t('vendor submits an incentive for review', (select count(*) from portal_records where id='i1') = 1);

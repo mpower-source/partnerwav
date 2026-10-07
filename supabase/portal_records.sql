@@ -112,6 +112,8 @@ insert into public.portal_field_rules (collection, field, allowed) values
   ('programs',         'agreement',    '[]'),
   ('programs',         'status',       '[]'),
   ('programs',         'terms',        '[]'),
+  -- the "Reseller Ready" badge is CloudWAV's verification; a vendor cannot award it to itself
+  ('programs',         'resellerReady','[null]'),
   -- agreements: partners can only request one; CloudWAV sends it and records signatures
   ('agreements',       'status',       '["requested"]'),
   ('agreements',       'signers',      '[[], null]'),

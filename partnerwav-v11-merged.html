@@ -3502,6 +3502,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return '<span class="badge '+cls+'">'+esc(rel)+'</span>';
   }
 
+  // "Reseller Ready": CloudWAV verified the product can be sold and supported by partners (set in Vendor introductions)
+  function readyBadge(p){ return p && p.resellerReady ? ' <span class="badge good" data-reseller-ready title="PartnerWAV Verified: Reseller Ready'+(p.resellerReady.builtBy ? ' · Built by '+attr(p.resellerReady.builtBy) : '')+'">Reseller Ready</span>' : ''; }
+  function builtByLine(p){ return p && p.resellerReady && p.resellerReady.builtBy ? '<div class="program-meta" data-built-by>PartnerWAV Verified: Reseller Ready · Built by '+esc(p.resellerReady.builtBy)+'</div>' : (p && p.resellerReady ? '<div class="program-meta" data-built-by>PartnerWAV Verified: Reseller Ready</div>' : ''); }
   function relBadges(rels){
     var list = Array.isArray(rels) ? rels : (rels ? [rels] : []);
     return list.map(relBadge).join(" ");
@@ -3550,8 +3553,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ? '<button class="btn secondary sm" disabled>Enrolled ✓</button>'
       : '<button class="btn primary sm" data-enroll="'+p.id+'">Enroll</button>';
     return '<div class="program-card">'
-      + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div>'+relBadges(p.relationships)+'</div>'
-      + '<div class="program-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'
+      + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div>'+relBadges(p.relationships)+readyBadge(p)+'</div>'
+      + '<div class="program-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'+builtByLine(p)
       + '<p class="program-desc">'+esc(p.desc)+'</p>'
       + '<div class="program-actions">'
         + '<button class="btn ghost sm" data-detail="'+p.id+'">View details →</button>'
@@ -4118,6 +4121,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function pmItem(group, id){ return (pricingModel[group] || []).filter(function(x){ return x.id === id; })[0] || null; }
   function vaMoney(n){ return "$" + Math.round(n || 0).toLocaleString("en-US"); }
   function vaUrl(){ return appBaseUrl() + "?assess=1"; }
+  // A software house's own audit link: every assessment started from it is recorded as its introduction
+  function vaAuditUrl(h){ return appBaseUrl() + "?assess=1&ref=" + encodeURIComponent(h.id) + "&by=" + encodeURIComponent(h.name); }
+  function vaIntroFromUrl(){ try { var q = new URLSearchParams(window.location.search), id = (q.get("ref") || "").slice(0, 60), by = (q.get("by") || "").replace(/[<>]/g, "").slice(0, 80); return id ? { id:id, name:by } : null; } catch(e){ return null; } }
   // Recommended plan: the larger of what their partner count calls for and what the features they ticked need
   function vaStartupEligible(a){ return /^Startup/.test(a.companyStage || "") && (a.partners === "0" || a.partners === "1-10"); }
   function vaRecommend(a){
@@ -4263,6 +4269,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
     delete d.notesInternal;
+    var intro = vaIntroFromUrl(); if (intro) d.introducedBy = intro;
     var btn = document.querySelector("[data-va-next]"), err = document.getElementById("vaError");
     if (supabase && !DEMO_MODE){
       if (btn){ btn.disabled = true; btn.textContent = "Sending…"; }
@@ -4331,7 +4338,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!force && box.getAttribute("data-va-key") === key) return;   // don't wipe what the visitor is typing
     box.setAttribute("data-va-key", key);
     box.innerHTML = '<div class="lp-public-wrap">'
-      + (state.vaDraft.step === 0 ? '<div class="lp-page" style="margin-bottom:14px;"><div class="lp-hero"><div class="lp-eyebrow">PartnerWAV · CloudWAV Consulting</div><h1>See how PartnerWAV fits your company</h1>'
+      + (state.vaDraft.step === 0 && vaIntroFromUrl() ? '<div class="lp-page" style="margin-bottom:14px;" data-va-audit><div class="lp-hero"><div class="lp-eyebrow">PartnerWAV · CloudWAV Consulting'+(vaIntroFromUrl().name ? ' · with '+esc(vaIntroFromUrl().name) : '')+'</div><h1>Free go-to-market and technical scalability audit</h1>'
+        + '<p>Find out whether your product is ready to be sold through resellers, and what it would take. Answer a few questions (about 5 minutes). A CloudWAV fractional CTO then reviews your go-to-market and your product with you and sends written findings, whether or not you go on to use PartnerWAV.'+(vaIntroFromUrl().name ? ' '+esc(vaIntroFromUrl().name)+' may receive a fee from CloudWAV if you do.' : '')+'</p></div></div>'
+      : state.vaDraft.step === 0 ? '<div class="lp-page" style="margin-bottom:14px;"><div class="lp-hero"><div class="lp-eyebrow">PartnerWAV · CloudWAV Consulting</div><h1>See how PartnerWAV fits your company</h1>'
         + '<p>PartnerWAV helps software and hardware vendors build and run a partner channel in Asia Pacific and the US: recruiting partners, registering deals, paying commissions, incentives, training and more. Answer a few questions (about 5 minutes) and we will come back to you with the plan and services that fit.</p></div></div>' : '')
       + vaWizardHtml(state.vaDraft) + '</div>';
     document.title = "PartnerWAV · Vendor fit assessment";
@@ -4345,7 +4354,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var sup = pmItem("support", a.support), sel = function(id, opts, cur){ return '<select id="'+id+'" class="filter app-select">'+opts.map(function(o){ return '<option value="'+attr(o.id)+'"'+(o.id === cur ? ' selected' : '')+'>'+esc(o.name)+'</option>'; }).join("")+'</select>'; };
     return '<button class="btn ghost sm" data-va-list>← All assessments</button>'
       + '<div class="card card-pad" style="margin-top:14px;display:flex;flex-direction:column;gap:14px;" data-va-detail="'+esc(a.id)+'">'
-        + '<div class="profile-header"><div><h2 style="font-size:1.25rem;">'+esc(a.company)+'</h2><div class="thread-meta">'+esc([a.contactName, a.contactRole].filter(Boolean).join(", "))+' · '+esc(a.source === "vendor-link" ? "Sent from the vendor link" : "Taken on a call")+' · '+esc(a.createdAt || "")+'</div></div>'
+        + '<div class="profile-header"><div><h2 style="font-size:1.25rem;">'+esc(a.company)+'</h2><div class="thread-meta">'+esc([a.contactName, a.contactRole].filter(Boolean).join(", "))+' · '+esc(a.source === "vendor-link" ? "Sent from the vendor link" : "Taken on a call")+(a.introducedBy && (a.introducedBy.name || a.introducedBy.id) ? ' · <b data-va-intro>Introduced by '+esc(a.introducedBy.name || a.introducedBy.id)+'</b>' : '')+esc("")+' · '+esc(a.createdAt || "")+'</div></div>'
           + '<div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'+(a.bookedAt ? '<span class="badge good" data-va-booked title="Booked from the thank-you page">Call booked '+esc(a.bookedAt)+'</span>' : '')+'<span class="badge '+st.cls+'">'+esc(st.label)+'</span>'
           + '<select id="vaStatus" class="filter app-select" aria-label="Status">'+Object.keys(VA_STATUS).map(function(k){ return '<option value="'+k+'"'+(k === a.status ? ' selected' : '')+'>'+esc(VA_STATUS[k].label)+'</option>'; }).join("")+'</select></div></div>'
         + '<div class="va-two">'
@@ -5720,8 +5729,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           ? '<button class="btn secondary sm" data-apply-vendor-reseller="'+p.id+'">Apply as Reseller →</button>'
           : '<button class="btn secondary sm" data-message-vendor="'+esc(p.name)+'">Message</button>';
       return '<div class="program-card">'
-        + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div>'+(mine?'<span class="badge accent2">You</span>':relBadges(p.relationships))+'</div>'
-        + '<div class="program-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'
+        + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div>'+(mine?'<span class="badge accent2">You</span>':relBadges(p.relationships))+readyBadge(p)+'</div>'
+        + '<div class="program-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'+builtByLine(p)
         + '<p class="program-desc">'+esc(p.desc)+'</p>'
         + '<div class="program-actions">'
           + '<button class="btn ghost sm" data-view-vendor="'+p.id+'">View profile →</button>'
@@ -6124,7 +6133,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       '<button class="btn ghost sm" data-back-vendor-network>← Back to Vendor Network</button>'
       + '<div class="card card-pad" style="margin-top:14px; display:flex; flex-direction:column; gap:16px;">'
         + '<div class="profile-header">'+logoOrFallback(p, 104)
-          + '<div><h2 style="font-size:1.3rem;">'+esc(p.name)+'</h2><div class="thread-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'+(mine ? '' : contactButtonsHtml("vendor:" + p.id))+'</div>'
+          + '<div><h2 style="font-size:1.3rem;">'+esc(p.name)+readyBadge(p)+'</h2><div class="thread-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'+builtByLine(p)+(mine ? '' : contactButtonsHtml("vendor:" + p.id))+'</div>'
           + (mine
               ? '<button class="btn primary sm" style="margin-left:auto;" data-edit-vendor-profile="'+esc(p.id)+'">Edit profile</button>'
               : '<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">'+(canPreview() ? '<button class="btn secondary sm" data-admin-manage="vendor" data-admin-id="'+attr(p.id)+'">Manage as '+esc(p.name)+'</button>' : '')+'<button class="btn primary sm" data-message-vendor="'+esc(p.name)+'">Message</button></div>')
@@ -10152,10 +10161,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ]},
       { title: "Vendor introductions to PartnerWAV", clauses: [
         "The Developer may introduce to CloudWAV a client or other company that has its own software product and wishes to sell it through partners (a \"Vendor Lead\"), by registering it through the PartnerWAV portal or in writing. CloudWAV may decline a Vendor Lead within {{acceptDays}} business days if the company is already a PartnerWAV vendor or is in documented discussions with CloudWAV.",
-        "If a Vendor Lead signs a PartnerWAV vendor agreement within {{protectionMonths}} months of the introduction, CloudWAV pays the Developer an introduction fee of {{vendorReferralRate}}% of the monthly PartnerWAV subscription fees CloudWAV collects from that vendor during the first {{vendorReferralMonths}} months of its subscription. The fee is calculated on subscription fees only, not on platform operator fees, commissions or any other amount.",
-        "CloudWAV pays the introduction fee within {{paymentDays}} days after the end of the month in which it collected the subscription fees, with a statement of the fees collected. If CloudWAV refunds a vendor within {{clawbackDays}} days of collection, the related introduction fee may be deducted from the next payment.",
+        "If a Vendor Lead signs a PartnerWAV vendor agreement within {{protectionMonths}} months of the introduction, CloudWAV pays the Developer an introduction fee of {{vendorReferralRate}}% of the monthly PartnerWAV subscription fees CloudWAV collects from that vendor during the first {{vendorReferralMonths}} months of its subscription. The introduction fee is calculated on subscription fees only.",
+        "Advisory share. If a vendor introduced under this clause engages CloudWAV or its affiliate CloudWAV Consulting for fractional technology leadership (for example a fractional CTO, CAIO, CIO or CISO), CloudWAV pays the Developer {{advisoryShareRate}}% of the advisory fees it collects from that vendor during the first {{advisoryShareMonths}} months of the engagement.",
+        "Originator share. CloudWAV also pays the Developer {{originatorShareRate}}% of the platform operator fees CloudWAV collects on sales of that vendor's products by partners, for {{originatorMonths}} months from the vendor's first partner sale. The originator share is calculated on the platform operator fees CloudWAV actually receives, not on the sale price, and never reduces a partner's commission or the vendor's revenue.",
+        "CloudWAV pays the introduction fee, the advisory share and the originator share within {{paymentDays}} days after the end of the month in which it collected the related fees, with a statement of the fees collected for each vendor. If CloudWAV refunds a vendor within {{clawbackDays}} days of collection, the related amount may be deducted from the next payment.",
+        "Engineering stays with the Developer. While a vendor introduced under this clause is on PartnerWAV and for {{tailMonths}} months afterwards, CloudWAV will not itself design, build or maintain that vendor's software product, and will not introduce another development firm to that vendor for that work, unless the Developer declines the work or cannot start it within a reasonable time, or the vendor asks in writing for another firm. Where CloudWAV's advisory work or a partner's request identifies development work for that vendor, CloudWAV will refer it to the Developer first. Advice, architecture review and security review by CloudWAV are not development work for this clause.",
+        "Audit. CloudWAV offers each Vendor Lead a go-to-market and technical scalability audit at no charge and gives the Developer a co-branded link through which Vendor Leads are registered. The Developer may attend audit meetings. The Developer will tell each Vendor Lead that it may receive fees from CloudWAV under this clause.",
+        "Reseller Ready. Where CloudWAV's review confirms that a product built by the Developer meets CloudWAV's published Reseller Ready checklist, CloudWAV may show a \"Reseller Ready\" mark and a credit to the Developer on that vendor's PartnerWAV listing. CloudWAV may withdraw the mark if the product stops meeting the checklist. The mark is not a warranty by either party.",
         "A company introduced under this clause becomes a vendor on PartnerWAV on CloudWAV's standard vendor terms. The Developer is not a party to that agreement and may not make promises about PartnerWAV's price or terms on CloudWAV's behalf.",
-        "Introduction fees under this clause and referral fees under clause 5 are separate obligations. Neither party may set one off against the other. This clause does not change how Projects are referred, or the fees on them."
+        "Amounts payable under this clause and referral fees under clause 5 are separate obligations. Neither party may set one off against the other. This clause does not change how Projects are referred, or the fees on them."
       ]}
     ],
     schedule: [
@@ -10163,6 +10177,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ["Co-Sell fee", "{{cosellRate}}% of Collected Fees for {{cosellMonths}} months from the first invoice to the Client"],
       ["Resell discount", "{{resellDiscount}}% off the Developer's standard rates"],
       ["Vendor introduction fee (paid by CloudWAV)", "{{vendorReferralRate}}% of the PartnerWAV subscription fees collected from an introduced vendor, for the first {{vendorReferralMonths}} months of its subscription"],
+      ["Advisory share (paid by CloudWAV)", "{{advisoryShareRate}}% of the fractional technology leadership fees collected from an introduced vendor, for the first {{advisoryShareMonths}} months of the engagement"],
+      ["Originator share (paid by CloudWAV)", "{{originatorShareRate}}% of the platform operator fees collected on partner sales of an introduced vendor's products, for {{originatorMonths}} months from its first partner sale"],
+      ["Engineering protection", "CloudWAV does not build an introduced vendor's product while it is on PartnerWAV and for {{tailMonths}} months afterwards"],
       ["Maintenance, support and retainers", "{{maintenanceText}}"],
       ["Minimum fee per won Project", "{{minFeeSchedule}}"],
       ["Cap", "{{capSchedule}}"],
@@ -10191,6 +10208,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     paymentDays:30, clawbackDays:90, currency:"THB", termMonths:12, noticeDays:60,
     // CloudWAV -> software house, for vendors it introduces to PartnerWAV (clause 17): % of the vendor's subscription, for N months
     vendorReferralRate:10, vendorReferralMonths:12,
+    // ...plus a share of the advisory fees CloudWAV Consulting collects from that vendor, and of the platform operator fees on its partner sales
+    advisoryShareRate:10, advisoryShareMonths:12, originatorShareRate:20, originatorMonths:24,
     // CloudWAV <-> partner payout (not part of the software house agreement)
     partnerShare:70, cosellPartnerLeadShare:80, cosellCloudwavLeadShare:60
   };
@@ -10246,13 +10265,27 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function vrFor(programId){ return vendorReferrals.filter(function(x){ return x.id === programId; })[0] || null; }
   function vrReferrer(x){ var h = x.houseId ? houseById(x.houseId) : null; return h ? h.name : (x.referrerName || "--"); }
   // Fee owed so far: rate x monthly subscription x months billed (never more than the agreed number of months)
+  //   + advisory share: advisoryPct of the advisory fees collected so far (typed in; advisoryCollected)
+  //   + originator share: originatorPct of the platform operator fees CloudWAV has been PAID on that vendor's
+  //     partner sales, within originatorMonths of the first such fee (US dollar deals; read from CloudWAV Revenue)
+  function vrOperatorFees(x){
+    var fees = (typeof platformFees !== "undefined" ? platformFees : []).filter(function(f){ return f.programId === x.id && f.status === "paid" && (!f.sym || f.sym === "$"); });
+    if (!fees.length) return { collected:0, count:0 };
+    var first = fees.map(function(f){ return String(f.approvedAt || "").slice(0, 10); }).filter(Boolean).sort()[0], months = Number(x.originatorMonths) || 0;
+    var until = first && months ? monthsFrom(first, months) : "";
+    var inWin = fees.filter(function(f){ var d = String(f.approvedAt || "").slice(0, 10); return !until || !d || d <= until; });
+    return { collected: inWin.reduce(function(t, f){ return t + (Number(f.amount) || 0); }, 0), count: inWin.length };
+  }
   function vrCalc(x, today){
     var billed = 0;
     if (x.startDate && Number(x.monthlyFee) > 0){ billed = Math.min(Number(x.months) || 0, Math.max(0, monthsBetween(x.startDate, today || todayIso()) + 1)); }
-    var owed = billed * (Number(x.monthlyFee) || 0) * (Number(x.ratePct) || 0) / 100;
+    var sub = billed * (Number(x.monthlyFee) || 0) * (Number(x.ratePct) || 0) / 100;
+    var adv = (Number(x.advisoryCollected) || 0) * (Number(x.advisoryPct) || 0) / 100;
+    var of = vrOperatorFees(x), orig = of.collected * (Number(x.originatorPct) || 0) / 100;
+    var owed = sub + adv + orig;
     var paid = (x.payouts || []).reduce(function(t, p){ return t + (Number(p.amount) || 0); }, 0);
     var total = (Number(x.months) || 0) * (Number(x.monthlyFee) || 0) * (Number(x.ratePct) || 0) / 100;
-    return { billed:billed, owed:owed, paid:paid, balance:owed - paid, total:total };
+    return { billed:billed, sub:sub, adv:adv, orig:orig, opFees:of.collected, opCount:of.count, owed:owed, paid:paid, balance:owed - paid, total:total };
   }
   var operatorSettings = [];   // CloudWAV-only settings; "legal" = the entity details printed in agreements
   function agrLegal(){ return operatorSettings.filter(function(x){ return x.id === "legal"; })[0] || { id:"legal" }; }
@@ -10333,6 +10366,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       referralRate: t.referralRate, windowMonths: t.windowMonths, stepDownRate: t.stepDownRate, stepDownMonths: t.stepDownMonths,
       cosellRate: t.cosellRate, cosellMonths: t.cosellMonths, resellDiscount: t.resellDiscount,
       vendorReferralRate: t.vendorReferralRate, vendorReferralMonths: t.vendorReferralMonths,
+      advisoryShareRate: t.advisoryShareRate, advisoryShareMonths: t.advisoryShareMonths, originatorShareRate: t.originatorShareRate, originatorMonths: t.originatorMonths,
       maintenanceText: t.maintenanceHalf ? "half the applicable rate" : "the full applicable rate",
       minFeeText: t.minFee ? "The minimum fee for each won Project is " + fmtMoney(t.minFee, cur) + ". " : "",
       capText: t.capPerYear ? "Fees for any one Client are capped at " + fmtMoney(t.capPerYear, cur) + " per 12 months." : (t.minFee ? "" : "There is no minimum fee and no cap."),
@@ -12051,19 +12085,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function vendorReferralsHtml(){
     var tot = vendorReferrals.reduce(function(a, x){ var c = vrCalc(x); a.owed += c.owed; a.paid += c.paid; return a; }, { owed:0, paid:0 });
-    return '<div class="map-stats" style="margin-bottom:12px;"><div class="map-stat"><b>'+vendorReferrals.length+'</b>vendors introduced</div><div class="map-stat"><b>'+vaMoney(tot.owed)+'</b>introduction fees owed so far</div><div class="map-stat"><b>'+vaMoney(tot.paid)+'</b>paid</div><div class="map-stat"><b>'+vaMoney(tot.owed - tot.paid)+'</b>balance to pay</div></div>'
-      + '<div class="cfg-actions" style="margin-bottom:12px;"><button type="button" class="btn primary sm" data-vr-edit="">+ Record who introduced a vendor</button><span class="field-note">When a software house (or anyone else) introduces a vendor, CloudWAV pays them a share of that vendor\'s monthly subscription for a set number of months. Only CloudWAV sees this.</span></div>'
+    return '<div class="map-stats" style="margin-bottom:12px;"><div class="map-stat"><b>'+vendorReferrals.length+'</b>vendors introduced</div><div class="map-stat"><b>'+vaMoney(tot.owed)+'</b>owed so far</div><div class="map-stat"><b>'+vaMoney(tot.paid)+'</b>paid</div><div class="map-stat"><b>'+vaMoney(tot.owed - tot.paid)+'</b>balance to pay</div></div>'
+      + '<div class="cfg-actions" style="margin-bottom:12px;"><button type="button" class="btn primary sm" data-vr-edit="">+ Record who introduced a vendor</button><span class="field-note">When a software house (or anyone else) introduces a vendor, CloudWAV pays them a share of that vendor\'s monthly subscription, of any advisory fees, and of the platform operator fees on its partner sales. Only CloudWAV sees this.</span></div>'
       + (vendorReferrals.length ? '<div style="display:flex;flex-direction:column;gap:10px;">' + vendorReferrals.map(function(x){
           var pr = programById(x.id), c = vrCalc(x);
           return '<div class="deal-row" data-vr-row="'+esc(x.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(pr ? pr.name : x.id)
             + '<span class="field-note" style="display:block;font-weight:400;">Introduced by '+esc(vrReferrer(x))+(x.introducedAt ? ' on '+esc(x.introducedAt) : '')+'</span>'
-            + '<span class="field-note" style="display:block;font-weight:400;">'+(Number(x.monthlyFee) > 0 ? esc(x.ratePct)+'% of '+vaMoney(x.monthlyFee)+' a month for '+esc(x.months)+' months'+(x.startDate ? ' from '+esc(x.startDate) : ' -- subscription not started')+' · '+c.billed+' of '+esc(x.months)+' months billed · owed '+vaMoney(c.owed)+' · paid '+vaMoney(c.paid) : 'Subscription not set yet -- add the monthly fee when they sign up')+'</span></span>'
+            + '<span class="field-note" style="display:block;font-weight:400;">'+(Number(x.monthlyFee) > 0 ? esc(x.ratePct)+'% of '+vaMoney(x.monthlyFee)+' a month for '+esc(x.months)+' months'+(x.startDate ? ' from '+esc(x.startDate) : ' -- subscription not started')+' · '+c.billed+' of '+esc(x.months)+' months billed · introduction fee '+vaMoney(c.sub) : 'Subscription not set yet -- add the monthly fee when they sign up')+'</span>'
+            + '<span class="field-note" style="display:block;font-weight:400;" data-vr-shares>Advisory share: '+esc(x.advisoryPct || 0)+'% of '+vaMoney(x.advisoryCollected || 0)+' collected = '+vaMoney(c.adv)+' · Originator share: '+esc(x.originatorPct || 0)+'% of '+vaMoney(c.opFees)+' operator fees paid ('+c.opCount+' deal'+(c.opCount === 1 ? '' : 's')+') = '+vaMoney(c.orig)+'</span>'
+            + '<span class="field-note" style="display:block;font-weight:400;">Owed '+vaMoney(c.owed)+' · paid '+vaMoney(c.paid)+'</span></span>'
+            + (pr && pr.resellerReady ? '<span class="badge good" data-vr-ready>Reseller Ready</span>' : '')
             + '<span class="badge '+(c.balance > 0.005 ? "warn" : (c.owed > 0 ? "good" : "neutral"))+'">'+(c.balance > 0.005 ? vaMoney(c.balance)+" to pay" : (c.owed > 0 ? "Paid up" : "Nothing due yet"))+'</span>'
             + '<button type="button" class="btn secondary sm" data-vr-pay="'+esc(x.id)+'">Record payment</button><button type="button" class="btn ghost sm" data-vr-edit="'+esc(x.id)+'">Edit</button></div>';
         }).join("") + '</div>' : '<div class="empty">No vendor introductions recorded yet.</div>');
   }
   function vrEditModal(id, presetVendor){
     var x = id ? vrFor(id) : null, d = x || { id:presetVendor || "", houseId:"", referrerName:"", introducedAt:todayIso(), startDate:"", monthlyFee:"", ratePct:DEFAULT_REFERRAL_TERMS.vendorReferralRate, months:DEFAULT_REFERRAL_TERMS.vendorReferralMonths, payouts:[], note:"" };
+    var dn = function(v, k){ return v === undefined || v === null ? DEFAULT_REFERRAL_TERMS[k] : v; }, prx = programById(d.id);
     var a = function(v){ return esc(v == null ? "" : v).replace(/"/g, "&quot;"); };
     var free = programs.filter(function(pr){ return pr.id !== "cloudwav" && (pr.id === d.id || !vrFor(pr.id)); });
     openModal('<div class="modal-head"><h2>'+(x ? "Edit vendor introduction" : "Who introduced this vendor?")+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
@@ -12076,8 +12114,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="field-row"><label for="vrFee">Vendor\'s monthly subscription ($)</label><input type="number" min="0" step="1" id="vrFee" value="'+a(d.monthlyFee)+'" placeholder="e.g. 497"></div>'
       + '<div class="field-row"><label for="vrRate">Introduction fee %</label><input type="number" min="0" max="100" step="0.5" id="vrRate" value="'+a(d.ratePct)+'"></div>'
       + '<div class="field-row"><label for="vrMonths">For how many months</label><input type="number" min="0" step="1" id="vrMonths" value="'+a(d.months)+'"></div></div>'
+      + '<div class="aff-section-title">Advisory share</div><div class="form-grid"><div class="field-row"><label for="vrAdvCollected">Advisory fees collected so far ($)</label><input type="number" min="0" step="1" id="vrAdvCollected" value="'+a(d.advisoryCollected)+'" placeholder="Fractional CTO / CAIO fees"></div>'
+      + '<div class="field-row"><label for="vrAdvRate">Advisory share %</label><input type="number" min="0" max="100" step="0.5" id="vrAdvRate" value="'+a(dn(d.advisoryPct, "advisoryShareRate"))+'"></div>'
+      + '<div class="field-row"><label for="vrAdvMonths">For how many months</label><input type="number" min="0" step="1" id="vrAdvMonths" value="'+a(dn(d.advisoryMonths, "advisoryShareMonths"))+'"></div></div>'
+      + '<div class="aff-section-title">Originator share</div><div class="form-grid"><div class="field-row"><label for="vrOrigRate">% of platform operator fees</label><input type="number" min="0" max="100" step="0.5" id="vrOrigRate" value="'+a(dn(d.originatorPct, "originatorShareRate"))+'"></div>'
+      + '<div class="field-row"><label for="vrOrigMonths">For how many months from the first partner sale</label><input type="number" min="0" step="1" id="vrOrigMonths" value="'+a(dn(d.originatorMonths, "originatorMonths"))+'"></div></div>'
+      + '<span class="field-note">The originator share is worked out from the operator fees marked Paid in CloudWAV Revenue for this vendor. Enter only advisory fees collected inside the agreed months.</span>'
+      + '<label class="cfg-check"><input type="checkbox" id="vrReady"'+(prx && prx.resellerReady ? " checked" : "")+'> Verified Reseller Ready -- shows the badge and a "Built by" credit on the vendor\'s listing</label>'
       + '<div class="field-row"><label for="vrNote">Note</label><input type="text" id="vrNote" value="'+a(d.note)+'"></div>'
-      + '<span class="field-note">The rate and months start from the software house\'s agreement and can be changed here for this vendor. Leave the subscription empty until the vendor signs up.</span>'
+      + '<span class="field-note">The rates and months start from the software house\'s agreement and can be changed here for this vendor. Leave the subscription empty until the vendor signs up.</span>'
       + '<div id="vrErr" class="login-msg bad" role="alert" hidden></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn primary sm" data-vr-save>Save</button><button type="button" class="btn secondary sm" data-agr-modal-close>Cancel</button>'+(x ? '<button type="button" class="btn ghost sm" style="color:var(--bad);margin-left:auto;" data-vr-delete="'+a(x.id)+'">Remove</button>' : '')+'</div></div>');
   }
@@ -12090,15 +12135,26 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!house && !name) return fail("Say who introduced them.");
     var old = vrFor(id) || { payouts:[] };
     var rec = { id:id, houseId:house, referrerName:house ? "" : name, introducedAt:g("vrIntro"), startDate:g("vrStart"), monthlyFee:g("vrFee") === "" ? "" : Math.max(0, Number(g("vrFee")) || 0),
-      ratePct:Math.max(0, Number(g("vrRate")) || 0), months:Math.max(0, Math.round(Number(g("vrMonths")) || 0)), payouts:old.payouts || [], note:g("vrNote") };
+      ratePct:Math.max(0, Number(g("vrRate")) || 0), months:Math.max(0, Math.round(Number(g("vrMonths")) || 0)), payouts:old.payouts || [], note:g("vrNote"),
+      advisoryCollected:g("vrAdvCollected") === "" ? "" : Math.max(0, Number(g("vrAdvCollected")) || 0), advisoryPct:Math.max(0, Number(g("vrAdvRate")) || 0), advisoryMonths:Math.max(0, Math.round(Number(g("vrAdvMonths")) || 0)),
+      originatorPct:Math.max(0, Number(g("vrOrigRate")) || 0), originatorMonths:Math.max(0, Math.round(Number(g("vrOrigMonths")) || 0)) };
+    if (rec.advisoryPct > 50 || rec.originatorPct > 50) return fail("A share above 50% leaves CloudWAV less than half of what it collects -- lower it, or confirm it in writing first.");
     vendorReferrals = vendorReferrals.filter(function(v){ return v.id !== id; }); vendorReferrals.push(rec);
+    // the Reseller Ready badge lives on the vendor's public listing; only CloudWAV can set it
+    var prog = programById(id), ready = document.getElementById("vrReady");
+    if (prog && ready){
+      var by = house ? ((houseById(house) || {}).name || "") : name;
+      if (ready.checked && !prog.resellerReady){ prog.resellerReady = { at:todayIso(), builtBy:by }; prog._edited = true; saveVendorEdits(); }
+      else if (ready.checked && prog.resellerReady && prog.resellerReady.builtBy !== by){ prog.resellerReady.builtBy = by; prog._edited = true; saveVendorEdits(); }
+      else if (!ready.checked && prog.resellerReady){ delete prog.resellerReady; prog._edited = true; saveVendorEdits(); }
+    }
     closeModal(); saveReferrals(); toast("Introduction recorded"); render();
   }
   function vrPayModal(id){
     var x = vrFor(id); if (!x) return; var c = vrCalc(x), pr = programById(id);
-    openModal('<div class="modal-head"><h2>Introduction fee: '+esc(pr ? pr.name : id)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+    openModal('<div class="modal-head"><h2>Fees owed: '+esc(pr ? pr.name : id)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
       + '<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;" data-vr-payform="'+esc(id)+'">'
-      + '<div class="tier-line"><span>Paid to</span><b>'+esc(vrReferrer(x))+'</b></div><div class="tier-line"><span>Owed so far</span><b>'+vaMoney(c.owed)+'</b></div><div class="tier-line"><span>Paid</span><b>'+vaMoney(c.paid)+'</b></div><div class="tier-line"><span>Balance</span><b>'+vaMoney(c.balance)+'</b></div>'
+      + '<div class="tier-line"><span>Paid to</span><b>'+esc(vrReferrer(x))+'</b></div><div class="tier-line"><span>Introduction fee</span><b>'+vaMoney(c.sub)+'</b></div><div class="tier-line"><span>Advisory share</span><b>'+vaMoney(c.adv)+'</b></div><div class="tier-line"><span>Originator share</span><b>'+vaMoney(c.orig)+'</b></div><div class="tier-line"><span>Owed so far</span><b>'+vaMoney(c.owed)+'</b></div><div class="tier-line"><span>Paid</span><b>'+vaMoney(c.paid)+'</b></div><div class="tier-line"><span>Balance</span><b>'+vaMoney(c.balance)+'</b></div>'
       + ((x.payouts || []).length ? '<table class="va-lines" style="width:100%;"><tbody>'+x.payouts.map(function(p){ return '<tr><td>'+esc(p.date)+'</td><td>'+esc(p.note || "")+'</td><td style="text-align:right;">'+vaMoney(p.amount)+'</td></tr>'; }).join("")+'</tbody></table>' : '')
       + '<div class="form-grid"><div class="field-row"><label for="vrPayAmt">Amount paid ($)</label><input type="number" min="0" step="1" id="vrPayAmt" value="'+(c.balance > 0 ? Math.round(c.balance * 100) / 100 : "")+'"></div><div class="field-row"><label for="vrPayDate">Date</label><input type="date" id="vrPayDate" value="'+todayIso()+'"></div></div>'
       + '<div class="field-row"><label for="vrPayNote">Note</label><input type="text" id="vrPayNote" placeholder="e.g. bank transfer reference"></div>'
@@ -12113,6 +12169,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + '<span class="badge '+(h.status === "active" ? "good" : "neutral")+'">'+(h.status === "active" ? "Active" : h.status === "paused" ? "Paused" : "Negotiating")+'</span>'
             + (ag ? agrBadge(ag) : '<span class="badge neutral">No agreement</span>')
             + '<button type="button" class="btn ghost sm" data-house-doc="'+esc(h.id)+'">Agreement</button>'
+            + '<button type="button" class="btn ghost sm" data-house-audit="'+esc(h.id)+'" title="Their co-branded link to the free audit; every client who starts from it is recorded as their introduction">Copy audit link</button>'
             + '<button type="button" class="btn secondary sm" data-house-edit="'+esc(h.id)+'">Edit</button></div>';
         }).join("") + '</div>' : '<div class="empty">No software houses yet.</div>');
   }
@@ -12252,7 +12309,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="vp-grid">'+n("acceptDays", "Accept / reject within (business days)")+n("protectionMonths", "Protection after acceptance (months)")+n("tailMonths", "Non-circumvention tail (months)")+n("paymentDays", "Pay within days after month end")+n("clawbackDays", "Refund clawback window (days)")+n("termMonths", "Term (months)")+n("noticeDays", "Notice to end (days)")
         + '<div class="field-row"><label for="ht_currency">Currency</label><select id="ht_currency"><option>THB</option><option>USD</option></select></div></div>'
       + '<div class="aff-section-title" style="margin-top:6px;">Vendor introductions (CloudWAV pays them, clause 17)</div>'
-      + '<div class="vp-grid">'+n("vendorReferralRate", "% of the vendor\'s subscription")+n("vendorReferralMonths", "…for months")+'</div>'
+      + '<div class="vp-grid">'+n("vendorReferralRate", "% of the vendor\'s subscription")+n("vendorReferralMonths", "…for months")+n("advisoryShareRate", "% of advisory fees")+n("advisoryShareMonths", "…for months")+n("originatorShareRate", "% of platform operator fees")+n("originatorMonths", "…for months")+'</div>'
       + '<div class="aff-section-title" style="margin-top:6px;">Partner payout (CloudWAV ↔ partner, not in this agreement)</div>'
       + '<div class="vp-grid">'+n("partnerShare", "Partner share of referral fees %")+n("cosellPartnerLeadShare", "Co-sell, partner leads %")+n("cosellCloudwavLeadShare", "Co-sell, CloudWAV leads %")+'</div>'
       + '<div id="hfError" class="login-msg bad" hidden></div>'
@@ -12363,6 +12420,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       px.payouts = px.payouts || []; px.payouts.push({ id:"vp-" + Date.now().toString(36), date:(document.getElementById("vrPayDate") || {}).value || todayIso(), amount:amt, note:((document.getElementById("vrPayNote") || {}).value || "").trim() });
       closeModal(); saveReferrals(); toast("Payment recorded"); render(); return;
     }
+    if ((b = t.closest("[data-house-audit]"))){ var hh = houseById(b.getAttribute("data-house-audit")); if (hh) copyText(vaAuditUrl(hh), "Audit link for " + hh.name + " copied"); return; }
     if ((b = t.closest("[data-house-edit]"))){ showHouseEditor(b.getAttribute("data-house-edit") || null); return; }
     if ((b = t.closest("[data-house-doc]"))){ showAgreementDocument(houseById(b.getAttribute("data-house-doc"))); return; }
     if ((b = t.closest("[data-msp-house]"))){ var ex = softwareHouses.filter(function(h){ return h.prospectId === b.getAttribute("data-msp-house"); })[0]; showHouseEditor(ex ? ex.id : null, ex ? null : b.getAttribute("data-msp-house")); return; }
@@ -16071,7 +16129,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!entity) return fail("That company could not be found.");
     if (isNew && role === "vendor" && refEl && refEl.value && !vrFor(entity.id)){
       var rh = houseById(refEl.value), rt = termsOf(rh);
-      vendorReferrals.push({ id:entity.id, houseId:refEl.value, referrerName:"", introducedAt:todayIso(), startDate:"", monthlyFee:"", ratePct:rt.vendorReferralRate, months:rt.vendorReferralMonths, payouts:[], note:"" });
+      vendorReferrals.push({ id:entity.id, houseId:refEl.value, referrerName:"", introducedAt:todayIso(), startDate:"", monthlyFee:"", ratePct:rt.vendorReferralRate, months:rt.vendorReferralMonths, payouts:[], note:"",
+        advisoryCollected:"", advisoryPct:rt.advisoryShareRate, advisoryMonths:rt.advisoryShareMonths, originatorPct:rt.originatorShareRate, originatorMonths:rt.originatorMonths });
       saveReferrals();
     }
     form.setAttribute("data-acct-fixed", entity.id);
@@ -16328,7 +16387,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!ev.target || ev.target.id !== "vrHouse") return;
     var row = document.getElementById("vrNameRow"); if (row) row.hidden = !!ev.target.value;
     var h = ev.target.value ? houseById(ev.target.value) : null, box = document.querySelector("[data-vr-form]");
-    if (h && box && !box.getAttribute("data-vr-form")){ var t2 = termsOf(h); document.getElementById("vrRate").value = t2.vendorReferralRate; document.getElementById("vrMonths").value = t2.vendorReferralMonths; }
+    if (h && box && !box.getAttribute("data-vr-form")){ var t2 = termsOf(h); document.getElementById("vrRate").value = t2.vendorReferralRate; document.getElementById("vrMonths").value = t2.vendorReferralMonths;
+      [["vrAdvRate","advisoryShareRate"],["vrAdvMonths","advisoryShareMonths"],["vrOrigRate","originatorShareRate"],["vrOrigMonths","originatorMonths"]].forEach(function(pair){ var el = document.getElementById(pair[0]); if (el) el.value = t2[pair[1]]; }); }
   });
   // picking who the agreement is with pre-selects the agreement that normally goes with them (it can be changed)
   document.addEventListener("change", function(ev){
