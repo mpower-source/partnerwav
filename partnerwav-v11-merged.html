@@ -5666,9 +5666,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var plural = function(n, w){ return n + " " + w + (n === 1 ? "" : "s"); };
     row.innerHTML =
       vTile("partners", "Active partners", active.length > 0, active.length, recent.length ? "\u2191 " + recent.length + " joined in the last 30 days" : waiting.length ? waiting.length + " more being onboarded" : "Across all tiers", ["3", "\u2191 1 joined in the last 30 days"])
-      + vTile("revenue", "Partner-sold revenue", revenue > 0 || closed > 0, money(revenue), plural(closed, "deal") + " closed · last 12 months", ["$254,000", "26 deals closed · last 12 months"])
+      + vTile("revenue", "Partner-sold revenue", revenue > 0 || closed > 0, money(revenue), plural(closed, "deal") + " closed · last 12 months", ["$254,000", "13 deals closed · last 12 months"])
       + vTile("deals", "Open deals", open.length > 0, open.length, pipeline ? pipeline + " in the pipeline" : "In review with CloudWAV", ["3", "$61,500 in the pipeline"])
-      + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$38,100", "Earned on 26 approved deals"])
+      + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$38,100", "Earned on 13 approved deals"])
       + vTile("applications", "Partner applications waiting", apps.length > 0, apps.length, apps.slice(0, 2).join(", ") + (apps.length > 2 ? " +" + (apps.length - 2) : ""), ["2", "Ready for your review"])
       + vTile("demos", "Demos booked this month", demos > 0, demos, "From your calendar and scheduling link", ["4", "\u2191 1 this week"]);
     var note = document.getElementById("vendorStatNote"); if (note) note.hidden = !anySample;
@@ -12829,7 +12829,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         ? { key:"partner", kicker:"Your return on PartnerWAV", before:"You have earned", big:money(q.earned), after: q.spent > 0 ? "in commission, " + money(q.net) + " after what you spent on training." : "in commission through PartnerWAV, at no cost to you.",
             note:"On approved deals. PartnerWAV is free for partners.", facts:[[q.deals + "", "approved deal" + (q.deals === 1 ? "" : "s")], [money(q.spent), q.spent > 0 ? "spent on training" : "paid to PartnerWAV"]] }
         : { key:"partner", sample:true, kicker:"Your return on PartnerWAV", before:"You have earned", big:"$38,100", after:"in commission through PartnerWAV, at no cost to you.",
-            note:"An example. Your own figure appears when your first deal is approved.", facts:[["26", "approved deals"], ["$0", "paid to PartnerWAV"]] });
+            note:"An example. Your own figure appears when your first deal is approved.", facts:[["13", "approved deals"], ["$0", "paid to PartnerWAV"]] });
     }
     if (op){
       var rows = programs.filter(function(x){ return x.id !== "cloudwav"; }).map(function(x){ return { p:x, r:roiVendor(x) }; });
