@@ -5641,7 +5641,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       vTile("partners", "Active partners", active.length > 0, active.length, recent.length ? "\u2191 " + recent.length + " joined in the last 30 days" : waiting.length ? waiting.length + " more being onboarded" : "Across all tiers", ["3", "\u2191 1 joined in the last 30 days"])
       + vTile("revenue", "Partner-sold revenue", revenue > 0 || closed > 0, money(revenue), plural(closed, "deal") + " closed · last 12 months", ["$127,000", "13 deals closed · last 12 months"])
       + vTile("deals", "Open deals", open.length > 0, open.length, pipeline ? pipeline + " in the pipeline" : "In review with CloudWAV", ["3", "$61,500 in the pipeline"])
-      + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$51,360", "Earned on 13 approved deals"])
+      + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$19,050", "Earned on 13 approved deals"])
       + vTile("applications", "Partner applications waiting", apps.length > 0, apps.length, apps.slice(0, 2).join(", ") + (apps.length > 2 ? " +" + (apps.length - 2) : ""), ["2", "Ready for your review"])
       + vTile("demos", "Demos booked this month", demos > 0, demos, "From your calendar and scheduling link", ["4", "\u2191 1 this week"]);
     var note = document.getElementById("vendorStatNote"); if (note) note.hidden = !anySample;

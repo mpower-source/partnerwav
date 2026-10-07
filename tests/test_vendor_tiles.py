@@ -10,7 +10,7 @@ with sync_playwright() as p:
     ok("$243,000" in t("revenue") and "13 deals closed" in t("revenue") and not smp("revenue"), "Partner-sold revenue and closed deals: " + t("revenue"))
     ok("$42,000 in the pipeline" in t("deals") and not smp("deals"), "Open deals with pipeline value: " + t("deals"))
     ok(smp("applications") and "TechBridge" not in t("applications"), "The two demo applications count as sample, not real: " + t("applications"))
-    ok(smp("commission") and "SAMPLE" in t("commission").upper() and "$51,360" in t("commission"), "No approved deal yet: commission tile shows a marked sample: " + t("commission"))
+    ok(smp("commission") and "SAMPLE" in t("commission").upper() and "$19,050" in t("commission"), "No approved deal yet: commission tile shows a marked sample: " + t("commission"))
     ok(smp("demos") and pg.locator("#vendorStatNote").is_visible(), "No demo this month: sample tile, and the note explains Sample")
 
     # real numbers replace the samples: approve the open deal, schedule a demo this month
