@@ -5612,9 +5612,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var open = state.approvals.filter(function(a){ return (a.programId === v.id || a.program === v.name) && (a.status || "pending") === "pending"; });
     var bySym = {}; open.forEach(function(a){ var n = dealAmount(a.value); if (n){ var sy = dealCurrencySymbol(a.value) || "$"; bySym[sy] = (bySym[sy] || 0) + n; } });
     var pipeline = Object.keys(bySym).map(function(sy){ return fmtAmount(sy, bySym[sy]); }).join(" + ");
-    var countries = []; active.forEach(function(e){ var c = (partnerById(e.partnerId) || {}).country || e.country; if (c && countries.indexOf(c) < 0) countries.push(c); });
     // partner applications still waiting for an answer: from the referral link, plus enrollments not yet approved
-    var apps = (v.referralPartners || []).filter(function(x){ return String(x.status || "pending").toLowerCase() === "pending"; }).map(function(x){ return x.name; })
+    // (the two starter applications on Intelsense's listing are demo entries, so they do not count as real)
+    var DEMO_APPS = ["TechBridge Solutions", "Asian Connect Services"];
+    var apps = (v.referralPartners || []).filter(function(x){ return String(x.status || "pending").toLowerCase() === "pending" && DEMO_APPS.indexOf(x.name) < 0; }).map(function(x){ return x.name; })
       .concat(ens.filter(function(e){ return e.status === "pending"; }).map(function(e){ return e.partner; }));
     // demos this calendar month: Demo events the vendor scheduled, plus meetings booked on its scheduling link
     var vKey = "vendor:" + v.id, nowD = new Date(), sameMonth = function(x){ var d = new Date(String(x).replace(" ", "T")); return !isNaN(d) && d.getFullYear() === nowD.getFullYear() && d.getMonth() === nowD.getMonth(); };
@@ -5638,12 +5639,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var plural = function(n, w){ return n + " " + w + (n === 1 ? "" : "s"); };
     row.innerHTML =
       vTile("partners", "Active partners", active.length > 0, active.length, recent.length ? "\u2191 " + recent.length + " joined in the last 30 days" : waiting.length ? waiting.length + " more being onboarded" : "Across all tiers", ["3", "\u2191 1 joined in the last 30 days"])
-      + vTile("revenue", "Partner-sold revenue", revenue > 0 || closed > 0, money(revenue), plural(closed, "deal") + " closed · last 12 months", ["$243,000", "13 deals closed · last 12 months"])
+      + vTile("revenue", "Partner-sold revenue", revenue > 0 || closed > 0, money(revenue), plural(closed, "deal") + " closed · last 12 months", ["$127,000", "13 deals closed · last 12 months"])
       + vTile("deals", "Open deals", open.length > 0, open.length, pipeline ? pipeline + " in the pipeline" : "In review with CloudWAV", ["3", "$61,500 in the pipeline"])
       + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$51,360", "Earned on 13 approved deals"])
       + vTile("applications", "Partner applications waiting", apps.length > 0, apps.length, apps.slice(0, 2).join(", ") + (apps.length > 2 ? " +" + (apps.length - 2) : ""), ["2", "Ready for your review"])
-      + vTile("demos", "Demos booked this month", demos > 0, demos, "From your calendar and scheduling link", ["4", "\u2191 1 this week"])
-      + vTile("countries", "Countries reached", countries.length > 0, countries.length, countries.slice(0, 3).join(", ") + (countries.length > 3 ? " +" + (countries.length - 3) : ""), ["2", "Thailand, Bangladesh"]);
+      + vTile("demos", "Demos booked this month", demos > 0, demos, "From your calendar and scheduling link", ["4", "\u2191 1 this week"]);
     var note = document.getElementById("vendorStatNote"); if (note) note.hidden = !anySample;
     var grid = document.getElementById("vendorOwnProgramGrid");
     if (grid) grid.innerHTML = programCard(v, { hideAction:true }) + productCardsHtml(v, { overview:true });
