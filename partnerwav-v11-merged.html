@@ -10205,7 +10205,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       "\"Introduced Vendor\" means a SaaS Client that, following an Introduction, signs a PartnerWAV vendor agreement with CloudWAV within the Protection Period.",
       "\"Subscription Fees\" means the monthly PartnerWAV subscription fees CloudWAV actually receives from an Introduced Vendor.",
       "\"Advisory Fees\" means the fees CloudWAV or its affiliate CloudWAV Consulting actually receives from an Introduced Vendor for fractional technology leadership, for example a fractional CTO, CAIO, CIO or CISO.",
-      "\"Operator Fees\" means the platform operator fees CloudWAV actually receives on sales of an Introduced Vendor's products by partners through PartnerWAV.",
+      "\"Operator Fees\" means the platform operator fees CloudWAV actually receives on sales of an Introduced Vendor's products through PartnerWAV by partners that CloudWAV brought to that vendor's program. Sales by partners the vendor invited itself are not included.",
       "Each of these amounts excludes VAT, withholding tax, other government charges, and refunds and credits actually given. \"Protection Period\" has the meaning in Schedule A."
      ]
     },
@@ -10239,7 +10239,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
      "clauses": [
       "Introduction fee. CloudWAV pays the Developer {{vendorReferralRate}}% of the Subscription Fees from each Introduced Vendor during the first {{vendorReferralMonths}} months of its subscription.",
       "Advisory share. CloudWAV pays the Developer {{advisoryShareRate}}% of the Advisory Fees from each Introduced Vendor during the first {{advisoryShareMonths}} months of the advisory engagement.",
-      "Originator share. CloudWAV pays the Developer {{originatorShareRate}}% of the Operator Fees for each Introduced Vendor, for {{originatorMonths}} months from that vendor's first partner sale. The originator share is calculated on the Operator Fees CloudWAV actually receives, not on the sale price, and never reduces a partner's commission or the vendor's revenue.",
+      "Originator share. CloudWAV pays the Developer {{originatorShareRate}}% of the Operator Fees for each Introduced Vendor, for {{originatorMonths}} months from that vendor's first sale by a partner CloudWAV brought. The originator share is calculated on the Operator Fees CloudWAV actually receives, not on the sale price, and never reduces a partner's commission or the vendor's revenue.",
       "These amounts are paid by CloudWAV out of what it receives. Nothing is payable by the SaaS Client to the Developer, or by the Developer to CloudWAV, under this Agreement.",
       "Where the parties also have a Software Project Referral Agreement that provides for an introduction fee on the same vendor's subscription, the introduction fee is paid once, under this Agreement."
      ]
@@ -10342,7 +10342,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     ],
     [
      "Originator share",
-     "{{originatorShareRate}}% of Operator Fees for {{originatorMonths}} months from the vendor's first partner sale"
+     "{{originatorShareRate}}% of Operator Fees (sales by partners CloudWAV brought) for {{originatorMonths}} months from the first such sale"
     ],
     [
      "Engineering protection",
@@ -10398,7 +10398,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     // CloudWAV -> software house, for vendors it introduces to PartnerWAV (clause 17): % of the vendor's subscription, for N months
     vendorReferralRate:10, vendorReferralMonths:12,
     // ...plus a share of the advisory fees CloudWAV Consulting collects from that vendor, and of the platform operator fees on its partner sales
-    advisoryShareRate:10, advisoryShareMonths:12, originatorShareRate:20, originatorMonths:24,
+    advisoryShareRate:10, advisoryShareMonths:12, originatorShareRate:10, originatorMonths:12,
     // CloudWAV <-> partner payout (not part of the software house agreement)
     partnerShare:70, cosellPartnerLeadShare:80, cosellCloudwavLeadShare:60
   };
@@ -10456,9 +10456,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Fee owed so far: rate x monthly subscription x months billed (never more than the agreed number of months)
   //   + advisory share: advisoryPct of the advisory fees collected so far (typed in; advisoryCollected)
   //   + originator share: originatorPct of the platform operator fees CloudWAV has been PAID on that vendor's
-  //     partner sales, within originatorMonths of the first such fee (US dollar deals; read from CloudWAV Revenue)
+  //     sales by partners CloudWAV brought (not partners the vendor invited), within originatorMonths of the first such fee (US dollar deals; read from CloudWAV Revenue)
   function vrOperatorFees(x){
-    var fees = (typeof platformFees !== "undefined" ? platformFees : []).filter(function(f){ return f.programId === x.id && f.status === "paid" && (!f.sym || f.sym === "$"); });
+    var fees = (typeof platformFees !== "undefined" ? platformFees : []).filter(function(f){ return f.programId === x.id && f.status === "paid" && f.sourced && (!f.sym || f.sym === "$"); });
     if (!fees.length) return { collected:0, count:0 };
     var first = fees.map(function(f){ return String(f.approvedAt || "").slice(0, 10); }).filter(Boolean).sort()[0], months = Number(x.originatorMonths) || 0;
     var until = first && months ? monthsFrom(first, months) : "";
@@ -12311,8 +12311,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="field-row"><label for="vrAdvRate">Advisory share %</label><input type="number" min="0" max="100" step="0.5" id="vrAdvRate" value="'+a(dn(d.advisoryPct, "advisoryShareRate"))+'"></div>'
       + '<div class="field-row"><label for="vrAdvMonths">For how many months</label><input type="number" min="0" step="1" id="vrAdvMonths" value="'+a(dn(d.advisoryMonths, "advisoryShareMonths"))+'"></div></div>'
       + '<div class="aff-section-title">Originator share</div><div class="form-grid"><div class="field-row"><label for="vrOrigRate">% of platform operator fees</label><input type="number" min="0" max="100" step="0.5" id="vrOrigRate" value="'+a(dn(d.originatorPct, "originatorShareRate"))+'"></div>'
-      + '<div class="field-row"><label for="vrOrigMonths">For how many months from the first partner sale</label><input type="number" min="0" step="1" id="vrOrigMonths" value="'+a(dn(d.originatorMonths, "originatorMonths"))+'"></div></div>'
-      + '<span class="field-note">The originator share is worked out from the operator fees marked Paid in CloudWAV Revenue for this vendor. Enter only advisory fees collected inside the agreed months.</span>'
+      + '<div class="field-row"><label for="vrOrigMonths">For how many months from the first such sale</label><input type="number" min="0" step="1" id="vrOrigMonths" value="'+a(dn(d.originatorMonths, "originatorMonths"))+'"></div></div>'
+      + '<span class="field-note">The originator share is worked out from the operator fees marked Paid in CloudWAV Revenue for this vendor, on sales by partners CloudWAV brought. Enter only advisory fees collected inside the agreed months.</span>'
       + '<label class="cfg-check"><input type="checkbox" id="vrReady"'+(prx && prx.resellerReady ? " checked" : "")+'> Verified Reseller Ready -- shows the badge and a "Built by" credit on the vendor\'s listing</label>'
       + '<div class="field-row"><label for="vrNote">Note</label><input type="text" id="vrNote" value="'+a(d.note)+'"></div>'
       + '<span class="field-note">The rates and months start from the software house\'s agreement and can be changed here for this vendor. Leave the subscription empty until the vendor signs up.</span>'
