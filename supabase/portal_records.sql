@@ -139,7 +139,7 @@ returns boolean language sql immutable as $$
                         'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
                         'programFees','platformFees','affiliateSignups',
                         'vendorAssessments','pricingModel','agreementReviews',
-                        'operatorSettings','vendorReferrals'])
+                        'operatorSettings','vendorReferrals','houseSummaries'])
 $$;
 
 -- ---------------------------------------------------------------------------
