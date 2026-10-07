@@ -7,7 +7,7 @@ with sync_playwright() as p:
 
     # ----- before a subscription is recorded: an example, marked as one
     role(pg, "vendor"); nav(pg, "vendor-overview")
-    ok(pg.locator('#scr-vendor-overview [data-roi="vendor"]').count() == 1 and smp("vendor") and "SAMPLE" in card("vendor") and "777% ROI" in card("vendor") and "$95,636" in card("vendor"), "Vendor overview leads with the return card; an example until there is a subscription: " + card("vendor")[:110])
+    ok(pg.locator('#scr-vendor-overview [data-roi="vendor"]').count() == 1 and smp("vendor") and "SAMPLE" in card("vendor") and "1,057% ROI" in card("vendor") and "$197,236" in card("vendor"), "Vendor overview leads with the return card; an example until there is a subscription: " + card("vendor")[:110])
     box = pg.locator("#vendorRoiCard").bounding_box(); tiles = pg.locator("#vendorStatRow").bounding_box()
     ok(box["y"] < tiles["y"], "The card sits above the tiles")
     role(pg, "partner"); nav(pg, "partner-overview")

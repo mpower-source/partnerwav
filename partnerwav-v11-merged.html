@@ -5666,9 +5666,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var plural = function(n, w){ return n + " " + w + (n === 1 ? "" : "s"); };
     row.innerHTML =
       vTile("partners", "Active partners", active.length > 0, active.length, recent.length ? "\u2191 " + recent.length + " joined in the last 30 days" : waiting.length ? waiting.length + " more being onboarded" : "Across all tiers", ["3", "\u2191 1 joined in the last 30 days"])
-      + vTile("revenue", "Partner-sold revenue", revenue > 0 || closed > 0, money(revenue), plural(closed, "deal") + " closed · last 12 months", ["$127,000", "13 deals closed · last 12 months"])
+      + vTile("revenue", "Partner-sold revenue", revenue > 0 || closed > 0, money(revenue), plural(closed, "deal") + " closed · last 12 months", ["$254,000", "26 deals closed · last 12 months"])
       + vTile("deals", "Open deals", open.length > 0, open.length, pipeline ? pipeline + " in the pipeline" : "In review with CloudWAV", ["3", "$61,500 in the pipeline"])
-      + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$19,050", "Earned on 13 approved deals"])
+      + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$38,100", "Earned on 26 approved deals"])
       + vTile("applications", "Partner applications waiting", apps.length > 0, apps.length, apps.slice(0, 2).join(", ") + (apps.length > 2 ? " +" + (apps.length - 2) : ""), ["2", "Ready for your review"])
       + vTile("demos", "Demos booked this month", demos > 0, demos, "From your calendar and scheduling link", ["4", "\u2191 1 this week"]);
     var note = document.getElementById("vendorStatNote"); if (note) note.hidden = !anySample;
@@ -12818,9 +12818,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           ? { key:"vendor", kicker:"Your return on PartnerWAV", before:"Your partner channel returned", big:roiPct(r.roi) + " ROI", after:"You kept " + money(r.net) + " after partner commissions and PartnerWAV costs.",
               note:ROI_FORMULA + " Updates as partners register and close deals.",
               facts:[[money(r.revenue), "sold by partners"], [money(r.commission), "partner commissions"], [money(r.spend), "spent on PartnerWAV"], [money(r.net), "net return"]] }
-          : { key:"vendor", sample:true, kicker:"Your return on PartnerWAV", before:"Your partner channel returned", big:"777% ROI", after:"You kept $95,636 after partner commissions and PartnerWAV costs.",
+          : { key:"vendor", sample:true, kicker:"Your return on PartnerWAV", before:"Your partner channel returned", big:"1,057% ROI", after:"You kept $197,236 after partner commissions and PartnerWAV costs.",
               note:"An example. " + (r.known ? "Your own figure appears with your first partner sale." : "Your own figure appears once your subscription and first partner sales are recorded."),
-              facts:[["$127,000", "sold by partners"], ["$19,050", "partner commissions"], ["$12,314", "spent on PartnerWAV"], ["$95,636", "net return"]] });
+              facts:[["$254,000", "sold by partners"], ["$38,100", "partner commissions"], ["$18,664", "spent on PartnerWAV"], ["$197,236", "net return"]] });
       }
     }
     if (pr){
@@ -12828,8 +12828,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       pr.innerHTML = roiCardHtml(q.earned > 0
         ? { key:"partner", kicker:"Your return on PartnerWAV", before:"You have earned", big:money(q.earned), after: q.spent > 0 ? "in commission, " + money(q.net) + " after what you spent on training." : "in commission through PartnerWAV, at no cost to you.",
             note:"On approved deals. PartnerWAV is free for partners.", facts:[[q.deals + "", "approved deal" + (q.deals === 1 ? "" : "s")], [money(q.spent), q.spent > 0 ? "spent on training" : "paid to PartnerWAV"]] }
-        : { key:"partner", sample:true, kicker:"Your return on PartnerWAV", before:"You have earned", big:"$19,050", after:"in commission through PartnerWAV, at no cost to you.",
-            note:"An example. Your own figure appears when your first deal is approved.", facts:[["13", "approved deals"], ["$0", "paid to PartnerWAV"]] });
+        : { key:"partner", sample:true, kicker:"Your return on PartnerWAV", before:"You have earned", big:"$38,100", after:"in commission through PartnerWAV, at no cost to you.",
+            note:"An example. Your own figure appears when your first deal is approved.", facts:[["26", "approved deals"], ["$0", "paid to PartnerWAV"]] });
     }
     if (op){
       var rows = programs.filter(function(x){ return x.id !== "cloudwav"; }).map(function(x){ return { p:x, r:roiVendor(x) }; });
@@ -12838,9 +12838,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         ? { key:"operator", kicker:"Return across all vendors", before:"Vendors' partner channels returned", big:roiPct(sum("net") / sum("spend") * 100) + " ROI", after:"Vendors kept " + money(sum("net")) + " after partner commissions and PartnerWAV costs.",
             note:ROI_FORMULA + " Counts the " + counted.length + " of " + rows.length + " vendor" + (rows.length === 1 ? "" : "s") + " with a subscription and partner sales recorded.",
             facts:[[money(sum("revenue")), "sold by partners"], [money(sum("commission")), "partner commissions"], [money(sum("spend")), "paid to PartnerWAV"], [money(sum("net")), "net return"]] }
-        : { key:"operator", sample:true, kicker:"Return across all vendors", before:"Vendors' partner channels returned", big:"777% ROI", after:"Vendors kept $95,636 after partner commissions and PartnerWAV costs.",
+        : { key:"operator", sample:true, kicker:"Return across all vendors", before:"Vendors' partner channels returned", big:"1,057% ROI", after:"Vendors kept $197,236 after partner commissions and PartnerWAV costs.",
             note:"An example. Enter each vendor's subscription under Manage programs > Configure to see the real figure.",
-            facts:[["$127,000", "sold by partners"], ["$19,050", "partner commissions"], ["$12,314", "paid to PartnerWAV"], ["$95,636", "net return"]] });
+            facts:[["$254,000", "sold by partners"], ["$38,100", "partner commissions"], ["$18,664", "paid to PartnerWAV"], ["$197,236", "net return"]] });
       var tb = document.getElementById("operatorRoiTable");
       if (tb){
         tb.hidden = false;
