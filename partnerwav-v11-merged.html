@@ -5671,6 +5671,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$38,100", "Earned on 13 approved deals"])
       + vTile("applications", "Partner applications waiting", apps.length > 0, apps.length, apps.slice(0, 2).join(", ") + (apps.length > 2 ? " +" + (apps.length - 2) : ""), ["2", "Ready for your review"])
       + vTile("demos", "Demos booked this month", demos > 0, demos, "From your calendar and scheduling link", ["4", "\u2191 1 this week"]);
+    // A software house is paid through project referrals and introductions, not partner resale: its own tiles
+    if (isSoftwareHouseProgram(v)){
+      anySample = false;
+      var hs = houseSummaryFor(v.id) || { currency:"USD", projects:0, partners:0, collected:0, fees:0, intro:0, clients:0, open:0 }, hm = function(n){ return fmtMoney(n, hs.currency); };
+      var avg = hs.projects ? hs.collected / hs.projects : 0;
+      row.innerHTML =
+        vTile("ref-partners", "Partners referring you", hs.partners > 0, hs.partners, "Brought you " + plural(hs.projects, "paid project"), ["3", "Brought you 6 paid projects"])
+        + vTile("ref-projects", "Referred projects", hs.projects > 0, hs.projects, hm(hs.collected) + " in project fees · " + hm(avg) + " average", ["6", "$120,000 in project fees · $20,000 average"])
+        + vTile("ref-open", "Open referrals", (hs.open || 0) > 0, hs.open || 0, "Waiting for your answer or a proposal", ["2", "Waiting for your answer or a proposal"])
+        + vTile("ref-fees", "Referral fees paid", hs.fees > 0, hm(hs.fees), "On fees you collected · PartnerWAV is free to use", ["$12,000", "10% of fees collected · PartnerWAV is free to use"])
+        + vTile("ref-intro", "Earned from introductions", hs.intro > 0, "$" + Number(hs.intro).toLocaleString("en-US"), "From " + plural(hs.clients, "client") + " you introduced to CloudWAV", ["$5,696", "From 1 client you introduced to CloudWAV"])
+        + vTile("demos", "Demos booked this month", demos > 0, demos, "From your calendar and scheduling link", ["4", "\u2191 1 this week"]);
+    }
     var note = document.getElementById("vendorStatNote"); if (note) note.hidden = !anySample;
     var grid = document.getElementById("vendorOwnProgramGrid");
     if (grid) grid.innerHTML = programCard(v, { hideAction:true }) + productCardsHtml(v, { overview:true });
@@ -10510,7 +10523,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var intro = 0, clients = 0;
     vendorReferrals.forEach(function(x){ if (x.houseId === h.id){ clients++; intro += vrCalc(x).owed; } });
     var net = collected - fees + (cur === "USD" ? intro : 0);
-    return { houseId:h.id, name:h.name, currency:cur, projects:projects, partners:Object.keys(who).length, collected:Math.round(collected), fees:Math.round(fees), intro:Math.round(intro), clients:clients,
+    var open = projectReferrals.filter(function(r){ return r.houseId === h.id && ["registered","accepted","proposal"].indexOf(refStatus(r)) > -1; }).length;
+    return { houseId:h.id, name:h.name, currency:cur, projects:projects, partners:Object.keys(who).length, collected:Math.round(collected), fees:Math.round(fees), intro:Math.round(intro), clients:clients, open:open,
       net:Math.round(net), real: collected > 0 && fees > 0, roi: fees > 0 ? Math.round(net / fees * 100) : 0 };
   }
   function houseForProgram(pid){ return softwareHouses.filter(function(h){ return h.programId === pid; })[0] || null; }
