@@ -278,6 +278,9 @@ select t('a vendor cannot remove accounts', fails($$select public.portal_remove_
 insert into portal_records(collection,id,data,readers,writers) values ('fundingProfiles','vendor:intelsense','{"id":"vendor:intelsense","status":"raising","round":"Series A"}','{vendor:intelsense}','{vendor:intelsense}');
 select t('a vendor saves its own investment round', (select count(*) from portal_records where collection='fundingProfiles') = 1);
 select t('a vendor cannot save another company''s round', fails($$insert into portal_records(collection,id,data,readers,writers) values ('fundingProfiles','vendor:botnoi','{"id":"vendor:botnoi"}','{vendor:intelsense}','{vendor:intelsense}')$$));
+insert into portal_records(collection,id,data,readers,writers,is_public) values ('brandKits','vendor:intelsense','{"id":"vendor:intelsense","primary":"#1e40af"}','{*}','{vendor:intelsense}',true);
+select t('a vendor saves its own brand colours', (select count(*) from portal_records where collection='brandKits' and id='vendor:intelsense') = 1);
+select t('a vendor cannot save another company''s brand colours', fails($$insert into portal_records(collection,id,data,readers,writers,is_public) values ('brandKits','vendor:botnoi','{"id":"vendor:botnoi","primary":"#000000"}','{*}','{vendor:intelsense}',true)$$));
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
 select t('a private round is hidden from other companies', (select count(*) from portal_records where collection='fundingProfiles') = 0);

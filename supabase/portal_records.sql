@@ -187,6 +187,10 @@ begin
     raise exception 'You can only save your own WhatsApp and LINE details';
   end if;
   -- investment round details: each company saves only its own
+  -- brand colours: each company saves only its own (CloudWAV can set them up for anyone)
+  if new.collection = 'brandKits' and new.id <> k then
+    raise exception 'You can only save your own brand colours';
+  end if;
   if new.collection = 'fundingProfiles' and new.id <> k then
     raise exception 'You can only save your own investment round details';
   end if;

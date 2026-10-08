@@ -29,7 +29,7 @@ with sync_playwright() as p:
     ok(order.index("partner-my-leads") < order.index("partner-commissions"), "Partner > My Business: My Leads is above Commissions")
     role(pg, "operator")
     order = pg.evaluate("[...document.querySelectorAll('#navOperator [data-sec=\"vendors\"] .navlink')].map(b=>b.getAttribute('data-screen'))")
-    ok(order[0] == "operator-assessments" and order[-1] == "vendor-network" and len(order) == 5, "Operator > Vendors & Programs: Assessments first, Vendor Network last")
+    ok(order[0] == "operator-assessments" and order[-1] == "vendor-network" and len(order) == 6 and "branding" in order, "Operator > Vendors & Programs: Assessments first, Branding included, Vendor Network last")
 
     # ----- agreements: CloudWAV Consulting as a party
     nav(pg, "operator-agreements")

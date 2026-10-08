@@ -88,20 +88,22 @@
   .fly-preview-wrap{ position:sticky; top:16px; }
   .fly-preview{ max-width:520px; }
   .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  .flyer{ position:relative; background:#fff; color:#1e1e28; border-radius:6px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,.18); border:1px solid #e3e3ea; aspect-ratio:210/297; display:flex; flex-direction:column; font-family:Helvetica, Arial, sans-serif; font-size:13px; line-height:1.4; }
-  .flyer-band{ background:var(--fly); color:#fff; padding:18px 22px 20px; }
+  .flyer{ position:relative; background:#fff; color:#1e1e28; border-radius:6px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,.18); border:1px solid #e3e3ea; aspect-ratio:210/297; display:flex; flex-direction:column; font-family:var(--fly-font, Helvetica, Arial, sans-serif); font-size:13px; line-height:1.4; }
+  .flyer-band{ background:var(--fly-band, var(--fly)); color:var(--fly-band-ink, #fff); padding:18px 22px 20px; }
+  .flyer.branded .flyer-band{ border-bottom:4px solid var(--fly-fill); }
+  .flyer.branded .flyer-pill{ border-color:var(--fly-accent); }
   .flyer-top{ display:flex; justify-content:space-between; gap:10px; font-weight:700; font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
   .flyer-pill{ border:1px solid rgba(255,255,255,.6); border-radius:99px; padding:1px 8px; font-size:10px; }
   .flyer-h1{ font-size:24px; font-weight:800; line-height:1.15; margin-top:14px; overflow-wrap:anywhere; }
   .flyer-sub{ margin-top:6px; font-size:13px; opacity:.95; }
   .flyer-body{ padding:16px 22px; display:flex; flex-direction:column; gap:6px; flex:1; }
-  .flyer-offer{ background:color-mix(in srgb, var(--fly) 10%, #fff); color:var(--fly); font-weight:800; font-size:16px; padding:10px 12px; border-radius:6px; }
+  .flyer-offer{ background:color-mix(in srgb, var(--fly-fill, var(--fly)) 12%, #fff); color:var(--fly); font-weight:800; font-size:16px; padding:10px 12px; border-radius:6px; }
   .flyer-h2{ color:var(--fly); font-weight:800; font-size:11px; letter-spacing:.06em; text-transform:uppercase; margin-top:6px; }
-  .flyer-list, .flyer-steps{ margin:0; padding-left:18px; } .flyer-list li::marker{ color:var(--fly); } .flyer-steps li::marker{ font-weight:700; }
+  .flyer-list, .flyer-steps{ margin:0; padding-left:18px; } .flyer-list li::marker{ color:var(--fly-fill, var(--fly)); } .flyer-steps li::marker{ font-weight:700; }
   .flyer-p{ margin:0; }
   .flyer-facts{ display:grid; grid-template-columns:repeat(auto-fit, minmax(90px,1fr)); gap:8px; border-top:1px solid #e3e3ea; padding-top:8px; margin-top:6px; }
   .flyer-facts span{ display:block; font-size:9px; text-transform:uppercase; color:#6e6e7d; letter-spacing:.05em; } .flyer-facts b{ font-size:11px; }
-  .flyer-cta{ background:var(--fly); color:#fff; border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; margin-top:6px; } .flyer-cta span{ font-size:11px; opacity:.9; overflow-wrap:anywhere; }
+  .flyer-cta{ background:var(--fly-fill, var(--fly)); color:var(--fly-fill-ink, #fff); border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; margin-top:6px; } .flyer-cta span{ font-size:11px; opacity:.9; overflow-wrap:anywhere; }
   .flyer-fine{ font-size:9.5px; color:#646473; margin-top:4px; }
   .flyer-foot{ text-align:center; font-size:9px; color:#8c8c96; padding:6px 0 10px; }
   .flyer-wm{ position:absolute; top:46%; left:50%; transform:translate(-50%,-50%) rotate(-24deg); font-size:84px; font-weight:900; color:rgba(200,40,40,.12); pointer-events:none; letter-spacing:.1em; }
@@ -387,6 +389,54 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 .lp-foot{ padding:16px 28px; border-top:1px solid var(--line); font-size:.8rem; color:var(--ink-faint); }
 .inv-offer{ padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); display:flex; flex-direction:column; gap:4px; }
 .lp-public-wrap{ max-width:880px; margin:24px auto; padding:0 16px; }
+/* brand colours on landing and invite pages: the page looks the same whatever the viewer's light/dark setting */
+.lp-page.branded{ background:#fff; color:#1e1e28; border-color:#e6e6ee; font-family:var(--lp-font); }
+.lp-page.branded h1, .lp-page.branded h2{ font-family:var(--lp-font); }
+.lp-page.branded.hs-dark .lp-hero{ background:radial-gradient(120% 150% at 90% -10%, color-mix(in srgb, var(--lp-primary) 38%, transparent) 0%, transparent 55%), var(--lp-dark); color:var(--lp-on-dark); }
+.lp-page.branded.hs-dark .lp-eyebrow{ color:var(--lp-accent); opacity:1; }
+.lp-page.branded.hs-dark .lp-cta{ background:var(--lp-primary); color:var(--lp-on-primary); }
+.lp-page.branded.hs-bold .lp-hero{ background:linear-gradient(135deg, var(--lp-primary) 0%, color-mix(in srgb, var(--lp-primary) 72%, var(--lp-dark)) 100%); color:var(--lp-on-primary); }
+.lp-page.branded.hs-bold .lp-cta{ background:#fff; color:var(--lp-text); }
+.lp-page.branded .lp-body h2{ color:var(--lp-text); }
+.lp-page.branded .lp-features li, .lp-page.branded .inv-offer{ background:var(--lp-light); border-color:color-mix(in srgb, var(--lp-primary) 22%, #fff); color:#1e1e28; }
+.lp-page.branded .lp-foot{ border-color:#ececf2; color:#6b6b78; }
+.lp-page.branded .lp-foot a{ color:var(--lp-text); }
+.lp-page.branded .field-note{ color:#6b6b78; }
+.lp-page.branded .aff-section-title{ color:var(--lp-text); }
+.lp-page.branded .btn.primary{ background:var(--lp-primary); color:var(--lp-on-primary); border-color:var(--lp-primary); }
+.lp-page.branded input, .lp-page.branded select, .lp-page.branded textarea{ background:#fff; color:#1e1e28; border-color:#dcdce6; }
+.link-btn{ border:0; background:none; padding:0; color:var(--accent); font:inherit; font-weight:700; cursor:pointer; text-decoration:underline; }
+.brand-who{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; max-width:520px; }
+.brand-layout{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:16px; align-items:start; }
+@media (max-width:1000px){ .brand-layout{ grid-template-columns:1fr; } }
+.brand-form{ display:flex; flex-direction:column; gap:16px; }
+.brand-head{ display:flex; align-items:center; gap:12px; }
+.brand-head h3{ margin:0; font-size:1.1rem; font-weight:800; }
+.brand-head .collab-ic{ position:static; width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; } .brand-head .collab-ic svg{ width:22px; height:22px; }
+.brand-presets{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+.brand-preset{ display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; padding:6px 10px 6px 6px; font:inherit; font-size:.8rem; font-weight:700; cursor:pointer; }
+.brand-preset:hover{ border-color:var(--accent-line); }
+.brand-strip{ display:inline-flex; border-radius:6px; overflow:hidden; } .brand-strip i{ width:12px; height:22px; display:block; }
+.brand-logo img{ width:22px; height:22px; object-fit:contain; border-radius:6px; background:#fff; }
+.brand-fields{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+@media (max-width:560px){ .brand-fields{ grid-template-columns:1fr; } }
+.brand-field label{ display:flex; flex-direction:column; gap:1px; font-weight:700; font-size:.86rem; margin-bottom:6px; }
+.brand-color{ display:flex; gap:8px; align-items:center; }
+.brand-color input[type="color"]{ width:44px; height:40px; padding:2px; border:1px solid var(--line); border-radius:10px; background:var(--surface); cursor:pointer; flex-shrink:0; }
+.brand-color input[type="text"]{ flex:1; min-width:0; height:40px; box-sizing:border-box; padding:0 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--ink); font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:.9rem; text-transform:uppercase; }
+.brand-color input[type="text"]:focus{ outline:2px solid var(--accent-line); border-color:var(--accent); }
+.brand-styles{ display:flex; gap:8px; flex-wrap:wrap; }
+.brand-style{ display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; padding:6px 10px 6px 6px; font:inherit; font-size:.82rem; font-weight:700; cursor:pointer; }
+.brand-style span{ position:relative; width:44px; height:30px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; }
+.brand-style span i{ position:absolute; right:5px; bottom:5px; width:12px; height:5px; border-radius:3px; }
+.brand-style[aria-pressed="true"]{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+.brand-checks ul{ list-style:none; margin:6px 0 0; padding:0; display:flex; flex-direction:column; gap:4px; font-size:.86rem; }
+.brand-checks li.ok{ color:var(--good, #15803d); } .brand-checks li.warn{ color:var(--warn); font-weight:600; }
+.brand-prev-wrap{ position:sticky; top:16px; }
+.brand-prev .lp-hero{ padding:24px 22px; } .brand-prev .lp-hero h1{ font-size:1.35rem; } .brand-prev .lp-body{ padding:16px 22px; } .brand-prev .lp-foot{ padding:10px 22px; }
+.brand-prev-fly{ max-width:360px; margin-top:6px; }
+.brand-prev-fly .flyer{ aspect-ratio:auto; }
+.fly-swatch-brand{ outline:2px solid var(--line); outline-offset:1px; }
 .msp-card{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
 .msp-main{ flex:1 1 320px; min-width:0; display:flex; flex-direction:column; gap:4px; }
 .msp-name{ font-weight:700; font-size:1rem; color:var(--ink); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
@@ -894,6 +944,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💼</span><span class="navsec-name">My Business</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
         <div class="navsec-items" hidden>
           <button class="navlink" data-screen="partner-profile-editor"><span class="ic">👤</span>My Profile</button>
+          <button class="navlink" data-screen="branding"><span class="ic">🎨</span>Branding</button>
           <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
           <button class="navlink" data-screen="partner-my-leads"><span class="ic">💼</span>My Leads</button>
           <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
@@ -945,6 +996,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="vendor-program-editor"><span class="ic">📝</span>My Program Listing</button>
           <button class="navlink" data-screen="vendor-hardware-offerings"><span class="ic">📦</span>Hardware Offerings</button>
           <button class="navlink" data-screen="vendor-incentives"><span class="ic">🎁</span>Partner Incentives</button>
+          <button class="navlink" data-screen="branding"><span class="ic">🎨</span>Branding</button>
           <button class="navlink" data-screen="vendor-partners"><span class="ic">👨‍💼</span>Partners in My Program</button>
           <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
         </div>
@@ -1015,6 +1067,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="operator-programs"><span class="ic">⚙️</span>Manage Programs</button>
           <button class="navlink" data-screen="operator-agreements"><span class="ic">📝</span>Agreements</button>
           <button class="navlink" data-screen="operator-landing-pages"><span class="ic">🎯</span>Landing Pages</button>
+          <button class="navlink" data-screen="branding"><span class="ic">🎨</span>Branding</button>
           <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
         </div>
       </div>
@@ -2390,6 +2443,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       </section>
 
       <!-- ===== ALL ROLES: INTEGRATIONS (Calendly, HubSpot, ...) ===== -->
+      <!-- ===== VENDOR / PARTNER (and CloudWAV): BRANDING ===== -->
+      <section id="scr-branding" hidden>
+        <div class="section-head"><h2>Branding</h2><span class="hint">Your colours and font -- used on your incentive flyers, landing pages and invite pages</span></div>
+        <div style="height:14px"></div>
+        <div id="brandingContent"></div>
+      </section>
+
       <section id="scr-integrations" hidden>
         <div class="section-head"><h2>Integrations</h2><span class="hint">Connect the tools you already use, so PartnerWAV fits how your company works</span></div>
         <div style="height:14px"></div>
@@ -3645,6 +3705,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-msp-prospects":"MSP Prospecting",
     "operator-msp-engagements":"MSP Engagement Tracker",
     "operator-landing-pages":"Landing Pages",
+    "branding":"Branding",
     "landing-page-editor":"Landing Page",
     "public-landing":"",
     "public-invite":"",
@@ -4092,13 +4153,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (r.error || !r.data) return false;
       var d = r.data.data, i = affiliatePrograms.map(function(x){ return x.id; }).indexOf(d.id);
       if (i > -1) affiliatePrograms[i] = d; else affiliatePrograms.push(d);
+      if (d.vendorId){   // the vendor's brand colours are public too
+        try { var bq = await supabase.from("portal_records").select("data").eq("collection", "brandKits").eq("id", "vendor:" + d.vendorId).maybeSingle();
+          if (!bq.error && bq.data && bq.data.data){ var bd = bq.data.data, bo = brandFor(bd.id); if (bo) brandKits[brandKits.indexOf(bo)] = bd; else brandKits.push(bd); } } catch(e2){}
+      }
       return true;
     } catch(e){ return false; }
   }
   function invitePageHtml(a){
     var i = a.invite || {}, v = programById(a.vendorId) || { name: offerVendorName(a) };
-    var pts = (i.points || []).filter(Boolean), ref = state.publicInviteRef;
-    return '<div class="lp-page" data-invite-page="'+esc(a.id)+'">'
+    var pts = (i.points || []).filter(Boolean), ref = state.publicInviteRef, ba = brandLpAttrs(a.vendorId ? brandFor("vendor:" + a.vendorId) : null);
+    return '<div class="lp-page'+ba.cls+'"'+ba.style+' data-invite-page="'+esc(a.id)+'">'
       + '<div class="lp-hero"><div class="lp-eyebrow">'+esc(i.eyebrow ? i.eyebrow : v.name)+'</div>'
         + '<h1>'+esc(i.headline || a.name)+'</h1><p>'+esc(i.body || a.desc)+'</p>'
         + (ref ? '<p class="inv-ref" style="margin-top:10px;font-size:.88rem;opacity:.9;">You were invited by someone in the '+esc(v.name)+' community -- sign up below and they\'ll be credited.</p>' : '')
@@ -4857,6 +4922,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var acctList = null, acctListErr = "", acctListBusy = false;
   var FUNDING_KEY = "partnerWAV_funding";
   var fundingProfiles = [];
+  // brand kits (Branding screen). Declared here, before loadBrandKits() runs at start-up.
+  var BRAND_KEY = "partnerWAV_brandKits";
+  // Starter: Botnoi's colours, matched by CloudWAV from botnoigroup.com (charcoal background, sky-blue buttons, IBM Plex Sans Thai)
+  var brandKits = [
+    { id:"vendor:botnoi", primary:"#61a6fa", dark:"#1d1f25", accent:"#92c2fc", light:"#eff6fe", font:"IBM Plex Sans Thai", heroStyle:"dark",
+      website:"https://botnoigroup.com", source:"Matched by CloudWAV from botnoigroup.com", updatedAt:"2026-10-08" }
+  ];
+
   var FUND_STATUS = { "": "Not shared yet", "not-raising":"Not raising", "raising":"Raising now", "raised":"Round closed", "bootstrapped":"Bootstrapped / self-funded" };
   var FUND_ROUNDS = ["Pre-seed", "Seed", "Series A", "Series B", "Series C or later", "Bridge round", "Convertible note / SAFE", "Other"];
   var calendarEvents = [];
@@ -5378,6 +5451,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderChannels();
     renderIntegrations();
     renderCalendar();
+    renderBranding();
     renderAccounts();
     renderFunding();
     renderReferrals();
@@ -8963,15 +9037,27 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return out;
   }
 
+  // the brand colours a flyer uses: while editing, the company's current brand; once saved, the copy saved with it
+  function flyBrandKit(f, live){
+    if (f.theme !== "brand") return null;
+    var cur = brandFor("vendor:" + f.vendorId);
+    return live ? (cur || f.brand || null) : (f.brand || cur || null);
+  }
+  function flyPdfColors(f, opts){
+    var bk = flyBrandKit(f, opts && opts.live);
+    if (!bk){ var c = hexRgb((FLY_THEMES[f.theme] || FLY_THEMES.indigo)[1]); return { band:c, bandInk:[255,255,255], fill:c, fillInk:[255,255,255], text:c }; }
+    var r = brandResolve(bk);
+    return { band:brandRgb(r.band), bandInk:brandRgb(r.onBand), fill:brandRgb(r.primary), fillInk:brandRgb(r.onPrimary), text:brandRgb(r.text) };
+  }
   // ----- the flyer itself (HTML preview) -----
   function flyerHtml(f, opts){
     opts = opts || {};
     var c = f.copy || {}, inc = flyIncentive(f), color = (FLY_THEMES[f.theme] || FLY_THEMES.indigo)[1];
-    var vName = (programById(f.vendorId) || { name: f.vendorId }).name;
+    var vName = (programById(f.vendorId) || { name: f.vendorId }).name, bk = flyBrandKit(f, opts.live);
     var list = function(t, cls){ var l = lines(t); return l.length ? '<ul class="'+cls+'">' + l.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("") + '</ul>' : ''; };
     var steps = lines(c.steps);
     var draft = f.status !== "approved" && !opts.clean;
-    return '<div class="flyer" style="--fly:'+attr(color)+'">'
+    return '<div class="flyer'+(bk ? " branded" : "")+'" style="'+attr(bk ? brandFlyerStyle(bk) : "--fly:" + color)+'">'
       + (draft ? '<div class="flyer-wm">DRAFT</div>' : '')
       + '<div class="flyer-band"><div class="flyer-top"><span class="flyer-vendor">'+esc(vName)+'</span><span class="flyer-pill">'+esc(inc ? (INC_TYPE_LABEL[inc.type] || inc.type) : "Partner incentive")+'</span></div>'
         + '<div class="flyer-h1">'+esc(c.headline || "Your headline")+'</div>'
@@ -9006,7 +9092,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     loadJsPDF(function(ok){
       if (!ok) return cb(null, "Couldn't load the PDF maker. Check your connection, or use Print / save as PDF.");
       var doc = new window.jspdf.jsPDF({ unit:"mm", format:"a4" });
-      var c = f.copy || {}, inc = flyIncentive(f), rgb = hexRgb((FLY_THEMES[f.theme] || FLY_THEMES.indigo)[1]);
+      var c = f.copy || {}, inc = flyIncentive(f), pc = flyPdfColors(f, opts), rgb = pc.text;
       var vName = pdfSafe((programById(f.vendorId) || { name: f.vendorId }).name);
       var W = 210, M = 16, CW = W - 2*M, y;
       // header band
@@ -9015,8 +9101,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       doc.setFont("helvetica","normal"); doc.setFontSize(12);
       var sub = c.subheadline ? doc.splitTextToSize(pdfSafe(c.subheadline), CW) : [];
       var bandH = 30 + h1.length * 10 + sub.length * 5.5 + 6;
-      doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.rect(0, 0, W, bandH, "F");
-      doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(11);
+      doc.setFillColor(pc.band[0], pc.band[1], pc.band[2]); doc.rect(0, 0, W, bandH, "F");
+      doc.setTextColor(pc.bandInk[0], pc.bandInk[1], pc.bandInk[2]); doc.setFont("helvetica","bold"); doc.setFontSize(11);
       doc.text(vName.toUpperCase(), M, 16);
       var pill = pdfSafe(inc ? (INC_TYPE_LABEL[inc.type] || inc.type) : "Partner incentive").toUpperCase();
       doc.setFontSize(9); doc.text(pill, W - M, 16, { align:"right" });
@@ -9028,14 +9114,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         doc.setFont("helvetica","bold"); doc.setFontSize(15);
         var off = doc.splitTextToSize(pdfSafe(c.offer), CW - 12);
         var oh = off.length * 7 + 8;
-        doc.setFillColor(Math.round(rgb[0]*0.1+230), Math.round(rgb[1]*0.1+230), Math.round(rgb[2]*0.1+230)); doc.roundedRect(M, y, CW, oh, 3, 3, "F");
+        doc.setFillColor(Math.round(pc.fill[0]*0.1+230), Math.round(pc.fill[1]*0.1+230), Math.round(pc.fill[2]*0.1+230)); doc.roundedRect(M, y, CW, oh, 3, 3, "F");
         doc.setTextColor(rgb[0], rgb[1], rgb[2]); var oy = y + 8; off.forEach(function(l){ doc.text(l, M + 6, oy); oy += 7; });
         y += oh + 8; doc.setTextColor(30,30,40);
       }
       var heading = function(t){ doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(rgb[0], rgb[1], rgb[2]); doc.text(t.toUpperCase(), M, y); y += 6; doc.setTextColor(30,30,40); };
       var para = function(t, size){ doc.setFont("helvetica","normal"); doc.setFontSize(size || 11); doc.splitTextToSize(pdfSafe(t), CW).forEach(function(l){ doc.text(l, M, y); y += (size || 11) * 0.48; }); y += 3; };
       var bl = lines(c.benefits);
-      if (bl.length){ heading("What you get"); doc.setFont("helvetica","normal"); doc.setFontSize(11); bl.forEach(function(b){ var ls = doc.splitTextToSize(pdfSafe(b), CW - 7); doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.circle(M + 1.5, y - 1.3, 1, "F"); ls.forEach(function(l){ doc.text(l, M + 6, y); y += 5.3; }); y += 0.8; }); y += 3; }
+      if (bl.length){ heading("What you get"); doc.setFont("helvetica","normal"); doc.setFontSize(11); bl.forEach(function(b){ var ls = doc.splitTextToSize(pdfSafe(b), CW - 7); doc.setFillColor(pc.fill[0], pc.fill[1], pc.fill[2]); doc.circle(M + 1.5, y - 1.3, 1, "F"); ls.forEach(function(l){ doc.text(l, M + 6, y); y += 5.3; }); y += 0.8; }); y += 3; }
       if (c.qualify){ heading("Who can take part"); para(c.qualify); }
       var st = lines(c.steps);
       if (st.length){ heading("How it works"); doc.setFontSize(11); st.forEach(function(s, i){ doc.setFont("helvetica","bold"); doc.text((i+1) + ".", M, y); doc.setFont("helvetica","normal"); doc.splitTextToSize(pdfSafe(s), CW - 7).forEach(function(l){ doc.text(l, M + 6, y); y += 5.3; }); y += 0.8; }); y += 3; }
@@ -9047,8 +9133,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         y += 20;
       }
       if (c.cta){
-        doc.setFillColor(rgb[0], rgb[1], rgb[2]); var ch = c.ctaLink ? 17 : 12; doc.roundedRect(M, y, CW, ch, 3, 3, "F");
-        doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text(doc.splitTextToSize(pdfSafe(c.cta), CW - 12)[0], M + 6, y + 8);
+        doc.setFillColor(pc.fill[0], pc.fill[1], pc.fill[2]); var ch = c.ctaLink ? 17 : 12; doc.roundedRect(M, y, CW, ch, 3, 3, "F");
+        doc.setTextColor(pc.fillInk[0], pc.fillInk[1], pc.fillInk[2]); doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text(doc.splitTextToSize(pdfSafe(c.cta), CW - 12)[0], M + 6, y + 8);
         if (c.ctaLink){ doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.text(pdfSafe(c.ctaLink), M + 6, y + 13.5); doc.link(M, y, CW, ch, { url: c.ctaLink }); }
         y += ch + 7; doc.setTextColor(30,30,40);
       }
@@ -9098,7 +9184,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function newFlyer(incId){
     var inc = incById(incId); if (!inc) return null;
-    return { id:"fly-" + Date.now().toString(36), vendorId: inc.vendorId, incentiveId: inc.id, status:"draft", theme:"indigo", tone:"professional", notes:"", copy:{}, thread:[], checks:{}, updatedAt: nowStamp() };
+    return { id:"fly-" + Date.now().toString(36), vendorId: inc.vendorId, incentiveId: inc.id, status:"draft", theme: brandFor("vendor:" + inc.vendorId) ? "brand" : "indigo", tone:"professional", notes:"", copy:{}, thread:[], checks:{}, updatedAt: nowStamp() };
   }
   function openFlyerEditor(flyerId, incId){
     var f = flyerId ? flyById(flyerId) : null;
@@ -9125,7 +9211,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
                 : '<input type="text" id="fly_'+key+'" data-fly-field="'+key+'" value="'+v+'" placeholder="'+attr(ph || "")+'"'+(locked?" disabled":"")+'>')
         + (note ? '<span class="field-note">'+note+'</span>' : '') + '</div>';
     };
-    var swatches = Object.keys(FLY_THEMES).map(function(k){ return '<button type="button" class="fly-swatch" data-fly-theme="'+k+'" aria-pressed="'+(f.theme===k?"true":"false")+'" title="'+attr(FLY_THEMES[k][0])+'" style="background:'+FLY_THEMES[k][1]+'"'+(locked?" disabled":"")+'><span class="sr-only">'+esc(FLY_THEMES[k][0])+'</span></button>'; }).join("");
+    var myBrand = brandFor("vendor:" + f.vendorId);
+    var swatches = (myBrand || f.theme === "brand" ? (function(){ var r = brandResolve(myBrand || f.brand); return '<button type="button" class="fly-swatch fly-swatch-brand" data-fly-theme="brand" aria-pressed="'+(f.theme==="brand"?"true":"false")+'" title="Your brand colours" style="background:linear-gradient(135deg, '+r.dark+' 50%, '+r.primary+' 50%)"'+(locked?" disabled":"")+'><span class="sr-only">Your brand colours</span></button>'; })() : '') + Object.keys(FLY_THEMES).map(function(k){ return '<button type="button" class="fly-swatch" data-fly-theme="'+k+'" aria-pressed="'+(f.theme===k?"true":"false")+'" title="'+attr(FLY_THEMES[k][0])+'" style="background:'+FLY_THEMES[k][1]+'"'+(locked?" disabled":"")+'><span class="sr-only">'+esc(FLY_THEMES[k][0])+'</span></button>'; }).join("");
     var checks = flyAutoChecks(f).map(function(x){ return '<li class="'+(x.ok ? "ok" : "warn")+'">'+(x.ok ? "✓ " : "! ")+esc(x.text)+'</li>'; }).join("");
     var lastMsgs = (f.thread || []).filter(function(m){ return m.from === "operator"; }).slice(-2);
     box.innerHTML = '<div class="fly-layout">'
@@ -9152,7 +9239,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + fld("cta","Call to action",0,"e.g. Register your first deal today")
         + fld("ctaLink","Link or contact",0,"https://… or email")
         + fld("finePrint","Fine print",3,"Dates, caps, payout timing, where the full terms are")
-        + '<div class="field-row"><label>Colour</label><div class="fly-swatches">'+swatches+'</div></div>'
+        + '<div class="field-row"><label>Colour</label><div class="fly-swatches">'+swatches+'</div><span class="field-note">'+(myBrand ? 'The split circle is your brand. <button type="button" class="link-btn" data-goto-screen="branding">Edit your brand colours</button>' : 'Want your own colours? <button type="button" class="link-btn" data-goto-screen="branding">Set up your brand</button>')+'</span></div>'
         + '<div class="fly-checks"><div class="aff-section-title">Before you submit</div><ul>'+checks+'</ul><span class="field-note">These are prompts, not rules -- creative offers are welcome. CloudWAV takes a second look for anything critical that\'s missing.</span></div>'
         + '<div id="flyError" class="login-msg bad" role="alert" hidden></div>'
         + '<div class="cfg-actions">'
@@ -9162,12 +9249,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + (locked ? '' : '<button type="button" class="btn primary sm" data-fly-save="submit" style="margin-left:auto;">Submit to CloudWAV</button>')
         + '</div>'
       + '</div>'
-      + '<div class="fly-preview-wrap"><div class="aff-section-title" style="margin-bottom:8px;">Preview</div><div id="flyPreview" class="fly-preview">'+flyerHtml(f)+'</div></div>'
+      + '<div class="fly-preview-wrap"><div class="aff-section-title" style="margin-bottom:8px;">Preview</div><div id="flyPreview" class="fly-preview">'+flyerHtml(f, { live:true })+'</div></div>'
     + '</div>';
   }
   function refreshFlyerPreview(){
     var f = state.flyerDraft, p = document.getElementById("flyPreview"); if (!f || !p) return;
-    p.innerHTML = flyerHtml(f);
+    p.innerHTML = flyerHtml(f, { live:true });
     var ul = document.querySelector(".fly-checks ul");
     if (ul) ul.innerHTML = flyAutoChecks(f).map(function(x){ return '<li class="'+(x.ok ? "ok" : "warn")+'">'+(x.ok ? "✓ " : "! ")+esc(x.text)+'</li>'; }).join("");
   }
@@ -9187,6 +9274,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     var prev = flyById(f.id), wasReviewed = prev && prev.status !== "draft";
     f.updatedAt = nowStamp();
+    if (f.theme === "brand"){ var bkit = brandFor("vendor:" + f.vendorId) || f.brand; if (bkit) f.brand = brandSnapshot(bkit); else f.theme = "indigo"; } else delete f.brand;
     if (mode === "submit"){
       f.status = "pending"; f.submittedAt = nowStamp(); f.unreadOperator = true;
       f.thread.push({ from:"system", time: nowStamp(), text: wasReviewed ? "Vendor updated and resubmitted the flyer" : "Vendor submitted the flyer for review" });
@@ -9942,6 +10030,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ return { readers:["vendor:" + r.vendorId], writers:[] }; } },
     { name:"calendarEvents", mode:"replace", get:function(){ return calendarEvents; }, set:function(a){ calendarEvents = a; },
       access:function(r){ return { readers: calPrivate(r) ? [r.ownerKey] : EVERYONE, writers:[r.ownerKey] }; } },
+    { name:"brandKits", mode:"merge", get:function(){ return brandKits; }, set:function(a){ brandKits = a; },
+      // brand colours are public (they show on public landing and invite pages); each company edits only its own
+      access:function(r){ return { readers:EVERYONE, writers:[r.id], pub:true }; } },
     { name:"fundingProfiles", mode:"replace", get:function(){ return fundingProfiles; }, set:function(a){ fundingProfiles = a; },
       access:function(r){ return { readers: r.visibility === "public" ? EVERYONE : [r.id], writers:[r.id] }; } },
     { name:"bookings", mode:"replace", get:function(){ return bookings; }, set:function(a){ bookings = a; },
@@ -13101,6 +13192,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     cloud:'<path d="M7 18a4.5 4.5 0 0 1-.5-9 6 6 0 0 1 11.5 1.5A4 4 0 0 1 17.5 18z"/>',
     pin:'<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
     clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    palette:'<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/>',
+    sparkle:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
     award:'<circle cx="12" cy="9" r="6"/><path d="m8.5 13.8-1.5 7.2 5-2.6 5 2.6-1.5-7.2"/>',
     cpu:'<rect x="6" y="6" width="12" height="12" rx="2.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5V6M15 2.5V6M9 18v3.5M15 18v3.5M2.5 9H6M2.5 15H6M18 9h3.5M18 15h3.5"/>',
     mail:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>',
@@ -13111,7 +13204,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "\ud83d\udcb0":"wallet", "\ud83d\udcac":"chat", "\u2699":"sliders", "\ud83c\udf93":"cap", "\ud83c\udfaf":"target", "\ud83d\udcdd":"file", "\ud83d\udccb":"clipboard",
     "\ud83d\ude80":"trend", "\ud83d\udcbc":"briefcase", "\ud83d\udecd":"bag", "\ud83d\uded2":"store", "\ud83d\udd0c":"plug", "\ud83d\udce3":"megaphone", "\ud83d\udce2":"megaphone",
     "\ud83d\udcda":"book", "\ud83d\udcc5":"calendar", "\ud83e\udde9":"code", "\ud83e\udd1d":"link", "\ud83c\udf81":"gift", "\ud83e\udded":"compass", "\ud83d\uddfa":"map",
-    "\ud83d\udd11":"key", "\ud83d\udd0d":"search", "\ud83d\udce6":"box", "\ud83d\udcde":"phone", "\u2601":"cloud" };
+    "\ud83d\udd11":"key", "\ud83c\udfa8":"palette", "\ud83d\udd0d":"search", "\ud83d\udce6":"box", "\ud83d\udcde":"phone", "\u2601":"cloud" };
   function pwIcon(name){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + PW_ICONS[name] + '</svg>'; }
   function applyMenuIcons(root){
     (root || document).querySelectorAll(".ic").forEach(function(el){
@@ -16145,13 +16238,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + (tier ? " " + tier.tier + " partners earn " + tier.rate + " (" + (tier.base || "net revenue").toLowerCase() + ")." : "")
     };
   }
+  // a published page keeps the colours it was published with; the editor preview shows the vendor's current brand
+  function lpBrandKit(lp, live){
+    if (lp.useBrand === false) return null;
+    var cur = lp.vendorId ? brandFor("vendor:" + lp.vendorId) : null;
+    return live ? (lp.vendorId ? (cur || lp.brand || null) : (lp.brand || null)) : (lp.brand || cur || null);
+  }
   function lpPageHtml(lp, preview){
-    var v = programById(lp.vendorId) || { name: lp.vendorId };
+    var v = programById(lp.vendorId) || { name: lp.displayName || lp.vendorId };
     var d = (!lp.headline || !lp.body) ? lpDraftCopy(lp) : {};
     var headline = lp.headline || d.headline, body = lp.body || d.body;
-    var feats = (lp.features || []).filter(Boolean);
-    return '<div class="lp-page">'
-      + '<div class="lp-hero"><div class="lp-eyebrow">'+esc(v.name)+' partner program · operated by CloudWAV</div>'
+    var feats = (lp.features || []).filter(Boolean), ba = brandLpAttrs(lpBrandKit(lp, preview));
+    return '<div class="lp-page'+ba.cls+'"'+ba.style+'>'
+      + '<div class="lp-hero"><div class="lp-eyebrow">'+esc(lp.eyebrow || (v.name + ' partner program · operated by CloudWAV'))+'</div>'
         + '<h1>'+esc(headline)+'</h1><p>'+esc(body)+'</p>'
         + '<a class="lp-cta" href="'+esc(preview ? "#" : lpCtaUrl(lp))+'"'+(preview ? ' onclick="return false;" aria-disabled="true"' : '')+'>'+esc(lp.cta || "Apply to become a partner")+'</a></div>'
       + (feats.length ? '<div class="lp-body"><h2>Why partners choose '+esc(v.name)+'</h2><ul class="lp-features">'+feats.map(function(f){ return '<li>'+esc(f)+'</li>'; }).join("")+'</ul></div>' : '')
@@ -16198,6 +16297,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div><label for="lpBody">Main text</label><textarea id="lpBody" rows="5">'+esc(d.body || "")+'</textarea></div>'
         + f("lpCta","Button text",d.cta,"Apply to become a partner")
         + f("lpCtaUrl","Button link (leave blank for the vendor's partner application)",d.ctaUrl,"https://…")
+        + '<label class="cfg-check"><input type="checkbox" id="lpUseBrand"'+(d.useBrand !== false ? " checked" : "")+'> Use the vendor\'s brand colours</label>'
+        + '<span class="field-note" id="lpBrandNote">'+(brandFor("vendor:" + d.vendorId) ? "Colours and font come from the vendor's Branding page." : "This vendor hasn't set brand colours yet, so PartnerWAV colours are used. Set them on the Branding page.")+'</span>'
         + '<label class="cfg-check"><input type="checkbox" id="lpVendorApproved"'+(d.vendorApproved?" checked":"")+'> The vendor has reviewed and approved this copy</label>'
         + '<div id="lpError" class="login-msg bad" role="alert" hidden></div>'
         + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-lp-save="draft">Save draft</button><button type="button" class="btn primary sm" data-lp-save="publish">'+(d.status === "published" ? "Save & keep published" : "Publish")+'</button></div>'
@@ -16212,6 +16313,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     d.features = g("lpFeatures").split(",").map(function(x){ return x.trim(); }).filter(Boolean);
     d.headline = g("lpHeadline"); d.body = g("lpBody"); d.cta = g("lpCta"); d.ctaUrl = g("lpCtaUrl");
     d.vendorApproved = !!(document.getElementById("lpVendorApproved") || {}).checked;
+    var ub = document.getElementById("lpUseBrand"); if (ub) d.useBrand = !!ub.checked;
+    var bn = document.getElementById("lpBrandNote"); if (bn) bn.textContent = brandFor("vendor:" + d.vendorId) ? "Colours and font come from the vendor's Branding page." : "This vendor hasn't set brand colours yet, so PartnerWAV colours are used. Set them on the Branding page.";
   }
   function saveLandingPage(mode){
     readLpForm();
@@ -16224,6 +16327,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     if (problems.length){ err.innerHTML = problems.map(esc).join("<br>"); err.hidden = false; return; }
     if (mode === "publish"){ d.status = "published"; d.publishedDate = d.publishedDate || nowStamp().slice(0,10); }
+    var lpKit = d.useBrand !== false ? brandFor("vendor:" + d.vendorId) : null;
+    if (lpKit) d.brand = brandSnapshot(lpKit); else delete d.brand;
     var i = landingPages.findIndex(function(l){ return l.id === d.id; });
     if (i >= 0) landingPages[i] = JSON.parse(JSON.stringify(d)); else landingPages.unshift(JSON.parse(JSON.stringify(d)));
     saveLandingPages();
@@ -16599,6 +16704,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadAssessments();
   loadCalendar();
   loadFunding();
+  loadBrandKits();
   loadShop();
   loadLevels();
   loadEngagementsAndPages();
@@ -17028,6 +17134,209 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("change", function(ev){ if (ev.target && ev.target.id === "acctRole"){ var rr = document.getElementById("acctRefRow"); if (rr) rr.hidden = ev.target.value !== "vendor"; } });
   document.addEventListener("keydown", function(ev){
     if (ev.key === "Enter" && ev.target && ev.target.closest && ev.target.closest("#acctForm") && ev.target.tagName === "INPUT"){ ev.preventDefault(); acctCreate(); }
+  });
+
+  // ===== BRANDING (vendors and partners; CloudWAV can set it up for any company) =====
+  // A brand kit is four colours, a font and a header style. Flyers, landing pages and invite pages read it; a flyer or a
+  // landing page keeps a copy of the colours it was saved with, so a later brand change doesn't alter approved material.
+  var BRAND_FONTS = ["Inter", "IBM Plex Sans Thai", "Noto Sans Thai", "Kanit", "Prompt", "Sarabun", "Poppins", "Montserrat", "Roboto", "Open Sans", "Lato", "Nunito"];
+  var BRAND_DEFAULT = { primary:"#6c4cf1", dark:"#1e1442", accent:"#b8a8ff", light:"#efebff", font:"Inter", heroStyle:"bold" };
+  var BRAND_PRESETS = [
+    ["Ocean",    { primary:"#2563eb", dark:"#0f172a", accent:"#38bdf8", light:"#eff6ff", heroStyle:"dark" }],
+    ["Forest",   { primary:"#15803d", dark:"#052e16", accent:"#86efac", light:"#f0fdf4", heroStyle:"bold" }],
+    ["Sunset",   { primary:"#ea580c", dark:"#431407", accent:"#fdba74", light:"#fff7ed", heroStyle:"bold" }],
+    ["Berry",    { primary:"#db2777", dark:"#3b0a24", accent:"#f9a8d4", light:"#fdf2f8", heroStyle:"bold" }],
+    ["Violet",   { primary:"#6c4cf1", dark:"#1e1442", accent:"#b8a8ff", light:"#efebff", heroStyle:"bold" }],
+    ["Graphite", { primary:"#334155", dark:"#0b0f17", accent:"#94a3b8", light:"#f1f5f9", heroStyle:"dark" }]
+  ];
+  var BRAND_FIELDS = [
+    ["primary", "Main colour", "Buttons, highlights and headings"],
+    ["dark", "Dark colour", "Dark headers and backgrounds"],
+    ["accent", "Accent colour", "Small touches on dark backgrounds"],
+    ["light", "Light background", "Soft panels and feature boxes"]
+  ];
+  // once anything has been saved, the saved list is the whole list (so a removed starter brand stays removed)
+  function loadBrandKits(){ try { var d = JSON.parse(lsGet(BRAND_KEY) || "null"); if (Array.isArray(d)) brandKits = d; } catch(e){} }
+  function saveBrandKits(){ try { lsSet(BRAND_KEY, JSON.stringify(brandKits)); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function brandFor(key){ return key ? brandKits.filter(function(k){ return k.id === key; })[0] || null : null; }
+  function brandHex(h){ return /^#[0-9a-f]{6}$/i.test(String(h || "")) ? String(h).toLowerCase() : null; }
+  function brandRgb(h){ var n = parseInt(String(h).slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  function brandToHex(c){ return "#" + c.map(function(v){ var x = Math.max(0, Math.min(255, Math.round(v))).toString(16); return x.length < 2 ? "0" + x : x; }).join(""); }
+  function brandMix(a, b, t){ var x = brandRgb(a), y = brandRgb(b); return brandToHex([0, 1, 2].map(function(i){ return x[i] + (y[i] - x[i]) * t; })); }
+  function brandLum(h){ return brandRgb(h).map(function(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }).reduce(function(a, v, i){ return a + v * [0.2126, 0.7152, 0.0722][i]; }, 0); }
+  function brandContrast(a, b){ var x = brandLum(a), y = brandLum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  function brandInk(bg){ return brandContrast(bg, "#ffffff") >= brandContrast(bg, "#111318") ? "#ffffff" : "#111318"; }
+  // the main colour, darkened just enough to read as text on white
+  function brandTextSafe(h){ var c = h, i = 0; while (brandContrast(c, "#ffffff") < 4.5 && i++ < 14) c = brandMix(c, "#000000", 0.08); return c; }
+  function brandResolve(kit){
+    var k = {}; Object.keys(BRAND_DEFAULT).forEach(function(x){ k[x] = (kit && kit[x]) || BRAND_DEFAULT[x]; });
+    ["primary", "dark", "accent", "light"].forEach(function(x){ k[x] = brandHex(k[x]) || BRAND_DEFAULT[x]; });
+    k.onPrimary = brandInk(k.primary); k.onDark = brandInk(k.dark); k.text = brandTextSafe(k.primary);
+    k.band = k.heroStyle === "dark" ? k.dark : k.primary; k.onBand = brandInk(k.band);
+    k.fontCss = '"' + String(k.font).replace(/["<>;{}]/g, "") + '", system-ui, sans-serif';
+    return k;
+  }
+  function brandSnapshot(kit){ if (!kit) return null; var o = {}; ["primary", "dark", "accent", "light", "font", "heroStyle"].forEach(function(x){ if (kit[x]) o[x] = kit[x]; }); return o; }
+  var brandFontsLoaded = { "Inter": 1, "Nunito": 1 };
+  function brandEnsureFont(font){
+    if (!font || brandFontsLoaded[font] || BRAND_FONTS.indexOf(font) < 0) return; brandFontsLoaded[font] = 1;
+    try { var l = document.createElement("link"); l.rel = "stylesheet"; l.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(font).replace(/%20/g, "+") + ":wght@400;600;700;800&display=swap"; document.head.appendChild(l); } catch(e){}
+  }
+  // CSS custom properties for a landing / invite page
+  function brandLpAttrs(kit){
+    if (!kit) return { cls:"", style:"" };
+    var r = brandResolve(kit); brandEnsureFont(r.font);
+    return { cls:" branded hs-" + (r.heroStyle === "dark" ? "dark" : "bold"),
+      style:' style="--lp-primary:'+r.primary+';--lp-on-primary:'+r.onPrimary+';--lp-dark:'+r.dark+';--lp-on-dark:'+r.onDark+';--lp-accent:'+r.accent+';--lp-light:'+r.light+';--lp-text:'+r.text+';--lp-font:'+attr(r.fontCss)+'"' };
+  }
+  // CSS custom properties for a flyer in the brand theme
+  function brandFlyerStyle(kit){
+    var r = brandResolve(kit); brandEnsureFont(r.font);
+    return "--fly:"+r.text+";--fly-fill:"+r.primary+";--fly-fill-ink:"+r.onPrimary+";--fly-band:"+r.band+";--fly-band-ink:"+r.onBand+";--fly-accent:"+r.accent+";--fly-font:"+r.fontCss;
+  }
+  // whose brand this screen edits: your own company, or (for CloudWAV) the company picked from the list
+  function brandTargetKey(){
+    if (state.role === "operator") return state.brandTarget || "vendor:botnoi";
+    var k = chMe(); return k && k !== "operator:" && /^(vendor|partner):/.test(k) ? k : null;
+  }
+  function brandLogoFor(key){
+    var r = String(key || "").split(":")[0], id = String(key || "").slice(r.length + 1);
+    var e = r === "vendor" ? programById(id) : r === "partner" ? partnerById(id) : null;
+    return e && e.logo && /^(data:image\/|https:\/\/)/.test(e.logo) ? e.logo : "";
+  }
+  // Pick a palette out of a logo: the most common strong colour becomes the main colour, the darkest the dark colour.
+  function brandFromLogo(src, cb){
+    var img = new Image(); img.crossOrigin = "anonymous";
+    img.onload = function(){
+      try {
+        var cv = document.createElement("canvas"), N = 72; cv.width = N; cv.height = N;
+        var cx = cv.getContext("2d"); cx.drawImage(img, 0, 0, N, N);
+        var px = cx.getImageData(0, 0, N, N).data, buckets = {};
+        for (var i = 0; i < px.length; i += 4){
+          if (px[i + 3] < 200) continue;
+          var key = (px[i] >> 4) + "," + (px[i + 1] >> 4) + "," + (px[i + 2] >> 4), b = buckets[key] || (buckets[key] = { n:0, r:0, g:0, b:0 });
+          b.n++; b.r += px[i]; b.g += px[i + 1]; b.b += px[i + 2];
+        }
+        var cols = Object.keys(buckets).map(function(k){ var b = buckets[k]; var hex = brandToHex([b.r / b.n, b.g / b.n, b.b / b.n]), c = brandRgb(hex), mx = Math.max.apply(null, c), mn = Math.min.apply(null, c);
+          return { hex:hex, n:b.n, sat: mx ? (mx - mn) / mx : 0, lum: brandLum(hex) }; }).sort(function(a, b){ return b.n - a.n; });
+        var strong = cols.filter(function(c){ return c.sat > 0.28 && c.lum > 0.04 && c.lum < 0.85; });
+        if (!strong.length) return cb(null, "We couldn't find a clear brand colour in the logo -- pick one below.");
+        var primary = strong[0].hex;
+        var second = strong.filter(function(c){ return brandContrast(c.hex, primary) > 1.35; })[0];
+        var darks = cols.filter(function(c){ return c.lum < 0.06 && c.n > 3; });
+        cb({ primary:primary, dark: darks.length ? darks[0].hex : brandMix(primary, "#0b0b12", 0.82), accent: second ? second.hex : brandMix(primary, "#ffffff", 0.45), light: brandMix(primary, "#ffffff", 0.92) });
+      } catch(e){ cb(null, "This logo can't be read for colours (it's hosted on another site). Pick colours below instead."); }
+    };
+    img.onerror = function(){ cb(null, "The logo couldn't be loaded."); };
+    img.src = src;
+  }
+  function brandChecks(d){
+    var r = brandResolve(d), out = [];
+    var c1 = brandContrast(r.primary, r.onPrimary), c2 = brandContrast(r.band, r.onBand), c3 = brandContrast(r.primary, "#ffffff");
+    out.push([c1 >= 4.5, c1 >= 4.5 ? "Button text is easy to read on your main colour" : "Button text on your main colour is hard to read -- try a darker or brighter main colour"]);
+    out.push([c2 >= 4.5, c2 >= 4.5 ? "Header text is easy to read" : "Header text is hard to read -- adjust the " + (r.heroStyle === "dark" ? "dark colour" : "main colour")]);
+    out.push([true, c3 >= 4.5 ? "Your main colour works for headings on white" : "Headings on white use a slightly deeper shade of your main colour so they stay readable"]);
+    if (r.heroStyle === "dark" && brandContrast(r.dark, r.primary) < 2.2) out.push([false, "Your main colour is close to the dark colour -- buttons may not stand out on dark headers"]);
+    return out;
+  }
+  function brandPreviewHtml(d, name, withFlyer){
+    var lp = { vendorId:"", displayName:name, eyebrow: name + " partner program", headline:"Grow with " + name, body:"Join our partner program and earn on every deal you bring in. We give you training, demos and a team that helps you close.",
+      features:["Up to 20% commission", "Free partner training", "Co-marketing support"], cta:"Become a partner", useBrand:true, brand:d };
+    var fl = { id:"brand-preview", vendorId:name, theme:"brand", brand:d, status:"approved",
+      copy:{ headline:"Earn an extra 5% this quarter", subheadline:"On every new customer you register before the end of the year.", offer:"+5% on top of your commission",
+        benefits:"Paid with your normal commission\nNo minimum deal size", cta:"Register your next deal", ctaLink:"partnerwav.app", finePrint:"Sample flyer -- your real flyers use your own incentive terms." } };
+    return '<div class="brand-prev"><div class="aff-section-title">Landing page</div>' + lpPageHtml(lp, true)
+      + (withFlyer ? '<div class="aff-section-title" style="margin-top:14px;">Incentive flyer</div><div class="brand-prev-fly">' + flyerHtml(fl, { clean:true }) + '</div>' : '') + '</div>';
+  }
+  function renderBranding(force){
+    var box = document.getElementById("brandingContent");
+    if (!box || state.screen !== "branding") return;
+    var key = brandTargetKey();
+    var rk = key + ":" + (state.brandV || 0) + ":" + state.role;
+    if (!force && box.getAttribute("data-brand-key") === rk) return;   // keep what's being picked
+    box.setAttribute("data-brand-key", rk);
+    if (!key){ box.innerHTML = '<div class="empty">Complete your company profile first, then set your brand colours here.</div>'; return; }
+    var kit = brandFor(key), name = keyName(key);
+    if (!state.brandDraft || state.brandDraft.id !== key) state.brandDraft = JSON.parse(JSON.stringify(kit || Object.assign({ id:key }, BRAND_DEFAULT)));
+    var d = state.brandDraft, logo = brandLogoFor(key), r = brandResolve(d);
+    var picker = "";
+    if (state.role === "operator"){
+      var opts = programs.filter(function(p){ return p.status !== "archived"; }).map(function(p){ return ["vendor:" + p.id, p.name + " (vendor)"]; })
+        .concat(partnerProfiles.map(function(p){ return ["partner:" + p.id, p.name + " (partner)"]; }));
+      picker = '<div class="card card-pad brand-who"><label for="brandTarget">Company</label><select id="brandTarget" class="filter app-select">'
+        + opts.map(function(o){ return '<option value="'+attr(o[0])+'"'+(o[0] === key ? " selected" : "")+'>'+esc(o[1])+(brandFor(o[0]) ? " -- brand set" : "")+'</option>'; }).join("") + '</select>'
+        + '<span class="field-note">CloudWAV can set up a company\'s brand for them -- for example matched from their website. They can change it any time.</span></div>';
+    }
+    var presetBtn = function(p, i){ var c = p[1]; return '<button type="button" class="brand-preset" data-brand-preset="'+i+'"><span class="brand-strip"><i style="background:'+c.dark+'"></i><i style="background:'+c.primary+'"></i><i style="background:'+c.accent+'"></i><i style="background:'+c.light+'"></i></span>'+esc(p[0])+'</button>'; };
+    var field = function(f){ return '<div class="brand-field"><label for="brandC_'+f[0]+'">'+esc(f[1])+'<span class="field-note">'+esc(f[2])+'</span></label>'
+      + '<div class="brand-color"><input type="color" id="brandC_'+f[0]+'" data-brand-color="'+f[0]+'" value="'+attr(r[f[0]])+'" aria-label="'+attr(f[1])+'"><input type="text" id="brandH_'+f[0]+'" data-brand-hex="'+f[0]+'" value="'+attr(r[f[0]].toUpperCase())+'" maxlength="7" spellcheck="false" aria-label="'+attr(f[1])+' hex code"></div></div>'; };
+    box.innerHTML = picker + '<div class="brand-layout"><div class="card card-pad brand-form" id="brandForm">'
+      + '<div class="brand-head"><span class="stat-ic collab-ic t-violet" aria-hidden="true">'+pwIcon("palette")+'</span><div><h3>'+esc(name)+'</h3><span class="field-note" data-brand-status>'+(kit ? (kit.source ? esc(kit.source) : "Brand saved") + (kit.updatedAt ? " · " + esc(String(kit.updatedAt).slice(0, 10)) : "") : "Not set yet -- PartnerWAV colours are used until you save yours")+'</span></div></div>'
+      + '<div><div class="aff-section-title">Start from</div><div class="brand-presets">'
+        + (logo ? '<button type="button" class="brand-preset brand-logo" data-brand-logo><img src="'+attr(logo)+'" alt="">Match my logo</button>' : '')
+        + BRAND_PRESETS.map(presetBtn).join("") + '</div><span class="field-note" id="brandLogoNote" role="status"></span></div>'
+      + '<div class="brand-fields">' + BRAND_FIELDS.map(field).join("") + '</div>'
+      + '<div class="form-grid"><div class="field-row"><label for="brandFont">Font</label><select id="brandFont" class="filter app-select">'+BRAND_FONTS.map(function(x){ return '<option'+(x === r.font ? " selected" : "")+'>'+esc(x)+'</option>'; }).join("")+'</select><span class="field-note">Thai-friendly: IBM Plex Sans Thai, Noto Sans Thai, Kanit, Prompt, Sarabun</span></div>'
+        + '<div class="field-row"><label>Header style</label><div class="brand-styles">'
+          + '<button type="button" class="brand-style" data-brand-style="dark" aria-pressed="'+(r.heroStyle === "dark")+'"><span style="background:'+r.dark+';color:'+r.onDark+'">Aa<i style="background:'+r.primary+'"></i></span>Dark header</button>'
+          + '<button type="button" class="brand-style" data-brand-style="bold" aria-pressed="'+(r.heroStyle !== "dark")+'"><span style="background:'+r.primary+';color:'+r.onPrimary+'">Aa<i style="background:#fff"></i></span>Colour header</button>'
+        + '</div></div></div>'
+      + '<div class="field-row"><label for="brandWebsite">Website <span class="field-note">(optional)</span></label><input type="url" id="brandWebsite" value="'+attr(d.website || "")+'" placeholder="https://"><span class="field-note">Not sure of your colours? Tell CloudWAV your website and we\'ll match them for you.</span></div>'
+      + '<div class="brand-checks"><div class="aff-section-title">Readability</div><ul id="brandChecks">' + brandChecks(d).map(function(c){ return '<li class="'+(c[0] ? "ok" : "warn")+'">'+(c[0] ? "✓ " : "! ")+esc(c[1])+'</li>'; }).join("") + '</ul></div>'
+      + '<div id="brandError" class="login-msg bad" role="alert" hidden></div>'
+      + '<div class="cfg-actions">'+(kit ? '<button type="button" class="btn ghost sm" data-brand-reset>Use PartnerWAV colours</button>' : '')+'<button type="button" class="btn primary cta sm" data-brand-save style="margin-left:auto;">Save brand</button></div>'
+      + '<p class="field-note" style="margin:0;" data-brand-where>' + (/^vendor:/.test(key) ? 'New flyers, landing pages and invite pages use these colours. Flyers and pages already saved keep their colours until they\'re saved again.'
+          : 'Partners don\'t have their own flyers or landing pages in PartnerWAV yet. Your brand is saved now and will be used as those are added.') + '</p>'
+      + '</div><div class="brand-prev-wrap"><div class="aff-section-title" style="margin-bottom:8px;">Preview</div><div id="brandPreview">' + brandPreviewHtml(d, name, /^vendor:/.test(key)) + '</div></div></div>';
+  }
+  function brandRefresh(){
+    var d = state.brandDraft; if (!d) return;
+    var r = brandResolve(d), name = keyName(d.id);
+    BRAND_FIELDS.forEach(function(f){ var c = document.getElementById("brandC_" + f[0]), h = document.getElementById("brandH_" + f[0]);
+      if (c && c.value !== r[f[0]]) c.value = r[f[0]]; if (h && document.activeElement !== h) h.value = r[f[0]].toUpperCase(); });
+    document.querySelectorAll("[data-brand-style]").forEach(function(b){ var dark = b.getAttribute("data-brand-style") === "dark"; b.setAttribute("aria-pressed", String(dark === (r.heroStyle === "dark")));
+      var sw = b.querySelector("span"); if (sw){ sw.style.background = dark ? r.dark : r.primary; sw.style.color = dark ? r.onDark : r.onPrimary; var i = sw.querySelector("i"); if (i) i.style.background = dark ? r.primary : "#fff"; } });
+    var ul = document.getElementById("brandChecks"); if (ul) ul.innerHTML = brandChecks(d).map(function(c){ return '<li class="'+(c[0] ? "ok" : "warn")+'">'+(c[0] ? "✓ " : "! ")+esc(c[1])+'</li>'; }).join("");
+    var pv = document.getElementById("brandPreview"); if (pv) pv.innerHTML = brandPreviewHtml(d, name, /^vendor:/.test(d.id));
+  }
+  function brandSave(){
+    var d = state.brandDraft, key = brandTargetKey(); if (!d || !key || d.id !== key) return;
+    var err = document.getElementById("brandError"), bad = BRAND_FIELDS.filter(function(f){ return !brandHex(d[f[0]]); });
+    var web = (document.getElementById("brandWebsite") || {}).value || ""; web = web.trim();
+    if (web && !/^https?:\/\//i.test(web) && /^[^\s\/]+\.\S+/.test(web)) web = "https://" + web;
+    if (bad.length){ err.textContent = "Use a 6-digit colour code like #61A6FA for: " + bad.map(function(f){ return f[1].toLowerCase(); }).join(", ") + "."; err.hidden = false; return; }
+    if (web && !/^https?:\/\/\S+\.\S+/i.test(web)){ err.textContent = "The website needs to be a full web address, like https://example.com"; err.hidden = false; return; }
+    var prev = brandFor(key), rec = { id:key, primary:d.primary, dark:d.dark, accent:d.accent, light:d.light, font:BRAND_FONTS.indexOf(d.font) > -1 ? d.font : "Inter", heroStyle: d.heroStyle === "dark" ? "dark" : "bold", website:web, updatedAt: nowStamp() };
+    var same = prev && ["primary", "dark", "accent", "light", "font", "heroStyle"].every(function(x){ return prev[x] === rec[x]; });
+    rec.source = same && prev.source ? prev.source : (state.role === "operator" && key !== "operator:" ? "Set up by CloudWAV" : "");
+    if (prev) brandKits[brandKits.indexOf(prev)] = rec; else brandKits.push(rec);
+    saveBrandKits(); state.brandDraft = null; state.brandV = (state.brandV || 0) + 1;
+    toast("Brand saved -- new flyers and landing pages will use it"); renderBranding(true);
+  }
+  document.addEventListener("input", function(ev){
+    var t = ev.target; if (!t || !t.closest || !t.closest("#brandForm") || !state.brandDraft) return;
+    var k;
+    if ((k = t.getAttribute("data-brand-color"))){ state.brandDraft[k] = t.value.toLowerCase(); brandRefresh(); return; }
+    if ((k = t.getAttribute("data-brand-hex"))){ var v = t.value.trim(); if (v && v[0] !== "#") v = "#" + v; if (brandHex(v)){ state.brandDraft[k] = v.toLowerCase(); brandRefresh(); } return; }
+    if (t.id === "brandWebsite") state.brandDraft.website = t.value;
+  });
+  document.addEventListener("change", function(ev){
+    var t = ev.target; if (!t) return;
+    if (t.id === "brandFont" && state.brandDraft){ state.brandDraft.font = t.value; brandRefresh(); }
+    if (t.id === "brandTarget"){ state.brandTarget = t.value; state.brandDraft = null; renderBranding(true); }
+  });
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t) return; var b;
+    if (!t.closest("#brandingContent")) return;
+    if ((b = t.closest("[data-brand-preset]")) && state.brandDraft){ var p = BRAND_PRESETS[Number(b.getAttribute("data-brand-preset"))]; if (p){ Object.keys(p[1]).forEach(function(x){ state.brandDraft[x] = p[1][x]; }); brandRefresh(); } return; }
+    if ((b = t.closest("[data-brand-style]")) && state.brandDraft){ state.brandDraft.heroStyle = b.getAttribute("data-brand-style"); brandRefresh(); return; }
+    if (t.closest("[data-brand-save]")){ brandSave(); return; }
+    if (t.closest("[data-brand-reset]")){ var key = brandTargetKey(), k0 = brandFor(key); if (k0 && confirm("Go back to PartnerWAV colours for " + keyName(key) + "? Saved flyers and pages keep their colours.")){ brandKits.splice(brandKits.indexOf(k0), 1); saveBrandKits(); state.brandDraft = null; state.brandV = (state.brandV || 0) + 1; toast("Brand removed -- PartnerWAV colours are used"); renderBranding(true); } return; }
+    if (t.closest("[data-brand-logo]") && state.brandDraft){
+      var note = document.getElementById("brandLogoNote"), src = brandLogoFor(state.brandDraft.id); if (note) note.textContent = "Reading your logo...";
+      brandFromLogo(src, function(c, msg){ if (!c){ if (note) note.textContent = msg; return; } Object.keys(c).forEach(function(x){ state.brandDraft[x] = c[x]; }); if (note) note.textContent = "Colours picked from your logo -- adjust anything, then save."; brandRefresh(); });
+      return;
+    }
   });
 
   // ===== INVESTMENT ROUND (vendors and partners; private to the company and CloudWAV unless they share it) =====
