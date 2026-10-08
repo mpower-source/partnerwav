@@ -57,7 +57,7 @@ with sync_playwright() as p:
     # --- vendor sees feedback, edits + resubmits
     role(pg, "vendor"); nav(pg, "vendor-incentives")
     vc = pg.inner_text("#vendorIncentivesContent")
-    ok("CloudWAV:" in vc and "Proof of performance" in vc and "CHANGES REQUESTED" in vc.upper(), "Vendor sees CloudWAV's feedback")
+    ok("PartnerWAV:" in vc and "Proof of performance" in vc and "CHANGES REQUESTED" in vc.upper(), "Vendor sees CloudWAV's feedback")
     pg.locator("#vendorIncentivesContent div").filter(has_text="Q1 Co-marketing MDF").locator("[data-edit-vendor-incentive]").last.click(); pg.wait_for_timeout(250)
     ok(pg.input_value("#incMdfShare") == "50" and pg.input_value("#incClaimProcess").startswith("Submit a proposal"), "Edit reloads saved terms")
     pg.fill("#incClaimProcess", "Proposal pre-approval required. Claim within 45 days with invoices and proof of performance (photos, attendee lists).")

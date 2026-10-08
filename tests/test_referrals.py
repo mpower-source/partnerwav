@@ -105,7 +105,7 @@ with sync_playwright() as p:
     rows = pg.locator("#agreementsContent [data-agr-row]")
     ok(rows.count() == 2, "Partner sees only their 2 agreements")
     pg.select_option("#agrReqProgram", "unisense"); pg.click("[data-agr-request]"); pg.wait_for_timeout(200)
-    ok(rows.count() == 3 and "Waiting for CloudWAV" in pg.inner_text("#agreementsContent"), "Partner requests an agreement")
+    ok(rows.count() == 3 and "Waiting for PartnerWAV" in pg.inner_text("#agreementsContent"), "Partner requests an agreement")
     rows.first.locator("[data-agr-view]").click(); pg.wait_for_timeout(200)
     ok(pg.locator(".modal").count() == 1, "View opens the agreement terms")
     pg.click(".modal-close")

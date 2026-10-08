@@ -82,9 +82,9 @@ with sync_playwright() as p:
 
     # --- vendor fixes + resubmits
     role(pg, "vendor"); nav(pg, "vendor-incentives")
-    ok("CloudWAV:" in pg.inner_text("#vendorFlyersContent"), "Vendor sees CloudWAV's note")
+    ok("PartnerWAV:" in pg.inner_text("#vendorFlyersContent"), "Vendor sees CloudWAV's note")
     pg.locator("#vendorFlyersContent [data-flyer-row]").filter(has_text="MDF - Marketing Co-op Fund").locator("[data-flyer-edit]").click(); pg.wait_for_timeout(300)
-    ok("CloudWAV:" in pg.inner_text("#flyerEditorContent") and pg.input_value("#fly_offer").startswith("Guaranteed"), "Editor shows feedback and saved copy")
+    ok("PartnerWAV:" in pg.inner_text("#flyerEditorContent") and pg.input_value("#fly_offer").startswith("Guaranteed"), "Editor shows feedback and saved copy")
     pg.fill("#fly_offer", "Up to $5,000 in co-marketing funds per quarter"); pg.wait_for_timeout(100)
     ok("All figures match" in pg.inner_text(".fly-checks") and "No absolute" in pg.inner_text(".fly-checks"), "Checks clear after the fix")
     pg.click('[data-fly-save="submit"]'); pg.wait_for_timeout(300)

@@ -90,7 +90,7 @@ with sync_playwright() as p:
     pg.select_option("#brandTarget", "vendor:intelsense"); pg.wait_for_timeout(200)
     ok("Not set yet" in pg.inner_text("[data-brand-status]"), "Removed brand stays removed after reload")
     pg.click('[data-brand-preset="1"]'); pg.click("[data-brand-save]"); pg.wait_for_timeout(300)
-    ok("Set up by CloudWAV" in pg.inner_text("[data-brand-status]"), "CloudWAV can set up a company's brand for them")
+    ok("Set up by PartnerWAV" in pg.inner_text("[data-brand-status]"), "CloudWAV can set up a company's brand for them")
 
     # ----- partner and phone
     role(pg, "partner"); nav(pg, "branding"); pg.wait_for_timeout(200)

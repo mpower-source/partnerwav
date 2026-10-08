@@ -42,7 +42,7 @@ with sync_playwright() as p:
     pg.select_option("#previewEntity", "intelsense"); pg.click("#previewGo"); pg.wait_for_timeout(300)
     ok(visible_screen(pg) == ["scr-vendor-overview"] and pg.locator("#navVendor").is_visible() and not pg.locator("#navOperator").is_visible(), "Opens the Vendor workspace with the Vendor menu")
     ban = pg.inner_text("#previewBanner")
-    ok("Vendor" in ban and "Intelsense" in ban and "signed in as CloudWAV" in ban, "Banner says who you're previewing as")
+    ok("Vendor" in ban and "Intelsense" in ban and "signed in as PartnerWAV" in ban, "Banner says who you're previewing as")
     ok("Intelsense" in pg.inner_text("#vendorOwnProgramGrid"), "Vendor overview shows Intelsense's program")
     nav(pg, "vendor-network")
     pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(300)

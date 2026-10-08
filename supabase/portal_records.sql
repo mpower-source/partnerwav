@@ -162,6 +162,9 @@ begin
   -- public sign-ups on a vendor's invite page arrive through submit_affiliate_signup() below
   if new.collection = 'affiliateSignups' and tg_op = 'INSERT'
      and current_setting('portal.affiliate_signup', true) = 'on' then return new; end if;
+  -- a sign-up on a partner's public landing page arrives through submit_partner_page_lead() below
+  if new.collection = 'leads' and tg_op = 'INSERT'
+     and current_setting('portal.page_lead', true) = 'on' then return new; end if;
   -- a vendor's fit assessment sent from the public form arrives through submit_vendor_assessment() below
   if new.collection = 'vendorAssessments'
      and current_setting('portal.vendor_assessment', true) = 'on' then return new; end if;
@@ -187,6 +190,10 @@ begin
     raise exception 'You can only save your own WhatsApp and LINE details';
   end if;
   -- investment round details: each company saves only its own
+  -- partner landing pages: a partner saves only its own
+  if new.collection = 'partnerPages' and 'partner:' || coalesce(new.data ->> 'partnerId', '') <> k then
+    raise exception 'You can only save your own landing pages';
+  end if;
   -- brand colours: each company saves only its own (CloudWAV can set them up for anyone)
   if new.collection = 'brandKits' and new.id <> k then
     raise exception 'You can only save your own brand colours';
@@ -313,6 +320,58 @@ grant execute on function public.submit_affiliate_signup(text, jsonb) to anon, a
 -- 5c. Vendor fit assessment: a prospective vendor fills in the public form (no account).
 --     Only CloudWAV can read what they sent; CloudWAV then contacts them about pricing.
 -- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- A visitor on a partner's published landing page asks for a demo or registers for a webinar (no sign-in).
+-- The request becomes a lead that only that partner can see and edit.
+-- ---------------------------------------------------------------------------
+create or replace function public.submit_partner_page_lead(p_page text, p_data jsonb)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  page jsonb;
+  partner text;
+  new_id text := 'lead-pp-' || replace(gen_random_uuid()::text, '-', '');
+  web boolean;
+  who text;
+begin
+  select data into page from public.portal_records
+   where collection = 'partnerPages' and id = p_page and is_public;
+  if page is null or page ->> 'status' is distinct from 'published' or page ? 'deletedAt' and page ->> 'deletedAt' <> '' then
+    raise exception 'This page is not available';
+  end if;
+  partner := page ->> 'partnerId';
+  if coalesce(partner, '') = '' then raise exception 'This page is not available'; end if;
+  if p_data is null or jsonb_typeof(p_data) <> 'object' or length(p_data::text) > 4000 then
+    raise exception 'Sign-up details are missing or too long';
+  end if;
+  if coalesce(trim(p_data ->> 'name'), '') = '' or coalesce(p_data ->> 'email', '') !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
+    raise exception 'Please give your name and a valid email address';
+  end if;
+  if coalesce((p_data ->> 'consent')::boolean, false) is not true then
+    raise exception 'Please agree to be contacted';
+  end if;
+  web := page ->> 'template' = 'webinar';
+  who := left(trim(p_data ->> 'name'), 120) || ' · ' || left(lower(trim(p_data ->> 'email')), 160)
+         || case when coalesce(p_data ->> 'phone', '') <> '' then ' · ' || left(p_data ->> 'phone', 60) else '' end
+         || case when coalesce(p_data ->> 'company', '') <> '' then ' · ' || left(p_data ->> 'company', 160) else '' end;
+  perform set_config('portal.page_lead', 'on', true);
+  insert into public.portal_records (collection, id, data, readers, writers, is_public)
+  values ('leads', new_id, jsonb_build_object(
+    'id', new_id, 'partnerId', partner, 'status', 'prospect', 'value', '', 'convertedDeal', null,
+    'prospectName', left(coalesce(nullif(trim(p_data ->> 'company'), ''), trim(p_data ->> 'name')), 160),
+    'notes', case when web then 'Registered for the webinar "' || left(coalesce(page ->> 'headline', ''), 160) || '" from your landing page. '
+                  else 'Asked for a ' || left(coalesce(page -> 'vendor' ->> 'name', page ->> 'vendorId', ''), 120) || ' demo from your landing page. ' end
+             || who || case when coalesce(p_data ->> 'note', '') <> '' then '. Note: ' || left(p_data ->> 'note', 500) else '' end,
+    'source', 'landing page', 'pageId', p_page, 'vendorId', page ->> 'vendorId',
+    'contact', jsonb_build_object('name', left(trim(p_data ->> 'name'), 120), 'email', left(lower(trim(p_data ->> 'email')), 160), 'phone', left(coalesce(p_data ->> 'phone', ''), 60)),
+    'createdDate', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD'),
+    'createdAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI')),
+    array['partner:' || partner], array['partner:' || partner], false);
+  perform set_config('portal.page_lead', 'off', true);
+  return new_id;
+end $$;
+revoke all on function public.submit_partner_page_lead(text, jsonb) from public;
+grant execute on function public.submit_partner_page_lead(text, jsonb) to anon, authenticated;
+
 create or replace function public.submit_vendor_assessment(p_data jsonb)
 returns text language plpgsql security definer set search_path = public as $$
 declare

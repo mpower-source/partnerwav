@@ -29,7 +29,7 @@ with sync_playwright() as p:
 
     # ----- investment round: vendor
     role(pg, "vendor"); nav(pg, "vendor-overview")
-    ok("Investment round" in pg.inner_text("#vendorFundingSlot") and "Only you and CloudWAV" in pg.inner_text("#vendorFundingSlot"), "Vendor overview has a private Investment round section")
+    ok("Investment round" in pg.inner_text("#vendorFundingSlot") and "Only you and PartnerWAV" in pg.inner_text("#vendorFundingSlot"), "Vendor overview has a private Investment round section")
     pg.click("[data-funding-edit]"); pg.wait_for_timeout(150)
     ok(not pg.locator("#fundRound").is_visible(), "Round details stay hidden until a raise is chosen")
     pg.select_option("#fundStatus", "raising"); pg.wait_for_timeout(100)

@@ -50,7 +50,7 @@ with sync_playwright() as p:
     card = pg.locator('#affiliateMarketplaceGrid [data-vendor-offer="intelsense"]')
     ok(card.count() == 1, "Vendor sees their new offer")
     mine = pg.locator('#affiliateMarketplaceGrid .program-card').filter(has_text="Intelsense AI Affiliate Program")
-    ok("WAITING FOR CLOUDWAV REVIEW" in mine.inner_text().upper() and "10%" not in mine.inner_text(), "Marked as waiting for review; terms not on the tile")
+    ok("WAITING FOR PARTNERWAV REVIEW" in mine.inner_text().upper() and "10%" not in mine.inner_text(), "Marked as waiting for review; terms not on the tile")
     role(pg, "partner"); nav(pg, "affiliate-marketplace")
     ok("Intelsense AI Affiliate Program" not in pg.inner_text("#affiliateMarketplaceGrid"), "Partners don't see it before review")
     role(pg, "operator"); nav(pg, "affiliate-marketplace")
@@ -70,7 +70,7 @@ with sync_playwright() as p:
     pg.locator('#affiliateMarketplaceGrid .program-card').filter(has_text="Intelsense AI Affiliate Program").locator("[data-edit-affiliate-offer]").click(); pg.wait_for_timeout(300)
     ok(pg.input_value("#aoTermAmount") == "10%", "Vendor sees their own terms in the editor")
     pg.fill("#aoTermAmount", "12%"); pg.click('#affiliateOfferForm button[type=submit]'); pg.wait_for_timeout(300)
-    ok("WAITING FOR CLOUDWAV REVIEW" in pg.locator('#affiliateMarketplaceGrid .program-card').filter(has_text="Intelsense AI Affiliate Program").inner_text().upper(), "Edits go back to CloudWAV for review")
+    ok("WAITING FOR PARTNERWAV REVIEW" in pg.locator('#affiliateMarketplaceGrid .program-card').filter(has_text="Intelsense AI Affiliate Program").inner_text().upper(), "Edits go back to CloudWAV for review")
     # persists in demo
     pg.reload(); pg.wait_for_timeout(700); role(pg, "vendor"); nav(pg, "affiliate-marketplace")
     ok("Intelsense AI Affiliate Program" in pg.inner_text("#affiliateMarketplaceGrid"), "Vendor offer persists after reload")

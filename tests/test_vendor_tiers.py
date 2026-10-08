@@ -14,7 +14,7 @@ with sync_playwright() as p:
     nav(pg, "vendor-network") if pg.locator('[data-screen="vendor-network"]:visible').count() else None
     role(pg, "vendor"); nav(pg, "vendor-network"); pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(300)
     sec = pg.locator("#vendorTiersSection")
-    ok(sec.locator("[data-tier-edit-open]").count() == 0 and "message CloudWAV" in sec.inner_text(), "Vendor sees its tiers (read-only, change through CloudWAV)")
+    ok(sec.locator("[data-tier-edit-open]").count() == 0 and "message PartnerWAV" in sec.inner_text(), "Vendor sees its tiers (read-only, change through CloudWAV)")
     ok("Reseller" in sec.inner_text() and "Channel Manager" in sec.inner_text(), "Intelsense tiers listed on its profile")
 
     # CloudWAV edits Botnoi's offerings from the profile

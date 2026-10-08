@@ -21,7 +21,7 @@ with sync_playwright() as p:
         btn.first.click(); pg.wait_for_timeout(300)
         ok(visible_screen(pg) == ["scr-partner-messages"] and "Riverside Telco" in pg.inner_text("#msgThreadHeader"), "Message button opens that conversation")
     pg.select_option("#msgNewTo", "operator:"); pg.wait_for_timeout(250)
-    ok("CloudWAV" in pg.inner_text("#msgThreadHeader"), "New message to CloudWAV")
+    ok("PartnerWAV" in pg.inner_text("#msgThreadHeader"), "New message to CloudWAV")
     pg.fill("#msgCompose", "Hello CloudWAV"); pg.click("#msgSendBtn"); pg.wait_for_timeout(200)
     role(pg, "operator"); nav(pg, "partner-messages")
     o = " | ".join(pg.locator("#msgList [data-open-convo]").all_inner_texts())

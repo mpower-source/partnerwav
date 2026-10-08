@@ -214,6 +214,28 @@ select t('other vendors cannot read the sign-ups', (select count(*) from portal_
 select t('signed-in members can use the invite page too', public.submit_affiliate_signup('inv-live', '{"name":"Ian","email":"ian@intelsense.ai","consent":true}') like 'sg-%');
 reset role;
 
+-- ===== partner landing pages: the partner's own pages; public sign-ups become that partner's leads
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers,is_public) values
+ ('partnerPages','pp-live','{"id":"pp-live","partnerId":"siam-digital","vendorId":"intelsense","template":"demo","status":"published","vendor":{"name":"Intelsense AI"}}','{*}','{partner:siam-digital}',true),
+ ('partnerPages','pp-draft','{"id":"pp-draft","partnerId":"siam-digital","vendorId":"intelsense","template":"webinar","status":"draft"}','{partner:siam-digital}','{partner:siam-digital}',false);
+select t('a partner saves its own landing pages', (select count(*) from portal_records where collection='partnerPages') = 2);
+select t('a partner cannot save a page as another partner', fails($$insert into portal_records(collection,id,data,readers,writers,is_public) values ('partnerPages','pp-x','{"id":"pp-x","partnerId":"gulf-coast","status":"draft"}','{partner:siam-digital}','{partner:siam-digital}',false)$$));
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('anon requests a demo on a published partner page', public.submit_partner_page_lead('pp-live', '{"name":"Ploy","email":"Ploy@Hotel.co.th","company":"Riverside Hotel","consent":true,"note":"Front desk bot"}') like 'lead-pp-%');
+select t('page sign-up needs consent', fails($$select public.submit_partner_page_lead('pp-live', '{"name":"A","email":"a@b.co","consent":false}')$$));
+select t('no sign-ups on a draft page', fails($$select public.submit_partner_page_lead('pp-draft', '{"name":"A","email":"a@b.co","consent":true}')$$));
+select t('anon cannot add leads directly', fails($$insert into portal_records(collection,id,data,readers,writers) values ('leads','lead-x','{"partnerId":"siam-digital"}','{partner:siam-digital}','{partner:siam-digital}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+select t('the partner sees the request in its leads', (select count(*) from portal_records where collection='leads' and data->>'source'='landing page' and data->>'prospectName'='Riverside Hotel' and data->'contact'->>'email'='ploy@hotel.co.th') = 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+select t('other partners cannot see that lead', (select count(*) from portal_records where collection='leads' and data->>'source'='landing page') = 0);
+select t('other partners cannot see a draft page', (select count(*) from portal_records where collection='partnerPages' and id='pp-draft') = 0);
+reset role;
+
 -- ===== vendor fit assessment from the public form
 select pg_temp.as_user(''); set role anon;
 select t('anon sends a vendor assessment', public.submit_vendor_assessment('{"company":"Acme AI","contactName":"Ann","email":"Ann@Acme.io","consent":true,"partners":"11-50","addons":["investor"],"status":"won","quote":{"total":1}}') like 'va-%');

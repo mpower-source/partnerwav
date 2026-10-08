@@ -39,7 +39,7 @@ with sync_playwright() as p:
     mine.first.locator("[data-view-deal]").click(); pg.wait_for_timeout(250)
     ok(visible_screen(pg) == ["scr-partner-deal-view"], "Partner opens the deal")
     view = pg.inner_text("#partnerDealContent")
-    ok("closed around $36k" in view and "CloudWAV requested changes" in view, "Partner sees the operator's message")
+    ok("closed around $36k" in view and "PartnerWAV requested changes" in view, "Partner sees the operator's message")
     ok("May be priced too high" not in view, "Operator's private pricing check not shown to the partner")
 
     # partner replies, then updates + resubmits
