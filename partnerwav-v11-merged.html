@@ -5660,7 +5660,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     // real = there is something of the vendor's own to show; otherwise the tile shows an example, marked Sample
     var vTile = function(key, label, real, value, trend, sample){
       var smp = !real && !!sample; if (smp) anySample = true;
-      return '<div class="stat-tile" data-vstat="'+key+'"'+(smp ? ' data-sample="1"' : '')+'><span class="stat-label">'+label+(smp ? ' <span class="badge neutral" style="font-size:.58rem;vertical-align:middle;">Sample</span>' : '')+'</span>'
+      return '<div class="stat-tile" data-vstat="'+key+'"'+(smp ? ' data-sample="1"' : '')+'><span class="stat-label">'+label+(smp ? ' <span class="badge neutral" style="font-size:.58rem;display:block;width:fit-content;margin-top:4px;">Sample</span>' : '')+'</span>'
         + '<span class="stat-value">'+(smp ? sample[0] : value)+'</span><span class="stat-trend">'+esc(smp ? sample[1] : trend)+'</span></div>';
     };
     var plural = function(n, w){ return n + " " + w + (n === 1 ? "" : "s"); };
