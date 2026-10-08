@@ -749,8 +749,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .btn{ font-weight:700; border-radius:12px; }
   .btn.primary{ background:var(--accent); box-shadow:inset 0 -3px 0 rgba(0,0,0,.18); }
   .btn.primary:hover{ background:var(--accent-strong); }
-  .btn.cta{ background:var(--orange); color:#fff; box-shadow:inset 0 -3px 0 rgba(0,0,0,.16); text-transform:uppercase; letter-spacing:.05em; font-family:"Nunito",Inter,sans-serif; font-weight:900; }
-  .btn.cta:hover{ background:var(--orange-strong); }
+  .btn.cta, .btn.primary.cta{ background:var(--orange); color:#fff; border-color:transparent; box-shadow:inset 0 -3px 0 rgba(0,0,0,.16); font-family:"Nunito",Inter,sans-serif; font-weight:900; letter-spacing:.01em; }
+  .btn.cta:hover, .btn.primary.cta:hover{ background:var(--orange-strong); }
+  .btn.cta:disabled{ opacity:.6; }
   .badge{ border-radius:999px; }
   .badge.accent2{ background:var(--accent2-soft); color:var(--accent2); }
   .stat-trend{ color:var(--good); }
@@ -997,13 +998,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
       <!-- ===== PARTNER: OVERVIEW ===== -->
       <section id="scr-partner-overview">
-        <div class="card card-pad" id="profileBanner" hidden style="border-color:var(--accent-soft); background:var(--accent-soft); margin-bottom:16px;">
+        <div class="card card-pad" id="profileBanner" hidden style="border-color:var(--orange-soft); background:var(--orange-soft); margin-bottom:16px; box-shadow:none;">
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
             <div style="flex:1;min-width:220px;">
-              <div style="font-weight:700;color:var(--accent-strong);">Finish setting up your Partner Network profile</div>
+              <div style="font-family:Nunito,Inter,sans-serif;font-weight:900;font-size:1.12rem;color:var(--ink);">Finish setting up your Partner Network profile</div>
               <div style="color:var(--ink-soft);font-size:.86rem;margin-top:2px;">Add your specialties, credentials and past projects so other MSPs and VARs can find and message you -- takes about two minutes.</div>
             </div>
-            <button class="btn primary sm" data-goto-screen="partner-my-profile">Complete profile</button>
+            <button class="btn primary cta sm" data-goto-screen="partner-my-profile">Complete profile</button>
           </div>
         </div>
         <div id="partnerRoiCard"></div>
@@ -1137,7 +1138,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-partner-commissions" hidden>
         <div class="section-head"><h2>Commissions</h2><span class="hint">Multi-currency, per-program</span></div>
         <div class="filter-row">
-          <button class="btn primary sm" id="submitDealBtn">Submit a deal</button>
+          <button class="btn primary cta sm" id="submitDealBtn">Submit a deal</button>
           <select class="filter" id="commissionFilter">
             <option value="all">All statuses</option>
             <option value="active">Active</option>
@@ -2249,7 +2250,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-operator-programs" hidden>
         <div class="section-head"><h2>Manage programs</h2><span class="hint">Every vendor program CloudWAV operates</span></div>
         <div style="display:flex;gap:10px;margin-bottom:14px;">
-          <button class="btn primary sm" data-acct-setup="vendor">+ Set up a vendor</button>
+          <button class="btn primary cta sm" data-acct-setup="vendor">+ Set up a vendor</button>
           <button class="btn secondary sm" data-goto-screen="operator-program-editor">Add with full details</button>
         </div>
         <div class="card">
@@ -3841,7 +3842,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + (a.direct && !a.directLink ? '<span class="badge warn" style="align-self:flex-start;" data-link-pending="'+esc(a.id)+'">Link &amp; QR code coming soon</span>' : '')
       + (a.apiIntegration ? '<span class="badge accent" style="align-self:flex-start;">API integration available</span>' : '')
       + '<div class="program-actions">'+reviewBtns+joinBtn
-        + (isInviteOffer(a) && editable && live ? '<button class="btn primary sm" data-invite-open="'+esc(a.id)+'">Invite link &amp; QR</button><button class="btn secondary sm" data-invite-signups="'+esc(a.id)+'">Sign-ups ('+signupsFor(a.id).length+')</button>' : '')
+        + (isInviteOffer(a) && editable && live ? '<button class="btn primary cta sm" data-invite-open="'+esc(a.id)+'">Invite link &amp; QR</button><button class="btn secondary sm" data-invite-signups="'+esc(a.id)+'">Sign-ups ('+signupsFor(a.id).length+')</button>' : '')
         + editBtns+'</div>'
     + '</div>';
   }
@@ -4315,7 +4316,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="va-fields">'+st.fields.filter(function(f){ return vaFieldVisible(f, d, mode); }).map(function(f){ return vaFieldHtml(f, d, mode); }).join("")+'</div>'
       + '<div id="vaError" class="login-msg bad" role="alert" hidden></div>'
       + '<div class="va-nav">'+(draft.step > 0 ? '<button type="button" class="btn secondary" data-va-back>Back</button>' : (mode === "operator" ? '<button type="button" class="btn secondary" data-va-cancel>Cancel</button>' : '<span></span>'))
-        + '<button type="button" class="btn primary" data-va-next>'+(last ? (mode === "operator" ? "Save assessment" : "Send to CloudWAV") : "Next")+'</button></div>'
+        + '<button type="button" class="btn primary'+(last && mode !== "operator" ? " cta" : "")+'" data-va-next>'+(last ? (mode === "operator" ? "Save assessment" : "Send to CloudWAV") : "Next")+'</button></div>'
     + '</form>';
   }
   function vaReadInputs(draft){
@@ -6485,7 +6486,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + 'ℹ️ <strong>Note:</strong> Once you become a partner, you\'ll be able to complete your full company profile with detailed address and location information that will appear on the partner map.'
       + '</div>'
       + '<div style="display:flex;gap:12px;margin-top:16px;">'
-      + '<button type="submit" class="btn primary" style="flex:1;">Submit Application</button>'
+      + '<button type="submit" class="btn primary cta" style="flex:1;">Submit Application</button>'
       + '<button type="button" class="btn secondary" data-goto-screen="partner-directory" style="flex:1;">Cancel</button>'
       + '</div>'
       + '<p style="font-size:.85rem;color:var(--ink-faint);margin-top:12px;">* Required fields</p>'
@@ -7172,7 +7173,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '✓ The vendor will contact you shortly to schedule your demo.'
       + '</div>'
       + '<div style="display:flex;gap:12px;margin-top:16px;">'
-      + '<button type="submit" class="btn primary" style="flex:1;">Request Demo</button>'
+      + '<button type="submit" class="btn primary cta" style="flex:1;">Request Demo</button>'
       + '<button type="button" class="btn secondary" onclick="closeModal();" style="flex:1;">Cancel</button>'
       + '</div>'
       + '</form>'
@@ -7511,7 +7512,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + (closed ? '' :
               '<button type="button" class="btn secondary sm" data-deal-action="changes">Request changes</button>'
             + '<button type="button" class="btn ghost sm" data-deal-action="decline">Decline</button>'
-            + '<button type="button" class="btn primary sm" data-deal-action="approve" style="margin-left:auto;">Approve deal</button>')
+            + '<button type="button" class="btn primary cta sm" data-deal-action="approve" style="margin-left:auto;">Approve deal</button>')
         + '</div>'
         + '<span class="field-note">Request changes and Decline send your message to the partner as the reason. Approve can include an optional note.</span>'
       + '</div>'
@@ -12179,7 +12180,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + (editable ? '<p class="field-note" id="agrDocStatus" style="margin:10px 0;"></p>'
           : '<p class="field-note" style="margin:10px 0;">' + (a.status === "signed" ? "Signed " + esc(a.signedAt || "") + ". This is the text that was signed." : a.status === "sent" ? "Out for signature. Read it through before you sign -- the highlighted parts were filled in for this agreement." : "Draft -- CloudWAV is still completing this agreement.") + '</p>')
       + '<div class="cfg-actions" style="margin-bottom:10px;flex-wrap:wrap;">'
-      + (editable ? '<button type="button" class="btn primary sm" data-agr-doc-send>Send for signature</button>' : '')
+      + (editable ? '<button type="button" class="btn primary cta sm" data-agr-doc-send>Send for signature</button>' : '')
       + '<button type="button" class="btn secondary sm" data-agr-doc-print>Print / save as PDF</button><button type="button" class="btn ghost sm" data-agr-doc-word>Download for Word</button></div>'
       + '<div class="agr-doc-wrap">' + agrDocHtml(a, editable ? "edit" : "read") + '</div></div>');
     var mEl = back.querySelector(".modal"); if (mEl){ mEl.style.maxWidth = "880px"; mEl.style.width = "94vw"; }
@@ -12391,7 +12392,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     box.innerHTML = head
       + '<div class="map-stats" style="margin-bottom:12px;"><div class="map-stat"><b>'+list.length+'</b>referrals</div><div class="map-stat"><b>'+list.filter(function(r){ return refStatus(r) === "won"; }).length+'</b>won</div>'
         + '<div class="map-stat"><b>'+fmtMoney(totals.fee, "THB")+'</b>'+(isOp ? "fees earned" : "your share earned")+'</div><div class="map-stat"><b>'+fmtMoney(totals.paid, "THB")+'</b>paid out</div></div>'
-      + '<div class="cfg-actions" style="margin-bottom:12px;">'+(active.length ? '<button type="button" class="btn primary sm" data-ref-new>+ Refer a software project</button>' : '<span class="field-note">No software houses are set up yet'+(isOp ? ' -- add one under Software houses.' : '.')+'</span>')+'</div>'
+      + '<div class="cfg-actions" style="margin-bottom:12px;">'+(active.length ? '<button type="button" class="btn primary cta sm" data-ref-new>+ Refer a software project</button>' : '<span class="field-note">No software houses are set up yet'+(isOp ? ' -- add one under Software houses.' : '.')+'</span>')+'</div>'
       + (list.length ? '<div style="display:flex;flex-direction:column;gap:10px;">' + list.map(function(r){
           var h = houseById(r.houseId) || { name:r.houseId }, f = referralFees(r);
           return '<div class="deal-row" data-ref-row="'+esc(r.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(r.client.company)
@@ -12506,7 +12507,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="field-row"><label for="rfTimeline">Timeline</label><input id="rfTimeline" type="text" placeholder="e.g. start in November"></div></div>'
       + '<label class="cfg-check"><input type="checkbox" id="rfDisclosed"> The client knows about this introduction and that I may receive a referral fee</label>'
       + '<div id="rfError" class="login-msg bad" hidden></div>'
-      + '<div class="modal-actions"><button class="btn secondary" data-modal-close>Cancel</button><button class="btn primary" id="rfSubmit">Register referral</button></div>');
+      + '<div class="modal-actions"><button class="btn secondary" data-modal-close>Cancel</button><button class="btn primary cta" id="rfSubmit">Register referral</button></div>');
     function rateNote(){
       var h = houseById(back.querySelector("#rfHouse").value), t = termsOf(h), lvl = back.querySelector("#rfLevel").value, lead = back.querySelector("#rfLead").value;
       back.querySelector("#rfLeadRow").hidden = lvl !== "cosell";
@@ -16604,7 +16605,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="field-row"><label for="acctContact">Contact name <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><input type="text" id="acctContact" value="' + a(vals.contact) + '" autocomplete="off"></div>'
       + '<span class="field-note">A temporary password is created for you to send. They choose their own the first time they sign in, then finish the rest of their profile themselves.</span>'
       + '<div id="acctErr" class="login-msg bad" role="alert"' + (errText ? "" : " hidden") + '>' + esc(errText || "") + '</div>'
-      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" id="acctCreateBtn">Create account</button>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary cta sm" id="acctCreateBtn">Create account</button>'
       + '<button type="button" class="btn secondary sm" data-acct-close>Cancel</button></div></div>';
     closeModal(); openModal(body);
     var first = document.getElementById(fixed ? "acctEmail" : "acctCompany"); if (first) first.focus();
