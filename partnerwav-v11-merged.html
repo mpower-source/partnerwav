@@ -56,7 +56,19 @@
   .shop-price{ font-weight:800; font-size:1.05rem; }
   .shop-list{ margin:6px 0 0; padding-left:20px; font-size:.9rem; display:flex; flex-direction:column; gap:3px; }
   .shop-detail{ max-width:760px; }
-  .shop-mini{ width:34px; height:34px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .shop-mini{ width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; color:var(--accent); background:var(--accent-soft); }
+  .shop-mini svg{ width:21px; height:21px; }
+  .shop-mini.t-teal{ color:var(--teal); background:var(--good-soft); } .shop-mini.t-orange{ color:var(--orange); background:var(--orange-soft); }
+  .shop-mini.t-pink{ color:var(--pink); background:var(--bad-soft); } .shop-mini.t-slate{ color:var(--ink-soft); background:rgba(110,106,140,.14); }
+  .opshop-stats{ margin-bottom:16px; }
+  .opshop-row{ padding:12px 14px; gap:14px; }
+  .opshop-price{ color:var(--ink); }
+  .opshop-warn{ color:var(--warn); font-weight:700; }
+  .shop-icon-pick{ display:flex; flex-wrap:wrap; gap:6px; }
+  .shop-pick{ width:38px; height:38px; border-radius:11px; border:1px solid var(--line); background:var(--surface); color:var(--ink-soft); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+  .shop-pick svg{ width:19px; height:19px; }
+  .shop-pick:hover{ border-color:var(--accent-line); color:var(--accent); }
+  .shop-pick[aria-pressed="true"]{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
   .lvl-progress{ height:6px; border-radius:99px; background:var(--surface-2); overflow:hidden; border:1px solid var(--line); }
   .lvl-progress div{ height:100%; background:var(--accent); }
   .lvl-table input, .lvl-table textarea{ width:100%; min-width:90px; font:inherit; }
@@ -9281,9 +9293,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var SHOP_LINE_ICON = { "\ud83d\udcc8":"trend", "\ud83c\udfc6":"award", "\ud83d\udce3":"megaphone", "\ud83d\udce2":"megaphone", "\ud83e\udded":"compass", "\ud83e\udd1d":"users",
     "\ud83e\udd16":"cpu", "\u2709\ufe0f":"mail", "\u2709":"mail", "\ud83d\udcd8":"book", "\ud83d\udcda":"book", "\ud83c\udf0f":"globe", "\ud83c\udf0d":"globe", "\ud83c\udf93":"cap" };
   var SHOP_CAT_ICON = { "Sales":"trend", "Bigger deals":"award", "Social media":"megaphone", "Community & events":"users", "Marketing":"book", "AI & tech":"cpu" };
+  var SHOP_PICK_ICONS = ["cap","trend","award","target","megaphone","users","book","cpu","mail","globe","calendar","briefcase","file","box","compass","cloud"];
   function shopTone(p){ return SHOP_TONE[String(p.cover || "").toLowerCase()] || "violet"; }
+  function shopIconName(p){
+    return (p.lineIcon && SHOP_PICK_ICONS.indexOf(p.lineIcon) >= 0 ? p.lineIcon : "") || SHOP_LINE_ICON[p.icon] || SHOP_CAT_ICON[p.category] || "cap";
+  }
   function shopIconSvg(p){
-    var n = SHOP_LINE_ICON[p.icon] || SHOP_CAT_ICON[p.category] || "cap";
+    var n = (p.lineIcon && SHOP_PICK_ICONS.indexOf(p.lineIcon) >= 0 ? p.lineIcon : "") || SHOP_LINE_ICON[p.icon] || SHOP_CAT_ICON[p.category] || "cap";
     return (typeof PW_ICONS === "object" && PW_ICONS && PW_ICONS[n]) ? pwIcon(n) : esc(p.icon || "");
   }
   function shopCover(p, big){
@@ -9375,19 +9391,24 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var awaiting = shopOrders.filter(function(o){ return o.status === "awaiting"; }).length;
     var paid = shopOrders.filter(function(o){ return o.status === "paid"; });
     var revenue = paid.reduce(function(a, o){ return a + (Number(o.price) || 0); }, 0);
-    var html = '<div class="map-stats" style="margin-bottom:12px;">'
-      + '<div class="map-stat"><b>'+shopProducts.filter(function(p){ return p.status === "published"; }).length+'</b>published</div>'
-      + '<div class="map-stat"><b>'+paid.length+'</b>sales</div><div class="map-stat"><b>$'+revenue.toLocaleString("en-US")+'</b>revenue</div>'
-      + '<div class="map-stat"><b>'+awaiting+'</b>awaiting payment</div><div class="map-stat"><b>'+shopWaitlist.length+'</b>on waitlists</div></div>'
+    var pubCount = shopProducts.filter(function(p){ return p.status === "published"; }).length;
+    var tile = function(label, value, trend){ return '<div class="stat-tile"><span class="stat-label">'+label+'</span><span class="stat-value">'+value+'</span><span class="stat-trend" style="color:var(--ink-faint);">'+trend+'</span></div>'; };
+    var html = '<div class="stat-row opshop-stats">'
+      + tile("Published products", pubCount, (shopProducts.length - pubCount)+' in draft')
+      + tile("Sales", paid.length, 'paid orders')
+      + tile("Revenue", '$'+revenue.toLocaleString("en-US"), 'from paid orders')
+      + tile("Awaiting payment", awaiting, awaiting ? 'to confirm in Orders' : 'nothing to confirm')
+      + tile("On waitlists", shopWaitlist.length, 'sign-ups before launch')
+      + '</div>'
       + '<div class="filter-chip-row" style="margin-bottom:12px;">'
       + ["products","orders","waitlist"].map(function(k){ return '<button type="button" class="filter-chip" data-opshop-tab="'+k+'" aria-pressed="'+(tab===k)+'">'+({products:"Products",orders:"Orders"+(awaiting ? " ("+awaiting+" to confirm)" : ""),waitlist:"Waitlist"})[k]+'</button>'; }).join("")
-      + '<button type="button" class="btn primary sm" data-shop-edit="" style="margin-left:auto;">+ New product</button></div>';
+      + '<button type="button" class="btn primary cta sm" data-shop-edit="" style="margin-left:auto;">+ New product</button></div>';
     if (tab === "products"){
       html += '<div style="display:flex;flex-direction:column;gap:10px;">' + shopProducts.map(function(p){
         var sales = shopOrders.filter(function(o){ return o.productId === p.id && o.status === "paid"; }).length;
         var wl = shopWaitlist.filter(function(w){ return w.productId === p.id; }).length;
-        return '<div class="deal-row" data-opshop-row="'+attr(p.id)+'"><span class="shop-mini" style="background:'+attr(p.cover)+'">'+esc(p.icon || "🎓")+'</span><span class="deal-row-name">'+esc(p.title)
-          + '<span class="field-note" style="display:block;font-weight:400;">'+esc(p.type)+' · '+esc(p.category)+' · for '+esc(SHOP_AUDIENCE[p.audience] || "Everyone")+' · '+shopPrice(p)+' · '+sales+' sold · '+wl+' waiting'+(p.price && !p.paymentLink ? ' · <b>no payment link yet (waitlist mode)</b>' : '')+'</span></span>'
+        return '<div class="deal-row opshop-row" data-opshop-row="'+attr(p.id)+'"><span class="shop-mini t-'+shopTone(p)+'" aria-hidden="true">'+shopIconSvg(p)+'</span><span class="deal-row-name">'+esc(p.title)
+          + '<span class="field-note" style="display:block;font-weight:400;">'+esc(p.type)+' · '+esc(p.category)+' · for '+esc(SHOP_AUDIENCE[p.audience] || "Everyone")+' · <b class="opshop-price">'+shopPrice(p)+'</b> · '+sales+' sold · '+wl+' waiting'+(p.price && !p.paymentLink ? ' · <span class="opshop-warn">No payment link yet (waitlist mode)</span>' : '')+'</span></span>'
           + '<span class="badge '+(p.status === "published" ? "good" : "neutral")+'">'+(p.status === "published" ? "Published" : "Draft")+'</span>'
           + '<button type="button" class="btn secondary sm" data-shop-edit="'+attr(p.id)+'">Edit</button></div>';
       }).join("") + '</div>';
@@ -9420,7 +9441,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<h2 style="margin:0;font-size:1.15rem;">'+(p.id ? "Edit product" : "New product")+'</h2>'
       + f("title","Title *","e.g. Sales Fundamentals for MSPs")
       + '<div class="vp-grid">' + sel("type","Type",SHOP_TYPES) + sel("category","Category",SHOP_CATS) + sel("audience","For",Object.keys(SHOP_AUDIENCE).map(function(k){ return [k, SHOP_AUDIENCE[k]]; })) + '</div>'
-      + '<div class="vp-grid">' + f("price","Price (USD, 0 = free)","149","number") + f("duration","Length / format","6 modules · about 4 hours") + f("icon","Icon (emoji)","📈") + '</div>'
+      + '<div class="vp-grid">' + f("price","Price (USD, 0 = free)","149","number") + f("duration","Length / format","6 modules · about 4 hours") + '</div>'
       + ta("summary","Short description *","One or two sentences shown on the card",2)
       + ta("learn","What they'll learn (one per line)","",4)
       + ta("outline","What's inside -- modules / lessons (one per line)","",5)
@@ -9428,9 +9449,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<span class="field-note">Create a payment link in Stripe or PayPal and paste it here. Leave empty to take waitlist sign-ups instead.</span>'
       + f("accessLink","Access link (shown after payment)","https://… course, Google Drive folder or download","url")
       + '<label class="cfg-check"><input type="checkbox" id="shp_certifies"'+(p.certifies ? " checked" : "")+'> Completing this counts toward partner levels</label>'
+      + '<div class="field-row"><label>Icon</label><div class="shop-icon-pick">'+(function(){ var cur = shopIconName(p); return SHOP_PICK_ICONS.map(function(n){ return '<button type="button" class="shop-pick" data-shop-lineicon="'+n+'" aria-pressed="'+(cur === n)+'" title="'+n+'">'+pwIcon(n)+'<span class="sr-only">'+n+'</span></button>'; }).join(""); })()+'</div></div>'
       + '<div class="field-row"><label>Cover colour</label><div class="fly-swatches">'+Object.keys(FLY_THEMES).map(function(k){ return '<button type="button" class="fly-swatch" data-shop-color="'+FLY_THEMES[k][1]+'" aria-pressed="'+(p.cover===FLY_THEMES[k][1])+'" style="background:'+({violet:"var(--accent)",teal:"var(--teal)",orange:"var(--orange)",pink:"var(--pink)",slate:"var(--ink-soft)"})[SHOP_TONE[FLY_THEMES[k][1]] || "violet"]+'"><span class="sr-only">'+esc(FLY_THEMES[k][0])+'</span></button>'; }).join("")+'</div></div>'
       + '<div id="shopEditError" class="login-msg bad" hidden></div>'
-      + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-shop-save="draft">Save as draft</button><button type="button" class="btn primary sm" data-shop-save="published" style="margin-left:auto;">Publish</button></div>'
+      + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-shop-save="draft">Save as draft</button><button type="button" class="btn primary cta sm" data-shop-save="published" style="margin-left:auto;">Publish</button></div>'
       + '</div><div class="fly-preview-wrap"><div class="aff-section-title" style="margin-bottom:8px;">Card preview</div><div id="shopEditPreview" style="max-width:320px;"></div></div></div>';
     refreshShopPreview();
   }
@@ -9665,8 +9687,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-shop-complete]"))){ var o = shopOrders.filter(function(x){ return x.id === b.getAttribute("data-shop-complete"); })[0]; if (o){ o.completedAt = nowStamp(); saveShop(); toast("Nice work -- this now counts toward your partner level"); renderShop(); } return; }
     if ((b = t.closest("[data-opshop-tab]"))){ state.opShopTab = b.getAttribute("data-opshop-tab"); renderOperatorShop(); return; }
     if ((b = t.closest("[data-shop-edit]"))){ var id = b.getAttribute("data-shop-edit"), ex = id ? shopById(id) : null;
-      state.shopDraft = ex ? JSON.parse(JSON.stringify(ex)) : { type:"Course", category:"Sales", audience:"all", price:0, icon:"🎓", cover:"#4338ca", certifies:false, status:"draft" };
+      state.shopDraft = ex ? JSON.parse(JSON.stringify(ex)) : { type:"Course", category:"Sales", audience:"all", price:0, icon:"", lineIcon:"cap", cover:"#4338ca", certifies:false, status:"draft" };
       state.screen = "operator-shop-editor"; render(); window.scrollTo(0,0); return; }
+    if ((b = t.closest("[data-shop-lineicon]"))){ if (state.shopDraft){ state.shopDraft.lineIcon = b.getAttribute("data-shop-lineicon"); document.querySelectorAll("[data-shop-lineicon]").forEach(function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); refreshShopPreview(); } return; }
     if ((b = t.closest("[data-shop-color]"))){ if (state.shopDraft){ state.shopDraft.cover = b.getAttribute("data-shop-color"); document.querySelectorAll("[data-shop-color]").forEach(function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); refreshShopPreview(); } return; }
     if ((b = t.closest("[data-shop-save]"))){ saveShopProduct(b.getAttribute("data-shop-save")); return; }
     if ((b = t.closest("[data-order-act]"))){ var od = shopOrders.filter(function(x){ return x.id === b.getAttribute("data-order-id"); })[0]; if (od && state.role === "operator"){ od.status = b.getAttribute("data-order-act"); if (od.status === "paid"){ od.paidAt = nowStamp(); var sa = shopAccess.filter(function(a){ return a.id === od.productId; })[0]; if (sa && sa.buyers.indexOf(od.buyer) < 0) sa.buyers.push(od.buyer); } saveShop(); toast(od.status === "paid" ? "Payment confirmed -- unlocked for " + buyerName(od.buyer) : "Order " + ORDER_STATUS[od.status].label.toLowerCase()); renderOperatorShop(); } return; }
@@ -12973,7 +12996,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   applyMenuIcons();
   // Stat tiles: an icon picked from the tile's label, in a palette colour
   var STAT_ICON_RULES = [
+    [/awaiting payment/i, "clock", "pink"],
+    [/waitlist/i, "users", "teal"],
+    [/published|product/i, "bag", "violet"],
     [/commission|revenue|fees|earned|paid|spent|return/i, "wallet", "amber"],
+    [/^\s*sales\b/i, "trend", "orange"],
     [/deal|project|referral/i, "briefcase", "orange"],
     [/partner|referring/i, "users", "teal"],
     [/program|enrolled|vendor/i, "building", "violet"],
