@@ -756,6 +756,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .badge.accent2{ background:var(--accent2-soft); color:var(--accent2); }
   .stat-trend{ color:var(--good); }
   table thead th{ color:var(--ink-faint); }
+  /* Partner Collaborations: a type icon per card, small line icons in the details */
+  .collab-card{ align-items:flex-start; gap:14px; }
+  .collab-card .collab-ic{ position:static; flex-shrink:0; width:42px; height:42px; border-radius:12px; }
+  .collab-card .collab-ic svg{ width:22px; height:22px; }
+  .collab-meta{ display:flex; align-items:center; flex-wrap:wrap; gap:4px; }
+  .collab-mi{ display:inline-flex; width:15px; height:15px; color:var(--ink-faint); margin-right:2px; }
+  .collab-mi svg{ width:100%; height:100%; }
+  .collab-meta[style*="--good"] .collab-mi{ color:var(--good); }
+  .collab-dot{ color:var(--ink-faint); margin:0 4px; }
   /* stat tiles carry a small icon in one of the palette colours */
   .stat-tile{ position:relative; }
   .stat-tile .stat-ic{ position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
@@ -12903,7 +12912,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
     box:'<path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="m3 7.5 9 4.5 9-4.5M12 12v9"/>',
     phone:'<path d="M5 3h3l2 5-2.5 1.5a11 11 0 0 0 7 7L16 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
-    cloud:'<path d="M7 18a4.5 4.5 0 0 1-.5-9 6 6 0 0 1 11.5 1.5A4 4 0 0 1 17.5 18z"/>'
+    cloud:'<path d="M7 18a4.5 4.5 0 0 1-.5-9 6 6 0 0 1 11.5 1.5A4 4 0 0 1 17.5 18z"/>',
+    pin:'<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
   };
   var PW_EMOJI_ICON = { "\ud83d\udcca":"home", "\ud83c\udfe2":"building", "\ud83d\udc68\u200d\ud83d\udcbc":"users", "\ud83d\udc65":"users", "\ud83d\udc64":"user", "\u2705":"check",
     "\ud83d\udcb0":"wallet", "\ud83d\udcac":"chat", "\u2699":"sliders", "\ud83c\udf93":"cap", "\ud83c\udfaf":"target", "\ud83d\udcdd":"file", "\ud83d\udccb":"clipboard",
@@ -16049,16 +16060,18 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!filtered.length){ container.innerHTML = '<div class="empty">No collaborations match your criteria.</div>'; return; }
     var interests = state.collabInterests || [];
     container.innerHTML = filtered.map(function(c){
-      var icon = c.type === "project" ? "🚀" : (c.type === "meetup" ? "👥" : "📢");
+      var kind = c.type === "project" ? ["trend", "orange"] : (c.type === "meetup" ? ["users", "teal"] : ["megaphone", "pink"]);
+      var mi = function(n){ return '<span class="collab-mi" aria-hidden="true">' + pwIcon(n) + '</span>'; };
       var label = c.type === "project" ? "Project" : (c.type === "meetup" ? "Meetup" : "Joint marketing");
       var mine = c.partnerId === state.myProfileId, shown = interests.indexOf(c.id) > -1;
       var who = c.partnerName || (partnerById(c.partnerId) || {}).name || c.partnerId;
-      return '<div class="msp-card">'
+      return '<div class="msp-card collab-card" data-collab-type="'+esc(c.type)+'">'
+        + '<span class="stat-ic collab-ic t-'+kind[1]+'" aria-hidden="true">'+pwIcon(kind[0])+'</span>'
         + '<div class="msp-main">'
-          + '<div class="msp-name"><span>'+icon+'</span>'+esc(c.title)+' <span class="badge accent">'+esc(label)+'</span></div>'
+          + '<div class="msp-name">'+esc(c.title)+' <span class="badge accent">'+esc(label)+'</span></div>'
           + '<div class="msp-meta">'+esc(c.description)+'</div>'
-          + '<div class="msp-meta">🌍 '+esc(c.region)+' · Posted by '+esc(who)+' · Open until '+esc(c.endDate)+'</div>'
-          + (c.compensation ? '<div class="msp-meta" style="color:var(--good);font-weight:600;">💰 '+esc(c.compensation)+'</div>' : '')
+          + '<div class="msp-meta collab-meta">'+mi("pin")+esc(c.region)+'<span class="collab-dot">·</span>Posted by '+esc(who)+'<span class="collab-dot">·</span>'+mi("clock")+'Open until '+esc(c.endDate)+'</div>'
+          + (c.compensation ? '<div class="msp-meta collab-meta" style="color:var(--good);font-weight:700;">'+mi("wallet")+esc(c.compensation)+'</div>' : '')
         + '</div>'
         + '<div class="msp-side" style="flex-basis:180px;min-width:160px;">'
           + (mine ? '<span class="badge neutral" style="align-self:flex-start;">Your post</span>'
