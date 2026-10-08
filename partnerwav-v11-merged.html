@@ -787,6 +787,57 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .collab-mi svg{ width:100%; height:100%; }
   .collab-meta[style*="--good"] .collab-mi{ color:var(--good); }
   .collab-dot{ color:var(--ink-faint); margin:0 4px; }
+  .cal-bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .cal-bar .cal-add{ margin-left:auto; }
+  .cal-views{ display:inline-flex; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:3px; gap:2px; }
+  .cal-view{ display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; color:var(--ink-soft); font-weight:700; font-size:.82rem; padding:6px 12px; border-radius:9px; cursor:pointer; }
+  .cal-view svg{ width:16px; height:16px; }
+  .cal-view[aria-pressed="true"]{ background:var(--accent-soft); color:var(--accent); }
+  .cal-card.is-past{ opacity:.78; }
+  .cal-month{ padding:18px; }
+  .cal-month-head{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .cal-month-head h3{ margin:0 6px; font-size:1.15rem; font-weight:800; min-width:150px; text-align:center; }
+  .cal-nav{ width:34px; height:34px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:1.3rem; line-height:1; cursor:pointer; }
+  .cal-nav:hover{ border-color:var(--accent-line); color:var(--accent); }
+  .cal-count{ margin-left:auto; font-size:.82rem; color:var(--ink-faint); font-weight:600; }
+  .cal-dow, .cal-days{ display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); }
+  .cal-dow span{ font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:0 8px 8px; }
+  .cal-days{ border-top:1px solid var(--line); border-left:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .cal-cell{ min-height:104px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); padding:6px; display:flex; flex-direction:column; gap:3px; min-width:0; background:var(--surface); }
+  .cal-cell.other{ background:var(--surface-2); } .cal-cell.other .cal-num{ color:var(--ink-faint); opacity:.6; }
+  .cal-cell.has{ cursor:pointer; } .cal-cell.has:hover{ background:var(--accent-soft); }
+  .cal-cell.has:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .cal-num{ font-size:.8rem; font-weight:700; color:var(--ink-soft); width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:99px; }
+  .cal-cell.today .cal-num{ background:var(--accent); color:#fff; }
+  .cal-chip{ display:flex; align-items:center; gap:4px; font-size:.72rem; font-weight:700; border-radius:7px; padding:3px 6px; min-width:0; color:var(--accent); background:var(--accent-soft); }
+  .cal-chip-ic{ display:inline-flex; width:12px; height:12px; flex-shrink:0; } .cal-chip-ic svg{ width:100%; height:100%; }
+  .cal-chip-t{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cal-chip.t-teal{ color:var(--teal); background:var(--good-soft); } .cal-chip.t-orange{ color:var(--orange-strong); background:var(--orange-soft); }
+  .cal-chip.t-pink{ color:var(--pink); background:var(--bad-soft); } .cal-chip.t-amber{ color:var(--warn); background:var(--warn-soft); }
+  .cal-cell.past .cal-chip{ opacity:.6; }
+  .cal-more{ font-size:.7rem; font-weight:700; color:var(--ink-faint); padding-left:4px; }
+  .cal-dots{ display:none; gap:3px; justify-content:center; margin-top:auto; }
+  .cal-dots i{ width:6px; height:6px; border-radius:99px; background:var(--accent); }
+  .cal-dots i.t-teal{ background:var(--teal); } .cal-dots i.t-orange{ background:var(--orange); } .cal-dots i.t-pink{ background:var(--pink); } .cal-dots i.t-amber{ background:var(--amber); }
+  .cal-hint{ margin:12px 0 0; }
+  .cal-pop{ display:flex; flex-direction:column; gap:14px; }
+  .cal-pop-ev{ display:flex; flex-direction:column; gap:6px; padding:14px; border:1px solid var(--line); border-radius:14px; }
+  .cal-pop-top{ display:flex; gap:12px; align-items:flex-start; margin-bottom:4px; }
+  .cal-pop-top .collab-ic{ position:static; flex-shrink:0; width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; } .cal-pop-top .collab-ic svg{ width:22px; height:22px; }
+  .cal-pop-badges{ margin-top:4px; }
+  .cal-pop-desc{ margin:2px 0; font-size:.88rem; color:var(--ink-soft); line-height:1.5; }
+  .cal-pop-actions{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; align-items:center; }
+  .cal-pop-actions a{ text-decoration:none; }
+  .cal-pop-own{ display:flex; gap:6px; align-items:center; border-top:1px solid var(--line); padding-top:8px; margin-top:4px; }
+  @media (max-width:640px){
+    .cal-month{ padding:12px; }
+    .cal-cell{ min-height:56px; padding:4px; align-items:center; }
+    .cal-chip, .cal-more{ display:none; }
+    .cal-dots{ display:flex; }
+    .cal-dow span{ padding:0 0 6px; text-align:center; font-size:.62rem; }
+    .cal-count{ width:100%; margin-left:0; }
+    .cal-bar .cal-add{ margin-left:0; }
+  }
   .train-wrap{ display:flex; flex-direction:column; gap:28px; }
   .train-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
   .train-head h3{ margin:0; font-size:1.05rem; font-weight:800; }
@@ -4812,7 +4863,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var CAL_KEY = "partnerWAV_calendar";
   var CAL_TYPES = ["Vendor training","PartnerWAV training","Webinar","In-person event","Meetup","Demo","Other"];
   function saveCalendar(){ try { lsSet(CAL_KEY, JSON.stringify({ events:calendarEvents, bookings:bookings })); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
-  function loadCalendar(){ try { var d = JSON.parse(lsGet(CAL_KEY) || "null"); if (d){ if (Array.isArray(d.events)) calendarEvents = d.events; if (Array.isArray(d.bookings)) bookings = d.bookings; } } catch(e){} }
+  function loadCalendar(){ try { var cv = lsGet("partnerWAV_calView"); if (cv === "list" || cv === "calendar") state.calView = cv; } catch(e){} try { var d = JSON.parse(lsGet(CAL_KEY) || "null"); if (d){ if (Array.isArray(d.events)) calendarEvents = d.events; if (Array.isArray(d.bookings)) bookings = d.bookings; } } catch(e){} }
   // Demos are always private to the company that scheduled them. Other events are shared unless marked private.
   // CloudWAV sees every event, read-only, to understand how the calendar is used and where it can help promote.
   function calPrivate(ev){ return ev.type === "Demo" || ev.visibility === "private"; }
@@ -4838,11 +4889,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return day + " · " + t(d) + " - " + t(e) + (tz ? " (" + tz.replace(/_/g, " ") + ")" : "");
   }
   function calLocalInput(iso){ var d = new Date(iso), z = function(n){ return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()) + "T" + z(d.getHours()) + ":" + z(d.getMinutes()); }
+  // Each event type gets a line icon and a palette tone, used by the list cards, the month grid and the day pop-up.
+  var CAL_TYPE_LOOK = { "Vendor training":["cap","violet"], "PartnerWAV training":["award","orange"], "Webinar":["chat","teal"], "In-person event":["pin","pink"], "Meetup":["users","teal"], "Demo":["target","amber"], "Other":["calendar","violet"] };
+  function calLook(ev){ return CAL_TYPE_LOOK[ev.type] || ["calendar","violet"]; }
+  function calIc(name){ return (typeof PW_ICONS === "object" && PW_ICONS && PW_ICONS[name]) ? pwIcon(name) : ""; }
+  function calMi(name){ return '<span class="collab-mi" aria-hidden="true">'+calIc(name)+'</span>'; }
   function calCardHtml(ev, me){
-    var mine = ev.ownerKey === me, past = calEnd(ev) < new Date(), priv = calPrivate(ev);
-    return '<div class="msp-card" data-cal-event="'+esc(ev.id)+'"><div class="msp-main"><div class="msp-name">'+esc(ev.title)+' <span class="badge accent">'+esc(ev.type || "Event")+'</span>'+(priv ? ' <span class="badge warn" data-cal-private title="Only '+attr(keyName(ev.ownerKey))+' and CloudWAV can see this">Private</span>' : '')+(past ? ' <span class="badge neutral">Past</span>' : '')+'</div>'
-      + '<div class="msp-meta" data-cal-when>📅 '+esc(calWhen(ev))+'</div>'
-      + (calWhere(ev) ? '<div class="msp-meta">📍 '+esc(ev.location || "Online")+(safeLink(ev.link) ? ' · <a href="'+attr(ev.link)+'" target="_blank" rel="noopener noreferrer">Join link</a>' : '')+'</div>' : '')
+    var mine = ev.ownerKey === me, past = calEnd(ev) < new Date(), priv = calPrivate(ev), lk = calLook(ev);
+    return '<div class="msp-card collab-card cal-card'+(past ? ' is-past' : '')+'" data-cal-event="'+esc(ev.id)+'"><span class="stat-ic collab-ic t-'+lk[1]+'" aria-hidden="true">'+calIc(lk[0])+'</span><div class="msp-main"><div class="msp-name">'+esc(ev.title)+' <span class="badge accent">'+esc(ev.type || "Event")+'</span>'+(priv ? ' <span class="badge warn" data-cal-private title="Only '+attr(keyName(ev.ownerKey))+' and CloudWAV can see this">Private</span>' : '')+(past ? ' <span class="badge neutral">Past</span>' : '')+'</div>'
+      + '<div class="msp-meta collab-meta" data-cal-when>'+calMi("calendar")+esc(calWhen(ev))+'</div>'
+      + (calWhere(ev) ? '<div class="msp-meta collab-meta">'+calMi("pin")+esc(ev.location || "Online")+(safeLink(ev.link) ? '<span class="collab-dot">·</span><a href="'+attr(ev.link)+'" target="_blank" rel="noopener noreferrer">Join link</a>' : '')+'</div>' : '')
       + (ev.desc ? '<div class="msp-meta">'+esc(ev.desc)+'</div>' : '')
       + '<div class="msp-meta">Hosted by '+esc(keyName(ev.ownerKey))+'</div></div>'
       + '<div class="msp-side" style="flex-basis:200px;min-width:180px;">'
@@ -4856,7 +4912,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function renderCalendar(force){
     var box = document.getElementById("calendarContent");
     if (!box || state.screen !== "calendar") return;
-    var me = chMe(), key = (state.calEditing || "list") + ":" + (state.calV || 0) + ":" + calendarEvents.length + ":" + (state.calTab || "upcoming") + ":" + (state.calType || "") + ":" + (me || "") + ":" + state.role + ":" + (state.calHost || "");
+    var me = chMe(), key = (state.calEditing || "list") + ":" + (state.calView || "calendar") + ":" + (state.calMonth || "") + ":" + (state.calV || 0) + ":" + calendarEvents.length + ":" + (state.calTab || "upcoming") + ":" + (state.calType || "") + ":" + (me || "") + ":" + state.role + ":" + (state.calHost || "");
     if (!force && box.getAttribute("data-cal-key") === key) return;   // keep what's being typed in the form
     box.setAttribute("data-cal-key", key);
     if (state.calEditing){
@@ -4893,12 +4949,78 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     var list = visible.filter(function(x){ return (tab === "upcoming" ? calEnd(x) >= now : calEnd(x) < now) && (!tf || x.type === tf) && (!hf || x.ownerKey === hf); })
       .sort(function(a, b2){ return tab === "upcoming" ? new Date(a.start) - new Date(b2.start) : new Date(b2.start) - new Date(a.start); });
-    box.innerHTML = usage + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">'+(me ? '<button type="button" class="btn primary" data-cal-new>+ Add an event</button>' : '')
-      + '<button type="button" class="btn '+(tab === "upcoming" ? "primary" : "secondary")+' sm" data-cal-tab="upcoming">Upcoming</button><button type="button" class="btn '+(tab === "past" ? "primary" : "secondary")+' sm" data-cal-tab="past">Past</button>'
+    var view = state.calView || "calendar";
+    var bar = '<div class="cal-bar"><div class="cal-views" role="group" aria-label="View">'
+        + '<button type="button" class="cal-view" data-cal-view="calendar" aria-pressed="'+(view === "calendar")+'">'+calIc("calendar")+'Calendar</button>'
+        + '<button type="button" class="cal-view" data-cal-view="list" aria-pressed="'+(view === "list")+'">'+calIc("clipboard")+'List</button></div>'
+      + (view === "list" ? '<button type="button" class="btn '+(tab === "upcoming" ? "primary" : "secondary")+' sm" data-cal-tab="upcoming">Upcoming</button><button type="button" class="btn '+(tab === "past" ? "primary" : "secondary")+' sm" data-cal-tab="past">Past</button>' : '')
       + '<select id="calTypeFilter" class="filter app-select" aria-label="Type"><option value="">All types</option>'+CAL_TYPES.map(function(t){ return '<option'+(t === tf ? ' selected' : '')+'>'+esc(t)+'</option>'; }).join("")+'</select>'
-      + (isOpView ? '<select id="calHostFilter" class="filter app-select" aria-label="Host"><option value="">All companies</option>'+hosts.map(function(h){ return '<option value="'+attr(h)+'"'+(h === hf ? ' selected' : '')+'>'+esc(keyName(h))+'</option>'; }).join("")+'</select>' : '')+'</div>'
+      + (isOpView ? '<select id="calHostFilter" class="filter app-select" aria-label="Host"><option value="">All companies</option>'+hosts.map(function(h){ return '<option value="'+attr(h)+'"'+(h === hf ? ' selected' : '')+'>'+esc(keyName(h))+'</option>'; }).join("")+'</select>' : '')
+      + (me ? '<button type="button" class="btn primary cta sm cal-add" data-cal-new>+ Add an event</button>' : '')+'</div>';
+    if (view === "calendar"){
+      box.innerHTML = usage + bar + calMonthHtml(visible.filter(function(x){ return (!tf || x.type === tf) && (!hf || x.ownerKey === hf); }));
+      if (typeof applyStatIcons === "function") applyStatIcons();
+      return;
+    }
+    box.innerHTML = usage + bar
       + '<div style="display:flex;flex-direction:column;gap:10px;" id="calList">'+(list.length ? list.map(function(x){ return calCardHtml(x, me); }).join("")
         : '<div class="empty">'+(tab === "upcoming" ? "No upcoming events yet. Add a training, webinar or in-person event and everyone can put it on their calendar." : "No past events.")+'</div>')+'</div>';
+    if (typeof applyStatIcons === "function") applyStatIcons();
+  }
+  function calDayKey(d){ var z = function(n){ return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); }
+  function calMonthStart(){
+    var m = /^(\d{4})-(\d{2})$/.exec(state.calMonth || ""), now = new Date();
+    return m ? new Date(Number(m[1]), Number(m[2]) - 1, 1) : new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+  function calMonthHtml(list){
+    var first = calMonthStart(), today = calDayKey(new Date()), byDay = {};
+    list.forEach(function(x){ var k = calDayKey(new Date(x.start)); (byDay[k] = byDay[k] || []).push(x); });
+    Object.keys(byDay).forEach(function(k){ byDay[k].sort(function(a, b){ return new Date(a.start) - new Date(b.start); }); });
+    var gridStart = new Date(first.getFullYear(), first.getMonth(), 1 - first.getDay());
+    var inMonth = list.filter(function(x){ var d = new Date(x.start); return d.getFullYear() === first.getFullYear() && d.getMonth() === first.getMonth(); }).length;
+    var label = first.toLocaleDateString(undefined, { month:"long", year:"numeric" });
+    var dows = []; for (var i = 0; i < 7; i++) dows.push(new Date(2026, 1, 1 + i).toLocaleDateString(undefined, { weekday:"short" }));   // 1 Feb 2026 was a Sunday
+    var cells = "", weeks = Math.ceil((first.getDay() + new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate()) / 7);
+    for (var c = 0; c < weeks * 7; c++){
+      var d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + c), k = calDayKey(d), evs = byDay[k] || [], other = d.getMonth() !== first.getMonth();
+      var past = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1) <= new Date();
+      cells += '<div class="cal-cell'+(other ? ' other' : '')+(k === today ? ' today' : '')+(evs.length ? ' has' : '')+(past ? ' past' : '')+'"'+(evs.length ? ' role="button" tabindex="0" data-cal-day="'+k+'" aria-label="'+attr(d.toLocaleDateString(undefined, { weekday:"long", day:"numeric", month:"long" }) + ": " + evs.length + " event" + (evs.length > 1 ? "s" : ""))+'"' : '')+'>'
+        + '<span class="cal-num">'+d.getDate()+'</span>'
+        + evs.slice(0, 3).map(function(x){ var lk = calLook(x); return '<span class="cal-chip t-'+lk[1]+'" data-cal-chip="'+attr(x.id)+'"><span class="cal-chip-ic" aria-hidden="true">'+calIc(lk[0])+'</span><span class="cal-chip-t">'+esc(new Date(x.start).toLocaleTimeString(undefined, { hour:"numeric", minute:"2-digit" }))+' '+esc(x.title)+'</span></span>'; }).join("")
+        + (evs.length > 3 ? '<span class="cal-more">+'+(evs.length - 3)+' more</span>' : '')
+        + (evs.length ? '<span class="cal-dots" aria-hidden="true">'+evs.slice(0, 4).map(function(x){ return '<i class="t-'+calLook(x)[1]+'"></i>'; }).join("")+'</span>' : '')
+        + '</div>';
+    }
+    return '<div class="card cal-month" id="calMonth">'
+      + '<div class="cal-month-head"><button type="button" class="cal-nav" data-cal-month="-1" aria-label="Previous month">&lsaquo;</button>'
+        + '<h3 data-cal-month-label>'+esc(label)+'</h3><button type="button" class="cal-nav" data-cal-month="1" aria-label="Next month">&rsaquo;</button>'
+        + '<button type="button" class="btn ghost sm" data-cal-month="0">Today</button><span class="cal-count">'+(inMonth ? inMonth + ' event' + (inMonth > 1 ? 's' : '') + ' this month' : 'No events this month')+'</span></div>'
+      + '<div class="cal-grid"><div class="cal-dow">'+dows.map(function(w){ return '<span>'+esc(w)+'</span>'; }).join("")+'</div><div class="cal-days">'+cells+'</div></div>'
+      + '<p class="field-note cal-hint">Click a highlighted day to see its events and add them to your own calendar.</p></div>';
+  }
+  function calOpenDay(dayKey, onlyId){
+    var me = chMe(), list = calendarEvents.filter(function(x){ return calCanSee(x, me) && calDayKey(new Date(x.start)) === dayKey; })
+      .sort(function(a, b){ return (b.id === onlyId) - (a.id === onlyId) || new Date(a.start) - new Date(b.start); });
+    if (!list.length) return;
+    var p = dayKey.split("-"), day = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    var body = list.map(function(ev){
+      var mine = ev.ownerKey === me, lk = calLook(ev), past = calEnd(ev) < new Date();
+      return '<div class="cal-pop-ev" data-cal-pop-event="'+attr(ev.id)+'">'
+        + '<div class="cal-pop-top"><span class="stat-ic collab-ic t-'+lk[1]+'" aria-hidden="true">'+calIc(lk[0])+'</span><div><div class="msp-name">'+esc(ev.title)+'</div>'
+          + '<div class="cal-pop-badges"><span class="badge accent">'+esc(ev.type || "Event")+'</span>'+(calPrivate(ev) ? ' <span class="badge warn">Private</span>' : '')+(past ? ' <span class="badge neutral">Past</span>' : '')+'</div></div></div>'
+        + '<div class="msp-meta collab-meta">'+calMi("clock")+esc(calWhen(ev))+'</div>'
+        + '<div class="msp-meta collab-meta">'+calMi("pin")+esc(ev.location || "Online")+(safeLink(ev.link) ? '<span class="collab-dot">·</span><a href="'+attr(ev.link)+'" target="_blank" rel="noopener noreferrer">Join link</a>' : '')+'</div>'
+        + (ev.desc ? '<p class="cal-pop-desc">'+esc(ev.desc)+'</p>' : '')
+        + '<div class="msp-meta collab-meta">'+calMi("building")+'Hosted by '+esc(keyName(ev.ownerKey))+'</div>'
+        + '<div class="cal-pop-actions"><a class="btn primary sm" href="'+attr(calGoogleUrl(ev))+'" target="_blank" rel="noopener noreferrer">Add to Google Calendar</a>'
+          + '<a class="btn secondary sm" href="'+attr(calOutlookUrl(ev))+'" target="_blank" rel="noopener noreferrer">Add to Outlook</a>'
+          + '<button type="button" class="btn secondary sm" data-cal-ics="'+attr(ev.id)+'">Apple / other (.ics)</button></div>'
+        + (mine ? '<div class="cal-pop-own"><button type="button" class="btn ghost sm" data-cal-edit="'+attr(ev.id)+'">Edit event</button><button type="button" class="btn ghost sm" data-cal-delete="'+attr(ev.id)+'">Delete</button></div>'
+            : state.role === "operator" ? '<div class="cal-pop-own"><span class="field-note">View only -- '+esc(keyName(ev.ownerKey))+' manages this event</span></div>' : '')
+        + '</div>';
+    }).join("");
+    openModal('<div class="modal-head"><div><h2>'+esc(day.toLocaleDateString(undefined, { weekday:"long", day:"numeric", month:"long", year:"numeric" }))+'</h2><span class="field-note">'+list.length+' event'+(list.length > 1 ? 's' : '')+'</span></div><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="cal-pop" id="calPop">'+body+'</div>');
   }
   function saveCalEvent(){
     var me = chMe(); if (!me) return;
@@ -4918,17 +5040,25 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   document.addEventListener("click", function(ev){
     var t = ev.target.closest ? ev.target : null; if (!t) return; var b;
+    if ((b = t.closest("[data-cal-view]"))){ state.calView = b.getAttribute("data-cal-view"); try { lsSet("partnerWAV_calView", state.calView); } catch(x){} renderCalendar(true); return; }
+    if ((b = t.closest("[data-cal-month]"))){ var step = Number(b.getAttribute("data-cal-month")), ms = calMonthStart(), nm = step ? new Date(ms.getFullYear(), ms.getMonth() + step, 1) : new Date();
+      state.calMonth = nm.getFullYear() + "-" + (nm.getMonth() < 9 ? "0" : "") + (nm.getMonth() + 1); renderCalendar(true); return; }
+    if ((b = t.closest("[data-cal-chip]"))){ var cd = b.closest("[data-cal-day]"); if (cd){ calOpenDay(cd.getAttribute("data-cal-day"), window.innerWidth > 640 ? b.getAttribute("data-cal-chip") : ""); return; } }
+    if ((b = t.closest("[data-cal-day]"))){ calOpenDay(b.getAttribute("data-cal-day")); return; }
     if (t.closest("[data-cal-new]")){ state.calEditing = "new"; renderCalendar(true); return; }
     if (t.closest("[data-cal-cancel]")){ state.calEditing = null; renderCalendar(true); return; }
     if (t.closest("[data-cal-save]")){ saveCalEvent(); return; }
     if ((b = t.closest("[data-cal-tab]"))){ state.calTab = b.getAttribute("data-cal-tab"); renderCalendar(true); return; }
-    if ((b = t.closest("[data-cal-edit]"))){ var e0 = calendarEvents.filter(function(x){ return x.id === b.getAttribute("data-cal-edit"); })[0]; if (!e0 || e0.ownerKey !== chMe()) return; state.calEditing = e0.id; renderCalendar(true); return; }
+    if ((b = t.closest("[data-cal-edit]"))){ var e0 = calendarEvents.filter(function(x){ return x.id === b.getAttribute("data-cal-edit"); })[0]; if (!e0 || e0.ownerKey !== chMe()) return; if (b.closest("#calPop")) closeModal(); state.calEditing = e0.id; renderCalendar(true); return; }
     if ((b = t.closest("[data-cal-delete]"))){ var id = b.getAttribute("data-cal-delete"), e1 = calendarEvents.filter(function(x){ return x.id === id; })[0];
-      if (e1 && e1.ownerKey === chMe() && confirm("Delete \"" + e1.title + "\"?")){ calendarEvents.splice(calendarEvents.indexOf(e1), 1); saveCalendar(); state.calV = (state.calV || 0) + 1; toast("Event deleted"); renderCalendar(true); } return; }
+      if (e1 && e1.ownerKey === chMe() && confirm("Delete \"" + e1.title + "\"?")){ if (b.closest("#calPop")) closeModal(); calendarEvents.splice(calendarEvents.indexOf(e1), 1); saveCalendar(); state.calV = (state.calV || 0) + 1; toast("Event deleted"); renderCalendar(true); } return; }
     if ((b = t.closest("[data-cal-ics]"))){ var e2 = calendarEvents.filter(function(x){ return x.id === b.getAttribute("data-cal-ics"); })[0]; if (!e2) return;
       var blob = new Blob([calIcs(e2)], { type:"text/calendar;charset=utf-8" }), link = document.createElement("a");
       link.href = URL.createObjectURL(blob); link.download = (e2.title || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) + ".ics";
       document.body.appendChild(link); link.click(); setTimeout(function(){ URL.revokeObjectURL(link.href); link.remove(); }, 500); return; }
+  });
+  document.addEventListener("keydown", function(ev){
+    if ((ev.key === "Enter" || ev.key === " ") && ev.target && ev.target.getAttribute && ev.target.getAttribute("data-cal-day")){ ev.preventDefault(); calOpenDay(ev.target.getAttribute("data-cal-day")); }
   });
   function calSyncVisibility(){ var t = document.getElementById("calType"), v = document.getElementById("calVisibility"); if (!t || !v) return; if (t.value === "Demo"){ v.value = "private"; v.disabled = true; } else v.disabled = false; }
   document.addEventListener("change", function(ev){
@@ -13005,6 +13135,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     [/partner|referring/i, "users", "teal"],
     [/program|enrolled|vendor/i, "building", "violet"],
     [/approval|pending|application/i, "check", "pink"],
+    [/companies using/i, "building", "violet"],
+    [/^\s*private/i, "key", "pink"],
+    [/^\s*shared events/i, "megaphone", "orange"],
     [/demo|event|calendar/i, "calendar", "teal"],
     [/agreement/i, "file", "violet"],
     [/post|community|message/i, "chat", "violet"],

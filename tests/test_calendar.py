@@ -9,6 +9,8 @@ with sync_playwright() as p:
 
     # ----- a vendor adds a training
     role(pg, "vendor"); nav(pg, "calendar")
+    ok(pg.locator("#calMonth").count() == 1 and pg.get_attribute('[data-cal-view="calendar"]', "aria-pressed") == "true", "Opens in calendar view")
+    pg.click('[data-cal-view="list"]'); pg.wait_for_timeout(150)
     ok("No upcoming events yet" in pg.inner_text("#calendarContent"), "Empty to start")
     pg.click("[data-cal-new]"); pg.wait_for_timeout(200)
     pg.click("[data-cal-save]"); pg.wait_for_timeout(150)
