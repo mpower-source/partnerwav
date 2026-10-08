@@ -236,6 +236,43 @@ select t('other partners cannot see that lead', (select count(*) from portal_rec
 select t('other partners cannot see a draft page', (select count(*) from portal_records where collection='partnerPages' and id='pp-draft') = 0);
 reset role;
 
+-- ===== spam protection on the public forms
+select pg_temp.as_user(''); set role anon;
+select t('a filled-in hidden field is dropped quietly', public.submit_partner_page_lead('pp-live', '{"name":"Bot","email":"bot@spam.test","company":"Spam Co","consent":true,"hp":"http://spam.test"}') like 'lead-pp-%');
+select t('a form sent in under 1.5 seconds is dropped quietly', public.submit_partner_page_lead('pp-live', '{"name":"Fast","email":"fast@spam.test","company":"Fast Co","consent":true,"elapsedMs":300}') like 'lead-pp-%');
+select t('a normal-speed form goes through', public.submit_partner_page_lead('pp-live', '{"name":"Ann","email":"ann@ok.test","company":"Ann Co","consent":true,"elapsedMs":9000}') like 'lead-pp-%');
+select public.submit_partner_page_lead('pp-live', '{"name":"Ann","email":"ann@ok.test","company":"Ann Co","consent":true}');
+select public.submit_partner_page_lead('pp-live', '{"name":"Ann","email":"ann@ok.test","company":"Ann Co","consent":true}');
+select t('the same email can sign up on a form at most 3 times a day', fails($$select public.submit_partner_page_lead('pp-live', '{"name":"Ann","email":"ANN@ok.test","company":"Ann Co","consent":true}')$$));
+select set_config('request.headers', '{"x-forwarded-for":"203.0.113.9, 10.0.0.1"}', false);
+select public.submit_affiliate_signup('inv-live', '{"name":"I1","email":"i1@ip.test","consent":true}');
+select public.submit_affiliate_signup('inv-live', '{"name":"I2","email":"i2@ip.test","consent":true}');
+select public.submit_affiliate_signup('inv-live', '{"name":"I3","email":"i3@ip.test","consent":true}');
+select public.submit_affiliate_signup('inv-live', '{"name":"I4","email":"i4@ip.test","consent":true}');
+select t('five sign-ups from one connection are fine', public.submit_affiliate_signup('inv-live', '{"name":"I5","email":"i5@ip.test","consent":true}') like 'sg-%');
+select t('a sixth from the same connection within 10 minutes is refused', fails($$select public.submit_affiliate_signup('inv-live', '{"name":"I6","email":"i6@ip.test","consent":true}')$$));
+select set_config('request.headers', '', false);
+select t('anon cannot read the submission log', fails($$select count(*) from public.portal_submit_log$$));
+select t('anon cannot read the CAPTCHA secret', fails($$select value from public.portal_secrets$$));
+select t('anon cannot call the spam check directly', fails($$select public.portal_spam_check('x', null, 'a@b.co', '{}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+select t('the partner gets only the real sign-ups', (select count(*) from portal_records where collection='leads' and data->>'source'='landing page') = 4);
+select t('a signed-in member cannot read the CAPTCHA secret', fails($$select value from public.portal_secrets$$));
+reset role;
+-- CAPTCHA: once the secret is saved, a valid Turnstile answer is required (Cloudflare stubbed here)
+create schema if not exists extensions;
+create or replace function extensions.http_post(url text, body text, ctype text) returns table(status int, content text) language sql as $$
+  select 200, case when body like '%response=good-token-12345%' and body like 'secret=test-secret%' then '{"success":true}' else '{"success":false}' end $$;
+insert into public.portal_secrets(key, value) values ('turnstile_secret', 'test-secret') on conflict (key) do update set value = excluded.value;
+select pg_temp.as_user(''); set role anon;
+select t('with the CAPTCHA on, a sign-up without an answer is refused', fails($$select public.submit_partner_page_lead('pp-live', '{"name":"C1","email":"c1@cap.test","company":"C","consent":true}')$$));
+select t('a wrong CAPTCHA answer is refused', fails($$select public.submit_partner_page_lead('pp-live', '{"name":"C2","email":"c2@cap.test","company":"C","consent":true,"captchaToken":"bad-token-12345"}')$$));
+select t('a valid CAPTCHA answer goes through', public.submit_partner_page_lead('pp-live', '{"name":"C3","email":"c3@cap.test","company":"C","consent":true,"captchaToken":"good-token-12345"}') like 'lead-pp-%');
+select t('the vendor assessment checks the CAPTCHA too', fails($$select public.submit_vendor_assessment('{"company":"X","contactName":"Y","email":"y@x.test","consent":true}')$$));
+reset role;
+delete from public.portal_secrets where key = 'turnstile_secret';
+
 -- ===== vendor fit assessment from the public form
 select pg_temp.as_user(''); set role anon;
 select t('anon sends a vendor assessment', public.submit_vendor_assessment('{"company":"Acme AI","contactName":"Ann","email":"Ann@Acme.io","consent":true,"partners":"11-50","addons":["investor"],"status":"won","quote":{"total":1}}') like 'va-%');

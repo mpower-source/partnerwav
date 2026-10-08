@@ -46,7 +46,7 @@ with sync_playwright() as p:
     ok(len(sg) == 1 and sg[0]["readers"] == ["vendor:botnoi"] and not sg[0]["is_public"] and sg[0]["data"]["kind"] == "referrer", "Sign-up saved through submit_affiliate_signup, readable by Botnoi only")
     ok(sg and mine.endswith("&ref=" + sg[0]["id"]), "Personal link uses the saved sign-up id")
     pg.goto(mine); pg.wait_for_timeout(1000)
-    pg.fill("#invName", "Somsri P."); pg.fill("#invEmail", "somsri@shop.co.th"); pg.fill("#invCompany", "Somsri Thai Kitchen"); pg.check("#invConsent"); pg.click("#inviteSubmit"); pg.wait_for_timeout(1200)
+    pg.fill("#invName", "Somsri P."); pg.fill("#invEmail", "somsri@shop.co.th"); pg.fill("#invCompany", "Somsri Thai Kitchen"); pg.check("#invConsent"); pg.wait_for_timeout(700); pg.click("#inviteSubmit"); pg.wait_for_timeout(1200)
     sg = db("affiliateSignups")
     ok(len(sg) == 2 and any(r["data"]["kind"] == "business" and r["data"]["referredBy"] == mine.split("ref=")[1] for r in sg), "Business sign-up credited to the referrer")
     b.close()

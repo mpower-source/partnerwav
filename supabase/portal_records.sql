@@ -294,6 +294,7 @@ begin
   if coalesce((p_data ->> 'consent')::boolean, false) is not true then
     raise exception 'Please agree to be contacted about this offer';
   end if;
+  if not public.portal_spam_check('invite', p_offer, p_data ->> 'email', p_data) then return new_id; end if;
   clean := jsonb_build_object(
     'id', new_id, 'offerId', p_offer, 'vendorId', vendor,
     'kind',      case when p_data ->> 'kind' = 'business' then 'business' else 'referrer' end,
@@ -349,6 +350,7 @@ begin
   if coalesce((p_data ->> 'consent')::boolean, false) is not true then
     raise exception 'Please agree to be contacted';
   end if;
+  if not public.portal_spam_check('page', p_page, p_data ->> 'email', p_data) then return new_id; end if;
   web := page ->> 'template' = 'webinar';
   who := left(trim(p_data ->> 'name'), 120) || ' · ' || left(lower(trim(p_data ->> 'email')), 160)
          || case when coalesce(p_data ->> 'phone', '') <> '' then ' · ' || left(p_data ->> 'phone', 60) else '' end
@@ -388,8 +390,9 @@ begin
   if coalesce((p_data ->> 'consent')::boolean, false) is not true then
     raise exception 'Please agree to be contacted about PartnerWAV';
   end if;
+  if not public.portal_spam_check('assess', null, p_data ->> 'email', p_data) then return new_id; end if;
   -- keep the answers, but CloudWAV-only fields can never be set from the public form
-  clean := (p_data - 'quote' - 'plan' - 'notesInternal' - 'statusLog')
+  clean := (p_data - 'quote' - 'plan' - 'notesInternal' - 'statusLog' - 'hp' - 'elapsedMs' - 'captchaToken')
     || jsonb_build_object('id', new_id, 'source', 'vendor-link', 'status', 'new',
          'email', left(lower(trim(p_data ->> 'email')), 160),
          'company', left(trim(p_data ->> 'company'), 160),
@@ -494,6 +497,122 @@ begin
 end $$;
 revoke all on function public.portal_remove_account(uuid) from public;
 grant execute on function public.portal_remove_account(uuid) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 5b. Spam protection for the public forms (invite pages, partner landing pages, the vendor
+--     assessment and the partner application). Every public submit function calls portal_spam_check():
+--       * a hidden "hp" field that people never see; if a bot fills it in, the submission is dropped quietly
+--       * a form sent faster than a person could type (under 1.5 seconds) is dropped quietly
+--       * a CAPTCHA (Cloudflare Turnstile), checked here on the server, once its secret key is saved below
+--       * limits: 5 submissions per connection per 10 minutes, 3 per email per form per day,
+--         100 per form per hour
+--     To turn the CAPTCHA on: create a free Turnstile widget at dash.cloudflare.com (Turnstile -> Add widget,
+--     add your portal's domain), put its SITE key in the portal (Integrations -> Spam protection, as the
+--     operator), and save its SECRET key here, in the SQL editor:
+--       insert into public.portal_secrets(key, value) values ('turnstile_secret', 'YOUR-SECRET-KEY')
+--         on conflict (key) do update set value = excluded.value;
+--     The secret never goes into the portal page. Nobody can read portal_secrets through the API.
+-- ---------------------------------------------------------------------------
+create table if not exists public.portal_secrets (key text primary key, value text not null);
+alter table public.portal_secrets enable row level security;
+revoke all on public.portal_secrets from anon, authenticated;
+
+create table if not exists public.portal_submit_log (
+  id bigserial primary key, kind text not null, ref text, ip_hash text, email_hash text,
+  at timestamptz not null default now());
+create index if not exists portal_submit_log_at on public.portal_submit_log (at);
+alter table public.portal_submit_log enable row level security;
+revoke all on public.portal_submit_log from anon, authenticated;
+
+-- the http extension lets the database ask Cloudflare whether a CAPTCHA answer is valid
+do $$ begin
+  create extension if not exists http with schema extensions;
+exception when others then raise notice 'http extension not available: %', sqlerrm;
+end $$;
+
+create or replace function public.portal_client_ip()
+returns text language sql stable as $$
+  select nullif(trim(split_part(coalesce(
+    (nullif(current_setting('request.headers', true), '')::json ->> 'x-forwarded-for'), ''), ',', 1)), '')
+$$;
+
+-- true = looks like a person; false = drop it quietly (the visitor still sees "thank you").
+-- Raises an error the visitor sees for a failed CAPTCHA or when a limit is reached.
+create or replace function public.portal_spam_check(p_kind text, p_ref text, p_email text, p_data jsonb)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare
+  secret text;
+  token text := coalesce(p_data ->> 'captchaToken', '');
+  ip text := public.portal_client_ip();
+  iph text;
+  emh text := md5(lower(coalesce(p_email, '')));
+  st int;
+  body text;
+  ok boolean := false;
+begin
+  if coalesce(p_data ->> 'hp', '') <> '' then return false; end if;
+  if coalesce(p_data ->> 'elapsedMs', '') ~ '^[0-9]{1,12}$' and (p_data ->> 'elapsedMs')::bigint < 1500 then return false; end if;
+
+  select value into secret from public.portal_secrets where key = 'turnstile_secret';
+  if coalesce(secret, '') <> '' then
+    if length(token) not between 10 and 4096 or token !~ '^[A-Za-z0-9._:-]+$' then raise exception 'Please complete the security check'; end if;
+    begin
+      execute 'select status, content::text from extensions.http_post($1, $2, $3)' into st, body
+        using 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+              'secret=' || secret || '&response=' || token
+                || case when length(ip) <= 64 and ip ~ '^[0-9a-fA-F:.]+$' then '&remoteip=' || ip else '' end,
+              'application/x-www-form-urlencoded';
+      ok := st = 200 and coalesce((body::json ->> 'success')::boolean, false);
+    exception when others then ok := false;
+    end;
+    if not ok then raise exception 'The security check did not pass. Please try again'; end if;
+  end if;
+
+  iph := case when ip is null then null else md5('partnerwav:' || ip) end;
+  delete from public.portal_submit_log where at < now() - interval '2 days';
+  if iph is not null and (select count(*) from public.portal_submit_log
+                          where ip_hash = iph and at > now() - interval '10 minutes') >= 5 then
+    raise exception 'Too many sign-ups from this connection. Please wait a few minutes and try again';
+  end if;
+  if (select count(*) from public.portal_submit_log
+      where email_hash = emh and kind = p_kind and ref is not distinct from p_ref and at > now() - interval '1 day') >= 3 then
+    raise exception 'You have already signed up with this email address';
+  end if;
+  if (select count(*) from public.portal_submit_log
+      where kind = p_kind and ref is not distinct from p_ref and at > now() - interval '1 hour') >= 100 then
+    raise exception 'This form is getting a lot of sign-ups right now. Please try again a little later';
+  end if;
+  insert into public.portal_submit_log (kind, ref, ip_hash, email_hash) values (p_kind, p_ref, iph, emh);
+  return true;
+end $$;
+revoke all on function public.portal_spam_check(text, text, text, jsonb) from public, anon, authenticated;
+revoke all on function public.portal_client_ip() from public, anon, authenticated;
+
+-- The public partner application (?apply=vendor). Goes through the same spam check, then into
+-- partner_applications. Once this is in place, remove any policy that lets anon insert into
+-- partner_applications directly, so this is the only way in.
+create or replace function public.submit_partner_application(p_vendor uuid, p_data jsonb)
+returns text language plpgsql security definer set search_path = public as $$
+begin
+  if p_data is null or jsonb_typeof(p_data) <> 'object' or length(p_data::text) > 6000 then
+    raise exception 'The application is empty or too long';
+  end if;
+  if coalesce(trim(p_data ->> 'companyName'), '') = '' or coalesce(p_data ->> 'email', '') !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
+    raise exception 'Please give your company name and a valid email address';
+  end if;
+  if not public.portal_spam_check('apply', p_vendor::text, p_data ->> 'email', p_data) then return 'ok'; end if;
+  insert into public.partner_applications (vendor_id, first_name, last_name, company_name, country_code, phone_number,
+      region, work_email, website, years_in_business, annual_revenue, num_employees, num_sales_people,
+      vertical_markets, geographic_markets, status)
+  values (p_vendor, left(p_data ->> 'firstName', 120), left(p_data ->> 'lastName', 120), left(p_data ->> 'companyName', 160),
+      left(p_data ->> 'countryCode', 10), left(p_data ->> 'phone', 60), left(p_data ->> 'region', 120),
+      left(lower(trim(p_data ->> 'email')), 160), left(p_data ->> 'website', 300), left(p_data ->> 'yearsInBusiness', 20),
+      left(p_data ->> 'revenue', 60), left(p_data ->> 'numEmployees', 60), left(p_data ->> 'numSalesPeople', 20),
+      left(p_data ->> 'verticalMarkets', 300), left(p_data ->> 'geographicMarkets', 300), 'pending');
+  return 'ok';
+end $$;
+revoke all on function public.submit_partner_application(uuid, jsonb) from public;
+grant execute on function public.submit_partner_application(uuid, jsonb) to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 6. Live updates: other people's changes show up without reloading

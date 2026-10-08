@@ -428,6 +428,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 .pp-template:hover{ border-color:var(--accent); background:var(--accent-soft); }
 .pp-template .collab-ic{ position:static; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; } .pp-template .collab-ic svg{ width:21px; height:21px; }
 .pp-list{ display:flex; flex-direction:column; gap:10px; }
+.hp-field{ position:absolute !important; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden; }
+.captcha-box{ min-height:65px; }
 .link-btn{ border:0; background:none; padding:0; color:var(--accent); font:inherit; font-weight:700; cursor:pointer; text-decoration:underline; }
 .brand-who{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; max-width:520px; }
 .brand-layout{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:16px; align-items:start; }
@@ -2721,6 +2723,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         console.error('Vendor not found in mapping:', formData.vendorId);
         throw new Error('Vendor not found: ' + formData.vendorId);
       }
+      // Through the database's spam check first (supabase/portal_records.sql, submit_partner_application);
+      // falls back to the direct insert only if that function hasn't been installed yet.
+      var rpc = await supabase.rpc("submit_partner_application", { p_vendor: vendorUUID, p_data: Object.assign({}, formData, spamPayload("apply")) });
+      if (!rpc.error) return rpc.data;
+      if (!/PGRST202|could not find the function|does not exist/i.test((rpc.error.code || "") + " " + (rpc.error.message || ""))){ captchaReset("apply"); throw new Error(rpc.error.message); }
       const { data, error } = await supabase
         .from('partner_applications')
         .insert([{
@@ -4236,6 +4243,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '</div>'
       + '<div class="field-row"><label for="invNote">Anything we should know? (optional)</label><textarea id="invNote" rows="2" maxlength="500"></textarea></div>'
       + '<label class="cfg-check" style="align-items:flex-start;"><input type="checkbox" id="invConsent"> <span>I agree that '+esc(v.name)+' and PartnerWAV may contact me by email, phone, WhatsApp or LINE about this offer. I can ask them to stop at any time.</span></label>'
+      + spamFieldsHtml("invite")
       + '<div id="inviteError" class="login-msg bad" role="alert" hidden></div>'
       + '<button type="submit" class="btn primary" id="inviteSubmit">Sign up</button>'
     + '</form>';
@@ -4283,6 +4291,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) problems.push("Please enter a valid email address.");
     if (d.kind === "business" && !d.company) problems.push("Please enter your company name.");
     if (!d.consent) problems.push("Please tick the box so we can contact you about this offer.");
+    if (!problems.length && captchaMissing("invite")) problems.push("Please complete the security check.");
     var err = document.getElementById("inviteError");
     if (problems.length){ err.innerHTML = problems.map(esc).join("<br>"); err.hidden = false; return; }
     err.hidden = true;
@@ -4290,20 +4299,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var rec = null;
     if (supabase && !DEMO_MODE){
       try {
-        var r = await supabase.rpc("submit_affiliate_signup", { p_offer: a.id, p_data: d });
+        var r = await supabase.rpc("submit_affiliate_signup", { p_offer: a.id, p_data: Object.assign({}, d, spamPayload("invite")) });
         if (r.error) throw r.error;
         rec = Object.assign({ id: r.data, offerId: a.id, vendorId: a.vendorId, createdAt: nowStamp() }, d);
         rec.email = rec.email.toLowerCase();
       } catch(e){
-        btn.disabled = false; btn.textContent = "Sign up";
-        err.textContent = /not available/i.test((e && e.message) || "") ? "This invitation has ended." : "Sorry, we couldn't send that. Please check your connection and try again.";
+        btn.disabled = false; btn.textContent = "Sign up"; captchaReset("invite");
+        err.textContent = /not available/i.test((e && e.message) || "") ? "This invitation has ended." : spamErrorText(e, "Sorry, we couldn't send that. Please check your connection and try again.");
         err.hidden = false; return;
       }
     } else {
       rec = Object.assign({ id: "sg-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), offerId: a.id, vendorId: a.vendorId, createdAt: nowStamp() }, d);
       rec.email = rec.email.toLowerCase();
     }
-    affiliateSignups.push(rec); saveSignups();
+    if (!spamTrap("invite")){ affiliateSignups.push(rec); saveSignups(); }   // a bot that filled the hidden field is thanked but not saved
     document.getElementById("inviteFormBox").innerHTML = inviteDoneHtml(a, rec);
     fillQrCodes();
   }
@@ -4516,11 +4525,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function vaWizardHtml(draft){
     var d = draft.data, st = VA_STEPS[draft.step], last = draft.step === VA_STEPS.length - 1, mode = draft.mode;
     var pct = Math.round((draft.step + 1) / VA_STEPS.length * 100);
+    if (mode !== "operator" && !CAPTCHA.started.assess) CAPTCHA.started.assess = Date.now();
     return '<form class="card card-pad va-wizard" data-va-wizard="'+mode+'" novalidate onsubmit="return false;">'
       + '<div class="va-progress" role="progressbar" aria-valuemin="1" aria-valuemax="'+VA_STEPS.length+'" aria-valuenow="'+(draft.step + 1)+'"><span style="width:'+pct+'%"></span></div>'
       + '<div class="va-stepline">Step '+(draft.step + 1)+' of '+VA_STEPS.length+'</div>'
       + '<h2 class="va-title">'+esc(st.title)+'</h2>'+(st.intro ? '<p class="field-note" style="margin:0;">'+esc(st.intro)+'</p>' : '')
       + '<div class="va-fields">'+st.fields.filter(function(f){ return vaFieldVisible(f, d, mode); }).map(function(f){ return vaFieldHtml(f, d, mode); }).join("")+'</div>'
+      + (last && mode !== "operator" ? spamFieldsHtml("assess") : '')
       + '<div id="vaError" class="login-msg bad" role="alert" hidden></div>'
       + '<div class="va-nav">'+(draft.step > 0 ? '<button type="button" class="btn secondary" data-va-back>Back</button>' : (mode === "operator" ? '<button type="button" class="btn secondary" data-va-cancel>Cancel</button>' : '<span></span>'))
         + '<button type="button" class="btn primary'+(last && mode !== "operator" ? " cta" : "")+'" data-va-next>'+(last ? (mode === "operator" ? "Save assessment" : "Send to PartnerWAV") : "Next")+'</button></div>'
@@ -4561,10 +4572,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     delete d.notesInternal;
     var intro = vaIntroFromUrl(); if (intro) d.introducedBy = intro;
     var btn = document.querySelector("[data-va-next]"), err = document.getElementById("vaError");
+    if (captchaMissing("assess")){ err.textContent = "Please complete the security check."; err.hidden = false; return; }
     if (supabase && !DEMO_MODE){
       if (btn){ btn.disabled = true; btn.textContent = "Sending…"; }
-      try { var r = await supabase.rpc("submit_vendor_assessment", { p_data: d }); if (r.error) throw r.error; d.id = r.data; }
-      catch(e){ if (btn){ btn.disabled = false; btn.textContent = "Send to PartnerWAV"; } err.textContent = "Sorry, we couldn't send that. Please check your connection and try again."; err.hidden = false; return; }
+      try { var r = await supabase.rpc("submit_vendor_assessment", { p_data: Object.assign({}, d, spamPayload("assess")) }); if (r.error) throw r.error; d.id = r.data; }
+      catch(e){ if (btn){ btn.disabled = false; btn.textContent = "Send to PartnerWAV"; } captchaReset("assess"); err.textContent = spamErrorText(e, "Sorry, we couldn't send that. Please check your connection and try again."); err.hidden = false; return; }
     } else d.id = "va-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     rec = Object.assign(d, { source:"vendor-link", status:"new", createdAt:nowStamp() });
     vendorAssessments.unshift(rec); try { lsSet(VA_KEY, JSON.stringify(vendorAssessments)); } catch(e){}
@@ -4877,6 +4889,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var requests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.hubspot && x.integrations.hubspot.requested; }) : [];
     var notionRequests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.notion && x.integrations.notion.requested; }) : [];
     box.innerHTML = '<div class="int-grid">'
+      // --- Spam protection (CloudWAV only)
+      + (isOperator ? '<div class="card card-pad int-card" data-int="captcha"><div class="int-head"><span class="int-logo" style="background:#f6821f;">T</span><h3>Spam protection</h3>'+badge(!!captchaSiteKey(), "CAPTCHA on", "Basic only")+'</div>'
+        + '<p class="field-note" style="margin:0;">Every public form -- invite pages, partners\' landing pages, the vendor assessment and partner applications -- already has a hidden bot trap, a too-fast check and sign-up limits. Add a Cloudflare Turnstile CAPTCHA for stronger protection. It\'s free, and most visitors never see a puzzle.</p>'
+        + '<div class="field-row"><label for="intCaptchaKey">Turnstile site key</label><input type="text" id="intCaptchaKey" value="'+attr(captchaSiteKey())+'" placeholder="0x4AAAAAAA..." spellcheck="false" autocomplete="off"><span class="field-note">The site key is public -- it goes in the page. Never paste the secret key here.</span></div>'
+        + '<div id="intCaptchaError" class="login-msg bad" hidden></div>'
+        + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="captcha">Save</button>'+(captchaSiteKey() ? '<button type="button" class="btn ghost sm" data-int-captcha-off>Turn CAPTCHA off</button>' : '')+'</div>'
+        + '<div class="aff-section-title" style="margin-top:4px;">Set up (once)</div><ol class="shop-list" style="margin:0;"><li>In Cloudflare: Turnstile &rarr; Add widget, with your portal\'s domain (e.g. mpower-source.github.io).</li><li>Paste the <b>site key</b> above and save.</li><li>Save the <b>secret key</b> in Supabase, in the SQL editor -- the steps are at the top of section 5b in portal_records.sql. The portal never sees it.</li></ol>'
+        + '<p class="field-note" style="margin:0;">Turn the CAPTCHA on in both places. With only the secret saved, forms are refused; with only the site key, the puzzle shows but isn\'t checked.</p></div>' : '')
       // --- Calendly
       + '<div class="card card-pad int-card" data-int="calendly"><div class="int-head"><span class="int-logo" style="background:#006bff;">C</span><h3>Calendly</h3>'+badge(!!safeLink(c.booking), "Connected", "Not set up")+'</div>'
         + '<p class="field-note" style="margin:0;">Let people book time with you without emailing back and forth. Works with any Calendly plan -- paste your scheduling link.</p>'
@@ -4929,6 +4949,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function saveIntegration(which){
     var me = chMe(); if (!me) return;
+    if (which === "captcha" && me === "operator:"){
+      var ck = ((document.getElementById("intCaptchaKey") || {}).value || "").trim(), ce = document.getElementById("intCaptchaError");
+      if (ck && !/^[0-9A-Za-z_-]{10,100}$/.test(ck)){ ce.textContent = "That doesn't look like a Turnstile site key (it starts with 0x and has letters and numbers only)."; ce.hidden = false; return; }
+      setPublicSetting("captchaSiteKey", ck); saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule();
+      state.intV = (state.intV || 0) + 1; toast(ck ? "Site key saved -- public forms will show the CAPTCHA" : "CAPTCHA turned off"); renderIntegrations(true); return;
+    }
     var rec = contactFor(me); if (!rec){ rec = { id:me, show:true }; contactChannels.push(rec); }
     if (which === "calendly"){
       var err = document.getElementById("intCalError"), u = document.getElementById("intBooking").value.trim();
@@ -4951,6 +4977,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   document.addEventListener("click", function(ev){
     var b = ev.target.closest && ev.target.closest("[data-int-save]"); if (b){ saveIntegration(b.getAttribute("data-int-save")); return; }
+    if (ev.target.closest && ev.target.closest("[data-int-captcha-off]") && state.role === "operator"){ setPublicSetting("captchaSiteKey", ""); saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast("CAPTCHA turned off"); renderIntegrations(true); return; }
     var x = ev.target.closest && ev.target.closest("[data-int-cancel]");
     if (x){ var rec = contactFor(chMe()); if (rec && rec.integrations){ delete rec.integrations[x.getAttribute("data-int-cancel") === "notion" ? "notion" : "hubspot"]; saveChannels(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast(chMe() === "operator:" && x.getAttribute("data-int-cancel") === "notion" ? "Plan cleared" : "Request cancelled"); renderIntegrations(true); } }
   });
@@ -5552,6 +5579,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     // Attach form handlers for profile editors
     attachFormHandlers();
+    setTimeout(captchaMount, 0);   // CAPTCHA on any public form now on screen (no-op until a site key is saved)
   }
 
   function renderCommunity(){
@@ -6779,6 +6807,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div style="background:rgba(91,61,245,0.1);border-left:3px solid var(--accent);padding:12px;border-radius:4px;margin:16px 0;font-size:.9rem;">'
       + 'ℹ️ <strong>Note:</strong> Once you become a partner, you\'ll be able to complete your full company profile with detailed address and location information that will appear on the partner map.'
       + '</div>'
+      + spamFieldsHtml("apply")
       + '<div style="display:flex;gap:12px;margin-top:16px;">'
       + '<button type="submit" class="btn primary cta" style="flex:1;">Submit Application</button>'
       + '<button type="button" class="btn secondary" data-goto-screen="partner-directory" style="flex:1;">Cancel</button>'
@@ -6832,6 +6861,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           toast("Please enter a valid email address");
           return;
         }
+        if (captchaMissing("apply")){ toast("Please complete the security check"); return; }
+        if (spamTrap("apply")){ toast("Application submitted"); return; }   // a bot that filled the hidden field
 
         // Store application
         var application = {
@@ -10952,6 +10983,48 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var LEGAL_NAME_DEFAULT = "CloudWAV Consulting";
   function legalName(){ var p = operatorSettings.filter(function(x){ return x.id === "public"; })[0]; return (p && p.legalName) || LEGAL_NAME_DEFAULT; }
   function pwOperatedBy(){ return "PartnerWAV is operated by " + legalName(); }
+  // ----- Spam protection for the public forms (invite pages, partner landing pages, vendor assessment, partner application) -----
+  // Three layers: a hidden "hp" field people never see (bots fill it in), the time taken to fill the form, and -- once
+  // CloudWAV saves a Cloudflare Turnstile site key -- a CAPTCHA. The database checks all three and rate-limits sign-ups
+  // (supabase/portal_records.sql, portal_spam_check). The Turnstile SECRET key lives only in the database.
+  var CAPTCHA = { started:{}, tokens:{}, widgets:{}, loading:false };
+  function publicSettings(){ return operatorSettings.filter(function(x){ return x.id === "public"; })[0] || null; }
+  function setPublicSetting(k, v){
+    var p = publicSettings() || { id:"public" };
+    p = JSON.parse(JSON.stringify(p)); p[k] = v; p.updatedAt = todayIso();
+    operatorSettings = operatorSettings.filter(function(x){ return x.id !== "public"; }).concat([p]);
+  }
+  function captchaSiteKey(){ var p = publicSettings(); return p && /^[0-9A-Za-z_-]{10,100}$/.test(p.captchaSiteKey || "") ? p.captchaSiteKey : ""; }
+  function captchaOn(){ return !!(captchaSiteKey() && supabase && !DEMO_MODE); }
+  function spamFieldsHtml(form){
+    if (!CAPTCHA.started[form]) CAPTCHA.started[form] = Date.now();   // timed from when the visitor first saw the form
+    return '<div class="hp-field" aria-hidden="true"><label>Leave this empty <input type="text" id="hp_' + form + '" name="hp_' + form + '" tabindex="-1" autocomplete="off"></label></div>'
+      + (captchaOn() ? '<div class="captcha-box" data-captcha="' + form + '"></div>' : '');
+  }
+  function spamPayload(form){ var hp = document.getElementById("hp_" + form); return { hp: hp ? hp.value : "", elapsedMs: Date.now() - (CAPTCHA.started[form] || Date.now()), captchaToken: CAPTCHA.tokens[form] || "" }; }
+  function spamTrap(form){ var hp = document.getElementById("hp_" + form); return !!(hp && hp.value); }
+  function captchaMissing(form){ return captchaOn() && !CAPTCHA.tokens[form]; }
+  function captchaReset(form){ delete CAPTCHA.tokens[form]; try { if (window.turnstile && CAPTCHA.widgets[form] != null) window.turnstile.reset(CAPTCHA.widgets[form]); } catch(e){} }
+  function captchaMount(){
+    if (!captchaOn()) return;
+    var boxes = document.querySelectorAll("[data-captcha]:not([data-captcha-done])"); if (!boxes.length) return;
+    if (!window.turnstile){
+      if (!CAPTCHA.loading){ CAPTCHA.loading = true; var s = document.createElement("script"); s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; s.async = true;
+        s.onload = function(){ CAPTCHA.loading = false; captchaMount(); }; s.onerror = function(){ CAPTCHA.loading = false; }; document.head.appendChild(s); }
+      return;
+    }
+    boxes.forEach(function(el){
+      var form = el.getAttribute("data-captcha"); el.setAttribute("data-captcha-done", "1");
+      try { CAPTCHA.widgets[form] = window.turnstile.render(el, { sitekey: captchaSiteKey(),
+        callback: function(t){ CAPTCHA.tokens[form] = t; }, "expired-callback": function(){ delete CAPTCHA.tokens[form]; }, "error-callback": function(){ delete CAPTCHA.tokens[form]; } }); } catch(e){}
+    });
+  }
+  // what the visitor sees when the database turns a submission away
+  function spamErrorText(e, fallback){
+    var m = (e && e.message) || "";
+    return /security check|too many sign-ups|already signed up|a lot of sign-ups/i.test(m) ? m.replace(/^.*?(Please|Too|You|This|The)/, "$1") + (/[.!]$/.test(m) ? "" : ".") : fallback;
+  }
+
   var agreementReviews = [];   // PartnerWAV's private notes on outside agreements (never shared with the other side)
   function agrReviewNote(id){ var r = agreementReviews.filter(function(x){ return x.id === id; })[0]; return r ? r.note || "" : ""; }
   function agrSetReviewNote(id, note){ agreementReviews = agreementReviews.filter(function(x){ return x.id !== id; }); if (note) agreementReviews.push({ id:id, note:note, updatedAt:todayIso() }); }
@@ -13025,8 +13098,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       operatorSettings = operatorSettings.filter(function(x){ return x.id !== "legal"; });
       operatorSettings.push({ id:"legal", entity:le.trim().replace(/\s+/g, " "), contact:lc.trim(), law:ll.trim(), seat:ls.trim(), updatedAt:todayIso() });
       var lnm = ((document.getElementById("legalName") || {}).value || "").trim().replace(/\s+/g, " ").slice(0, 120);
-      operatorSettings = operatorSettings.filter(function(x){ return x.id !== "public"; });
-      operatorSettings.push({ id:"public", legalName: lnm || LEGAL_NAME_DEFAULT, updatedAt:todayIso() });
+      setPublicSetting("legalName", lnm || LEGAL_NAME_DEFAULT);
       closeModal(); saveReferrals(); toast("Legal details saved"); render(); return;
     }
     if ((b = t.closest("[data-agr-review]"))){ var ra = agrById(b.getAttribute("data-agr-review")); if (ra) agrOutsideModal(ra); return; }
@@ -16797,6 +16869,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var DEMO_MODE = AUTH_QS.get("demo") === "1";
   var PUBLIC_APPLY = !DEMO_MODE && (AUTH_QS.has("apply") || AUTH_QS.has("lp") || AUTH_QS.has("invite") || AUTH_QS.has("assess") || AUTH_QS.has("pp"));
   var AUTH_REQUIRED = !DEMO_MODE && !PUBLIC_APPLY;
+  // public pages: read the company name and CAPTCHA site key (no sign-in needed), then redraw the form with the CAPTCHA
+  if (PUBLIC_APPLY) setTimeout(function(){ cloudLoadPublicSettings().then(function(ok){ if (ok && captchaOn()){ ["invite", "pp", "assess", "apply"].forEach(function(k){ var el = document.getElementById("hp_" + k);
+    if (el && !document.querySelector('[data-captcha="' + k + '"]')){ var box = document.createElement("div"); box.className = "captcha-box"; box.setAttribute("data-captcha", k); el.closest(".hp-field").after(box); } }); captchaMount(); } }); }, 0);
   var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", operator:"operator-overview" };
   var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", operator:"Program Operator" };
   state.account = null;
@@ -17477,6 +17552,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="field-row"><label for="ppPhone">Phone / WhatsApp</label><input type="tel" id="ppPhone" autocomplete="tel"></div></div>'
       + (web ? '' : '<div class="field-row"><label for="ppNote">What would you like to see?</label><textarea id="ppNote" rows="3" maxlength="500"></textarea></div>')
       + '<label class="cfg-check"><input type="checkbox" id="ppConsent"> <span>I agree that ' + esc(pname) + ' may contact me about ' + esc(v.name) + ' by email, phone, WhatsApp or LINE.</span></label>'
+      + (preview ? '' : spamFieldsHtml("pp"))
       + '<div id="ppError" class="login-msg bad" role="alert" hidden></div>'
       + '<button type="button" class="btn primary" id="ppSubmit"' + (preview ? ' disabled title="Sign-ups open once the page is published"' : ' data-pp-submit') + '>' + esc(p.cta || (web ? "Save my seat" : "Request a demo")) + '</button></form>';
     return '<div class="lp-page pp-page' + ba.cls + '"' + ba.style + ' data-pp-page="' + attr(p.id || "") + '">'
@@ -17613,6 +17689,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     box.innerHTML = '<div class="lp-public-wrap">' + (p && p.status === "published" && !p.deletedAt ? ppPageHtml(p, false)
       : '<div class="empty" style="padding:40px;text-align:center;">This page isn\'t available. It may have been unpublished.</div>') + '</div>';
     if (p) document.title = (p.headline || "PartnerWAV") + " · " + (p.partnerName || "PartnerWAV");
+    captchaMount();
   }
   async function ppSubmit(){
     var p = ppById(state.publicPpId); if (!p || p.status !== "published") return;
@@ -17623,15 +17700,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) probs.push("Please enter a valid email address.");
     if (!web && !d.company) probs.push("Please enter your company name.");
     if (!d.consent) probs.push("Please tick the box so " + (p.partnerName || "we") + " can contact you.");
+    if (!probs.length && captchaMissing("pp")) probs.push("Please complete the security check.");
     var err = document.getElementById("ppError");
     if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
     err.hidden = true;
     var btn = document.getElementById("ppSubmit"); btn.disabled = true; btn.textContent = "Sending…";
     if (supabase && !DEMO_MODE){
-      try { var r = await supabase.rpc("submit_partner_page_lead", { p_page: p.id, p_data: d }); if (r.error) throw r.error; }
-      catch(e){ btn.disabled = false; btn.textContent = p.cta || (web ? "Save my seat" : "Request a demo");
-        err.textContent = /not available/i.test((e && e.message) || "") ? "This page is no longer taking sign-ups." : "Sorry, we couldn't send that. Please check your connection and try again."; err.hidden = false; return; }
-    } else {
+      try { var r = await supabase.rpc("submit_partner_page_lead", { p_page: p.id, p_data: Object.assign({}, d, spamPayload("pp")) }); if (r.error) throw r.error; }
+      catch(e){ btn.disabled = false; btn.textContent = p.cta || (web ? "Save my seat" : "Request a demo"); captchaReset("pp");
+        err.textContent = /not available/i.test((e && e.message) || "") ? "This page is no longer taking sign-ups." : spamErrorText(e, "Sorry, we couldn't send that. Please check your connection and try again."); err.hidden = false; return; }
+    } else if (!spamTrap("pp")) {
       // demo mode: the lead goes straight into the partner's My Leads in this browser
       leads.push({ id:"lead-pp-" + Date.now().toString(36), partnerId:p.partnerId, prospectName: d.company || d.name, value:"", status:"prospect",
         notes: ppLeadNote(p, d), createdDate: localDateIso(), convertedDeal:null, source:"landing page", pageId:p.id, vendorId:p.vendorId,
