@@ -135,7 +135,7 @@ on conflict (collection, field) do update set allowed = excluded.allowed;
 -- Collections only CloudWAV can add records to (members may still edit where they're a writer)
 create or replace function public.portal_operator_only(c text)
 returns boolean language sql immutable as $$
-  select c = any (array['mspProspects','mspEngagements','landingPages',
+  select c = any (array['mspProspects','mspEngagements','landingPages','resources',
                         'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
                         'programFees','platformFees','affiliateSignups',
                         'vendorAssessments','pricingModel','agreementReviews',
@@ -158,6 +158,11 @@ declare
 begin
   new.updated_at := now();
   new.updated_by := auth.uid();
+  -- A record keeps its collection and id for life. Moving one would carry values past every check below
+  -- (e.g. a scratch record holding "status":"approved" edited into deals), so nobody may do it.
+  if tg_op = 'UPDATE' and (new.collection is distinct from old.collection or new.id is distinct from old.id) then
+    raise exception 'A record cannot be moved to another collection or renamed';
+  end if;
   if public.is_portal_operator() then return new; end if;
   -- public sign-ups on a vendor's invite page arrive through submit_affiliate_signup() below
   if new.collection = 'affiliateSignups' and tg_op = 'INSERT'
@@ -190,6 +195,32 @@ begin
     raise exception 'You can only save your own WhatsApp and LINE details';
   end if;
   -- investment round details: each company saves only its own
+  -- the id stored inside a record must be the record's own id (the portal shows and links by it)
+  if new.data ? 'id' and new.data ->> 'id' is distinct from new.id then
+    raise exception 'A record''s id must match its key';
+  end if;
+  -- records that belong to one company can only be saved by that company
+  if new.collection in ('incentives', 'flyers', 'hardwareOfferings')
+     and 'vendor:' || coalesce(new.data ->> 'vendorId', '') <> k then
+    raise exception 'You can only save your own company''s %', new.collection;
+  end if;
+  if new.collection in ('deals', 'leads', 'partnerProjects')
+     and 'partner:' || coalesce(new.data ->> 'partnerId', '') <> k then
+    raise exception 'You can only save your own company''s %', new.collection;
+  end if;
+  if (new.collection = 'partnerProfiles' and 'partner:' || new.id <> k)
+     or (new.collection = 'affiliateProfiles' and 'affiliate:' || new.id <> k)
+     or (new.collection = 'prefs' and new.id <> k) then
+    raise exception 'You can only save your own profile and settings';
+  end if;
+  -- resources: members submit their own for review; the id can't reuse a published resource's id
+  if new.collection in ('resources', 'pendingResources') and coalesce(new.data ->> 'ownerKey', '') <> k then
+    raise exception 'You can only submit resources as yourself';
+  end if;
+  if new.collection = 'pendingResources' and tg_op = 'INSERT'
+     and exists (select 1 from public.portal_records x where x.collection = 'resources' and x.id = new.id) then
+    raise exception 'That resource id is already in use';
+  end if;
   -- partner landing pages: a partner saves only its own
   if new.collection = 'partnerPages' and 'partner:' || coalesce(new.data ->> 'partnerId', '') <> k then
     raise exception 'You can only save your own landing pages';
@@ -638,9 +669,10 @@ drop policy if exists "portal-files delete" on storage.objects;
 create policy "portal-files read" on storage.objects
   for select to authenticated using (
     bucket_id = 'portal-files'
-    and (exists (select 1 from public.portal_records r            -- RLS on portal_records applies here
-                 where r.collection in ('resources', 'pendingResources')
-                   and r.id = (storage.foldername(name))[2])
+    and (((storage.foldername(name))[1] = 'resources'                -- a resource's files: only under resources/
+          and exists (select 1 from public.portal_records r           -- RLS on portal_records applies here
+                      where r.collection in ('resources', 'pendingResources')
+                        and r.id = (storage.foldername(name))[2]))
          -- an uploaded outside agreement: whoever can see the agreement record can open its file
          or ((storage.foldername(name))[1] = 'agreements'
              and exists (select 1 from public.portal_records r

@@ -10397,7 +10397,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function cloudRetryHeld(){ CLOUD.held = {}; CLOUD.saveFails = 0; if (!CLOUD.loaded){ CLOUD.loadFails = 0; cloudStart(); return; } cloudSetStatus("saving"); cloudFlush(); }
   // Is the Supabase setup current? Uses functions portal_records.sql creates, so it also tells us if it needs re-running.
-  var SETUP_VERSION_CHECKS = [["platformFees", true], ["affiliatePrograms", false], ["affiliateSignups", true], ["vendorAssessments", true]];
+  var SETUP_VERSION_CHECKS = [["platformFees", true], ["affiliatePrograms", false], ["affiliateSignups", true], ["vendorAssessments", true], ["resources", true]];
   async function cloudSetupCheck(){
     var out = [];
     var add = function(ok2, label, fix){ out.push({ ok:ok2, label:label, fix:fix || "" }); };

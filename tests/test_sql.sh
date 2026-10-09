@@ -13,7 +13,7 @@ $P -f "$ROOT/tests/sql/supabase_shim.sql"
 sed '/^with wanted/,$d' "$ROOT/supabase/portal_users.sql" | $P
 $P -f "$ROOT/supabase/portal_records.sql"
 $P -f "$ROOT/supabase/portal_records.sql"   # re-runnable
-psql -h $D -p $PORT -U postgres -q -f "$ROOT/tests/sql/test_portal_records.sql" 2>/dev/null | sed 's/^ //' | grep -E '^(PASS|FAIL)' | tee /tmp/sqlres.txt
+psql -h $D -p $PORT -U postgres -q -f "$ROOT/tests/sql/test_portal_records.sql" 2>/tmp/sqlerr.txt | sed 's/^ //' | grep -E '^(PASS|FAIL)' | tee /tmp/sqlres.txt
 su postgres -c "$BIN/pg_ctl -D $D/data stop -m fast" >/dev/null
 P_=$(grep -c ^PASS /tmp/sqlres.txt); F_=$(grep -c ^FAIL /tmp/sqlres.txt || true)
 echo "test_sql: $P_ passed, $F_ failed"; [ "$F_" = "0" ]

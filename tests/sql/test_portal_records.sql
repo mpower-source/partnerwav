@@ -66,7 +66,7 @@ select t('paid product cannot be self-marked paid', fails($$insert into portal_r
 insert into portal_records(collection,id,data,readers,writers) values ('shopOrders','o-paid','{"id":"o-paid","productId":"shop-paid","price":149,"status":"awaiting","paidAt":"","buyer":"partner:siam-digital"}','{partner:siam-digital}','{partner:siam-digital}');
 select t('paid product order starts awaiting payment', (select data->>'status' from portal_records where id='o-paid') = 'awaiting');
 -- upsert path (what the portal uses)
-insert into portal_records(collection,id,data,readers,writers) values ('deals','d1','{"id":"d1","status":"pending","pricingCheck":"","notes":"upserted"}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital}')
+insert into portal_records(collection,id,data,readers,writers) values ('deals','d1','{"id":"d1","status":"pending","pricingCheck":"","notes":"upserted","partnerId":"siam-digital"}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital}')
   on conflict (collection,id) do update set data = excluded.data, readers = excluded.readers, writers = excluded.writers;
 select t('upsert of own deal works', (select data->>'notes' from portal_records where id='d1') = 'upserted');
 reset role;
@@ -78,7 +78,7 @@ update portal_records set data = jsonb_set(jsonb_set(data,'{status}','"paid"'),'
 select t('operator sees everything (11 rows)', (select count(*) from portal_records) = 11);
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
-insert into portal_records(collection,id,data,readers,writers) values ('deals','d1','{"id":"d1","status":"approved","pricingCheck":"","notes":"seen","unreadPartner":false}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital}')
+insert into portal_records(collection,id,data,readers,writers) values ('deals','d1','{"id":"d1","status":"approved","pricingCheck":"","notes":"seen","unreadPartner":false,"partnerId":"siam-digital"}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital}')
   on conflict (collection,id) do update set data = excluded.data, readers = excluded.readers, writers = excluded.writers;
 select t('partner can upsert an approved deal without changing its status', (select data->>'notes' from portal_records where id='d1') = 'seen');
 reset role;
@@ -364,6 +364,55 @@ reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
 select t('the flag is cleared in the list', (select count(*) from jsonb_array_elements(public.portal_accounts()) a where a->>'email'='new@agentid.test' and not (a->>'must_change_password')::boolean) = 1);
 select t('CloudWAV removes the login''s access', public.portal_remove_account('00000000-0000-0000-0000-000000000007') and not public.portal_remove_account('00000000-0000-0000-0000-000000000001'));
+reset role;
+
+
+-- ===== hardening (security review, fix 1): moved records, file folders, review bypass, owner checks
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;   -- partner gulf-coast
+insert into portal_records(collection,id,data,readers,writers) values ('scratch','d-x','{"id":"d-x","status":"approved","partnerId":"gulf-coast","programId":"intelsense"}','{partner:gulf-coast}','{partner:gulf-coast}');
+select t('a record cannot be moved into another collection (e.g. an approved deal)', fails($$update portal_records set collection='deals' where collection='scratch' and id='d-x'$$));
+select t('a record cannot be moved into a CloudWAV-only collection', fails($$update portal_records set collection='enrollments' where collection='scratch' and id='d-x'$$));
+select t('a record cannot be renamed', fails($$update portal_records set id='d-y' where collection='scratch' and id='d-x'$$));
+select t('no deal was created by moving', (select count(*) from portal_records where collection='deals' and id='d-x') = 0);
+select t('a stored id must match the record key', fails($$insert into portal_records(collection,id,data,readers,writers) values ('leads','lead-a','{"id":"lead-b","partnerId":"gulf-coast"}','{partner:gulf-coast}','{partner:gulf-coast}')$$));
+select t('members cannot publish resources directly', fails($$insert into portal_records(collection,id,data,readers,writers,is_public) values ('resources','evil','{"id":"evil","ownerKey":"partner:gulf-coast"}','{*}','{partner:gulf-coast}',true)$$));
+select t('a pending resource must be submitted as yourself', fails($$insert into portal_records(collection,id,data,readers,writers) values ('pendingResources','res-x','{"id":"res-x","ownerKey":"partner:siam-digital"}','{partner:gulf-coast}','{partner:gulf-coast}')$$));
+insert into portal_records(collection,id,data,readers,writers) values ('pendingResources','res-new','{"id":"res-new","status":"pending","ownerKey":"partner:gulf-coast"}','{partner:gulf-coast}','{partner:gulf-coast}');
+select t('members can still submit their own resources for review', (select count(*) from portal_records where collection='pendingResources' and id='res-new') = 1);
+select t('no hardware offering under another vendor''s name', fails($$insert into portal_records(collection,id,data,readers,writers,is_public) values ('hardwareOfferings','hw-x','{"id":"hw-x","vendorId":"intelsense"}','{*}','{partner:gulf-coast}',true)$$));
+select t('no incentive under another vendor''s name', fails($$insert into portal_records(collection,id,data,readers,writers) values ('incentives','inc-x','{"id":"inc-x","vendorId":"intelsense"}','{partner:gulf-coast}','{partner:gulf-coast}')$$));
+select t('no deal for another partner', fails($$insert into portal_records(collection,id,data,readers,writers) values ('deals','deal-x','{"id":"deal-x","partnerId":"siam-digital"}','{partner:gulf-coast}','{partner:gulf-coast}')$$));
+select t('no lead for another partner', fails($$insert into portal_records(collection,id,data,readers,writers) values ('leads','lead-x2','{"id":"lead-x2","partnerId":"siam-digital"}','{partner:gulf-coast}','{partner:gulf-coast}')$$));
+select t('no partner project for another partner', fails($$insert into portal_records(collection,id,data,readers,writers,is_public) values ('partnerProjects','pp-x','{"id":"pp-x","partnerId":"siam-digital"}','{*}','{partner:gulf-coast}',true)$$));
+select t('a partner cannot create another partner''s profile', fails($$insert into portal_records(collection,id,data,readers,writers) values ('partnerProfiles','acme-msp','{"id":"acme-msp"}','{*}','{partner:gulf-coast}')$$));
+select t('a partner cannot claim another company''s preferences', fails($$insert into portal_records(collection,id,data,readers,writers) values ('prefs','partner:siam-digital','{"id":"partner:siam-digital"}','{partner:gulf-coast}','{partner:gulf-coast}')$$));
+insert into portal_records(collection,id,data,readers,writers) values ('leads','lead-own','{"id":"lead-own","partnerId":"gulf-coast"}','{partner:gulf-coast}','{partner:gulf-coast}');
+insert into portal_records(collection,id,data,readers,writers) values ('prefs','partner:gulf-coast','{"id":"partner:gulf-coast"}','{partner:gulf-coast}','{partner:gulf-coast}');
+select t('a partner still saves its own leads and preferences', (select count(*) from portal_records where (collection='leads' and id='lead-own') or (collection='prefs' and id='partner:gulf-coast')) = 2);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- vendor intelsense
+insert into portal_records(collection,id,data,readers,writers,is_public) values ('hardwareOfferings','hw-own','{"id":"hw-own","vendorId":"intelsense"}','{*}','{vendor:intelsense}',true);
+select t('a vendor still saves its own hardware offerings', (select count(*) from portal_records where collection='hardwareOfferings' and id='hw-own') = 1);
+reset role;
+-- files: a fake resource record no longer opens another folder (agreements)
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('agreements','agr-vendor-intelsense','{"id":"agr-vendor-intelsense"}','{vendor:intelsense}','{vendor:intelsense}') on conflict do nothing;
+reset role;
+insert into storage.objects(bucket_id, name, owner) values ('portal-files', 'agreements/agr-vendor-intelsense/signed.pdf', '00000000-0000-0000-0000-000000000001');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+select t('a resource record with an agreement''s id does not open that agreement''s files', (select count(*) from storage.objects where name like 'agreements/agr-vendor-intelsense/%') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV still opens the agreement file', (select count(*) from storage.objects where name like 'agreements/agr-vendor-intelsense/%') = 1);
+insert into portal_records(collection,id,data,readers,writers,is_public) values ('resources','res-ok','{"id":"res-ok","ownerKey":"partner:gulf-coast"}','{*}','{partner:gulf-coast}',true);
+select t('CloudWAV can still publish an approved resource', (select count(*) from portal_records where collection='resources' and id='res-ok') = 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+update portal_records set data = data || '{"title":"Edited"}' where collection='resources' and id='res-ok';
+select t('the owner can still edit their published resource', (select data->>'title' from portal_records where collection='resources' and id='res-ok') = 'Edited');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+select t('a pending resource cannot reuse a published resource id', fails($$insert into portal_records(collection,id,data,readers,writers) values ('pendingResources','res-ok','{"id":"res-ok","status":"pending","ownerKey":"partner:gulf-coast"}','{partner:gulf-coast}','{partner:gulf-coast}')$$));
 reset role;
 
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;
