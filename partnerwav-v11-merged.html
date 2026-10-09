@@ -3772,7 +3772,22 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   };
 
   function programById(id){ for (var i=0;i<programs.length;i++){ if (programs[i].id===id) return programs[i]; } return null; }
-  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+  // Escapes text for HTML, including inside attribute values (quotes too)
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+  // A link address that is safe to put in href: web, email, phone, or a link within the portal. Anything else (javascript:, data:) becomes "".
+  function safeHref(u){
+    u = String(u == null ? "" : u).trim();
+    if (!u) return "";
+    if (/^(https?:|mailto:|tel:|blob:)/i.test(u)) return u;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(u.replace(/[\u0000-\u0020]/g, ""))) return "";   // any other scheme, e.g. javascript:
+    if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(\/|$)/i.test(u)) return "https://" + u;          // "example.com" -> https://example.com
+    return u;                                                                      // a link within the portal
+  }
+  // An image address that is safe to put in src: a web image, an uploaded image, or a file picked on this device.
+  function safeImg(u){
+    u = String(u == null ? "" : u).trim();
+    return /^(https?:\/\/|blob:|data:image\/(png|jpe?g|gif|webp|svg\+xml|bmp|x-icon|avif);)/i.test(u) ? u : "";
+  }
 
   // Generate affiliate tracking link for a partner
   function generateAffiliateLink(affiliateId, partnerId){
@@ -3786,7 +3801,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function statusPill(status){
     var label = status.charAt(0).toUpperCase()+status.slice(1);
-    return '<span class="pill '+status+'">'+label+'</span>';
+    return '<span class="pill '+esc(status)+'">'+esc(label)+'</span>';
   }
 
   function relBadge(rel){
@@ -3822,19 +3837,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var radius = Math.round(size * 0.235);
     var fontSize = (size * 0.0191).toFixed(2);
     var inner = entity.logo
-      ? '<img class="entity-logo-img" style="width:'+size+'px;height:'+size+'px;border-radius:'+radius+'px;" src="'+esc(entity.logo)+'" alt="'+esc(entity.name)+' logo">'
+      ? '<img class="entity-logo-img" style="width:'+size+'px;height:'+size+'px;border-radius:'+radius+'px;" src="'+esc(safeImg(entity.logo))+'" alt="'+esc(entity.name)+' logo">'
       : '<span class="entity-logo-fallback" style="width:'+size+'px;height:'+size+'px;border-radius:'+radius+'px;font-size:'+fontSize+'rem;">'+esc(entity.init || initials(entity.name))+'</span>';
     return entity.website
-      ? '<a class="logo-link" href="'+esc(entity.website)+'" target="_blank" rel="noopener" title="Visit '+esc(entity.name)+'\'s website" onclick="event.stopPropagation()">'+inner+'</a>'
+      ? '<a class="logo-link" href="'+esc(safeHref(entity.website))+'" target="_blank" rel="noopener" title="Visit '+esc(entity.name)+'\'s website" onclick="event.stopPropagation()">'+inner+'</a>'
       : inner;
   }
 
   function socialLinksHtml(social){
     if (!social) return "";
     var items = [];
-    if (social.linkedin) items.push('<a class="social-link" href="'+esc(social.linkedin)+'" target="_blank" rel="noopener">LinkedIn</a>');
-    if (social.twitter) items.push('<a class="social-link" href="'+esc(social.twitter)+'" target="_blank" rel="noopener">X / Twitter</a>');
-    if (social.facebook) items.push('<a class="social-link" href="'+esc(social.facebook)+'" target="_blank" rel="noopener">Facebook</a>');
+    if (social.linkedin) items.push('<a class="social-link" href="'+esc(safeHref(social.linkedin))+'" target="_blank" rel="noopener">LinkedIn</a>');
+    if (social.twitter) items.push('<a class="social-link" href="'+esc(safeHref(social.twitter))+'" target="_blank" rel="noopener">X / Twitter</a>');
+    if (social.facebook) items.push('<a class="social-link" href="'+esc(safeHref(social.facebook))+'" target="_blank" rel="noopener">Facebook</a>');
     return items.length ? '<div class="social-links">'+items.join("")+'</div>' : '';
   }
 
@@ -3843,13 +3858,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var enrolled = state.enrolled.indexOf(p.id) > -1;
     var actionBtn = enrolled
       ? '<button class="btn secondary sm" disabled>Enrolled ✓</button>'
-      : '<button class="btn primary sm" data-enroll="'+p.id+'">Enroll</button>';
+      : '<button class="btn primary sm" data-enroll="'+esc(p.id)+'">Enroll</button>';
     return '<div class="program-card">'
       + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div>'+relBadges(p.relationships)+readyBadge(p)+'</div>'
       + '<div class="program-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'+builtByLine(p)
       + '<p class="program-desc">'+esc(p.desc)+'</p>'
       + '<div class="program-actions">'
-        + '<button class="btn ghost sm" data-detail="'+p.id+'">View details →</button>'
+        + '<button class="btn ghost sm" data-detail="'+esc(p.id)+'">View details →</button>'
         + (opts.hideAction ? "" : actionBtn)
       + '</div>'
     + '</div>';
@@ -3993,9 +4008,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function affQrHtml(a){
     var file = (a.name || "invite").toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-invite-qr.png";
-    return '<div class="aff-qr" data-aff-qr="'+esc(a.id)+'"><img src="'+esc(a.qr)+'" alt="QR code for the '+esc(a.name)+' invite link" width="84" height="84">'
+    return '<div class="aff-qr" data-aff-qr="'+esc(a.id)+'"><img src="'+esc(safeImg(a.qr))+'" alt="QR code for the '+esc(a.name)+' invite link" width="84" height="84">'
       + '<div><div class="field-note" style="margin:0 0 6px;">Scan to sign up -- handy for slides, flyers and events.</div>'
-      + '<a class="btn secondary sm" href="'+esc(a.qr)+'" download="'+esc(file)+'" style="text-decoration:none;">Download QR code</a></div></div>';
+      + '<a class="btn secondary sm" href="'+esc(safeImg(a.qr))+'" download="'+esc(file)+'" style="text-decoration:none;">Download QR code</a></div></div>';
   }
   function affTermsHtml(a){
     var t = a.terms || {}, row = function(k, v){ return v ? '<div class="aff-term"><span>'+k+'</span><b>'+esc(v)+'</b></div>' : ''; };
@@ -4021,7 +4036,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var joinBtn = !live || isOperator || isInviteOffer(a) ? ''
       : enrolled ? '<button class="btn secondary sm" data-manage-affiliate="'+esc(a.id)+'" title="View your link, services and link activity">Enrolled ✓ · Manage →</button>'
       : (state.role === "vendor" && a.vendorId === state.myVendorId) ? ''
-      : '<button class="btn primary sm" data-enroll-affiliate="'+a.id+'">Enroll</button>';
+      : '<button class="btn primary sm" data-enroll-affiliate="'+esc(a.id)+'">Enroll</button>';
     var reviewBtns = isOperator && a.status === "pending"
       ? '<button class="btn primary sm" data-offer-review="approve" data-offer-id="'+esc(a.id)+'">Approve</button><button class="btn ghost sm" data-offer-review="reject" data-offer-id="'+esc(a.id)+'">Request changes</button>' : '';
     var editBtns = editable
@@ -4031,7 +4046,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var directHtml = a.directLink
       ? '<div class="aff-link-row" data-direct-link="'+esc(a.id)+'"><input type="text" class="aff-link-input" readonly value="'+esc(a.directLink).replace(/"/g,"&quot;")+'" aria-label="'+esc(linkLabel)+'">'
         + '<button type="button" class="btn primary sm" data-copy-direct="'+esc(a.directLink).replace(/"/g,"&quot;")+'">Copy link</button>'
-        + '<a class="btn secondary sm" href="'+esc(a.directLink).replace(/"/g,"&quot;")+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">'+(a.direct ? "Open" : "Join program")+'</a></div>'
+        + '<a class="btn secondary sm" href="'+esc(safeHref(a.directLink))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">'+(a.direct ? "Open" : "Join program")+'</a></div>'
         + (a.qr ? affQrHtml(a) : '')
       : '';
     var st = OFFER_STATUS[a.status];
@@ -4222,7 +4237,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + (pts.length ? '<ul class="lp-features">'+pts.map(function(f){ return '<li>'+esc(f)+'</li>'; }).join("")+'</ul>' : '')
         + '<div id="inviteFormBox">'+inviteFormHtml(a)+'</div>'
       + '</div>'
-      + '<div class="lp-foot">'+esc(v.name)+(i.website ? ' · <a href="'+attr(i.website)+'" target="_blank" rel="noopener noreferrer">'+esc(i.website.replace(/^https?:\/\//, ""))+'</a>' : '')+' · '+esc(pwOperatedBy())+'</div>'
+      + '<div class="lp-foot">'+esc(v.name)+(i.website ? ' · <a href="'+attr(safeHref(i.website))+'" target="_blank" rel="noopener noreferrer">'+esc(i.website.replace(/^https?:\/\//, ""))+'</a>' : '')+' · '+esc(pwOperatedBy())+'</div>'
     + '</div>';
   }
   function inviteFormHtml(a){
@@ -4676,9 +4691,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + '<div class="inv-offer" style="margin-top:6px;"><div style="font-weight:700;font-size:1.05rem;" data-va-rec="'+rec.plan+'">'+esc(pmItem("plans", rec.plan).name)+' plan</div><div class="field-note">'+esc(rec.why || "From their answers")+'</div></div>'
             + '<div class="aff-section-title" style="margin-top:14px;">Quote <span class="field-note" style="text-transform:none;letter-spacing:0;font-weight:400;">-- per month, from the pricing model; change anything</span></div>'
             + '<div class="form-grid" style="margin-top:6px;"><div class="field-row"><label for="vaPlan">Plan</label>'+sel("vaPlan", pricingModel.plans, q.planId)+'</div><div class="field-row"><label for="vaSupport">Support</label>'+sel("vaSupport", pricingModel.support, q.supportId)+'</div></div>'
-            + '<div class="va-opts col" style="margin-top:8px;">'+pricingModel.addons.map(function(x){ var on = q.addons.indexOf(x.id) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-va-qaddon="'+x.id+'"'+(on ? ' checked' : '')+'><span><b>'+esc(x.name)+'</b><small>'+(x.price ? vaMoney(x.price)+' / month' : 'No monthly fee')+((a.addons || []).indexOf(x.id) > -1 ? ' · they asked for this' : '')+'</small></span></label>'; }).join("")+'</div>'
-            + '<table class="va-lines" style="width:100%;margin-top:10px;"><tbody>'+calc.lines.map(function(l){ return '<tr><td>'+esc(l.label)+(l.amount !== l.list ? ' <span class="field-note">(list '+vaMoney(l.list)+')</span>' : '')+'</td><td style="text-align:right;"><input type="number" min="0" step="50" class="va-amt" data-va-line="'+attr(l.key)+'" value="'+l.amount+'" aria-label="'+attr(l.label)+' price"></td></tr>'; }).join("")
-              + '<tr><td>Discount %</td><td style="text-align:right;"><input type="number" min="0" max="100" step="5" class="va-amt" id="vaDiscount" value="'+(q.discountPct || 0)+'" aria-label="Discount percent"></td></tr>'
+            + '<div class="va-opts col" style="margin-top:8px;">'+pricingModel.addons.map(function(x){ var on = q.addons.indexOf(x.id) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-va-qaddon="'+esc(x.id)+'"'+(on ? ' checked' : '')+'><span><b>'+esc(x.name)+'</b><small>'+(x.price ? vaMoney(x.price)+' / month' : 'No monthly fee')+((a.addons || []).indexOf(x.id) > -1 ? ' · they asked for this' : '')+'</small></span></label>'; }).join("")+'</div>'
+            + '<table class="va-lines" style="width:100%;margin-top:10px;"><tbody>'+calc.lines.map(function(l){ return '<tr><td>'+esc(l.label)+(l.amount !== l.list ? ' <span class="field-note">(list '+vaMoney(l.list)+')</span>' : '')+'</td><td style="text-align:right;"><input type="number" min="0" step="50" class="va-amt" data-va-line="'+attr(l.key)+'" value="'+esc(l.amount)+'" aria-label="'+attr(l.label)+' price"></td></tr>'; }).join("")
+              + '<tr><td>Discount %</td><td style="text-align:right;"><input type="number" min="0" max="100" step="5" class="va-amt" id="vaDiscount" value="'+esc(q.discountPct || 0)+'" aria-label="Discount percent"></td></tr>'
               + '</tbody></table>'
             + '<div class="va-total"><span>Monthly</span><b id="vaMonthly">'+vaMoney(calc.monthly)+'</b></div><div class="field-note" style="text-align:right;" id="vaAnnual">'+vaMoney(calc.annual)+' a year'+(calc.discount ? ' · '+vaMoney(calc.discount)+' discount a month' : '')+'</div>'
             + '<div class="field-note" data-va-fee-note style="margin-top:8px;">Plus the '+esc(vaFeeNote().replace(/^Platform/, "platform"))+'</div>'
@@ -4723,7 +4738,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function vaPricingModal(){
     if (state.role !== "operator") return;
-    var row = function(g, x){ return '<tr><td><b>'+esc(x.name)+'</b>'+(x.size ? ' <span class="field-note">'+esc(x.size)+'</span>' : '')+'</td><td style="text-align:right;white-space:nowrap;">$ <input type="number" min="0" step="50" class="va-amt" data-pm="'+g+':'+x.id+'" value="'+x.price+'" aria-label="'+attr(x.name)+' monthly price"></td></tr>'; };
+    var row = function(g, x){ return '<tr><td><b>'+esc(x.name)+'</b>'+(x.size ? ' <span class="field-note">'+esc(x.size)+'</span>' : '')+'</td><td style="text-align:right;white-space:nowrap;">$ <input type="number" min="0" step="50" class="va-amt" data-pm="'+g+':'+esc(x.id)+'" value="'+esc(x.price)+'" aria-label="'+attr(x.name)+' monthly price"></td></tr>'; };
     var sect = function(title, g){ return '<tr><th colspan="2" style="text-align:left;padding-top:10px;">'+title+'</th></tr>'+pricingModel[g].map(function(x){ return row(g, x); }).join(""); };
     var back = openModal('<div class="modal-head"><h2>Pricing model</h2><button class="modal-close" aria-label="Close">×</button></div>'
       + '<p class="field-note" style="margin:0 0 6px;">Monthly list prices in USD. Only PartnerWAV sees these. Quotes use them as the starting point; saved quotes keep any price you changed by hand. On every plan the vendor also pays the platform operator fee ('+vaFeeRates().operator+'% / '+vaFeeRates().invited+'%), which is set per program under CloudWAV Revenue.</p>'
@@ -5294,8 +5309,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<div><span class="field-note">'+(lead.source === "landing page" ? '<span class="badge accent" style="margin-right:6px;">From your landing page</span>' : '')+(lead.value ? 'Value: <strong>'+esc(lead.value)+'</strong>' : 'Value not set yet')+(lead.createdDate ? ' · Created '+esc(/^\d{4}-\d{2}-\d{2}$/.test(lead.createdDate) ? fmtDate(lead.createdDate) : lead.createdDate) : '')+'</span></div>'
           + '<div style="color:var(--ink-soft);font-size:.88rem;">'+esc(lead.notes)+'</div>'
           + '<div style="display:flex;gap:8px;margin-top:6px;">'
-          + '<button class="btn secondary xs" data-edit-lead="'+lead.id+'">Edit</button>'
-          + (lead.status !== "won" && lead.status !== "lost" ? '<button class="btn primary xs" data-convert-lead="'+lead.id+'">Convert to deal →</button>' : '')
+          + '<button class="btn secondary xs" data-edit-lead="'+esc(lead.id)+'">Edit</button>'
+          + (lead.status !== "won" && lead.status !== "lost" ? '<button class="btn primary xs" data-convert-lead="'+esc(lead.id)+'">Convert to deal →</button>' : '')
           + '</div>'
           + '</div>';
       }).join("") : '<div class="empty">No leads in this status yet.</div>';
@@ -5317,8 +5332,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<p style="margin:0;color:var(--ink-soft);font-size:.88rem;">'+esc(proj.desc)+'</p>'
           + '<p style="margin:0;color:var(--ink-soft);font-size:.86rem;font-weight:500;">📋 '+esc(sowSummary)+'</p>'
           + '<div style="display:flex;gap:8px;margin-top:8px;">'
-          + '<button class="btn primary sm" data-sow-details="'+proj.id+'">View scope of work →</button>'
-          + (proj.claimedBy ? '<button class="btn secondary sm" disabled>Claimed by '+esc(proj.claimedBy)+'</button>' : '<button class="btn secondary sm" data-claim-project="'+proj.id+'">Claim project</button>')
+          + '<button class="btn primary sm" data-sow-details="'+esc(proj.id)+'">View scope of work →</button>'
+          + (proj.claimedBy ? '<button class="btn secondary sm" disabled>Claimed by '+esc(proj.claimedBy)+'</button>' : '<button class="btn secondary sm" data-claim-project="'+esc(proj.id)+'">Claim project</button>')
           + '</div>'
           + '</div>';
       }).join("");
@@ -5343,7 +5358,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<td>'+esc(item.effort)+'</td>'
         + '<td>'+(item.assignedPartner ? esc(item.assignedPartner) : '<em style="color:var(--ink-faint);">Unclaimed</em>')+'</td>'
         + '<td><span class="badge '+(item.status==="claimed"?"accent2":"neutral")+'">'+esc(item.status)+'</span></td>'
-        + '<td>'+(!item.assignedPartner ? '<button class="btn primary xs" data-claim-item="'+item.id+'">Claim</button>' : '')+'</td>'
+        + '<td>'+(!item.assignedPartner ? '<button class="btn primary xs" data-claim-item="'+esc(item.id)+'">Claim</button>' : '')+'</td>'
         + '</tr>';
     });
     html += '</tbody></table></div>'
@@ -5487,9 +5502,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       opRows.innerHTML = programs.map(function(p){
         var firstTier = p.tiers && p.tiers[0] ? esc(p.tiers[0].tier)+": "+esc(p.tiers[0].rate) : "--";
         var cfgNote = p.terms && p.terms.updatedAt ? "<div class='field-note'>Configured "+esc(p.terms.updatedAt)+"</div>" : "";
-        var opLogo = p.logo ? "<img class='op-logo' src='"+esc(p.logo)+"' alt=''>" : "<span class='op-logo op-logo-empty' aria-hidden='true'>"+esc((p.name || "?").charAt(0))+"</span>";
+        var opLogo = safeImg(p.logo) ? "<img class='op-logo' src='"+esc(safeImg(p.logo))+"' alt=''>" : "<span class='op-logo op-logo-empty' aria-hidden='true'>"+esc((p.name || "?").charAt(0))+"</span>";
         return "<tr><td><div class='op-prog-name'>"+opLogo+"<div>"+esc(p.name)+cfgNote+fundingPill("vendor:" + p.id)+(vrFor(p.id) ? "<div class='field-note' data-vr-note>Introduced by "+esc(vrReferrer(vrFor(p.id)))+"</div>" : "")+"</div></div></td><td>"+esc(p.vertical)+"</td><td>"+relBadges(p.relationships)+"</td><td style='font-size:.82rem;'>"+firstTier+"</td><td>"+statusPill(p.status)+"</td>"
-          + "<td class='row-actions'><button class='btn secondary sm' data-op-logo='"+p.id+"'>"+(p.logo ? "Change logo" : "Add logo")+"</button> <button class='btn secondary sm' data-acct-setup='vendor' data-acct-entity='"+p.id+"'>Login</button> <button class='btn secondary sm' data-configure='"+p.id+"'>Configure</button></td></tr>";
+          + "<td class='row-actions'><button class='btn secondary sm' data-op-logo='"+esc(p.id)+"'>"+(p.logo ? "Change logo" : "Add logo")+"</button> <button class='btn secondary sm' data-acct-setup='vendor' data-acct-entity='"+esc(p.id)+"'>Login</button> <button class='btn secondary sm' data-configure='"+esc(p.id)+"'>Configure</button></td></tr>";
       }).join("");
     }
 
@@ -5611,8 +5626,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + (canEdit ? '<button class="btn ghost sm" data-edit-thread="'+esc(t.id)+'">Edit</button>' : '')+'</div></div>'
           + '<div style="display:flex;flex-direction:column;gap:10px;">'+(postsHtml || '<p class="field-note" style="margin:0;">No posts yet -- start the conversation below.</p>')+'</div>'
           + '<div class="compose"><span class="p-avatar">'+esc(myInit)+'</span>'
-            + '<textarea placeholder="Post an update to this project…" data-compose="'+t.id+'"></textarea>'
-            + '<button class="btn primary sm" data-post="'+t.id+'">Post</button></div>'
+            + '<textarea placeholder="Post an update to this project…" data-compose="'+esc(t.id)+'"></textarea>'
+            + '<button class="btn primary sm" data-post="'+esc(t.id)+'">Post</button></div>'
         + '</div>';
       }).join("") : '<div class="empty">No project threads yet -- create one to start collaborating.</div>';
     } else {
@@ -5620,10 +5635,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var visibleGroups = groups.filter(function(g){ return !g.archivedAt; });
       gg.innerHTML = visibleGroups.length ? visibleGroups.map(function(g){
         var joined = state.joinedGroups.indexOf(g.id) > -1;
-        var btn = joined ? '<button class="btn secondary sm" disabled>Joined ✓</button>' : '<button class="btn primary sm" data-join-group="'+g.id+'">Join</button>';
+        var btn = joined ? '<button class="btn secondary sm" disabled>Joined ✓</button>' : '<button class="btn primary sm" data-join-group="'+esc(g.id)+'">Join</button>';
         if (g.createdBy === state.myProfileId || state.role === "operator") btn += ' <button class="btn ghost sm" data-edit-group="'+esc(g.id)+'">Edit</button>';
         return '<div class="group-card"><div class="group-top"><span class="group-name">'+esc(g.name)+'</span><span class="badge neutral">'+esc(g.vertical)+'</span></div>'
-          + '<span class="group-members">'+g.members+' members</span>'
+          + '<span class="group-members">'+esc(g.members)+' members</span>'
           + '<p class="program-desc">'+esc(g.desc)+'</p>'
           + '<div class="program-actions">'+btn+'</div></div>';
       }).join("") : '<div class="empty">No groups yet -- create one to bring partners together.</div>';
@@ -5689,7 +5704,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!preview) return;
     var val = hidden ? hidden.value : "";
     preview.innerHTML = val
-      ? '<img src="'+esc(val)+'" alt="Logo preview">'
+      ? '<img src="'+esc(safeImg(val))+'" alt="Logo preview">'
       : '<span class="logo-preview-empty">No logo</span>';
     if (removeBtn) removeBtn.hidden = !val;
   }
@@ -5843,7 +5858,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function logoFieldHtml(prefix, val, label){
     var a = function(x){ return esc(x || "").replace(/"/g, "&quot;"); };
     return '<div class="field-row"><label>'+esc(label || "Logo")+'</label><div class="logo-upload-row">'
-      + '<div class="logo-preview" id="'+prefix+'LogoPreview">'+(val ? '<img src="'+a(val)+'" alt="Logo preview">' : '<span class="logo-preview-empty">No logo</span>')+'</div>'
+      + '<div class="logo-preview" id="'+prefix+'LogoPreview">'+(val ? '<img src="'+a(safeImg(val))+'" alt="Logo preview">' : '<span class="logo-preview-empty">No logo</span>')+'</div>'
       + '<div class="logo-upload-actions"><button type="button" class="btn secondary sm" data-browse-logo="'+prefix+'">'+(val ? "Change…" : "Upload…")+'</button>'
       + '<button type="button" class="btn ghost sm" id="'+prefix+'LogoRemoveBtn" data-remove-logo="'+prefix+'"'+(val ? '' : ' hidden')+'>Remove</button></div></div>'
       + '<input type="file" id="'+prefix+'LogoFile" data-logo-prefix="'+prefix+'" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>'
@@ -5971,7 +5986,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<p class="program-desc">'+esc(p.tagline)+'</p>'
         + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+chips+'</div>'
         + '<div class="program-actions">'
-          + '<button class="btn ghost sm" data-view-profile="'+p.id+'">View profile →</button>'
+          + '<button class="btn ghost sm" data-view-profile="'+esc(p.id)+'">View profile →</button>'
           + actionBtn
         + '</div></div>';
     }).join("");
@@ -6152,14 +6167,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var actionBtn = mine
         ? '<button class="btn secondary sm" data-edit-vendor-profile="'+esc(p.id)+'">Edit profile</button>'
         : isLoggedInPartner
-          ? '<button class="btn secondary sm" data-apply-vendor-reseller="'+p.id+'">Apply as Reseller →</button>'
+          ? '<button class="btn secondary sm" data-apply-vendor-reseller="'+esc(p.id)+'">Apply as Reseller →</button>'
           : '<button class="btn secondary sm" data-message-vendor="'+esc(p.name)+'">Message</button>';
       return '<div class="program-card">'
         + '<div class="program-top"><div class="entity-name-row">'+logoOrFallback(p)+'<span class="program-name">'+esc(p.name)+'</span></div>'+(mine?'<span class="badge accent2">You</span>':relBadges(p.relationships))+readyBadge(p)+'</div>'
         + '<div class="program-meta">'+esc(p.vertical)+' · '+esc(p.origin)+'</div>'+builtByLine(p)
         + '<p class="program-desc">'+esc(p.desc)+'</p>'
         + '<div class="program-actions">'
-          + '<button class="btn ghost sm" data-view-vendor="'+p.id+'">View profile →</button>'
+          + '<button class="btn ghost sm" data-view-vendor="'+esc(p.id)+'">View profile →</button>'
           + actionBtn
         + '</div></div>';
     };
@@ -6194,7 +6209,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + '<div><div class="train-title">'+esc(prog.title)+'</div><div class="train-prov">'+esc(prog.provider)+'</div></div></div>'
           + '<p class="train-desc">'+esc(prog.description)+'</p>'
           + '<div class="train-foot"><span class="train-level">'+esc(prog.level)+'</span>'
-            + '<a class="btn secondary sm" href="'+attr(prog.url)+'" target="_blank" rel="noopener noreferrer">Access Training'+(icons ? '<span class="train-out" aria-hidden="true">'+pwIcon("arrowOut")+'</span>' : ' &rarr;')+'</a></div>'
+            + '<a class="btn secondary sm" href="'+attr(safeHref(prog.url))+'" target="_blank" rel="noopener noreferrer">Access Training'+(icons ? '<span class="train-out" aria-hidden="true">'+pwIcon("arrowOut")+'</span>' : ' &rarr;')+'</a></div>'
           + '</div>';
       });
       html += '</div></div>';
@@ -6527,12 +6542,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<tbody>'
         + referralPartners.map(function(partner){
           return '<tr style="border-bottom:1px solid var(--line);">'
-            + '<td style="padding:10px 8px;"><a href="javascript:void(0)" data-review-application="'+esc(partner.name)+'" style="color:var(--accent);cursor:pointer;text-decoration:none;">'+esc(partner.name)+'</a></td>'
+            + '<td style="padding:10px 8px;"><a href="#" role="button" data-review-application="'+esc(partner.name)+'" style="color:var(--accent);cursor:pointer;text-decoration:none;">'+esc(partner.name)+'</a></td>'
             + '<td style="padding:10px 8px;">'+esc(partner.countryCode || partner.country || 'N/A')+'</td>'
             + '<td style="padding:10px 8px;"><span class="badge neutral">'+esc(partner.status)+'</span></td>'
             + (mine ? '<td style="padding:10px 8px;text-align:right;">'
-              + '<button class="btn primary xs" data-approve-referral="'+p.id+'" data-partner="'+esc(partner.name)+'">Approve</button> '
-              + '<button class="btn secondary xs" data-deny-referral="'+p.id+'" data-partner="'+esc(partner.name)+'">Deny</button>'
+              + '<button class="btn primary xs" data-approve-referral="'+esc(p.id)+'" data-partner="'+esc(partner.name)+'">Approve</button> '
+              + '<button class="btn secondary xs" data-deny-referral="'+esc(p.id)+'" data-partner="'+esc(partner.name)+'">Deny</button>'
               + '</td>' : '')
             + '</tr>';
         }).join('')
@@ -6543,7 +6558,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="section-head"><h2 style="font-size:.9rem;">Vendor Referral Link</h2></div>'
       + '<div style="margin-top:10px;display:flex;gap:10px;align-items:center;">'
       + '<input type="text" readonly value="'+esc(referralUrl)+'" style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:6px;font-family:monospace;font-size:.8rem;background:var(--surface);" />'
-      + '<button class="btn primary sm" data-copy-referral-link="'+p.id+'">Copy link</button>'
+      + '<button class="btn primary sm" data-copy-referral-link="'+esc(p.id)+'">Copy link</button>'
       + '</div>'
       + '<div style="margin-top:16px;">'
       + '<div class="section-head"><h2 style="font-size:.9rem;">Partners via your referral link</h2></div>'
@@ -7444,12 +7459,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Phone:</td><td style="padding:8px;">'+esc(partner.phone)+'</td></tr>'
       + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Country:</td><td style="padding:8px;">'+esc(partner.countryCode)+'</td></tr>'
       + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Region:</td><td style="padding:8px;">'+esc(partner.region)+'</td></tr>'
-      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Website:</td><td style="padding:8px;"><a href="'+esc(partner.website)+'" target="_blank">'+esc(partner.website)+'</a></td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Website:</td><td style="padding:8px;"><a href="'+esc(safeHref(partner.website))+'" target="_blank" rel="noopener noreferrer">'+esc(partner.website)+'</a></td></tr>'
       + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Years in Business:</td><td style="padding:8px;">'+esc(partner.yearsInBusiness)+'</td></tr>'
       + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Employees:</td><td style="padding:8px;">'+esc(partner.numEmployees)+'</td></tr>'
       + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Vertical Markets:</td><td style="padding:8px;">'+esc(partner.verticalMarkets)+'</td></tr>'
       + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Geographic Markets:</td><td style="padding:8px;">'+esc(partner.geographicMarkets)+'</td></tr>'
-      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Status:</td><td style="padding:8px;"><span class="badge '+partner.status+'">'+esc(partner.status)+'</span></td></tr>'
+      + '<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;font-weight:600;">Status:</td><td style="padding:8px;"><span class="badge '+esc(partner.status)+'">'+esc(partner.status)+'</span></td></tr>'
       + '</table>'
       + '<div style="display:flex;gap:10px;margin-top:20px;">'
       + '<button class="btn primary" data-approve-referral="'+vendorId+'" data-partner="'+esc(partner.name)+'" onclick="closeModal();">Approve</button>'
@@ -7561,14 +7576,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function esignCellHtml(p){
     var es = p.agreement.esign;
     if (!es){
-      return '<span class="badge neutral">Not sent</span> <button class="btn ghost sm" data-send-esign="'+p.id+'">Send for signature</button>';
+      return '<span class="badge neutral">Not sent</span> <button class="btn ghost sm" data-send-esign="'+esc(p.id)+'">Send for signature</button>';
     }
     if (es.status === "signed"){
       return '<span class="badge success">Fully executed</span>';
     }
     var signedCount = es.signers.filter(function(s){ return s.signed; }).length;
     return '<span class="badge accent2">Awaiting signature ('+signedCount+'/'+es.signers.length+')</span> '
-      + '<button class="btn ghost sm" data-simulate-signed="'+p.id+'">Simulate signed</button>';
+      + '<button class="btn ghost sm" data-simulate-signed="'+esc(p.id)+'">Simulate signed</button>';
   }
 
   function esignDetailHtml(p){
@@ -7576,14 +7591,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!es){
       return '<div class="tier-line"><span>E-signature</span><b>Not sent</b></div>'
         + '<p style="margin:0;color:var(--ink-faint);font-size:.8rem;">Sends the '+esc(p.agreement.type)+' template through '+ESIGN_PROVIDER+' for signature by PartnerWAV and '+esc(p.name)+'.</p>'
-        + '<div class="modal-actions" style="justify-content:flex-start;"><button class="btn primary sm" data-send-esign="'+p.id+'">Send for e-signature</button></div>';
+        + '<div class="modal-actions" style="justify-content:flex-start;"><button class="btn primary sm" data-send-esign="'+esc(p.id)+'">Send for e-signature</button></div>';
     }
     var signerRows = es.signers.map(function(s){
       return '<div class="tier-line"><span>'+esc(s.name)+'</span><b>'+(s.signed ? "Signed ✓" : "Pending")+'</b></div>';
     }).join("");
     var footer = es.status === "signed"
       ? '<p style="margin:0;color:var(--ink-faint);font-size:.8rem;">Fully executed via '+ESIGN_PROVIDER+'.</p>'
-      : '<div class="modal-actions" style="justify-content:flex-start;"><button class="btn secondary sm" data-simulate-signed="'+p.id+'">Simulate all parties signed</button></div>';
+      : '<div class="modal-actions" style="justify-content:flex-start;"><button class="btn secondary sm" data-simulate-signed="'+esc(p.id)+'">Simulate all parties signed</button></div>';
     return '<div class="tier-line"><span>Sent via</span><b>'+ESIGN_PROVIDER+' · '+esc(es.sentAt)+'</b></div>'
       + signerRows + footer;
   }
@@ -7655,11 +7670,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       '<div class="modal-head"><div><div class="eyebrow" style="margin-bottom:6px;">'+relBadges(p.relationships)+'</div><h2>'+esc(p.name)+'</h2></div><button class="modal-close" aria-label="Close">×</button></div>'
       + '<p style="margin:0;color:var(--ink-soft);font-size:.9rem;line-height:1.5;">'+esc(p.desc)+'</p>'
       + '<div style="display:flex;flex-direction:column;gap:8px;">'+tiersHtml+'</div>'
-      + '<div class="tier-line"><span>Governing agreement</span><b>'+esc(p.agreement.type)+' -- '+p.agreement.status+'</b></div>'
+      + '<div class="tier-line"><span>Governing agreement</span><b>'+esc(p.agreement.type)+' -- '+esc(p.agreement.status)+'</b></div>'
       + '<div class="modal-actions">'
         + '<button class="btn secondary" id="modalClose2">Close</button>'
         + (canUpgrade ? (upgradeRequested ? '<button class="btn secondary" disabled>Upgrade requested ✓</button>' : '<button class="btn secondary" id="modalUpgrade">Request tier upgrade</button>') : "")
-        + (enrolled ? '<button class="btn secondary" disabled>Already enrolled</button>' : '<button class="btn primary" id="modalEnroll" data-enroll="'+p.id+'">Enroll as '+esc(p.tiers[0].tier)+'</button>')
+        + (enrolled ? '<button class="btn secondary" disabled>Already enrolled</button>' : '<button class="btn primary" id="modalEnroll" data-enroll="'+esc(p.id)+'">Enroll as '+esc(p.tiers[0].tier)+'</button>')
       + '</div>'
     );
     back.querySelector("#modalClose2").addEventListener("click", closeModal);
@@ -8517,7 +8532,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("change", function(ev){ if (ev.target.id === "aoAudience") syncAoAudience(); });
   function setAoQr(v){
     document.getElementById("aoQr").value = v || "";
-    document.getElementById("aoQrPreview").innerHTML = v ? '<img src="'+attr(v)+'" alt="QR code preview">' : '<span class="logo-preview-empty">No QR</span>';
+    document.getElementById("aoQrPreview").innerHTML = v ? '<img src="'+attr(safeImg(v))+'" alt="QR code preview">' : '<span class="logo-preview-empty">No QR</span>';
     document.getElementById("aoQrRemove").hidden = !v; document.getElementById("aoQrBrowse").textContent = v ? "Change…" : "Upload…";
   }
   document.addEventListener("click", function(ev){
@@ -9002,7 +9017,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var FLY_RISKY = ["guarantee","guaranteed","risk-free","risk free","no risk","unlimited","free money","get rich","instant cash","no strings","100% profit","can't lose","cannot lose","double your"];
   var JSPDF = { url:"https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js", sri:"sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" };
 
-  function attr(s){ return esc(s == null ? "" : s).replace(/"/g,"&quot;"); }
+  function attr(s){ return esc(s == null ? "" : s); }
   function saveFlyers(){ try { lsSet(FLYERS_KEY, JSON.stringify(incentiveFlyers)); } catch(e){ console.log("Could not save flyers:", e); } }
   function loadFlyers(){
     try { var saved = JSON.parse(lsGet(FLYERS_KEY) || "null"); if (Array.isArray(saved)) incentiveFlyers = saved; } catch(e){ console.log("Could not load flyers:", e); }
@@ -9616,8 +9631,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         return '<div class="shop-card" data-lib-card="'+attr(p.id)+'">'+shopCover(p)
           + '<div class="shop-body"><div class="shop-title">'+esc(p.title)+'</div>'
           + '<div>'+'<span class="badge '+ORDER_STATUS[o.status].cls+'">'+esc(ORDER_STATUS[o.status].label)+'</span>'+(o.completedAt ? ' <span class="badge good">Completed</span>' : '')+'</div>'
-          + (paid ? (p.accessLink ? '<a class="btn primary sm" href="'+attr(p.accessLink)+'" target="_blank" rel="noopener noreferrer">Open '+esc(p.type.toLowerCase())+'</a>' : '<span class="field-note">PartnerWAV will email you access shortly.</span>')
-                  : '<span class="field-note">We\'ll unlock this as soon as PartnerWAV confirms your payment.'+(p.paymentLink ? ' <a href="'+attr(p.paymentLink)+'" target="_blank" rel="noopener noreferrer">Payment page</a>' : '')+'</span>')
+          + (paid ? (p.accessLink ? '<a class="btn primary sm" href="'+attr(safeHref(p.accessLink))+'" target="_blank" rel="noopener noreferrer">Open '+esc(p.type.toLowerCase())+'</a>' : '<span class="field-note">PartnerWAV will email you access shortly.</span>')
+                  : '<span class="field-note">We\'ll unlock this as soon as PartnerWAV confirms your payment.'+(p.paymentLink ? ' <a href="'+attr(safeHref(p.paymentLink))+'" target="_blank" rel="noopener noreferrer">Payment page</a>' : '')+'</span>')
           + (paid && p.certifies && !o.completedAt ? '<button type="button" class="btn secondary sm" data-shop-complete="'+attr(o.id)+'">Mark as completed</button><span class="field-note">Completed courses count toward your partner level.</span>' : '')
           + '<button type="button" class="btn ghost sm" data-shop-view="'+attr(p.id)+'">Details</button>'
           + '</div></div>';
@@ -9650,7 +9665,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (state.role === "operator") action = '<button type="button" class="btn primary" data-shop-edit="'+attr(p.id)+'">Edit product</button>';
     else if (!key) action = '<span class="field-note">Complete your profile first to buy.</span>';
     else if (o && o.status === "paid") action = '<button type="button" class="btn primary" data-shop-tab-go="library">Open in my library</button>';
-    else if (o) action = '<div class="field-note">Order placed '+esc(o.created)+' -- awaiting payment confirmation.'+(p.paymentLink ? ' <a href="'+attr(p.paymentLink)+'" target="_blank" rel="noopener noreferrer">Go to payment page</a>' : '')+'</div>';
+    else if (o) action = '<div class="field-note">Order placed '+esc(o.created)+' -- awaiting payment confirmation.'+(p.paymentLink ? ' <a href="'+attr(safeHref(p.paymentLink))+'" target="_blank" rel="noopener noreferrer">Go to payment page</a>' : '')+'</div>';
     else if (!p.price) action = '<button type="button" class="btn primary" data-shop-buy="'+attr(p.id)+'">Get it free</button>';
     else if (p.paymentLink) action = '<button type="button" class="btn primary" data-shop-buy="'+attr(p.id)+'">Buy for '+shopPrice(p)+'</button><span class="field-note">Opens a secure payment page in a new tab.</span>';
     else action = w ? '<span class="badge neutral">You\'re on the waitlist -- we\'ll let you know when it opens</span>' : '<button type="button" class="btn primary" data-shop-waitlist="'+attr(p.id)+'">Join the waitlist</button><span class="field-note">Opening soon at '+shopPrice(p)+'. We\'ll let you know first.</span>';
@@ -9886,7 +9901,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + (list.length ? list.map(function(e){ var s = enStats(e), fl2 = enFlag(e);
           return '<tr data-en-row="'+attr(e.id)+'"><td><b>'+esc(e.partner)+'</b><span class="field-note" style="display:block;">'+esc(e.country)+'</span></td><td>'+esc(enProgramName(e))+'</td><td>'+esc(e.tier)+'</td>'
             + '<td>'+levelBadge(e.level)+(fl2 ? '<span class="badge '+FLAG_LABEL[fl2][0]+'" style="margin-left:4px;">'+esc(FLAG_LABEL[fl2][1])+'</span>' : '')+'</td><td style="min-width:120px;">'+progressHtml(e)+'</td>'
-            + '<td style="text-align:right">'+money(s.revenue)+'</td><td style="text-align:right">'+s.deals+'</td><td style="text-align:right">'+s.courses+'</td><td>'+statusPill(e.status)+'</td>'
+            + '<td style="text-align:right">'+money(s.revenue)+'</td><td style="text-align:right">'+esc(s.deals)+'</td><td style="text-align:right">'+esc(s.courses)+'</td><td>'+statusPill(e.status)+'</td>'
             + '<td class="row-actions"><button type="button" class="btn primary sm" data-en-view="'+attr(e.id)+'">Manage</button></td></tr>'; }).join("")
         : '<tr><td colspan="10"><div class="empty">No partners match.</div></td></tr>')
       + '</tbody></table></div></div>';
@@ -9907,7 +9922,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     box.innerHTML = '<div class="deal-layout"><div style="display:flex;flex-direction:column;gap:16px;">'
       + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
         + '<div class="profile-header">'+(prof ? logoOrFallback(prof, 56) : '')+'<div><h2 style="font-size:1.2rem;margin:0;">'+esc(e.partner)+'</h2><div class="thread-meta">'+esc(enProgramName(e))+' · '+esc(e.tier)+' · joined '+esc(e.joined)+' · '+esc(e.country)+'</div></div><div style="margin-left:auto;">'+statusPill(e.status)+'</div></div>'
-        + '<div class="map-stats"><div class="map-stat"><b>'+money(s.revenue)+'</b>revenue 12 mo</div><div class="map-stat"><b>'+s.deals+'</b>closed deals</div><div class="map-stat"><b>'+s.courses+'</b>courses</div><div class="map-stat"><b>'+esc(e.lastActivity)+'</b>last activity</div></div>'
+        + '<div class="map-stats"><div class="map-stat"><b>'+money(s.revenue)+'</b>revenue 12 mo</div><div class="map-stat"><b>'+esc(s.deals)+'</b>closed deals</div><div class="map-stat"><b>'+esc(s.courses)+'</b>courses</div><div class="map-stat"><b>'+esc(e.lastActivity)+'</b>last activity</div></div>'
         + '<div class="field-row"><label for="enSource">How this partner joined '+esc(enProgramName(e))+'</label><select id="enSource"><option value="vendor"'+(e.source !== "cloudwav" ? " selected" : "")+'>Vendor brought them -- base platform fee</option><option value="cloudwav"'+(e.source === "cloudwav" ? " selected" : "")+'>PartnerWAV sourced them -- sourced platform fee</option></select></div>'
         + '<div class="cfg-actions" style="flex-wrap:wrap;">'+statusBtns+'<button type="button" class="btn secondary sm" data-message-partner="'+attr(e.partner)+'">Message</button>'+(canPreview() ? '<button type="button" class="btn secondary sm" data-admin-manage="partner" data-admin-id="'+attr(e.partnerId)+'">Manage as '+esc(e.partner)+'</button>' : '')+(prof ? '<button type="button" class="btn ghost sm" data-view-profile="'+attr(prof.id)+'">View profile</button>' : '')+'</div>'
       + '</div>'
@@ -13683,7 +13698,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var list = socialGroups.filter(function(g){ return g.ownerKey === "vendor:" + p.id && g.listed !== false && safeLink(g.link); });
     if (!list.length) return "";
     return '<div class="ch-contact" data-vendor-groups="'+attr(p.id)+'"><span class="field-note">Join the community:</span>'
-      + list.map(function(g){ var pf = GROUP_PLATFORMS[g.platform] || {}; return '<a class="btn secondary sm" href="'+attr(g.link)+'" target="_blank" rel="noopener noreferrer">'+esc(pf.icon || "")+' '+esc(g.name)+'</a>'; }).join("") + '</div>';
+      + list.map(function(g){ var pf = GROUP_PLATFORMS[g.platform] || {}; return '<a class="btn secondary sm" href="'+attr(safeHref(g.link))+'" target="_blank" rel="noopener noreferrer">'+esc(pf.icon || "")+' '+esc(g.name)+'</a>'; }).join("") + '</div>';
   }
   function renderChannels(){
     var box = document.getElementById("channelsContent");
@@ -13748,7 +13763,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="field-row"><label for="gCity">City / area</label><input id="gCity" type="text" value="'+attr(g.city)+'" placeholder="e.g. Bangkok"></div>'
       + '</div>'
       + '<div class="field-row"><label for="gDesc">What the group is about</label><textarea id="gDesc" rows="2">'+esc(g.desc || "")+'</textarea></div>'
-      + '<div class="field-row"><label>QR code (optional)</label><div class="logo-upload-row"><div class="logo-preview" id="gQrPreview">'+(g.qr ? '<img src="'+attr(g.qr)+'" alt="QR code">' : '<span class="logo-preview-empty">No QR</span>')+'</div>'
+      + '<div class="field-row"><label>QR code (optional)</label><div class="logo-upload-row"><div class="logo-preview" id="gQrPreview">'+(g.qr ? '<img src="'+attr(safeImg(g.qr))+'" alt="QR code">' : '<span class="logo-preview-empty">No QR</span>')+'</div>'
         + '<div class="logo-upload-actions"><button type="button" class="btn secondary sm" data-g-qr-browse>'+(g.qr ? "Change…" : "Upload…")+'</button></div></div><input type="file" id="gQrFile" accept="image/png,image/jpeg,image/webp" hidden><input type="hidden" id="gQr" value="'+attr(g.qr)+'"></div>'
       + '<label class="cfg-check"><input type="checkbox" id="gListed"'+(g.listed !== false ? " checked" : "")+'> List it in the Group directory so other PartnerWAV members can join</label>'
       + '<div id="gError" class="login-msg bad" hidden></div>'
@@ -13761,7 +13776,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="program-top"><span class="program-name">'+esc(pf.icon)+' '+esc(g.name)+'</span><span class="badge neutral">'+esc(pf.label)+'</span></div>'
       + '<div class="program-meta">'+esc(g.purpose || "")+(g.city ? ' · '+esc(g.city) : '')+(g.members ? ' · '+esc(g.members)+' members' : '')+(own ? '' : ' · by '+esc(keyName(g.ownerKey)))+'</div>'
       + (g.desc ? '<p class="program-desc">'+esc(g.desc)+'</p>' : '')
-      + (g.qr ? '<div class="aff-qr"><img src="'+attr(g.qr)+'" alt="QR code to join '+attr(g.name)+'" width="84" height="84"><div class="field-note" style="margin:0;">Scan to join</div></div>' : '')
+      + (g.qr ? '<div class="aff-qr"><img src="'+attr(safeImg(g.qr))+'" alt="QR code to join '+attr(g.name)+'" width="84" height="84"><div class="field-note" style="margin:0;">Scan to join</div></div>' : '')
       + '<div class="program-actions">'
         + (safeLink(g.link) ? '<a class="btn '+(own ? "secondary" : "primary")+' sm" href="'+attr(g.link)+'" target="_blank" rel="noopener noreferrer">'+(own ? "Open" : "Join group")+'</a>' : '')
         + (own ? '<button type="button" class="btn secondary sm" data-g-edit="'+attr(g.id)+'">Edit</button>'+(g.listed === false ? '<span class="badge neutral">Not listed</span>' : '<span class="badge good">Listed</span>') : '')
@@ -13873,7 +13888,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
       if (!/^image\/(png|jpeg|webp)$/.test(f.type)){ toast("Please choose a PNG, JPG or WEBP image"); return; }
       if (f.size > 1024 * 1024){ toast("That QR image is over 1 MB -- export a smaller one"); return; }
-      var r = new FileReader(); r.onload = function(){ document.getElementById("gQr").value = r.result; document.getElementById("gQrPreview").innerHTML = '<img src="'+attr(r.result)+'" alt="QR code">'; }; r.readAsDataURL(f);
+      var r = new FileReader(); r.onload = function(){ document.getElementById("gQr").value = r.result; document.getElementById("gQrPreview").innerHTML = '<img src="'+attr(safeImg(r.result))+'" alt="QR code">'; }; r.readAsDataURL(f);
     }
   });
 
@@ -14148,9 +14163,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '</div>'
         + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:.9rem;margin-bottom:8px;">'
         + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Timeline</label><div>'+esc(sow.timeline)+'</div></div>'
-        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Effort</label><div>'+sow.effort+'h</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Effort</label><div>'+esc(sow.effort)+'h</div></div>'
         + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Status</label><div>'+esc(sow.status)+'</div></div>'
-        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Assigned</label><div>'+(sow.assignedPartner || 'Unassigned')+'</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Assigned</label><div>'+esc(sow.assignedPartner || 'Unassigned')+'</div></div>'
         + '</div>'
         + '<div style="font-size:.9rem;color:var(--ink-soft);margin:8px 0;">'+esc(sow.notes)+'</div>'
         + '</div>';
@@ -14286,8 +14301,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '</div>'
         + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:.9rem;margin-bottom:8px;">'
         + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Timeline</label><div>'+esc(sow.timeline)+'</div></div>'
-        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Effort</label><div>'+sow.effort+'h</div></div>'
-        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Assigned</label><div>'+(sow.assignedPartner || 'Unassigned')+'</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Effort</label><div>'+esc(sow.effort)+'h</div></div>'
+        + '<div><label style="color:var(--ink-faint);font-size:.85rem;">Assigned</label><div>'+esc(sow.assignedPartner || 'Unassigned')+'</div></div>'
         + '</div>'
         + '<div style="font-size:.9rem;color:var(--ink-soft);">'+esc(sow.notes)+'</div>'
         + '</div>';
@@ -14359,7 +14374,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var preview = document.getElementById("productLogoPreview");
     if (!preview) return;
     if (logoUrl && logoUrl.length > 0){
-      preview.innerHTML = '<img src="'+esc(logoUrl)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />';
+      preview.innerHTML = '<img src="'+esc(safeImg(logoUrl))+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />';
     } else {
       preview.innerHTML = '📦';
     }
@@ -14794,7 +14809,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((m = url.match(/loom\.com\/share\/([\w-]+)/i))) return "https://www.loom.com/embed/" + m[1];
     if ((m = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/i))) return "https://drive.google.com/file/d/" + m[1] + "/preview";
     if ((m = url.match(/docs\.google\.com\/(document|presentation|spreadsheets)\/d\/([\w-]+)/i))) return "https://docs.google.com/" + m[1] + "/d/" + m[2] + "/preview";
-    if (/\.pdf(\?|#|$)/i.test(url)) return url;
+    if (/\.pdf(\?|#|$)/i.test(url)) return safeLink(url);   // https only: never a javascript: link in a frame
     return "";
   }
   function resourcePreviewHtml(r){
@@ -14826,7 +14841,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var bar = function(inner){ return '<div class="res-preview-bar">'+inner+'</div>'; };
     if (r.fileUrl && /^https?:\/\//i.test(r.fileUrl)){
       var emb = embedUrlFor(r.fileUrl);
-      var openL = '<a class="btn secondary sm" href="'+esc(r.fileUrl)+'" target="_blank" rel="noopener noreferrer">Open in new tab</a>';
+      var openL = '<a class="btn secondary sm" href="'+esc(safeHref(r.fileUrl))+'" target="_blank" rel="noopener noreferrer">Open in new tab</a>';
       var lbl = '<span style="overflow-wrap:anywhere;">🔗 '+esc(r.fileUrl)+'</span>';
       if (emb) return '<div class="res-preview"><iframe title="Preview of '+esc(r.title)+'" src="'+esc(emb)+'" referrerpolicy="no-referrer" allow="fullscreen; picture-in-picture"></iframe>'+bar(lbl+openL)+'</div>';
       return '<div class="res-preview"><div class="res-preview-empty">This link can\'t be embedded here -- open it to review the material.</div>'+bar(lbl+openL)+'</div>';
@@ -15355,6 +15370,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     var reviewAppBtn = e.target.closest("[data-review-application]");
     if (reviewAppBtn){
+      e.preventDefault();
       var partnerName = reviewAppBtn.getAttribute("data-review-application");
       var vendorId = state.viewingVendorId;  // Will be set when viewing vendor profile
       if (vendorId && partnerName) reviewApplicationModal(vendorId, partnerName);
@@ -16191,7 +16207,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<label for="mspNotes-'+esc(x.id)+'">Notes</label><textarea id="mspNotes-'+esc(x.id)+'" data-msp-notes="'+esc(x.id)+'" placeholder="Who you spoke to, next step…">'+esc(x.notes || "")+'</textarea>'
           + '<button type="button" class="btn primary sm" data-msp-invite="'+esc(x.id)+'">Invite to a program</button>'
           + '<button type="button" class="btn secondary sm" data-msp-log="'+esc(x.id)+'">Log activity</button>'
-          + (site ? '<a class="btn secondary sm" href="'+esc(site)+'" target="_blank" rel="noopener noreferrer" style="text-align:center;text-decoration:none;">Visit website</a>' : '')
+          + (safeHref(site) ? '<a class="btn secondary sm" href="'+esc(safeHref(site))+'" target="_blank" rel="noopener noreferrer" style="text-align:center;text-decoration:none;">Visit website</a>' : '')
           + (x.sample ? '' : '<button type="button" class="btn ghost sm" data-msp-edit="'+esc(x.id)+'">Edit details</button>')
           + (x.type === "Software house" ? '<button type="button" class="btn ghost sm" data-msp-house="'+esc(x.id)+'">'+(softwareHouses.some(function(h){ return h.prospectId === x.id; }) ? "Referral partner ✓" : "Make referral partner")+'</button>' : '')
         + '</div>'
@@ -17194,7 +17210,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     Object.keys(ACCT_ROLES).forEach(function(r){ acctEntities(r).forEach(function(e){ if (!live || (acctList && !acctFor(r, e.id).length)) none.push({ role:r, e:e }); }); });
     if (none.length && (!live || acctList)){
       html += '<div style="height:16px"></div><div class="section-head"><h2 style="font-size:.95rem;">' + (live ? "Companies without a login" : "Companies") + '</h2></div><div class="card"><div class="table-scroll"><table><tbody id="accountNoLoginRows">'
-        + none.map(function(x){ return '<tr><td>' + esc(x.e.name) + '</td><td>' + ACCT_ROLES[x.role] + '</td><td class="row-actions"><button class="btn secondary sm" data-acct-setup="' + x.role + '" data-acct-entity="' + esc(x.e.id) + '">Set up login</button></td></tr>'; }).join("")
+        + none.map(function(x){ return '<tr><td>' + esc(x.e.name) + '</td><td>' + ACCT_ROLES[x.role] + '</td><td class="row-actions"><button class="btn secondary sm" data-acct-setup="' + esc(x.role) + '" data-acct-entity="' + esc(x.e.id) + '">Set up login</button></td></tr>'; }).join("")
         + '</tbody></table></div></div>';
     }
     el.innerHTML = html;
@@ -17434,7 +17450,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     box.innerHTML = picker + '<div class="brand-layout"><div class="card card-pad brand-form" id="brandForm">'
       + '<div class="brand-head"><span class="stat-ic collab-ic t-violet" aria-hidden="true">'+pwIcon("palette")+'</span><div><h3>'+esc(name)+'</h3><span class="field-note" data-brand-status>'+(kit ? (kit.source ? esc(kit.source) : "Brand saved") + (kit.updatedAt ? " · " + esc(String(kit.updatedAt).slice(0, 10)) : "") : "Not set yet -- PartnerWAV colours are used until you save yours")+'</span></div></div>'
       + '<div><div class="aff-section-title">Start from</div><div class="brand-presets">'
-        + (logo ? '<button type="button" class="brand-preset brand-logo" data-brand-logo><img src="'+attr(logo)+'" alt="">Match my logo</button>' : '')
+        + (logo ? '<button type="button" class="brand-preset brand-logo" data-brand-logo><img src="'+attr(safeImg(logo))+'" alt="">Match my logo</button>' : '')
         + BRAND_PRESETS.map(presetBtn).join("") + '</div><span class="field-note" id="brandLogoNote" role="status"></span></div>'
       + '<div class="brand-fields">' + BRAND_FIELDS.map(field).join("") + '</div>'
       + '<div class="form-grid"><div class="field-row"><label for="brandFont">Font</label><select id="brandFont" class="filter app-select">'+BRAND_FONTS.map(function(x){ return '<option'+(x === r.font ? " selected" : "")+'>'+esc(x)+'</option>'; }).join("")+'</select><span class="field-note">Thai-friendly: IBM Plex Sans Thai, Noto Sans Thai, Kanit, Prompt, Sarabun</span></div>'
@@ -17564,8 +17580,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + (pts.length ? '<h2>' + (web ? "What you'll learn" : "Why talk to us") + '</h2><ul class="lp-features">' + pts.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join("") + '</ul>' : '')
         + (web && lines(p.agenda).length ? '<h2>Agenda</h2><ol class="pp-agenda">' + lines(p.agenda).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join("") + '</ol>' : '')
         + (web && p.speakers ? '<p class="pp-speakers">' + ic("users") + '<b>Speakers:</b> ' + esc(p.speakers) + '</p>' : '')
-        + (!web ? '<div class="pp-vendor">' + (v.logo ? '<img src="' + attr(v.logo) + '" alt="">' : '') + '<div><h2>About ' + esc(v.name) + '</h2>' + (v.desc ? '<p>' + esc(v.desc) + '</p>' : '') + '</div></div>'
-            + ((v.products || []).length ? '<div class="pp-products">' + v.products.map(function(x){ return '<div class="pp-product">' + (x.logo ? '<img src="' + attr(x.logo) + '" alt="">' : '') + '<div><b>' + esc(x.name) + '</b>' + (x.desc ? '<span>' + esc(x.desc) + '</span>' : '') + '</div></div>'; }).join("") + '</div>' : '') : '')
+        + (!web ? '<div class="pp-vendor">' + (safeImg(v.logo) ? '<img src="' + attr(safeImg(v.logo)) + '" alt="">' : '') + '<div><h2>About ' + esc(v.name) + '</h2>' + (v.desc ? '<p>' + esc(v.desc) + '</p>' : '') + '</div></div>'
+            + ((v.products || []).length ? '<div class="pp-products">' + v.products.map(function(x){ return '<div class="pp-product">' + (safeImg(x.logo) ? '<img src="' + attr(safeImg(x.logo)) + '" alt="">' : '') + '<div><b>' + esc(x.name) + '</b>' + (x.desc ? '<span>' + esc(x.desc) + '</span>' : '') + '</div></div>'; }).join("") + '</div>' : '') : '')
         + '<div id="ppFormBox">' + form + '</div>'
       + '</div>'
       + '<div class="lp-foot">' + esc(pname) + ' is an authorized partner of ' + esc(v.name) + ' · Page on PartnerWAV · ' + esc(pwOperatedBy()) + '</div>'
@@ -18029,7 +18045,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     console.error("RENDER ERROR:", e.message, e.stack);
     var errorDiv = document.createElement("div");
     errorDiv.style.cssText = "position:fixed;top:20px;right:20px;background:#fbe7e8;border:2px solid #ff8489;color:#c23a3f;padding:15px;border-radius:8px;z-index:99999;max-width:400px;font-family:monospace;font-size:12px;";
-    errorDiv.innerHTML = "<strong>ERROR:</strong><br>" + e.message + "<br><br>" + e.stack;
+    errorDiv.innerHTML = "<strong>ERROR:</strong><br>" + esc(e.message) + "<br><br>" + esc(e.stack);
     document.body.appendChild(errorDiv);
   }
 })();
