@@ -8,7 +8,8 @@
 //   supabase functions deploy flyer-assist
 // Optional: supabase secrets set ANTHROPIC_MODEL=claude-sonnet-5
 //
-// Only signed-in vendors and operators (rows in portal_users) can use it.
+// Only signed-in vendors and operators (rows in portal_users) can use it, within a daily allowance
+// per person (portal_ai_quota in supabase/portal_records.sql: 20 a day, 200 for CloudWAV).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -55,6 +56,11 @@ Deno.serve(async (req) => {
   let body: { vendor?: string; tone?: string; notes?: string; incentive?: Record<string, unknown> };
   try { body = await req.json(); } catch { return json(400, { error: "Bad JSON" }); }
   if (!body.incentive || typeof body.incentive !== "object") return json(400, { error: "incentive is required" });
+
+  // daily allowance, counted in the database before anything is spent (security review finding 10)
+  const { data: quota, error: quotaErr } = await sb.rpc("portal_ai_quota", { p_kind: "flyer" });
+  if (quotaErr) return json(503, { error: "AI allowance check unavailable -- re-run supabase/portal_records.sql" });
+  if (!quota?.ok) return json(429, { error: "daily_limit", limit: quota?.limit ?? 0 });
 
   const user = `Vendor: ${String(body.vendor ?? "").slice(0, 120)}
 Tone: ${String(body.tone ?? "Professional").slice(0, 60)}

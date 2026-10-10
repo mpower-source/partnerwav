@@ -712,6 +712,45 @@ end $$;
 revoke all on function public.submit_partner_application(uuid, jsonb) from public;
 grant execute on function public.submit_partner_application(uuid, jsonb) to anon, authenticated;
 
+-- Finding 11: applications only arrive through submit_partner_application (spam-checked).
+-- Nobody can write straight into the table any more; CloudWAV can still read and update them.
+do $$ declare p record; begin
+  if to_regclass('public.partner_applications') is not null then
+    revoke insert on public.partner_applications from public, anon, authenticated;
+    for p in select policyname from pg_policies
+             where schemaname = 'public' and tablename = 'partner_applications' and cmd = 'INSERT' loop
+      execute format('drop policy %I on public.partner_applications', p.policyname);
+    end loop;
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 5c. Daily allowance for AI drafts (finding 10). Each AI flyer draft costs CloudWAV money, so the
+--     flyer-assist function asks here first. 20 a day per person (200 for CloudWAV); to change it:
+--       insert into public.portal_secrets(key, value) values ('ai_daily_limit_vendor', '40')
+--         on conflict (key) do update set value = excluded.value;
+-- ---------------------------------------------------------------------------
+create or replace function public.portal_ai_quota(p_kind text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare who uuid := auth.uid(); r text; lim int; used int;
+begin
+  if who is null then raise exception 'Sign in first'; end if;
+  select role into r from public.portal_users where id = who;
+  if r is null then raise exception 'This login has no PartnerWAV role'; end if;
+  if public.portal_password_pending() then raise exception 'Choose your own password first'; end if;
+  if coalesce(p_kind, '') !~ '^[a-z-]{1,30}$' then raise exception 'Unknown AI feature'; end if;
+  lim := coalesce((select value::int from public.portal_secrets where key = 'ai_daily_limit_' || r and value ~ '^[0-9]{1,6}$'),
+                  case when r = 'operator' then 200 else 20 end);
+  perform pg_advisory_xact_lock(hashtext('portal-ai:' || who::text));   -- two clicks at once can't both slip under the limit
+  select count(*) into used from public.portal_submit_log
+   where kind = 'ai:' || p_kind and ref = who::text and at > now() - interval '24 hours';
+  if used >= lim then return jsonb_build_object('ok', false, 'limit', lim, 'used', used); end if;
+  insert into public.portal_submit_log (kind, ref) values ('ai:' || p_kind, who::text);
+  return jsonb_build_object('ok', true, 'limit', lim, 'used', used + 1);
+end $$;
+revoke all on function public.portal_ai_quota(text) from public;
+grant execute on function public.portal_ai_quota(text) to authenticated;
+
 -- ---------------------------------------------------------------------------
 -- 6. Live updates: other people's changes show up without reloading
 -- ---------------------------------------------------------------------------

@@ -2723,37 +2723,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         console.error('Vendor not found in mapping:', formData.vendorId);
         throw new Error('Vendor not found: ' + formData.vendorId);
       }
-      // Through the database's spam check first (supabase/portal_records.sql, submit_partner_application);
-      // falls back to the direct insert only if that function hasn't been installed yet.
+      // Only through the database's spam check (supabase/portal_records.sql, submit_partner_application)
       var rpc = await supabase.rpc("submit_partner_application", { p_vendor: vendorUUID, p_data: Object.assign({}, formData, spamPayload("apply")) });
       if (!rpc.error) return rpc.data;
       if (!/PGRST202|could not find the function|does not exist/i.test((rpc.error.code || "") + " " + (rpc.error.message || ""))){ captchaReset("apply"); throw new Error(rpc.error.message); }
-      const { data, error } = await supabase
-        .from('partner_applications')
-        .insert([{
-          vendor_id: vendorUUID,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          company_name: formData.companyName,
-          country_code: formData.countryCode,
-          phone_number: formData.phone,
-          region: formData.region,
-          work_email: formData.email,
-          website: formData.website,
-          years_in_business: formData.yearsInBusiness,
-          annual_revenue: formData.revenue,
-          num_employees: formData.numEmployees,
-          num_sales_people: formData.numSalesPeople,
-          vertical_markets: formData.verticalMarkets,
-          geographic_markets: formData.geographicMarkets,
-          status: 'pending'
-        }]);
-      if (error) {
-        console.error('Supabase error details:', error.message, error.details, error.code);
-        throw new Error(error.message || JSON.stringify(error));
-      }
-      showToast('Application submitted successfully!', 'good');
-      return data;
+      // the old direct insert into partner_applications is closed (security review finding 11)
+      throw new Error("Applications are being set up. Please try again later.");
     } catch(e) {
       var errorMsg = e.message || (typeof e === 'object' ? JSON.stringify(e) : String(e));
       console.error('Error submitting application:', errorMsg);
@@ -9065,7 +9040,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // AI writer: a Supabase Edge Function (supabase/functions/flyer-assist) that asks Claude to write
   // the copy from the incentive terms only. Falls back to the built-in writer if it isn't reachable.
   function flyerAssist(inc, vendorName, tone, notes, cb){
-    var fallback = function(why){ cb(flyTemplateCopy(inc, vendorName, tone), "template", why); };
+    var fallback = function(why, limit){ cb(flyTemplateCopy(inc, vendorName, tone), "template", why, limit); };
     if (!supabase || !supabase.functions || !state.account) return fallback("signed-out");
     var terms = {}; ["title","type","description","validFrom","validUntil","eligibility","budgetCap","payoutTiming","claimProcess","tiers","amount","period","mdfShare","mdfClaimDays","creditValue","trialDays","prizes","winningCriteria"].forEach(function(k){ if (inc[k] !== undefined && inc[k] !== "") terms[k] = inc[k]; });
     if (INC_ELIGIBILITY[inc.eligibility]) terms.eligibilityLabel = INC_ELIGIBILITY[inc.eligibility];
@@ -9074,6 +9049,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       .then(function(res){
         if (done) return; done = true; clearTimeout(timer);
         var d = res && res.data; if (typeof d === "string"){ try { d = JSON.parse(d); } catch(e){ d = null; } }
+        var ctx = res && res.error && res.error.context;
+        if (ctx && ctx.status === 429){   // today's AI drafts are used up
+          return Promise.resolve(typeof ctx.json === "function" ? ctx.json().catch(function(){ return {}; }) : {}).then(function(b){ fallback("limit", (b && b.limit) || 0); });
+        }
         if (res.error || !d || !d.headline) return fallback("error");
         var base = flyTemplateCopy(inc, vendorName, tone);
         cb({ headline: d.headline, subheadline: d.subheadline || "", offer: d.offer || base.offer,
@@ -9458,10 +9437,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (e.target.closest("[data-fly-ai]")){
       var f = state.flyerDraft, inc = f && flyIncentive(f); if (!inc) return;
       var btn = e.target.closest("[data-fly-ai]"); btn.disabled = true; btn.textContent = "Writing…";
-      flyerAssist(inc, (programById(inc.vendorId) || { name: inc.vendorId }).name, f.tone, f.notes, function(copy, source){
+      flyerAssist(inc, (programById(inc.vendorId) || { name: inc.vendorId }).name, f.tone, f.notes, function(copy, source, why, limit){
         if (state.flyerDraft !== f) return;
         f.copy = copy; f.aiSource = source;
-        state.flyerAiNote = source === "ai" ? "Drafted by AI from your incentive terms -- review and edit before submitting." : "Drafted from your incentive terms with the built-in writer (the AI writer isn't connected yet). Edit anything you like.";
+        state.flyerAiNote = source === "ai" ? "Drafted by AI from your incentive terms -- review and edit before submitting."
+          : why === "limit" ? "You've used today's " + (limit ? limit + " " : "") + "AI drafts, so this one was written with the built-in writer from your incentive terms. AI drafts are available again tomorrow. Edit anything you like."
+          : "Drafted from your incentive terms with the built-in writer (the AI writer isn't connected yet). Edit anything you like.";
         renderFlyerEditor();
       });
       return;

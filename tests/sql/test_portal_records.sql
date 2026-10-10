@@ -452,4 +452,42 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authent
 select t('a pending resource cannot reuse a published resource id', fails($$insert into portal_records(collection,id,data,readers,writers) values ('pendingResources','res-ok','{"id":"res-ok","status":"pending","ownerKey":"partner:gulf-coast"}','{partner:gulf-coast}','{partner:gulf-coast}')$$));
 reset role;
 
+-- ===== finding 11: partner applications only through the spam-checked route
+set role anon;
+select t('nobody can write straight into partner_applications any more', fails($$insert into public.partner_applications(company_name, work_email, status) values ('Spam Co','x@spam.test','approved')$$));
+select t('an application through the spam-checked route still arrives', public.submit_partner_application('11111111-2222-3333-4444-555555555555', '{"companyName":"Real MSP","email":"Owner@RealMSP.co.th","firstName":"Somchai"}') = 'ok');
+reset role;
+select t('...saved as pending, with the email tidied', (select status = 'pending' and work_email = 'owner@realmsp.co.th' from public.partner_applications where company_name = 'Real MSP'));
+select t('the old open insert rule is gone', (select count(*) from pg_policies where tablename = 'partner_applications' and cmd = 'INSERT') = 0);
+select t('reading applications still works', (select count(*) from pg_policies where tablename = 'partner_applications' and cmd = 'SELECT') = 1);
+
+-- ===== finding 10: a daily allowance for AI drafts
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- vendor intelsense
+select t('a vendor gets an AI draft', (public.portal_ai_quota('flyer')->>'ok')::boolean);
+reset role;
+insert into public.portal_submit_log(kind, ref) select 'ai:flyer', '00000000-0000-0000-0000-000000000002' from generate_series(1, 18);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('the 20th draft of the day is allowed', (public.portal_ai_quota('flyer')->>'used')::int = 20);
+select t('the 21st is refused', not (public.portal_ai_quota('flyer')->>'ok')::boolean and (public.portal_ai_quota('flyer')->>'limit')::int = 20);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authenticated;   -- vendor botnoi
+select t('another vendor has its own allowance', (public.portal_ai_quota('flyer')->>'ok')::boolean);
+reset role;
+update public.portal_submit_log set at = now() - interval '25 hours' where kind = 'ai:flyer' and ref = '00000000-0000-0000-0000-000000000002';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('the allowance comes back after a day', (public.portal_ai_quota('flyer')->>'ok')::boolean);
+reset role;
+insert into public.portal_secrets(key, value) values ('ai_daily_limit_vendor', '1') on conflict (key) do update set value = excluded.value;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('CloudWAV can change the allowance', not (public.portal_ai_quota('flyer')->>'ok')::boolean and (public.portal_ai_quota('flyer')->>'limit')::int = 1);
+select t('a vendor cannot read or edit the allowance setting', fails($$update public.portal_secrets set value = '9999'$$));
+select t('a vendor cannot clear its own usage', fails($$delete from public.portal_submit_log$$));
+reset role;
+set role anon;
+select t('signed-out visitors get no AI drafts', fails($$select public.portal_ai_quota('flyer')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000006'); set role authenticated;   -- a login with no role
+select t('a login without a role gets no AI drafts', fails($$select public.portal_ai_quota('flyer')$$));
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

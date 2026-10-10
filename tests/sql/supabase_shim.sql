@@ -40,3 +40,13 @@ grant usage on schema storage to anon, authenticated;
 grant select, insert, update, delete on storage.objects to anon, authenticated;
 grant select on storage.buckets to anon, authenticated;
 grant execute on function storage.foldername(text) to anon, authenticated;
+
+-- partner_applications as it was first set up in the dashboard: anyone could insert straight into it
+create table public.partner_applications (id uuid primary key default gen_random_uuid(), vendor_id uuid, first_name text, last_name text,
+  company_name text, country_code text, phone_number text, region text, work_email text, website text, years_in_business text,
+  annual_revenue text, num_employees text, num_sales_people text, vertical_markets text, geographic_markets text, status text,
+  created_at timestamptz default now());
+alter table public.partner_applications enable row level security;
+create policy "Anyone can submit an application" on public.partner_applications for insert to anon, authenticated with check (true);
+create policy "Signed-in users read applications" on public.partner_applications for select to authenticated using (true);
+grant select, insert, update on public.partner_applications to anon, authenticated;

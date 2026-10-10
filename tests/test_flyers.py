@@ -130,6 +130,7 @@ class FnMock(MockSupabase):
         req = route.request
         if "/functions/v1/flyer-assist" in req.url and req.method == "POST":
             self.fn_bodies.append((json.loads(req.post_data or "{}"), req.headers.get("authorization", "")))
+            if self.fail == "limit": return route.fulfill(status=429, content_type="application/json", body='{"error":"daily_limit","limit":20}', headers={"access-control-allow-origin": "*"})
             if self.fail: return route.fulfill(status=503, content_type="application/json", body='{"error":"not configured"}', headers={"access-control-allow-origin": "*"})
             return route.fulfill(status=200, content_type="application/json", headers={"access-control-allow-origin": "*"},
                 body=json.dumps({"headline": "Close more, earn up to 15% extra", "subheadline": "A Q4 bonus on top of your Intelsense commission.",
@@ -138,7 +139,7 @@ class FnMock(MockSupabase):
                     "cta": "Register your next deal", "finePrint": "Valid 1 Oct - 31 Dec 2026. Full terms in the Intelsense AI partner program on PartnerWAV."}))
         return super().handle(route)
 UID = "11111111-0000-0000-0000-000000000002"
-for fail in (False, True):
+for fail in (False, True, "limit"):
     with sync_playwright() as p:
         mock = FnMock({"vendor@intelsense.test": {"password": "vend-pass-123", "id": UID}}, {UID: {"role": "vendor", "entity_id": "intelsense", "display_name": "Intelsense Admin"}}, fail=fail)
         b, ctx, pg = open_page_supabase(p, mock)
@@ -159,6 +160,9 @@ for fail in (False, True):
             ok(pg.input_value("#fly_headline") == "Close more, earn up to 15% extra" and "Register the deal" in pg.input_value("#fly_steps"), "AI copy fills the flyer")
             ok("Drafted by AI" in pg.inner_text("#flyAiNote"), "Says AI drafted it")
             ok("All figures match" in pg.inner_text(".fly-checks"), "AI figures checked against terms")
+        elif fail == "limit":
+            note = pg.inner_text("#flyAiNote")
+            ok(len(mock.fn_bodies) == 1 and pg.input_value("#fly_headline") != "" and "used today's 20 AI drafts" in note and "again tomorrow" in note, "Daily AI allowance used up: says so, and the built-in writer drafts it: " + note)
         else:
             ok(len(mock.fn_bodies) == 1 and pg.input_value("#fly_headline") != "" and "built-in writer" in pg.inner_text("#flyAiNote"), "AI function not deployed: falls back to the built-in writer")
         b.close()
