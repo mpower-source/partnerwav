@@ -7345,6 +7345,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">'
           + '<div><div style="font-size:.78rem;color:var(--ink-faint);">'+typeIcon+' '+typeLabel+' • '+esc(r.uploadedBy)+'</div>'
             + '<div style="font-weight:700;font-size:1rem;margin-top:2px;">'+esc(r.title)+'</div>'
+            + (r.replacesId ? '<div class="field-note" style="margin:2px 0 0;" data-res-revision>Changes to a published resource'+(function(){ var o = resources.filter(function(x){ return x.id === r.replacesId; })[0]; return o ? ': ' + esc(o.title) : ''; })()+' -- approving replaces the published version</div>' : '')
             + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program || "Unknown")+' • '+(r.submittedDate ? 'Submitted '+esc(r.submittedDate) : (r.uploadedDate ? 'Published '+esc(r.uploadedDate) : ''))+'</div></div>'
           + '<span class="badge '+statusBadgeClass+'">'+statusText+'</span>'
         + '</div>'
@@ -14689,7 +14690,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (up && up.path){ fileFields.filePath = up.path; } // unchanged stored file
     if (up && !fileSize) fileSize = up.size;
 
-    if (state.editingResourceId){
+    var revisionOf = null;
+    if (state.editingResourceId && state.role !== "operator"){
+      // a published resource is PartnerWAV's reviewed copy: the owner's changes go back for review and replace it once approved
+      revisionOf = resources.filter(function(r){ return r.id === state.editingResourceId; })[0] || null;
+    }
+    if (state.editingResourceId && !revisionOf){
       var idx = resources.findIndex(function(r){ return r.id === state.editingResourceId; });
       if (idx >= 0){
         resources[idx] = Object.assign(resources[idx], {
@@ -14706,10 +14712,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         duration: duration || "",
         fileUrl: fileFields.fileUrl, fileName: fileFields.fileName, fileMime: fileFields.fileMime, fileData: fileFields.fileData
       });
-      toast("Resource submitted for operator review");
+      if (revisionOf){
+        var rev = pendingResources[pendingResources.length - 1];
+        rev.replacesId = revisionOf.id; rev.uploadedBy = revisionOf.uploadedBy || vendor;
+        if (fileFields.filePath) rev.filePath = fileFields.filePath;   // the file already reviewed, unless a new one was attached
+      }
+      toast(revisionOf ? "Changes sent for review -- the published version stays until PartnerWAV approves them" : "Resource submitted for operator review");
       if (up && up.file && CLOUD.on) uploadResourceFile(pendingResources[pendingResources.length - 1], up);
     }
-    if (state.editingResourceId && up && up.file && CLOUD.on){ var er = resources.filter(function(r){ return r.id === state.editingResourceId; })[0]; if (er) uploadResourceFile(er, up); }
+    if (state.editingResourceId && !revisionOf && up && up.file && CLOUD.on){ var er = resources.filter(function(r){ return r.id === state.editingResourceId; })[0]; if (er) uploadResourceFile(er, up); }
     state.editingResourceId = null;
     state.resourceUpload = null;
     state.screen = "resource-browse";
@@ -14889,10 +14900,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var resource = pendingResources[idx];
       if (decision === "approve"){
         resource.status = "published";
-        resources.unshift(Object.assign({}, resource, { submittedDate: null, uploadedDate: "just now", status: "published", approvalComment: comments || "",
-          summary: (resource.summary && resource.summary.indexOf("[Pending") !== 0) ? resource.summary : (resource.previewText || resource.title) }));
+        var pub = Object.assign({}, resource, { submittedDate: null, uploadedDate: "just now", status: "published", approvalComment: comments || "",
+          summary: (resource.summary && resource.summary.indexOf("[Pending") !== 0) ? resource.summary : (resource.previewText || resource.title) });
+        var oldIdx = resource.replacesId ? resources.findIndex(function(r){ return r.id === resource.replacesId; }) : -1;
+        if (oldIdx >= 0){
+          // an approved change keeps the resource's id and links; the reviewed file stays where it was uploaded
+          pub.id = resource.replacesId; pub.ownerKey = resources[oldIdx].ownerKey; delete pub.replacesId;
+          resources[oldIdx] = pub;
+        } else { delete pub.replacesId; resources.unshift(pub); }
         pendingResources.splice(idx, 1);
-        toast("Resource approved and published");
+        toast(oldIdx >= 0 ? "Changes approved and published" : "Resource approved and published");
       } else if (decision === "reject"){
         resource.status = "rejected";
         resource.rejectionComment = comments;

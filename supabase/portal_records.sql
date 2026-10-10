@@ -164,6 +164,10 @@ declare
   prev public.portal_records%rowtype;
   is_new boolean;
   product_price numeric;
+  st jsonb;
+  fkey text;
+  i int;
+  empty_vals jsonb[] := array['null', '""', '[]', '{}']::jsonb[];
 begin
   -- finding 8: nothing is saved until the person has replaced CloudWAV's temporary password
   if public.portal_password_pending() then raise exception 'Choose your own password before saving anything'; end if;
@@ -299,6 +303,55 @@ begin
       raise exception 'Only CloudWAV can set "%" on %', r.field, new.collection;
     end if;
   end loop;
+
+  -- Second review, finding 2: once CloudWAV has approved, declined, signed, paid or accepted a record, its owner
+  -- can't quietly change it. They can still mark messages read, add to its thread, or send it back for review
+  -- (a status they are allowed to set, which takes the approval away).
+  if not is_new then
+    select allowed into st from public.portal_field_rules where collection = new.collection and field = 'status'
+       and collection in ('deals', 'incentives', 'flyers', 'pendingResources', 'shopOrders', 'affiliatePrograms', 'agreements', 'projectReferrals');
+    if found and coalesce(prev.data -> 'status', 'null'::jsonb) <> 'null'::jsonb
+       and not (st @> jsonb_build_array(prev.data -> 'status')) and prev.data ->> 'status' <> 'changes'
+       and (new.data -> 'status') is not distinct from (prev.data -> 'status') then
+      for fkey in select jsonb_object_keys(prev.data || new.data) loop
+        continue when fkey in ('unreadPartner', 'unreadVendor', 'unreadOperator', 'unreadAffiliate', 'thread', 'archivedAt');
+        continue when coalesce(new.data -> fkey, 'null'::jsonb) = any(empty_vals) and coalesce(prev.data -> fkey, 'null'::jsonb) = any(empty_vals);
+        if (new.data -> fkey) is distinct from (prev.data -> fkey) then
+          raise exception 'This record is % by CloudWAV, so "%" can''t be changed. Send it back for review to edit it', prev.data ->> 'status', fkey;
+        end if;
+      end loop;
+    end if;
+    -- a record's message thread only grows: earlier messages can't be edited or removed
+    if jsonb_typeof(prev.data -> 'thread') = 'array' and jsonb_array_length(prev.data -> 'thread') > 0 then
+      if jsonb_typeof(new.data -> 'thread') is distinct from 'array' or jsonb_array_length(new.data -> 'thread') < jsonb_array_length(prev.data -> 'thread') then
+        raise exception 'Messages already sent can''t be removed';
+      end if;
+      for i in 0 .. jsonb_array_length(prev.data -> 'thread') - 1 loop
+        if (new.data -> 'thread' -> i) is distinct from (prev.data -> 'thread' -> i) then raise exception 'Messages already sent can''t be changed'; end if;
+      end loop;
+    end if;
+    -- shop orders: the product, price and buyer are fixed once the order exists
+    if new.collection = 'shopOrders' and ((new.data -> 'productId') is distinct from (prev.data -> 'productId')
+        or (new.data -> 'price') is distinct from (prev.data -> 'price') or (new.data -> 'buyer') is distinct from (prev.data -> 'buyer')) then
+      raise exception 'An order''s product, price and buyer can''t be changed';
+    end if;
+    -- finding 3: a published resource is CloudWAV's copy. Its owner may archive it; changes go through review.
+    if new.collection = 'resources' then
+      for fkey in select jsonb_object_keys(prev.data || new.data) loop
+        continue when fkey = 'archivedAt';
+        if (new.data -> fkey) is distinct from (prev.data -> fkey) then
+          raise exception 'A published resource can''t be changed directly. Submit your changes for review';
+        end if;
+      end loop;
+    end if;
+  end if;
+  -- only CloudWAV writes as CloudWAV in a thread
+  if jsonb_typeof(new.data -> 'thread') = 'array' and exists (
+       select 1 from jsonb_array_elements(new.data -> 'thread') with ordinality as m(msg, n)
+        where m.n > coalesce(case when is_new or jsonb_typeof(prev.data -> 'thread') <> 'array' then 0 else jsonb_array_length(prev.data -> 'thread') end, 0)
+          and m.msg ->> 'from' = 'operator') then
+    raise exception 'Only CloudWAV can post as CloudWAV';
+  end if;
   return new;
 end $$;
 
@@ -714,13 +767,23 @@ grant execute on function public.submit_partner_application(uuid, jsonb) to anon
 
 -- Finding 11: applications only arrive through submit_partner_application (spam-checked).
 -- Nobody can write straight into the table any more; CloudWAV can still read and update them.
+-- Second review, finding 1: applicants' names, emails and phone numbers are for CloudWAV only. Every other
+-- rule on the table is replaced (the partner map reads approved applicants through its own view).
 do $$ declare p record; begin
   if to_regclass('public.partner_applications') is not null then
-    revoke insert on public.partner_applications from public, anon, authenticated;
-    for p in select policyname from pg_policies
-             where schemaname = 'public' and tablename = 'partner_applications' and cmd = 'INSERT' loop
+    alter table public.partner_applications enable row level security;
+    revoke all on public.partner_applications from public, anon;
+    revoke insert on public.partner_applications from authenticated;
+    grant select, update, delete on public.partner_applications to authenticated;
+    for p in select policyname from pg_policies where schemaname = 'public' and tablename = 'partner_applications' loop
       execute format('drop policy %I on public.partner_applications', p.policyname);
     end loop;
+    create policy "CloudWAV reads applications" on public.partner_applications
+      for select to authenticated using (public.is_portal_operator());
+    create policy "CloudWAV reviews applications" on public.partner_applications
+      for update to authenticated using (public.is_portal_operator()) with check (public.is_portal_operator());
+    create policy "CloudWAV removes applications" on public.partner_applications
+      for delete to authenticated using (public.is_portal_operator());
   end if;
 end $$;
 
@@ -772,6 +835,19 @@ drop policy if exists "portal-files upload" on storage.objects;
 drop policy if exists "portal-files update" on storage.objects;
 drop policy if exists "portal-files delete" on storage.objects;
 
+-- A member may change or remove a resource file only while it is waiting for review, in a folder of their own
+-- pending submission, and never a file a published resource uses (second review, finding 3).
+create or replace function public.portal_member_can_change_file(p_name text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select (storage.foldername(p_name))[1] = 'resources'
+     and exists (select 1 from public.portal_records r where r.collection = 'pendingResources'
+                  and r.id = (storage.foldername(p_name))[2] and public.portal_key() = any(r.writers))
+     and not exists (select 1 from public.portal_records r where r.collection = 'resources'
+                      and (r.id = (storage.foldername(p_name))[2] or r.data ->> 'filePath' = p_name));
+$$;
+revoke all on function public.portal_member_can_change_file(text) from public;
+grant execute on function public.portal_member_can_change_file(text) to authenticated;
+
 create policy "portal-files read" on storage.objects
   for select to authenticated using (
     bucket_id = 'portal-files'
@@ -779,6 +855,9 @@ create policy "portal-files read" on storage.objects
           and exists (select 1 from public.portal_records r           -- RLS on portal_records applies here
                       where r.collection in ('resources', 'pendingResources')
                         and r.id = (storage.foldername(name))[2]))
+         -- an approved change to a resource keeps the file it was reviewed with (only CloudWAV writes resources)
+         or ((storage.foldername(name))[1] = 'resources'
+             and exists (select 1 from public.portal_records r where r.collection = 'resources' and r.data ->> 'filePath' = name))
          -- an uploaded outside agreement: whoever can see the agreement record can open its file
          or ((storage.foldername(name))[1] = 'agreements'
              and exists (select 1 from public.portal_records r
@@ -790,22 +869,18 @@ create policy "portal-files upload" on storage.objects
     bucket_id = 'portal-files'
     and not public.portal_password_pending()
     and (((storage.foldername(name))[1] = 'resources'
-          and (public.is_portal_operator()
-               or exists (select 1 from public.portal_records r
-                          where r.collection in ('resources', 'pendingResources')
-                            and r.id = (storage.foldername(name))[2]
-                            and public.portal_key() = any(r.writers))))
+          and (public.is_portal_operator() or public.portal_member_can_change_file(name)))
          -- outside agreements are uploaded by CloudWAV only
          or ((storage.foldername(name))[1] = 'agreements' and public.is_portal_operator()))
   );
 
 create policy "portal-files update" on storage.objects
   for update to authenticated
-  using (bucket_id = 'portal-files' and (owner = auth.uid() or public.is_portal_operator()))
-  with check (bucket_id = 'portal-files' and (owner = auth.uid() or public.is_portal_operator()));
+  using (bucket_id = 'portal-files' and (public.is_portal_operator() or (owner = auth.uid() and public.portal_member_can_change_file(name))))
+  with check (bucket_id = 'portal-files' and (public.is_portal_operator() or (owner = auth.uid() and public.portal_member_can_change_file(name))));
 
 create policy "portal-files delete" on storage.objects
-  for delete to authenticated using (bucket_id = 'portal-files' and (owner = auth.uid() or public.is_portal_operator()));
+  for delete to authenticated using (bucket_id = 'portal-files' and (public.is_portal_operator() or (owner = auth.uid() and public.portal_member_can_change_file(name))));
 
 -- ---------------------------------------------------------------------------
 -- 8. Check (optional): after signing in to the portal as the operator and clicking

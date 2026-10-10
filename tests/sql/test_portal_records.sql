@@ -78,9 +78,10 @@ update portal_records set data = jsonb_set(jsonb_set(data,'{status}','"paid"'),'
 select t('operator sees everything (11 rows)', (select count(*) from portal_records) = 11);
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
-insert into portal_records(collection,id,data,readers,writers) values ('deals','d1','{"id":"d1","status":"approved","pricingCheck":"","notes":"seen","unreadPartner":false,"partnerId":"siam-digital"}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital}')
+insert into portal_records(collection,id,data,readers,writers) values ('deals','d1','{"id":"d1","status":"approved","pricingCheck":"","notes":"upserted","unreadPartner":false,"partnerId":"siam-digital"}','{partner:siam-digital,vendor:intelsense}','{partner:siam-digital}')
   on conflict (collection,id) do update set data = excluded.data, readers = excluded.readers, writers = excluded.writers;
-select t('partner can upsert an approved deal without changing its status', (select data->>'notes' from portal_records where id='d1') = 'seen');
+select t('partner can upsert an approved deal to mark it read', (select data->>'unreadPartner' from portal_records where id='d1') = 'false');
+select t('...but cannot change what CloudWAV approved', fails($$update portal_records set data = data || '{"notes":"seen","value":"$999,999"}' where id='d1'$$));
 reset role;
 
 -- ===== other partner and vendors
@@ -93,7 +94,7 @@ select t('deal still there after the other partner tried to delete it', (select 
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
 select t('vendor sees deals in their program', (select count(*) from portal_records where collection='deals') = 1);
-select t('vendor cannot edit partner deals', (select count(*) from (select 1) x where not fails($$update portal_records set data='{}' where id='d1'$$)) = 1 and (select data->>'notes' from portal_records where id='d1') = 'seen');
+select t('vendor cannot edit partner deals', (select count(*) from (select 1) x where not fails($$update portal_records set data='{}' where id='d1'$$)) = 1 and (select data->>'notes' from portal_records where id='d1') = 'upserted');
 update portal_records set data = jsonb_set(data,'{name}','"Intelsense AI (edited)"') where collection='programs' and id='intelsense';
 select t('vendor can edit their own profile', (select data->>'name' from portal_records where collection='programs' and id='intelsense') = 'Intelsense AI (edited)');
 select t('vendor cannot change their commission tiers', fails($$update portal_records set data = jsonb_set(data,'{tiers}','[99]') where collection='programs' and id='intelsense'$$));
@@ -183,8 +184,8 @@ update portal_records set data = data || '{"status":"signed","signedAt":"2026-10
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
 select t('partner sees CloudWAV''s updates', (select data->>'status' from portal_records where id='r1') = 'won' and (select data->>'status' from portal_records where id='a1') = 'signed');
-update portal_records set data = jsonb_set(data,'{thread}','[{"text":"thanks"}]') where id='r1';
-select t('partner can still add notes after it is won', (select data->'thread'->0->>'text' from portal_records where id='r1') = 'thanks');
+update portal_records set data = jsonb_set(data,'{thread}', coalesce(data->'thread','[]'::jsonb) || '[{"from":"partner","text":"thanks"}]') where id='r1';
+select t('partner can still add notes after it is won', (select data->'thread'->-1->>'text' from portal_records where id='r1') = 'thanks');
 reset role;
 
 -- ===== invite-only affiliate offers: public sign-ups through submit_affiliate_signup()
@@ -445,8 +446,9 @@ insert into portal_records(collection,id,data,readers,writers,is_public) values 
 select t('CloudWAV can still publish an approved resource', (select count(*) from portal_records where collection='resources' and id='res-ok') = 1);
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
-update portal_records set data = data || '{"title":"Edited"}' where collection='resources' and id='res-ok';
-select t('the owner can still edit their published resource', (select data->>'title' from portal_records where collection='resources' and id='res-ok') = 'Edited');
+select t('the owner cannot change a published resource directly (second review, finding 3)', fails($$update portal_records set data = data || '{"url":"https://evil.example/payload.exe"}' where collection='resources' and id='res-ok'$$));
+update portal_records set data = data || '{"archivedAt":"2026-10-10"}' where collection='resources' and id='res-ok';
+select t('...but can archive it', (select data->>'archivedAt' from portal_records where collection='resources' and id='res-ok') = '2026-10-10');
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
 select t('a pending resource cannot reuse a published resource id', fails($$insert into portal_records(collection,id,data,readers,writers) values ('pendingResources','res-ok','{"id":"res-ok","status":"pending","ownerKey":"partner:gulf-coast"}','{partner:gulf-coast}','{partner:gulf-coast}')$$));
@@ -489,5 +491,77 @@ reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000006'); set role authenticated;   -- a login with no role
 select t('a login without a role gets no AI drafts', fails($$select public.portal_ai_quota('flyer')$$));
 reset role;
+
+-- ===== second review, finding 1: applications are CloudWAV's to read
+insert into public.partner_applications(company_name, work_email, phone_number, status) values ('Acme','ceo@acme.test','+1555','pending');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000006'); set role authenticated;   -- a login with no role
+select t('a signed-in login cannot read partner applications', (select count(*) from public.partner_applications) = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- a vendor
+select t('a vendor cannot read partner applications', (select count(*) from public.partner_applications) = 0);
+update public.partner_applications set status = 'approved';
+reset role;
+select t('...or approve one', (select count(*) from public.partner_applications where status = 'approved') = 0);
+set role anon;
+select t('anonymous visitors cannot read them', fails($$select * from public.partner_applications$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV reads applications', (select count(*) from public.partner_applications where company_name = 'Acme') = 1);
+update public.partner_applications set status = 'approved' where company_name = 'Acme';
+select t('CloudWAV reviews them', (select status from public.partner_applications where company_name = 'Acme') = 'approved');
+reset role;
+
+-- ===== second review, finding 2: approved, signed and paid records are locked for their owner
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- vendor intelsense
+insert into portal_records(collection,id,data,readers,writers) values ('flyers','fly-lock','{"id":"fly-lock","vendorId":"intelsense","status":"pending","copy":{"headline":"Q4 bonus"},"thread":[]}','{vendor:intelsense}','{vendor:intelsense}');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+update portal_records set data = data || '{"status":"approved","thread":[{"from":"operator","text":"Looks good"}]}' where id='fly-lock';
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('a vendor cannot rewrite an approved flyer', fails($$update portal_records set data = data || '{"copy":{"headline":"Guaranteed 500% returns"}}' where id='fly-lock'$$));
+select t('...or rewrite CloudWAV''s messages on it', fails($$update portal_records set data = jsonb_set(data, '{thread,0,text}', '"Approved, wire funds"') where id='fly-lock'$$));
+select t('...or post as CloudWAV', fails($$update portal_records set data = jsonb_set(data, '{thread}', data->'thread' || '[{"from":"operator","text":"fake"}]') where id='fly-lock'$$));
+update portal_records set data = jsonb_set(data, '{thread}', data->'thread' || '[{"from":"vendor","text":"Thanks!"}]') || '{"unreadVendor":false}' where id='fly-lock';
+select t('...but can reply and mark it read', (select jsonb_array_length(data->'thread') = 2 and data->>'unreadVendor' = 'false' from portal_records where id='fly-lock'));
+update portal_records set data = data || '{"status":"pending","copy":{"headline":"Q4 bonus, now bigger"}}' where id='fly-lock';
+select t('...and can change it by sending it back for review', (select data->>'status' = 'pending' and data->'copy'->>'headline' = 'Q4 bonus, now bigger' from portal_records where id='fly-lock'));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;   -- partner siam-digital
+select t('a partner cannot change the value of an approved deal', fails($$update portal_records set data = data || '{"value":"999999","programId":"botnoi"}' where id='d1'$$));
+insert into portal_records(collection,id,data,readers,writers) values ('shopOrders','o-lock','{"id":"o-lock","productId":"shop-free","price":0,"status":"paid","paidAt":"now","buyer":"partner:siam-digital"}','{partner:siam-digital}','{partner:siam-digital}');
+select t('a free order cannot be switched to a paid product', fails($$update portal_records set data = data || '{"productId":"shop-paid","price":149}' where id='o-lock'$$));
+select t('...even while waiting for payment', fails($$update portal_records set data = data || '{"productId":"shop-free"}' where id='o-paid'$$));
+select t('a signed agreement''s terms cannot be changed by the partner', fails($$update portal_records set data = data || '{"terms":"anything I like"}' where id='a1'$$));
+reset role;
+
+-- ===== second review, finding 3: files of a published resource
+insert into storage.objects(bucket_id, name, owner) values ('portal-files', 'resources/res-ok/deck.pdf', '00000000-0000-0000-0000-000000000004');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;   -- the owner, partner gulf-coast
+update storage.objects set name = 'resources/res-ok/deck2.pdf' where name = 'resources/res-ok/deck.pdf';
+reset role;
+select t('the owner cannot move or replace a published resource''s file', (select count(*) from storage.objects where name = 'resources/res-ok/deck.pdf') = 1);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+delete from storage.objects where name = 'resources/res-ok/deck.pdf';
+reset role;
+select t('...and cannot be deleted by the owner', (select count(*) from storage.objects where name = 'resources/res-ok/deck.pdf') = 1);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+select t('the owner cannot upload into a published resource''s folder', fails($$insert into storage.objects(bucket_id, name) values ('portal-files', 'resources/res-ok/new.pdf')$$));
+insert into storage.objects(bucket_id, name) values ('portal-files', 'resources/res-new/v1.pdf');
+select t('...but can still upload to their pending submission', (select count(*) from storage.objects where name = 'resources/res-new/v1.pdf') = 1);
+insert into portal_records(collection,id,data,readers,writers) values ('pendingResources','res-rev','{"id":"res-rev","status":"pending","ownerKey":"partner:gulf-coast","replacesId":"res-ok","filePath":"resources/res-rev/v2.pdf"}','{partner:gulf-coast}','{partner:gulf-coast}');
+insert into storage.objects(bucket_id, name) values ('portal-files', 'resources/res-rev/v2.pdf');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+update portal_records set data = data || '{"filePath":"resources/res-rev/v2.pdf","title":"Edited after review"}' where collection='resources' and id='res-ok';
+delete from portal_records where collection='pendingResources' and id='res-rev';
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;   -- another partner
+select t('once CloudWAV approves the change, everyone can open the reviewed file', (select count(*) from storage.objects where name = 'resources/res-rev/v2.pdf') = 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;
+delete from storage.objects where name = 'resources/res-rev/v2.pdf';
+reset role;
+select t('...and the owner can no longer swap it', (select count(*) from storage.objects where name = 'resources/res-rev/v2.pdf') = 1);
 
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;
