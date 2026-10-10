@@ -109,7 +109,8 @@ with sync_playwright() as p:
     ok("File attached: intelsense-deck.pdf" in card.inner_text(), "Queue shows the stored file")
     card.locator('[data-review-decision=""]').click(); pg.wait_for_timeout(1200)
     fr = pg.locator("#approvalReviewContent .res-preview iframe")
-    ok(fr.count() == 1 and "/storage/v1/object/sign/portal-files/resources/" in fr.get_attribute("src"), "Preview uses a short-lived signed link")
+    got = pg.evaluate("s => fetch(s).then(r => r.blob()).then(b => b.text().then(t => b.type + '|' + t.slice(0, 5)))", fr.get_attribute("src")) if fr.count() == 1 else ""
+    ok(fr.get_attribute("src").startswith("blob:") and got == "application/pdf|%PDF-", "Preview loads the stored file through a short-lived signed link, as a PDF: " + got)
     head = pg.evaluate("async () => { const r = await fetch(document.querySelector('#approvalReviewContent .res-preview iframe').src); return (await r.text()).slice(0, 8); }")
     ok(head == "%PDF-1.4", "Operator opens the actual uploaded PDF")
     pg.select_option("#approvalDecision", "approve"); pg.click('#approvalForm button[type=submit]'); pg.wait_for_timeout(500); settle(pg)

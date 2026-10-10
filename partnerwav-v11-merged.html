@@ -12695,7 +12695,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var path = "agreements/" + a.id + "/" + safeFileName(file.name);
       try {
         await cloudFlushNow();   // the agreement record must exist first (the storage rule checks it)
-        var r = await supabase.storage.from(STORAGE_BUCKET).upload(path, await file.arrayBuffer(), { upsert:true, contentType: a.fileMime });
+        var r = await supabase.storage.from(STORAGE_BUCKET).upload(path, await file.arrayBuffer(), { upsert:true, contentType: safeFileMime(a.fileMime) });
         if (r.error) throw r.error;
         a.filePath = path;
       } catch(e){ a.uploadError = (e && e.message) || String(e); toast("The file didn't upload: " + a.uploadError); }
@@ -12703,7 +12703,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     })();
   }
   async function agrOpenFile(a){
-    if (a.fileData){ var w0 = window.open(dataUrlToBlobUrl(a.fileData) || a.fileData, "_blank"); if (!w0) toast("Allow pop-ups to open the file"); return; }
+    if (a.fileData){ var bu = dataUrlToBlobUrl(a.fileData, a.fileMime); if (!bu){ toast("This file can't be opened"); return; } var w0 = window.open(bu, "_blank"); if (!w0) toast("Allow pop-ups to open the file"); return; }
     if (a.filePath && supabase){
       var w = window.open("", "_blank");
       var r = await supabase.storage.from(STORAGE_BUCKET).createSignedUrl(a.filePath, 600);
@@ -14761,6 +14761,21 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var signedUrlCache = {};
   function safeFileName(n){ return String(n || "file").replace(/[^\w.\-]+/g, "_").slice(-120); }
   // Get a short-lived link to a stored file; re-renders the review screen once it arrives
+  function storagePdfBlob(path, signedUrl){
+    var c = signedUrlCache[path] || {};
+    if (c.pdf) return c.pdf;
+    if (c.pdfPending || c.pdfError) return "";
+    c.pdfPending = true;
+    fetch(signedUrl).then(function(res){ if (!res.ok) throw new Error("HTTP " + res.status); return res.arrayBuffer(); }).then(function(buf){
+      c.pdf = URL.createObjectURL(new Blob([buf], { type:"application/pdf" }));
+    }).catch(function(e){ c.pdfError = (e && e.message) || "unavailable"; }).then(function(){
+      c.pdfPending = false;
+      var slot = document.getElementById("resPreviewSlot"), rid = slot && slot.getAttribute("data-res-id");
+      var rec = rid ? (pendingResources.filter(function(x){ return x.id === rid; })[0] || resources.filter(function(x){ return x.id === rid; })[0]) : null;
+      if (slot && rec) slot.innerHTML = resourcePreviewHtml(rec);
+    });
+    return "";
+  }
   function storageUrl(path){
     var c = signedUrlCache[path];
     if (c && c.exp > Date.now()) return c.url;
@@ -14781,7 +14796,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     try {
       await cloudFlushNow(); // the record must exist before its file (storage policy checks it)
       var bytes = await up.file.arrayBuffer();
-      var r = await supabase.storage.from(STORAGE_BUCKET).upload(path, bytes, { upsert:true, contentType: up.mime || "application/octet-stream" });
+      var r = await supabase.storage.from(STORAGE_BUCKET).upload(path, bytes, { upsert:true, contentType: safeFileMime(up.mime) });
       if (r.error) throw r.error;
       rec.filePath = path; delete rec.fileUploading; delete rec.uploadError;
       toast("File uploaded");
@@ -14793,9 +14808,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     saveResourceData(); render();
   }
   function humanSize(n){ return n >= 1048576 ? (n/1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n/1024)) + "KB"; }
-  function dataUrlToBlobUrl(dataUrl){
+  // File types the portal will show. Anything else is only ever handed over as a download, never shown as a page.
+  var PREVIEW_MIME = /^(application\/pdf|image\/(png|jpeg|gif|webp|bmp|avif)|video\/(mp4|webm|ogg|quicktime))$/;
+  function safeFileMime(m){ m = String(m || "").toLowerCase().split(";")[0].trim(); return PREVIEW_MIME.test(m) ? m : "application/octet-stream"; }
+  // The file is always given the type it was declared as (or made a plain download), never the type hidden inside its data
+  function dataUrlToBlobUrl(dataUrl, declaredMime){
     try {
-      var parts = dataUrl.split(","), mime = (parts[0].match(/data:([^;]+)/) || [])[1] || "application/octet-stream";
+      var parts = String(dataUrl).split(","), mime = safeFileMime(declaredMime || (parts[0].match(/data:([^;,]+)/) || [])[1]);
+      if (!/;base64$/i.test(parts[0])) return "";
       var bin = atob(parts[1]), arr = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
       return URL.createObjectURL(new Blob([arr], { type: mime }));
@@ -14818,17 +14838,22 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (r.filePath && !r.fileData){
       var su = storageUrl(r.filePath), cached = signedUrlCache[r.filePath] || {};
       if (!su) return '<div class="res-preview"><div class="res-preview-empty">'+(cached.error ? "Couldn't open the stored file: " + esc(cached.error) : "Loading "+esc(r.fileName || "file")+"…")+'</div></div>';
+      if (safeFileMime(r.fileMime) === "application/pdf"){
+        var pdf = storagePdfBlob(r.filePath, su);
+        if (!pdf) return '<div class="res-preview"><div class="res-preview-empty">'+(cached.pdfError ? "Couldn't open the stored file: " + esc(cached.pdfError) : "Loading "+esc(r.fileName || "file")+"…")+'</div></div>';
+        return filePreviewHtml(r, pdf);
+      }
       return filePreviewHtml(r, su);
     }
     if (r.fileData){
-      return filePreviewHtml(r, dataUrlToBlobUrl(r.fileData));
+      return filePreviewHtml(r, dataUrlToBlobUrl(r.fileData, r.fileMime));
     }
     return linkPreviewHtml(r);
   }
   function filePreviewHtml(r, blobUrl){
     var bar = function(inner){ return '<div class="res-preview-bar">'+inner+'</div>'; };
     {
-      var mime = r.fileMime || "";
+      var mime = safeFileMime(r.fileMime);
       var open = '<a class="btn secondary sm" href="'+esc(blobUrl)+'" target="_blank" rel="noopener" download="'+esc(r.fileName || "file")+'">Open file</a>';
       var label = '<span>📎 <b>'+esc(r.fileName || "Uploaded file")+'</b>'+(r.fileSize ? ' · '+esc(r.fileSize) : '')+'</span>';
       if (mime === "application/pdf") return '<div class="res-preview"><iframe title="Preview of '+esc(r.title)+'" src="'+esc(blobUrl)+'"></iframe>'+bar(label+open)+'</div>';
@@ -14843,7 +14868,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var emb = embedUrlFor(r.fileUrl);
       var openL = '<a class="btn secondary sm" href="'+esc(safeHref(r.fileUrl))+'" target="_blank" rel="noopener noreferrer">Open in new tab</a>';
       var lbl = '<span style="overflow-wrap:anywhere;">🔗 '+esc(r.fileUrl)+'</span>';
-      if (emb) return '<div class="res-preview"><iframe title="Preview of '+esc(r.title)+'" src="'+esc(emb)+'" referrerpolicy="no-referrer" allow="fullscreen; picture-in-picture"></iframe>'+bar(lbl+openL)+'</div>';
+      if (emb) return '<div class="res-preview"><iframe title="Preview of '+esc(r.title)+'" src="'+esc(emb)+'" referrerpolicy="no-referrer" allow="fullscreen; picture-in-picture"'+(emb === r.fileUrl ? '' : ' sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"')+'></iframe>'+bar(lbl+openL)+'</div>';
       return '<div class="res-preview"><div class="res-preview-empty">This link can\'t be embedded here -- open it to review the material.</div>'+bar(lbl+openL)+'</div>';
     }
     return '<div class="res-preview"><div class="res-preview-empty"><b>Nothing attached.</b> This submission only has a description, so there\'s no material to check. Use <b>Request Revision</b> to ask '+esc(r.uploadedBy || "the submitter")+' to attach the file or a link.</div></div>';
