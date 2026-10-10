@@ -145,6 +145,15 @@ $$;
 -- ---------------------------------------------------------------------------
 -- 5. Guard trigger: enforces the rules above on every insert/update
 -- ---------------------------------------------------------------------------
+alter table public.portal_users add column if not exists must_change_password boolean not null default false;
+-- True while the signed-in person still has the temporary password CloudWAV gave them (finding 8).
+create or replace function public.portal_password_pending()
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select must_change_password from public.portal_users where id = auth.uid()), false);
+$$;
+revoke all on function public.portal_password_pending() from public;
+grant execute on function public.portal_password_pending() to anon, authenticated;
+
 create or replace function public.portal_records_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
@@ -156,6 +165,8 @@ declare
   is_new boolean;
   product_price numeric;
 begin
+  -- finding 8: nothing is saved until the person has replaced CloudWAV's temporary password
+  if public.portal_password_pending() then raise exception 'Choose your own password before saving anything'; end if;
   new.updated_at := now();
   new.updated_by := auth.uid();
   -- A record keeps its collection and id for life. Moving one would carry values past every check below
@@ -468,37 +479,86 @@ grant execute on function public.mark_assessment_booked(text) to anon, authentic
 create extension if not exists pgcrypto with schema extensions;
 alter table public.portal_users add column if not exists must_change_password boolean not null default false;
 
+alter table public.portal_users add column if not exists temp_password_hash text;
+-- Logins CloudWAV took access away from: these may be given to their company again later
+create table if not exists public.portal_removed_logins (id uuid primary key, removed_at timestamptz not null default now());
+alter table public.portal_removed_logins enable row level security;
+revoke all on public.portal_removed_logins from anon, authenticated;
+
+-- Creates (or resets) a company's login. Security review findings 7 and 9:
+--   * the login is created here, so "Allow new users to sign up" can stay OFF in Supabase
+--   * an email that already has a used login is refused, unless it is this same company's login being reset
+--     (someone could have registered it first and kept a session open)
+--   * the login goes to exactly the company id given, which must exist -- never matched by name
+--   * every setup or reset signs the login out everywhere
 create or replace function public.portal_setup_account(p_email text, p_role text, p_entity text, p_name text, p_password text)
 returns jsonb language plpgsql security definer set search_path = public, extensions as $$
-declare u uuid; existing text;
+declare u uuid; used_at timestamptz; cur_role text; cur_entity text; mail text := lower(trim(coalesce(p_email, ''))); ent text := trim(coalesce(p_entity, ''));
+        hash text; coll text;
 begin
   if not public.is_portal_operator() then raise exception 'Only CloudWAV can set up accounts'; end if;
   if p_role is null or p_role not in ('partner', 'vendor', 'affiliate') then raise exception 'Choose vendor, partner or affiliate'; end if;
-  if coalesce(trim(p_entity), '') = '' then raise exception 'The account needs a company'; end if;
+  if ent = '' then raise exception 'The account needs a company'; end if;
+  if mail !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' then raise exception 'Enter a valid email address'; end if;
   if p_password is null or length(p_password) < 8 then raise exception 'The temporary password needs at least 8 characters'; end if;
-  select id into u from auth.users where lower(email) = lower(trim(p_email)) limit 1;
-  if u is null then raise exception 'No login exists for % yet', trim(p_email); end if;
-  select role into existing from public.portal_users where id = u;
-  if existing = 'operator' then raise exception 'That email belongs to a CloudWAV operator login'; end if;
-  update auth.users
-     set encrypted_password = crypt(p_password, gen_salt('bf')),
-         email_confirmed_at = coalesce(email_confirmed_at, now())
-   where id = u;
-  insert into public.portal_users (id, email, role, entity_id, display_name, must_change_password)
-  values (u, lower(trim(p_email)), p_role, trim(p_entity), nullif(trim(coalesce(p_name, '')), ''), true)
+  coll := case p_role when 'vendor' then 'programs' when 'partner' then 'partnerProfiles' else 'affiliateProfiles' end;
+  if not exists (select 1 from public.portal_records where collection = coll and id = ent and coalesce(data->>'_deleted', '') <> 'true') then
+    raise exception 'That company could not be found (%). It needs to be saved before it can have a login.', ent;
+  end if;
+
+  select id, last_sign_in_at into u, used_at from auth.users where lower(email) = mail limit 1;
+  hash := crypt(p_password, gen_salt('bf'));
+  if u is not null then
+    select role, entity_id into cur_role, cur_entity from public.portal_users where id = u;
+    if cur_role = 'operator' then raise exception 'That email belongs to a CloudWAV operator login'; end if;
+    if cur_role is not null and (cur_role <> p_role or cur_entity <> ent) then
+      raise exception 'That email already has a login for another company (% %). Remove that login first.', cur_role, cur_entity;
+    end if;
+    if cur_role is null and not exists (select 1 from public.portal_removed_logins x where x.id = u)
+       and (used_at is not null or exists (select 1 from auth.sessions s where s.user_id = u)) then
+      raise exception 'That email already has a login that has been used, so it can''t be given to a company. Use another email, or delete that login under Authentication > Users in Supabase first.';
+    end if;
+    update auth.users set encrypted_password = hash, email_confirmed_at = coalesce(email_confirmed_at, now()), updated_at = now() where id = u;
+  else
+    u := gen_random_uuid();
+    insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+                            created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change,
+                            email_change_token_current, phone_change, phone_change_token, reauthentication_token)
+    values ('00000000-0000-0000-0000-000000000000', u, 'authenticated', 'authenticated', mail, hash, now(),
+            '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', '', '', '', '', '');
+    insert into auth.identities (id, user_id, provider_id, provider, identity_data, created_at, updated_at)
+    values (gen_random_uuid(), u, u::text, 'email', jsonb_build_object('sub', u::text, 'email', mail, 'email_verified', true, 'phone_verified', false), now(), now());
+  end if;
+  -- sign the login out everywhere: any session someone already holds stops working
+  delete from auth.sessions where user_id = u;
+  delete from auth.refresh_tokens where user_id = u::text;
+  delete from public.portal_removed_logins where id = u;
+
+  insert into public.portal_users (id, email, role, entity_id, display_name, must_change_password, temp_password_hash)
+  values (u, mail, p_role, ent, nullif(trim(coalesce(p_name, '')), ''), true, hash)
   on conflict (id) do update
     set email = excluded.email, role = excluded.role, entity_id = excluded.entity_id,
-        display_name = coalesce(excluded.display_name, public.portal_users.display_name), must_change_password = true;
-  return jsonb_build_object('id', u, 'email', lower(trim(p_email)), 'role', p_role, 'entity_id', trim(p_entity));
+        display_name = coalesce(excluded.display_name, public.portal_users.display_name),
+        must_change_password = true, temp_password_hash = excluded.temp_password_hash;
+  return jsonb_build_object('id', u, 'email', mail, 'role', p_role, 'entity_id', ent);
 end $$;
 revoke all on function public.portal_setup_account(text, text, text, text, text) from public;
 grant execute on function public.portal_setup_account(text, text, text, text, text) to authenticated;
 
 -- Called by the person themselves once they have chosen their own password.
+-- Only clears the flag if the password really is no longer the temporary one.
 create or replace function public.portal_password_changed()
-returns boolean language sql security definer set search_path = public as $$
-  update public.portal_users set must_change_password = false where id = auth.uid() returning true;
-$$;
+returns boolean language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  update public.portal_users p set must_change_password = false, temp_password_hash = null
+   where p.id = auth.uid()
+     and (p.temp_password_hash is null
+          or exists (select 1 from auth.users u where u.id = p.id and u.encrypted_password is distinct from p.temp_password_hash));
+  get diagnostics n = row_count;
+  if n = 0 and public.portal_password_pending() then raise exception 'Choose your own password first'; end if;
+  return n > 0;
+end $$;
 revoke all on function public.portal_password_changed() from public;
 grant execute on function public.portal_password_changed() to authenticated;
 
@@ -524,6 +584,13 @@ begin
   if not public.is_portal_operator() then raise exception 'Only CloudWAV can remove accounts'; end if;
   delete from public.portal_users where id = p_user and role <> 'operator';
   get diagnostics n = row_count;
+  if n > 0 then
+    -- signed out everywhere, and the old password stops working
+    insert into public.portal_removed_logins (id) values (p_user) on conflict (id) do update set removed_at = now();
+    delete from auth.sessions where user_id = p_user;
+    delete from auth.refresh_tokens where user_id = p_user::text;
+    update auth.users set encrypted_password = extensions.crypt(gen_random_uuid()::text, extensions.gen_salt('bf')) where id = p_user;
+  end if;
   return n > 0;
 end $$;
 revoke all on function public.portal_remove_account(uuid) from public;
@@ -682,6 +749,7 @@ create policy "portal-files read" on storage.objects
 create policy "portal-files upload" on storage.objects
   for insert to authenticated with check (
     bucket_id = 'portal-files'
+    and not public.portal_password_pending()
     and (((storage.foldername(name))[1] = 'resources'
           and (public.is_portal_operator()
                or exists (select 1 from public.portal_records r

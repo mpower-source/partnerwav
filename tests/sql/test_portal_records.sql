@@ -346,24 +346,61 @@ select t('a private round is hidden from other companies', (select count(*) from
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
 select t('CloudWAV sees the round', (select data->>'round' from portal_records where collection='fundingProfiles' and id='vendor:intelsense') = 'Series A');
-select t('CloudWAV sets up a vendor login', (select public.portal_setup_account(' New@AgentID.test','vendor','agentid','AgentID','TempPass123')->>'entity_id') = 'agentid');
 insert into portal_records(collection,id,data,readers,writers,is_public) values ('programs','agentid','{"id":"agentid","name":"AgentID","needsProfile":true,"tiers":[{"tier":"Reseller","rate":"To be agreed"}]}','{*}','{vendor:agentid}',true);
+select t('a login can only go to a company that exists', fails($$select public.portal_setup_account('new@agentid.test','vendor','agentid-lookalike','AgentID','TempPass123')$$));
+select t('CloudWAV sets up a vendor login (an unused login is reused)', (select public.portal_setup_account(' New@AgentID.test','vendor','agentid','AgentID','TempPass123')->>'id') = '00000000-0000-0000-0000-000000000007');
 select t('operator logins cannot be created here', fails($$select public.portal_setup_account('new@agentid.test','operator','x','X','TempPass123')$$));
 select t('an operator login cannot be re-assigned', fails($$select public.portal_setup_account('ops@cloudwav.test','vendor','agentid','X','TempPass123')$$));
-select t('an unknown email is refused', fails($$select public.portal_setup_account('nobody@nowhere.test','vendor','agentid','X','TempPass123')$$));
 select t('a short temporary password is refused', fails($$select public.portal_setup_account('new@agentid.test','vendor','agentid','X','short')$$));
+select t('a bad email is refused', fails($$select public.portal_setup_account('not-an-email','vendor','agentid','X','TempPass123')$$));
+select t('a login cannot be moved to another company', fails($$select public.portal_setup_account('new@agentid.test','vendor','intelsense','X','TempPass123')$$));
 select t('the list shows the new login waiting for its own password', (select count(*) from jsonb_array_elements(public.portal_accounts()) a where a->>'email'='new@agentid.test' and a->>'role'='vendor' and (a->>'must_change_password')::boolean) = 1);
+-- finding 7: the login is created here, so public sign-up can stay off
+select t('a brand-new email gets a login created', (select public.portal_setup_account('fresh@agentid.test','vendor','agentid','Second user','TempPass456')->>'email') = 'fresh@agentid.test');
 reset role;
+select t('...with an email identity, confirmed, and the password hashed', (select count(*) from auth.users u join auth.identities i on i.user_id = u.id and i.provider = 'email' and i.provider_id = u.id::text
+  where u.email = 'fresh@agentid.test' and u.email_confirmed_at is not null and u.aud = 'authenticated' and u.encrypted_password = extensions.crypt('TempPass456', u.encrypted_password) and u.confirmation_token = '') = 1);
+-- someone registered the email first and kept a session: refused, so they never get the company's access
+insert into auth.users(id, email, last_sign_in_at) values ('00000000-0000-0000-0000-000000000008', 'grab@agentid.test', now());
+insert into auth.users(id, email) values ('00000000-0000-0000-0000-000000000009', 'grab2@agentid.test');
+insert into auth.sessions(user_id) values ('00000000-0000-0000-0000-000000000009');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('an email whose login has already been used is refused', fails($$select public.portal_setup_account('grab@agentid.test','vendor','agentid','X','TempPass123')$$));
+select t('an email whose login has an open session is refused', fails($$select public.portal_setup_account('grab2@agentid.test','vendor','agentid','X','TempPass123')$$));
+reset role;
+select t('...and neither got a company', (select count(*) from public.portal_users where email like 'grab%') = 0);
 select t('the temporary password is stored hashed and the email confirmed', (select encrypted_password = extensions.crypt('TempPass123', encrypted_password) and email_confirmed_at is not null from auth.users where email='new@agentid.test'));
+-- finding 8: nothing is saved until the temporary password is replaced
 select pg_temp.as_user('00000000-0000-0000-0000-000000000007'); set role authenticated;
+select t('with the temporary password, nothing can be saved', fails($$update portal_records set data = data || '{"desc":"Identity for AI agents"}' where collection='programs' and id='agentid'$$));
+select t('with the temporary password, no file can be uploaded', fails($$insert into storage.objects(bucket_id, name) values ('portal-files', 'resources/x/a.pdf')$$));
+select t('the flag cannot be cleared without changing the password', fails($$select public.portal_password_changed()$$));
+reset role;
+update auth.users set encrypted_password = extensions.crypt('MyOwnPass789', extensions.gen_salt('bf')) where id = '00000000-0000-0000-0000-000000000007';   -- what Supabase does when they choose a password
+select pg_temp.as_user('00000000-0000-0000-0000-000000000007'); set role authenticated;
+select t('choosing a password clears the flag', public.portal_password_changed());
 update portal_records set data = data || '{"desc":"Identity for AI agents","needsProfile":false}' where collection='programs' and id='agentid';
 select t('the new vendor finishes the profile CloudWAV started', (select data->>'desc' = 'Identity for AI agents' and data->>'needsProfile' = 'false' from portal_records where collection='programs' and id='agentid'));
 select t('the new vendor cannot change its own commission tiers', fails($$update portal_records set data = data || '{"tiers":[{"tier":"Reseller","rate":"90%"}]}' where collection='programs' and id='agentid'$$));
-select t('choosing a password clears the flag', public.portal_password_changed());
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
 select t('the flag is cleared in the list', (select count(*) from jsonb_array_elements(public.portal_accounts()) a where a->>'email'='new@agentid.test' and not (a->>'must_change_password')::boolean) = 1);
+reset role;
+-- resetting the same company's login signs it out everywhere
+insert into auth.sessions(user_id) values ('00000000-0000-0000-0000-000000000007');
+insert into auth.refresh_tokens(token, user_id, session_id) select 'rt-1', '00000000-0000-0000-0000-000000000007', id from auth.sessions where user_id = '00000000-0000-0000-0000-000000000007';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV can reset that company''s own login', (select public.portal_setup_account('new@agentid.test','vendor','agentid','AgentID','ResetPass123')->>'entity_id') = 'agentid');
+reset role;
+select t('...which signs it out everywhere', (select count(*) from auth.sessions where user_id = '00000000-0000-0000-0000-000000000007') = 0 and (select count(*) from auth.refresh_tokens where user_id = '00000000-0000-0000-0000-000000000007') = 0);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
 select t('CloudWAV removes the login''s access', public.portal_remove_account('00000000-0000-0000-0000-000000000007') and not public.portal_remove_account('00000000-0000-0000-0000-000000000001'));
+reset role;
+select t('...which signs it out everywhere and stops its password working', (select count(*) from auth.sessions where user_id = '00000000-0000-0000-0000-000000000007') = 0
+  and (select encrypted_password <> extensions.crypt('ResetPass123', encrypted_password) from auth.users where id = '00000000-0000-0000-0000-000000000007'));
+update auth.users set last_sign_in_at = now() where id = '00000000-0000-0000-0000-000000000007';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('a removed login can be given back to its company later', (select public.portal_setup_account('new@agentid.test','vendor','agentid','AgentID','BackAgain123')->>'entity_id') = 'agentid');
 reset role;
 
 

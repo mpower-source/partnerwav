@@ -2817,25 +2817,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
 
   // ===== AUTHENTICATION FUNCTIONS =====
-  async function signUpSB(email, password, userRole) {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: { role: userRole }
-        }
-      });
-      if (error) throw error;
-      showToast('Account created! Check your email to confirm.', 'good');
-      return data;
-    } catch(e) {
-      console.error('Sign up error:', e);
-      showToast('Error creating account: ' + e.message, 'bad');
-      throw e;
-    }
-  }
-
+  // Logins are created by PartnerWAV (Accounts screen -> portal_setup_account), never by public sign-up
   async function signInSB(email, password) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -17124,11 +17106,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var first = document.getElementById(fixed ? "acctEmail" : "acctCompany"); if (first) first.focus();
   }
 
-  function acctRpcError(err, signupErr, email){
+  function acctRpcError(err, email){
     var m = (err && err.message) || String(err || "");
-    if (/Could not find the function|PGRST202|does not exist/i.test(m)) return "The database needs the latest set-up: re-run supabase/portal_records.sql in the Supabase SQL editor, then press Create account again.";
-    if (/No login exists/i.test(m)) return "Couldn't create the login for " + email + (signupErr ? " (" + signupErr + ")" : "")
-      + ". In Supabase, check that Authentication > Sign In / Providers > \"Allow new users to sign up\" is on, or add this email under Authentication > Users. Then press Create account again.";
+    if (/Could not find the function|PGRST202|does not exist|No login exists/i.test(m)) return "The database needs the latest set-up: re-run supabase/portal_records.sql in the Supabase SQL editor, then press Create account again.";
     return m;
   }
 
@@ -17143,8 +17123,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!fixedId && !company) return fail("Enter the company name.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail("Enter a valid email address.");
     if (!fixedId){
+      // never match by name: anyone can rename their company. Logins for an existing company go through that company's own Login button.
       var dup = acctEntities(role).filter(function(x){ return String(x.name).trim().toLowerCase() === company.toLowerCase(); })[0];
-      if (dup) fixedId = dup.id;   // same name: add the login to the company that is already there
+      if (dup) return fail("There's already a company called " + dup.name + ". To give it a login, use the Login button on its row, so the login goes to exactly that company. To add a different company, use a name that tells them apart.");
     }
     var isNew = !fixedId, refEl = document.getElementById("acctRef");
     var entity = fixedId ? acctEntity(role, fixedId) : acctCreateEntity(role, company);
@@ -17162,14 +17143,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
     btn.disabled = true; btn.textContent = "Creating...";
-    var temp = acctTempPassword(), signupErr = "";
+    var temp = acctTempPassword();
     try {
       await cloudFlushNow();   // the company record is in place before the login exists
-      try {
-        var c2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false, storageKey:"pw-account-setup" } });
-        var su = await c2.auth.signUp({ email: email, password: temp });
-        if (su.error && !/already (been )?registered/i.test(su.error.message || "")) signupErr = su.error.message || "sign-up failed";
-      } catch(e1){ signupErr = (e1 && e1.message) || "sign-up failed"; }
+      // the database creates the login itself, so "Allow new users to sign up" can stay off in Supabase
       var r = await supabase.rpc("portal_setup_account", { p_email: email, p_role: role, p_entity: entity.id, p_name: contact || entity.name, p_password: temp });
       if (r.error) throw r.error;
       acctList = null;
@@ -17177,7 +17154,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       acctResultModal({ name: entity.name, role: role, email: email, password: temp, contact: contact });
     } catch(err){
       render();
-      acctSetupModal(role, entity.id, acctRpcError(err, signupErr, email) + " " + entity.name + " itself has been added.", { email: email, contact: contact });
+      acctSetupModal(role, entity.id, acctRpcError(err, email) + " " + entity.name + " itself has been added.", { email: email, contact: contact });
     }
   }
 
@@ -17206,7 +17183,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var r = await supabase.rpc("portal_accounts");
       if (r.error) throw r.error;
       acctList = Array.isArray(r.data) ? r.data : []; acctListErr = "";
-    } catch(e){ acctList = []; acctListErr = acctRpcError(e, "", ""); }
+    } catch(e){ acctList = []; acctListErr = acctRpcError(e, ""); }
     acctListBusy = false;
     renderAccounts(true);
   }
@@ -17295,7 +17272,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var acc = (acctList || []).filter(function(x){ return x.id === reset.getAttribute("data-acct-reset"); })[0]; if (!acc) return;
       var ent = acctEntity(acc.role, acc.entity_id), nm = ent ? ent.name : acc.entity_id;
       openModal('<div class="modal-head"><h2>Reset password for ' + esc(acc.email) + '?</h2><button class="modal-close" aria-label="Close">×</button></div>'
-        + '<p style="margin:14px 0;color:var(--ink-soft);">Their current password stops working. You get a new temporary password to send, and they choose their own at the next sign-in.</p>'
+        + '<p style="margin:14px 0;color:var(--ink-soft);">Their current password stops working and they are signed out everywhere. You get a new temporary password to send, and they choose their own at the next sign-in.</p>'
         + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-acct-reset-go="' + esc(acc.id) + '">Create a new temporary password</button><button type="button" class="btn secondary sm" data-acct-close>Cancel</button></div>');
       return;
     }
@@ -17305,7 +17282,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var ent2 = acctEntity(acc2.role, acc2.entity_id), temp = acctTempPassword();
       go.disabled = true;
       supabase.rpc("portal_setup_account", { p_email: acc2.email, p_role: acc2.role, p_entity: acc2.entity_id, p_name: acc2.display_name || "", p_password: temp }).then(function(r){
-        if (r.error){ closeModal(); toast(acctRpcError(r.error, "", acc2.email)); return; }
+        if (r.error){ closeModal(); toast(acctRpcError(r.error, acc2.email)); return; }
         acctList = null; render();
         acctResultModal({ name: ent2 ? ent2.name : acc2.entity_id, role: acc2.role, email: acc2.email, password: temp, contact: "" });
       });
@@ -17315,14 +17292,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (rm && acctLive()){
       var acc3 = (acctList || []).filter(function(x){ return x.id === rm.getAttribute("data-acct-remove"); })[0]; if (!acc3) return;
       openModal('<div class="modal-head"><h2>Remove access for ' + esc(acc3.email) + '?</h2><button class="modal-close" aria-label="Close">×</button></div>'
-        + '<p style="margin:14px 0;color:var(--ink-soft);">This login will no longer open the portal. The company and its records stay as they are, and you can set up a login for it again later.</p>'
+        + '<p style="margin:14px 0;color:var(--ink-soft);">This login will no longer open the portal and is signed out everywhere. The company and its records stay as they are, and you can set up a login for it again later.</p>'
         + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-acct-remove-go="' + esc(acc3.id) + '">Remove access</button><button type="button" class="btn secondary sm" data-acct-close>Cancel</button></div>');
       return;
     }
     var rmGo = t.closest("[data-acct-remove-go]");
     if (rmGo && acctLive()){
       supabase.rpc("portal_remove_account", { p_user: rmGo.getAttribute("data-acct-remove-go") }).then(function(r){
-        closeModal(); toast(r.error ? acctRpcError(r.error, "", "") : "Access removed"); acctList = null; acctLoadList(true);
+        closeModal(); toast(r.error ? acctRpcError(r.error, "") : "Access removed"); acctList = null; acctLoadList(true);
       });
       return;
     }

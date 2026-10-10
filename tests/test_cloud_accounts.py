@@ -10,7 +10,8 @@ PORTAL = { USERS["ops@cloudwav.test"]["id"]: {"role": "operator", "entity_id": N
 class AcctMock(PgSupabase):
     """Adds what account set-up needs: sign-up, password checks against the stored hash, changing your own
     password, and portal_users read from the database (so roles given by portal_setup_account are real)."""
-    signups_on = True
+    signups_on = False   # finding 7: public sign-up is off; the database creates company logins
+    signup_calls = 0
     def admin(self, q, args=()):
         con = psycopg2.connect(self.dsn); con.autocommit = True; cur = con.cursor(); cur.execute(q, args)
         r = cur.fetchall() if cur.description else None; con.close(); return r
@@ -20,7 +21,7 @@ class AcctMock(PgSupabase):
         def j(status, body): route.fulfill(status=status, content_type="application/json", body=json.dumps(body, default=str), headers=hdr)
         if req.method == "OPTIONS": return route.fulfill(status=200, headers=hdr)
         if path == "/auth/v1/signup":
-            body = json.loads(req.post_data or "{}"); email = body.get("email", "").lower()
+            body = json.loads(req.post_data or "{}"); email = body.get("email", "").lower(); self.signup_calls += 1
             if not self.signups_on: return j(422, {"code": 422, "error_code": "signup_disabled", "msg": "Signups not allowed for this instance"})
             if email not in self.users:
                 self.users[email] = {"password": body.get("password"), "id": str(uuid.uuid4())}
@@ -28,6 +29,9 @@ class AcctMock(PgSupabase):
             return j(200, self.user_obj(email))
         if path == "/auth/v1/token" and qs.get("grant_type") == ["password"]:
             body = json.loads(req.post_data or "{}"); email = body.get("email", "").lower(); pw = body.get("password", "")
+            if email not in self.users:   # a login the database created
+                row = self.admin("select id from auth.users where lower(email) = %s", (email,))
+                if row: self.users[email] = {"password": None, "id": str(row[0][0])}
             if email in self.users:
                 h = self.admin("select encrypted_password is null, case when encrypted_password is null then false else encrypted_password = extensions.crypt(%s, encrypted_password) end from auth.users where id=%s", (pw, self.users[email]["id"]))
                 good = (h and ((h[0][0] and self.users[email]["password"] == pw) or (not h[0][0] and h[0][1])))
@@ -154,14 +158,20 @@ with sync_playwright() as p:
     nav(op, "operator-programs")
     op.locator("#operatorProgramRows tr", has_text="Botnoi Voice").locator("[data-acct-setup]").click(); op.wait_for_timeout(200)
     ok(op.locator("#acctCompany").count() == 0 and "Botnoi Voice" in op.inner_text(".modal"), "Login button on a vendor row asks only for the email")
-    # sign-ups switched off in Supabase: clear message, nothing half-done
-    mock.signups_on = False
-    op.fill("#acctEmail", "new@botnoi.test"); op.click("#acctCreateBtn"); op.wait_for_timeout(2000)
-    ok(op.locator("#acctErr").is_visible() and "Allow new users to sign up" in op.inner_text("#acctErr") and pu("new@botnoi.test") == [], "If Supabase refuses the sign-up, it says what to switch on")
-    mock.signups_on = True
-    op.click("#acctCreateBtn"); op.wait_for_timeout(2500)
-    ok(op.locator("#acctTempPw").count() == 1 and pu("new@botnoi.test") == [("vendor", "botnoi", True)], "Pressing Create again then works")
+    # finding 7: someone registered this email first and signed in: refused, they never get Botnoi's access
+    grab = str(uuid.uuid4()); mock.admin("insert into auth.users(id, email, last_sign_in_at) values (%s, 'grab@botnoi.test', now())", (grab,))
+    op.fill("#acctEmail", "grab@botnoi.test"); op.click("#acctCreateBtn"); op.wait_for_timeout(2000)
+    ok(op.locator("#acctErr").is_visible() and "already has a login that has been used" in op.inner_text("#acctErr") and pu("grab@botnoi.test") == [], "An email someone already signed in with is refused")
+    op.fill("#acctEmail", "new@botnoi.test"); op.click("#acctCreateBtn"); op.wait_for_timeout(2500)
+    ok(op.locator("#acctTempPw").count() == 1 and pu("new@botnoi.test") == [("vendor", "botnoi", True)], "A new email works with public sign-up switched off")
+    ok(mock.signup_calls == 0, "The portal never uses public sign-up")
     op.click("[data-acct-close]"); op.wait_for_timeout(200)
+    # finding 9: a company with the same name as an existing one is never matched by name
+    nav(op, "operator-partners")
+    op.click('#scr-operator-partners [data-acct-setup="partner"]:not([data-acct-entity])'); op.wait_for_timeout(200)
+    op.fill("#acctCompany", "seven peaks"); op.fill("#acctEmail", "other@sevenpeaks.test"); op.click("#acctCreateBtn"); op.wait_for_timeout(1500)
+    ok(op.locator("#acctErr").is_visible() and "Login button on its row" in op.inner_text("#acctErr") and pu("other@sevenpeaks.test") == [], "A look-alike company name is refused, not matched")
+    op.click(".modal .modal-close"); op.wait_for_timeout(200)
     nav(op, "operator-accounts"); op.wait_for_timeout(1200)
     op.locator("#accountRows tr", has_text="new@botnoi.test").locator("[data-acct-remove]").click(); op.wait_for_timeout(200); op.click("[data-acct-remove-go]"); op.wait_for_timeout(1500)
     ok(pu("new@botnoi.test") == [] and op.locator("#accountRows tr", has_text="new@botnoi.test").count() == 0, "Remove access takes the login's role away")
