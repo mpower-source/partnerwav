@@ -690,6 +690,39 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .idb-contacts{ display:flex; flex-direction:column; gap:8px; }
   .idb-contact{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px; }
   .idb-flags{ display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; } .idb-flags .badge{ font-size:.66rem; }
+  .idb-split{ display:grid; grid-template-columns:minmax(0,1fr) minmax(340px,440px); gap:16px; align-items:start; }
+  .idb-list{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .idb-row{ display:grid; grid-template-columns:minmax(0,1fr) auto 104px; align-items:center; gap:12px; height:64px; padding:0 14px; text-align:left; font:inherit; color:inherit; cursor:pointer;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; transition:border-color .12s, box-shadow .12s; }
+  .idb-row:hover{ border-color:var(--accent-line, var(--accent)); }
+  .idb-row.sel{ border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft, rgba(124,58,237,.15)); }
+  .idb-row-main{ display:flex; flex-direction:column; min-width:0; }
+  .idb-row-main .idb-name, .idb-row-sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .idb-row-sub{ font-size:.8rem; color:var(--ink-faint); }
+  .idb-row-tags{ display:flex; gap:4px; flex-wrap:nowrap; overflow:hidden; max-width:320px; justify-content:flex-end; }
+  .idb-row-tags .badge{ font-size:.64rem; white-space:nowrap; }
+  .idb-row .idb-ticket.none{ color:var(--ink-faint); font-weight:500; font-size:.75rem; }
+  .idb-row .idb-ticket{ text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:.85rem; }
+  .idb-panel{ position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; background:var(--surface); border:1px solid var(--line); border-radius:14px; }
+  .idb-panel .idb-detail{ border-radius:14px; padding:16px; }
+  .idb-panel-empty{ display:flex; flex-direction:column; gap:4px; padding:28px 18px; text-align:center; color:var(--ink-faint); }
+  .idb-dp-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .idb-dp-name{ margin:0; font-size:1.1rem; }
+  .idb-dp-close{ display:none; }
+  .idb-dp-key{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .idb-dp-key span{ display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-size:.85rem; }
+  .idb-dp-key b{ font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); }
+  @media (max-width:1100px){ .idb-row-tags{ max-width:200px; } }
+  @media (max-width:900px){
+    .idb-split{ grid-template-columns:1fr; }
+    .idb-row{ grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto 20px; height:84px; padding:8px 12px; row-gap:4px; column-gap:10px; }
+    .idb-row .idb-ticket{ font-size:.78rem; max-width:120px; }
+    .idb-row-tags{ grid-column:1 / -1; grid-row:2; max-width:none; justify-content:flex-start; height:20px; }
+    .idb-panel{ display:none; }
+    .idb-split.has-sel .idb-panel{ display:block; position:fixed; inset:0; z-index:400; max-height:none; border-radius:0; border:0; overflow:auto; }
+    .idb-split.has-sel .idb-panel .idb-detail{ border-radius:0; min-height:100%; }
+    .idb-dp-close{ display:inline-flex; }
+  }
   .idb-co{ display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--accent-line, var(--line)); border-left:3px solid var(--accent); border-radius:10px; padding:10px 12px; }
   .idb-co-head{ font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); }
   .idb-prog-list{ display:flex; flex-direction:column; gap:8px; }
@@ -18938,23 +18971,30 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="idb-actions">'+(li ? '<a class="btn idb-li xs" href="'+attr(li)+'" target="_blank" rel="noopener noreferrer">LinkedIn</a>' : '')+(mail ? '<a class="btn secondary xs" href="'+attr(mail)+'">Email</a>' : '')
         + (flags.length ? '<button type="button" class="btn ghost xs" data-idb-check="'+attr(x.id)+'|'+i+'">Mark checked</button>' : '')+'</div></div>';
   }
-  function idbCardHtml(x){
-    var site = safeHref(x.website || ""), li = safeHref(x.linkedin || ""), seg = idbSegment(x), open = state.idbOpen === x.id, fl = idbOpenFlags(x), org = x.orgId ? idbById(x.orgId) : null;
-    return '<div class="card card-pad idb-card" data-idb-row="'+attr(x.id)+'">'
-      + '<div class="idb-head"><div style="min-width:0;"><b class="idb-name">'+esc(x.name)+'</b><div class="field-note">'+esc([x.typeLabel || x.type, x.city].filter(Boolean).join(" · "))+(org ? ' · <a href="#" data-idb-open="'+attr(org.id)+'">'+esc(org.name)+'</a>' : '')+'</div></div>'
-        + '<span class="idb-ticket">'+esc(idbTicket(x) || "--")+'</span></div>'
-      + idbGroupChips(x)
-      + ((idbAbroad(x) || x.parentCountry || x.pilot) ? '<div class="meet-chips idb-chips">'
-          + (idbAbroad(x) ? '<span class="badge warn" data-idb-abroad>Based in '+esc(idbBasedIn(x))+'</span>' : '')
-          + (x.parentCountry ? '<span class="badge neutral" data-idb-parent title="Run from Thailand, with a parent company abroad">Parent: '+esc(x.parentCountry)+'</span>' : '')
-          + (x.pilot ? '<span class="badge accent" data-idb-pilot>Pilot first</span>' : '')+'</div>' : '')
-      + ((x.focus || []).length ? '<div class="meet-chips idb-chips">'+x.focus.slice(0, 6).map(function(f){ return '<span class="badge neutral">'+esc(f)+'</span>'; }).join("")+'</div>' : '')
-      + ((x.stages || []).length ? '<div class="field-note"><b>Stages:</b> '+esc(x.stages.join(", "))+'</div>' : '')
+  // One row per investor, all the same size; the chosen one opens in the details panel (beside the list on desktop, over it on a phone)
+  function idbRowHtml(x){
+    var sel = state.idbOpen === x.id, fl = idbOpenFlags(x), f = idbFor(x, idbCo());
+    var sub = [x.typeLabel || x.type, x.city && x.city !== idbBasedIn(x) ? x.city : "", idbAbroad(x) ? "" : idbBasedIn(x)].filter(Boolean).join(" · ");
+    var tags = (idbAbroad(x) ? '<span class="badge warn" data-idb-abroad>Based in '+esc(idbBasedIn(x))+'</span>' : '')
+      + (x.parentCountry ? '<span class="badge neutral" data-idb-parent title="Run from Thailand, with a parent company abroad">Parent: '+esc(x.parentCountry)+'</span>' : '')
+      + (x.pilot ? '<span class="badge accent" data-idb-pilot>Pilot first</span>' : '')
+      + (f && (f.groups || []).length ? '<span class="badge accent" data-idb-groups>'+esc(IDB_GROUP_NAMES[f.groups[f.groups.length - 1]] || f.groups[0])+(f.groups.length > 1 ? ' +'+(f.groups.length - 1) : '')+'</span>' : '')
+      + (fl ? '<span class="badge warn idb-warn-b">'+fl+' to check</span>' : '');
+    return '<button type="button" class="idb-row'+(sel ? ' sel' : '')+'" data-idb-row="'+attr(x.id)+'" data-idb-open="'+attr(x.id)+'" aria-pressed="'+sel+'">'
+      + '<span class="idb-row-main"><b class="idb-name">'+esc(x.name)+'</b><span class="idb-row-sub">'+esc(sub)+'</span></span>'
+      + '<span class="idb-row-tags">'+tags+'</span>'
+      + '<span class="idb-ticket'+(idbTicket(x) ? '' : ' none')+'">'+esc(idbTicket(x) || "Cheque n/a")+'</span></button>';
+  }
+  function idbDetailHtml(x){
+    if (!x) return '<div class="idb-panel-empty"><b>Choose an investor</b><span class="field-note">Their details, contacts and sources show here.</span></div>';
+    var site = safeHref(x.website || ""), li = safeHref(x.linkedin || ""), org = x.orgId ? idbById(x.orgId) : null;
+    return '<div class="idb-detail" data-idb-detail="'+attr(x.id)+'">'
+      + '<div class="idb-dp-head"><div style="min-width:0;"><h3 class="idb-dp-name">'+esc(x.name)+'</h3><div class="field-note">'+esc([x.typeLabel || x.type, x.city].filter(Boolean).join(" · "))+(org ? ' · <a href="#" data-idb-open="'+attr(org.id)+'">'+esc(org.name)+'</a>' : '')+'</div></div>'
+        + '<button type="button" class="btn ghost xs idb-dp-close" data-idb-close aria-label="Close details">Close</button></div>'
+      + '<div class="idb-dp-key"><span><b>Cheque</b>'+esc(idbTicket(x) || "Not known")+'</span><span><b>Stages</b>'+esc((x.stages || []).join(", ") || "Not known")+'</span></div>'
+      + ((x.focus || []).length ? '<div class="meet-chips idb-chips">'+x.focus.slice(0, 8).map(function(f){ return '<span class="badge neutral">'+esc(f)+'</span>'; }).join("")+'</div>' : '')
+      + ((li || site) ? '<div class="idb-actions">'+(li ? '<a class="btn idb-li xs" href="'+attr(li)+'" target="_blank" rel="noopener noreferrer">LinkedIn</a>' : '')+(site ? '<a class="btn secondary xs" href="'+attr(site)+'" target="_blank" rel="noopener noreferrer">Website</a>' : '')+'</div>' : '')
       + (x.portfolio ? '<div class="field-note"><b>Portfolio:</b> '+esc(x.portfolio)+'</div>' : '')
-      + '<div class="idb-foot"><span class="field-note">'+(x.contacts || []).length+' contact'+((x.contacts || []).length === 1 ? '' : 's')+(fl ? ' · <span class="idb-warn">'+fl+' to check</span>' : '')+'</span>'
-        + '<span class="idb-actions">'+(li ? '<a class="btn idb-li xs" href="'+attr(li)+'" target="_blank" rel="noopener noreferrer">LinkedIn</a>' : '')+(site ? '<a class="btn secondary xs" href="'+attr(site)+'" target="_blank" rel="noopener noreferrer">Website</a>' : '')
-        + '<button type="button" class="btn ghost xs" data-idb-open="'+attr(x.id)+'">'+(open ? 'Close' : 'Details')+'</button></span></div>'
-      + (open ? '<div class="idb-detail">'
           + (x.affiliation ? '<div class="field-note"><b>Background:</b> '+esc(x.affiliation)+'</div>' : '')
           + '<div class="field-note"><b>Based in:</b> '+esc(idbBasedIn(x))+(x.city ? ' ('+esc(x.city)+')' : '')+(x.parentCountry ? ' · <b>Parent company:</b> '+esc(x.parentCountry) : '')+'</div>'
           + (x.pilot ? '<div class="cp-next idb-pilot"><b>Route in:</b> '+esc(x.pilot)+'</div>' : '')
@@ -18963,7 +19003,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<div class="idb-contacts">'+((x.contacts || []).length ? x.contacts.map(function(c, i){ return idbContactHtml(x, c, i); }).join("") : '<span class="field-note">No contacts yet.</span>')+'</div>'
           + '<div class="field-note">Source: '+esc(x.source || "Added by CloudWAV")+(x.tags && x.tags.length ? ' · Tags: '+esc(x.tags.join(", ")) : '')+'</div>'
           + ((x.sources || []).length ? '<div class="field-note idb-sources" data-idb-sources><b>Checked against:</b> '+x.sources.map(function(u, k){ var h = safeHref(u); return h ? '<a href="'+attr(h)+'" target="_blank" rel="noopener noreferrer">'+esc(idbHost(u))+'</a>' : ''; }).filter(Boolean).join(" · ")+'</div>' : '')
-          + '<div style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="btn secondary xs" data-idb-edit="'+attr(x.id)+'">Edit</button><button type="button" class="btn ghost xs" data-idb-delete="'+attr(x.id)+'">Remove</button></div></div>' : '')
+          + '<div style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="btn secondary xs" data-idb-edit="'+attr(x.id)+'">Edit</button><button type="button" class="btn ghost xs" data-idb-delete="'+attr(x.id)+'">Remove</button></div>'
       + '</div>';
   }
   // ===== Investor program: the companies CloudWAV is taking through a raise (a paid monthly service).
@@ -19154,7 +19194,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div id="idbImportOut" class="field-note"></div><div style="display:flex;gap:8px;"><button type="button" class="btn secondary sm" data-idb-preview>Check the file</button><button type="button" class="btn primary sm" data-idb-commit hidden>Import</button><button type="button" class="btn ghost sm" data-idb-import-cancel>Cancel</button></div></div>';
     if (state.idbEdit) html += idbFormHtml(state.idbEdit === "new" ? null : idbById(state.idbEdit));
     html += '<div class="field-note" style="margin:4px 0 10px;" data-idb-shown>Showing '+list.length+' of '+investorDb.length+'</div>'
-      + (list.length ? '<div class="idb-grid">'+list.map(idbCardHtml).join("")+'</div>' : '<div class="empty">'+(investorDb.length ? 'Nothing matches. Try fewer filters.' : 'The database is empty. Import a CSV or add the first record.')+'</div>');
+      + (list.length ? '<div class="idb-split'+(state.idbOpen && idbById(state.idbOpen) ? ' has-sel' : '')+'"><div class="idb-list" role="list" aria-label="Investors">'+list.map(idbRowHtml).join("")+'</div>'
+          + '<aside class="idb-panel" id="idbPanel" aria-label="Investor details">'+idbDetailHtml(state.idbOpen ? idbById(state.idbOpen) : null)+'</aside></div>'
+        : '<div class="empty">'+(investorDb.length ? 'Nothing matches. Try fewer filters.' : 'The database is empty. Import a CSV or add the first record.')+'</div>');
     box.innerHTML = html;
   }
   function idbSaveForm(id){
@@ -19193,9 +19235,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("click", function(ev){
     var t = ev.target && ev.target.closest ? ev.target : null; if (!t || !t.closest("#investorDbContent")) return; var b;
     if ((b = t.closest("[data-idb-seg]"))){ state.idbSeg = b.getAttribute("data-idb-seg"); renderInvestorDb(true); return; }
-    if ((b = t.closest("[data-idb-open]"))){ ev.preventDefault(); var oid = b.getAttribute("data-idb-open"); state.idbOpen = state.idbOpen === oid ? null : oid;
+    if (t.closest("[data-idb-close]")){ state.idbOpen = null; renderInvestorDb(true); return; }
+    if ((b = t.closest("[data-idb-open]"))){ ev.preventDefault(); var oid = b.getAttribute("data-idb-open"); state.idbOpen = state.idbOpen === oid && b.classList.contains("idb-row") ? null : oid;
       if (state.idbOpen && !investorDb.filter(idbMatches).some(function(x){ return x.id === oid; })){ state.idbQ = ""; state.idbSeg = ""; state.idbStage = ""; state.idbFocus = ""; state.idbAmount = ""; state.idbCheck = ""; state.idbLoc = ""; state.idbRoute = ""; }
-      renderInvestorDb(true); var row = document.querySelector('[data-idb-row="' + oid + '"]'); if (row && row.scrollIntoView && b.tagName === "A") row.scrollIntoView({ block:"nearest" }); return; }
+      renderInvestorDb(true); var row = document.querySelector('[data-idb-row="' + oid + '"]'); if (row && row.scrollIntoView && b.tagName === "A") row.scrollIntoView({ block:"nearest" });
+      var pn = document.getElementById("idbPanel"); if (pn) pn.scrollTop = 0; return; }
     if (t.closest("[data-idb-new]")){ state.idbEdit = "new"; state.idbImport = false; renderInvestorDb(true); var nm = document.getElementById("idbName"); if (nm) nm.focus(); return; }
     if ((b = t.closest("[data-idb-edit]"))){ state.idbEdit = b.getAttribute("data-idb-edit"); state.idbImport = false; renderInvestorDb(true); var fm = document.getElementById("idbForm"); if (fm && fm.scrollIntoView) fm.scrollIntoView({ block:"start" }); return; }
     if (t.closest("[data-idb-cancel]")){ state.idbEdit = null; renderInvestorDb(true); return; }
