@@ -880,24 +880,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   /* ---------- responsive ---------- */
   @media (max-width:860px){
     .shell{ flex-direction:column; height:auto; min-height:100%; }
-    .sidebar{ width:auto; flex-direction:row; flex-wrap:wrap; align-items:center; overflow:visible; padding:10px 12px; gap:8px 10px; border-right:none; border-bottom:1px solid var(--line); }
-    .brand{ flex-shrink:0; }
-    .proto-pill{ display:none; }
-    .role-switch{ flex-shrink:0; width:260px; margin:0; order:1; }
-    .navgroup{ flex-direction:row; flex-wrap:wrap; order:2; width:100%; gap:6px; }
-    .navgroup-label{ display:none; }
-    .navlink{ white-space:nowrap; padding:7px 10px; }
-    .navlink, .navsec-head{ width:auto; }
-    .navsec{ display:contents; }
-    .navsec-head{ white-space:nowrap; padding:7px 10px; background:var(--surface); }
-    .navsec-items{ flex-direction:row; flex-wrap:wrap; width:100%; margin-left:0; padding:0 0 4px 8px; gap:6px; }
-    .sidebar-foot{ display:none; }
     .main{ overflow-y:visible; }
     .topbar{ position:static; }
     .search{ width:120px; }
   }
   @media (max-width:480px){
-    .brand-name{ display:none; }
     .content{ padding:18px 16px 50px; }
     .topbar{ padding:max(14px, env(safe-area-inset-top,0px)) 16px 12px; }
     .search{ display:none; }
@@ -1039,16 +1026,53 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .stat-ic.t-amber{ color:var(--amber); background:var(--warn-soft); }
   .stat-ic.t-pink{ color:var(--pink); background:var(--bad-soft); }
 </style>
+<style id="pw-mobile-nav">
+  /* Phones and small tablets: the menu is a bar across the top. Tapping Menu opens it over the page;
+     choosing a screen closes it and shows that screen's content underneath. */
+  .mnav-toggle{ display:none; }
+  @media (max-width:860px){
+    .sidebar{ position:sticky; top:0; z-index:60; width:auto; height:auto; flex-direction:column; gap:0; padding:0; overflow:visible;
+      border-right:none; border-bottom:1px solid var(--line); background:var(--surface); box-shadow:0 1px 0 rgba(0,0,0,.02); }
+    .sidebar-head{ display:flex; align-items:center; gap:10px; min-height:56px; padding:max(8px, env(safe-area-inset-top,0px)) 12px 8px 16px; }
+    .sidebar-head .brand{ padding:0; }
+    .sidebar-head .brand-name{ display:inline; font-size:1.15rem; }
+    .proto-pill{ display:none; }
+    .mnav-toggle{ display:inline-flex; align-items:center; gap:8px; margin-left:auto; min-height:44px; padding:0 14px; border-radius:12px;
+      border:1.5px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-weight:800; font-size:.92rem; cursor:pointer; }
+    .mnav-toggle:hover{ background:var(--surface-2); }
+    .mnav-toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+    .mnav-bars{ position:relative; width:18px; height:2px; background:currentColor; border-radius:2px; transition:background .15s; }
+    .mnav-bars::before, .mnav-bars::after{ content:""; position:absolute; left:0; width:18px; height:2px; background:currentColor; border-radius:2px; transition:transform .18s ease, top .18s ease; }
+    .mnav-bars::before{ top:-6px; } .mnav-bars::after{ top:6px; }
+    html:not(.mnav-open) .sidebar > :not(.sidebar-head){ display:none !important; }
+    html.mnav-open, html.mnav-open body{ overflow:hidden; }
+    html.mnav-open .sidebar{ position:fixed; inset:0; height:100vh; height:100dvh; overflow-y:auto; overscroll-behavior:contain; gap:16px; padding-bottom:max(24px, env(safe-area-inset-bottom,0px)); animation:mnavIn .16s ease-out; }
+    html.mnav-open .sidebar-head{ position:sticky; top:0; z-index:1; background:var(--surface); border-bottom:1px solid var(--line); }
+    html.mnav-open .mnav-toggle{ background:var(--accent-soft); border-color:var(--accent-line); color:var(--accent-strong); }
+    html.mnav-open .mnav-bars{ background:transparent; }
+    html.mnav-open .mnav-bars::before{ top:0; transform:rotate(45deg); }
+    html.mnav-open .mnav-bars::after{ top:0; transform:rotate(-45deg); }
+    html.mnav-open .sidebar > .role-switch, html.mnav-open .sidebar > .navgroup, html.mnav-open .sidebar > .sidebar-foot{ margin-left:16px; margin-right:16px; }
+    html.mnav-open .sidebar .navgroup{ gap:4px; }
+    html.mnav-open .sidebar .navlink, html.mnav-open .sidebar .navsec-head{ min-height:46px; font-size:.9rem; }
+    html.mnav-open .sidebar .navsec-items .navlink{ min-height:42px; font-size:.95rem; }
+    html.mnav-open .sidebar-foot{ margin-top:8px; }
+    .topbar{ position:static; }
+  }
+  @keyframes mnavIn{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce){ html.mnav-open .sidebar{ animation:none; } }
+</style>
 
 <div class="shell">
 
-  <aside class="sidebar">
-    <div>
+  <aside class="sidebar" id="mnavPanel">
+    <div class="sidebar-head">
       <div class="brand">
         <svg width="24" height="24" viewBox="0 0 26 26" fill="none"><rect x="1" y="1" width="24" height="24" rx="7" fill="var(--accent)"/><path d="M8 18V8h5.2c2.3 0 3.9 1.4 3.9 3.5S15.5 15 13.2 15H10v3H8Zm2-5h3c1.1 0 1.9-.6 1.9-1.5S14.1 10 13 10h-3v3Z" fill="#fff"/></svg>
         <span class="brand-name">PartnerWAV</span>
       </div>
       <div class="proto-pill">Phase 1 · Prototype</div>
+      <button type="button" class="mnav-toggle" id="mnavToggle" aria-expanded="false" aria-controls="mnavPanel" aria-label="Open menu"><span class="mnav-bars" aria-hidden="true"></span><span class="mnav-text">Menu</span></button>
     </div>
 
     <div class="role-switch" role="group" aria-label="View as">
@@ -5517,6 +5541,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       head.setAttribute("data-active", holds && !open ? "true" : "false");
       sec.querySelector(".navsec-items").hidden = !open;
     });
+    // phone menu: going to another screen closes it (switching the demo role keeps it open to pick a screen)
+    if (state.mnavScreen !== state.screen){ if (state.mnavScreen && state.mnavRole === state.role && document.documentElement.classList.contains("mnav-open")){ mnavSet(false); window.scrollTo(0, 0); } state.mnavScreen = state.screen; }
+    state.mnavRole = state.role;
     document.getElementById("topEyebrow").textContent = roleLabel(state.role);
     document.getElementById("topTitle").textContent = titles[state.screen] || "";
     var topbarEl = document.querySelector(".topbar"); if (topbarEl) topbarEl.hidden = state.screen === "public-landing" || state.screen === "public-invite" || state.screen === "public-assess" || state.screen === "public-partner-page" || state.screen === "public-meet" || state.screen === "public-events";
@@ -15323,6 +15350,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
     var navBtn = e.target.closest(".navlink");
+    if (navBtn && mnavIsOpen()){ mnavSet(false); window.scrollTo(0, 0); }
     if (navBtn && navBtn.hasAttribute("data-own-partner")){ openOwnPartner(); return; }
     if (navBtn){
       console.log("Nav button clicked, going to:", navBtn.getAttribute("data-screen"));
@@ -18154,6 +18182,21 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (pc){ pc.status = pc.status === "contacted" ? "new" : "contacted"; saveEvents(); state.evV = (state.evV || 0) + 1; renderOperatorEvents(true); } return; }
     if (t.closest("[data-ev-csv]")){ evDownloadCsv(); return; }
   });
+
+  // ===== PHONE MENU: a bar across the top; "Menu" opens it over the page, choosing a screen closes it =====
+  function mnavIsOpen(){ return document.documentElement.classList.contains("mnav-open"); }
+  function mnavSet(open){
+    document.documentElement.classList.toggle("mnav-open", !!open);
+    var b = document.getElementById("mnavToggle"); if (!b) return;
+    b.setAttribute("aria-expanded", String(!!open)); b.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    var tx = b.querySelector(".mnav-text"); if (tx) tx.textContent = open ? "Close" : "Menu";
+    if (open){ var panel = document.getElementById("mnavPanel"), cur = panel && panel.querySelector('nav:not([hidden]) .navlink[aria-current="true"]');
+      if (panel) panel.scrollTop = 0; if (cur && cur.scrollIntoView) cur.scrollIntoView({ block:"nearest" }); }
+  }
+  document.addEventListener("click", function(ev){ var t = ev.target && ev.target.closest ? ev.target.closest("#mnavToggle") : null; if (t) mnavSet(!mnavIsOpen()); });
+  document.addEventListener("keydown", function(ev){ if (ev.key === "Escape" && mnavIsOpen()){ mnavSet(false); var b = document.getElementById("mnavToggle"); if (b) b.focus(); } });
+  if (window.matchMedia){ var mnavMq = window.matchMedia("(max-width:860px)"); var mnavOff = function(){ if (!mnavMq.matches && mnavIsOpen()) mnavSet(false); };
+    if (mnavMq.addEventListener) mnavMq.addEventListener("change", mnavOff); else if (mnavMq.addListener) mnavMq.addListener(mnavOff); }
 
   // ===== COMMUNITY PARTNERS & THAILAND EVENT CALENDAR =====
   // CloudWAV keeps a private list of the communities it works with (Bangkok Entrepreneurs, the Claude Thailand

@@ -126,8 +126,13 @@ def open_page_supabase(p, mock, query="", ctx=None, viewport=None):
     pg.goto(URL + query); pg.wait_for_timeout(900)
     return b, ctx, pg
 
+def open_phone_menu(pg):
+    """On a phone the menu is closed behind the Menu button at the top: open it."""
+    t = pg.locator("#mnavToggle:visible")
+    if t.count() and t.get_attribute("aria-expanded") != "true": t.click(); pg.wait_for_timeout(150)
 def open_menu(pg, screen):
     """Menu items live in collapsible sections: open the one holding this screen."""
+    open_phone_menu(pg)
     if pg.locator(f'[data-screen="{screen}"]:visible').count() == 0:
         head = pg.locator(f'nav.navgroup:not([hidden]) .navsec:has([data-screen="{screen}"]) .navsec-head')
         if head.count(): head.first.click(); pg.wait_for_timeout(100)
@@ -138,7 +143,10 @@ def nav(pg, screen):
     open_menu(pg, screen)
     pg.locator(f'[data-screen="{screen}"]:visible').first.click(); pg.wait_for_timeout(200)
 def role(pg, r):
+    open_phone_menu(pg)
     pg.locator(f'[data-role="{r}"]').first.click(); pg.wait_for_timeout(200)
+    if pg.locator("#mnavToggle:visible").count() and pg.get_attribute("#mnavToggle", "aria-expanded") == "true":
+        pg.click("#mnavToggle"); pg.wait_for_timeout(100)
 def visible_screen(pg):
     return pg.evaluate("[...document.querySelectorAll('[id^=\"scr-\"]')].filter(e=>!e.hidden).map(e=>e.id)")
 def report():
