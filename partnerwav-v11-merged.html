@@ -690,6 +690,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .idb-contacts{ display:flex; flex-direction:column; gap:8px; }
   .idb-contact{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px; }
   .idb-flags{ display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; } .idb-flags .badge{ font-size:.66rem; }
+  .idb-co{ display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--accent-line, var(--line)); border-left:3px solid var(--accent); border-radius:10px; padding:10px 12px; }
+  .idb-co-head{ font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); }
+  .idb-prog-list{ display:flex; flex-direction:column; gap:8px; }
+  .idb-prog-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; background:var(--surface-2); border-radius:10px; padding:10px 12px; }
+  .idb-prog-row [role=switch]{ min-width:56px; justify-content:center; }
   @media (max-width:600px){ .idb-grid{ grid-template-columns:1fr; } .idb-filters > *{ flex:1 1 100%; max-width:none !important; } }
   tr.op-sub > td:first-child{ padding-left:34px; }
   .sub-prog-note{ display:block; }
@@ -5269,7 +5274,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // CloudWAV's investor & incubator database (see INVESTOR DATABASE). The demo shows a few organisations (public company
   // information only) and one made-up example; the real records are loaded into Supabase from a private seed.
   var IDB_KEY = "partnerWAV_investorDb";   // declared here, before loadIdb() runs at start-up
-  var investorDb = [{"id": "idb-beacon-venture-capital", "kind": "organization", "name": "Beacon Venture Capital (Kasikornbank)", "type": "Corporate VC", "typeLabel": "Corporate VC", "website": "https://beaconvc.fund", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Enterprise", "Consumer"], "stages": ["Seed", "Series A", "Series B+", "Growth"], "ticketText": "$500K-$5M", "ticketMin": 500000, "ticketMax": 5000000, "portfolio": "", "segment": "firms", "linkedin": "", "contacts": [], "notes": "KBank's corporate venture arm. Recent: WIZ.AI Series B (Nov 2025), Quantified Energy (Dec 2025).", "sources": ["https://www.cbinsights.com/investor/beacon-venture-capital"], "source": "Example (public company information)", "verified": "unverified", "tags": ["Intelsense sprint A (contact now)", "Intelsense Series A pipeline"], "timing": "Series A pipeline: a corporate venture process takes 6-12 weeks at least. Start with a pilot; the full cheque is likelier at Series A.", "createdAt": "2026-10-12", "basedIn": "Thailand", "pilot": "Pilot first: offer Kasikornbank (KBank) a paid pilot. With Thai corporate venture arms, a successful pilot with the parent company is often the route to investment."}, {"id": "idb-scb-10x", "kind": "organization", "name": "SCB 10X (SCBX)", "type": "Corporate VC", "typeLabel": "Corporate VC", "website": "https://www.scb10x.com", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Blockchain", "Deep Tech"], "stages": ["Seed", "Series A", "Series B+", "Growth"], "ticketText": "$100K-$5M first cheque", "ticketMin": 100000, "ticketMax": 5000000, "portfolio": "", "segment": "firms", "linkedin": "", "contacts": [{"name": "", "title": "VC team: pitch decks and intros", "email": "scb10x-vc@scb10x.com", "phone": "", "linkedin": "", "note": "One FYI Center, Rama 4 Road, Klongtoei, Bangkok 10110", "checked": true, "flags": []}], "notes": "SCBX's venture arm. Global mandate, seed to Series C+.", "sources": ["https://www.scb10x.com/llms.txt", "https://www.openvc.app/fund/SCB%2010X"], "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "pilot": "Pilot first: offer SCB / SCBX a paid pilot. With Thai corporate venture arms, a successful pilot with the parent company is often the route to investment."}, {"id": "idb-openspace-ventures", "kind": "organization", "name": "Openspace Ventures", "type": "VC fund", "typeLabel": "VC", "website": "https://openspace.vc", "country": "Singapore", "basedIn": "Singapore", "city": "Singapore", "focus": ["AI", "Enterprise", "SaaS"], "stages": ["Series A", "Series B+"], "ticketText": "$1M-$10M", "ticketMin": 1000000, "ticketMax": 10000000, "portfolio": "Southeast Asian enterprise portfolio", "segment": "firms", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": ["Intelsense Series A pipeline"], "timing": "Series A pipeline: invests from Series A. Connect now, pitch once revenue is well past seed stage.", "createdAt": "2026-10-12"}, {"id": "idb-true-incube", "kind": "organization", "name": "True Incube (True Corporation)", "type": "Accelerator / incubator", "typeLabel": "Corporate VC / Accelerator", "website": "https://trueincube.com", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Telecom", "IoT", "5G"], "stages": ["Seed", "Series A"], "ticketText": "$100K-$2M", "ticketMin": 100000, "ticketMax": 2000000, "portfolio": "True/CP Group telecom ecosystem", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "pilot": "Pilot first: offer True Corporation a paid pilot. With Thai corporate venture arms, a successful pilot with the parent company is often the route to investment."}, {"id": "idb-depa", "kind": "organization", "name": "depa (Digital Economy Promotion Agency)", "type": "Government agency", "typeLabel": "Government Agency", "website": "https://depa.or.th", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Digital", "Smart City", "All"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Grants $10K-$150K", "ticketMin": 10000, "ticketMax": 150000, "portfolio": "Thailand's digital transformation agency. Smart City initiatives", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": ["Intelsense: not for seed"], "timing": "Not for the seed round: grants, not equity. Apply for non-dilutive grants alongside the round.", "createdAt": "2026-10-12", "basedIn": "Thailand"}, {"id": "idb-nia", "kind": "organization", "name": "NIA (National Innovation Agency)", "type": "Government agency", "typeLabel": "Government Agency", "website": "https://nia.or.th", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Innovation", "All Sectors"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Grants up to ฿15M ($450K)", "ticketMin": 450000, "ticketMax": 450000, "portfolio": "1,000+ startup grants/year. Startup Thailand platform", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand"}, {"id": "idb-plug-and-play-thailand", "kind": "organization", "name": "Plug and Play Thailand", "type": "Accelerator / incubator", "typeLabel": "Accelerator / VC", "website": "https://plugandplaytechcenter.com/thailand", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Enterprise", "Mobility"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Non-dilutive + Investment", "ticketMin": null, "ticketMax": null, "portfolio": "Global network. Thailand chapter", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "parentCountry": "USA (Plug and Play)"}, {"id": "idb-example-angel", "kind": "individual", "name": "Example Angel (example)", "type": "Individual investor", "typeLabel": "Angel investor", "website": "", "linkedin": "", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "SaaS"], "stages": ["Pre-seed", "Seed"], "ticketText": "", "ticketMin": 25000, "ticketMax": 150000, "portfolio": "", "segment": "individuals", "contacts": [{"name": "Example Angel", "title": "Angel investor", "email": "angel@example.com", "phone": "", "linkedin": "https://www.linkedin.com/in/example", "checked": false, "flags": ["Email not confirmed"]}], "notes": "A made-up example so the demo shows how contacts and checks look.", "source": "Example", "verified": "unverified", "tags": ["Example"], "createdAt": "2026-10-12", "basedIn": "Thailand"}];
+  var investorDb = [{"id": "idb-beacon-venture-capital", "kind": "organization", "name": "Beacon Venture Capital (Kasikornbank)", "type": "Corporate VC", "typeLabel": "Corporate VC", "website": "https://beaconvc.fund", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Enterprise", "Consumer"], "stages": ["Seed", "Series A", "Series B+", "Growth"], "ticketText": "$500K-$5M", "ticketMin": 500000, "ticketMax": 5000000, "portfolio": "", "segment": "firms", "linkedin": "", "contacts": [], "notes": "KBank's corporate venture arm. Recent: WIZ.AI Series B (Nov 2025), Quantified Energy (Dec 2025).", "sources": ["https://www.cbinsights.com/investor/beacon-venture-capital"], "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "pilot": "Pilot first: offer Kasikornbank (KBank) a paid pilot. With Thai corporate venture arms, a successful pilot with the parent company is often the route to investment.", "forCompany": {"intelsense": {"timing": "Series A pipeline: a corporate venture process takes 6-12 weeks at least. Start with a pilot; the full cheque is likelier at Series A.", "groups": ["sprintA", "seriesA"]}}}, {"id": "idb-scb-10x", "kind": "organization", "name": "SCB 10X (SCBX)", "type": "Corporate VC", "typeLabel": "Corporate VC", "website": "https://www.scb10x.com", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Blockchain", "Deep Tech"], "stages": ["Seed", "Series A", "Series B+", "Growth"], "ticketText": "$100K-$5M first cheque", "ticketMin": 100000, "ticketMax": 5000000, "portfolio": "", "segment": "firms", "linkedin": "", "contacts": [{"name": "", "title": "VC team: pitch decks and intros", "email": "scb10x-vc@scb10x.com", "phone": "", "linkedin": "", "note": "One FYI Center, Rama 4 Road, Klongtoei, Bangkok 10110", "checked": true, "flags": []}], "notes": "SCBX's venture arm. Global mandate, seed to Series C+.", "sources": ["https://www.scb10x.com/llms.txt", "https://www.openvc.app/fund/SCB%2010X"], "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "pilot": "Pilot first: offer SCB / SCBX a paid pilot. With Thai corporate venture arms, a successful pilot with the parent company is often the route to investment."}, {"id": "idb-openspace-ventures", "kind": "organization", "name": "Openspace Ventures", "type": "VC fund", "typeLabel": "VC", "website": "https://openspace.vc", "country": "Singapore", "basedIn": "Singapore", "city": "Singapore", "focus": ["AI", "Enterprise", "SaaS"], "stages": ["Series A", "Series B+"], "ticketText": "$1M-$10M", "ticketMin": 1000000, "ticketMax": 10000000, "portfolio": "Southeast Asian enterprise portfolio", "segment": "firms", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "forCompany": {"intelsense": {"timing": "Series A pipeline: invests from Series A. Connect now, pitch once revenue is well past seed stage.", "groups": ["seriesA"]}}}, {"id": "idb-true-incube", "kind": "organization", "name": "True Incube (True Corporation)", "type": "Accelerator / incubator", "typeLabel": "Corporate VC / Accelerator", "website": "https://trueincube.com", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Telecom", "IoT", "5G"], "stages": ["Seed", "Series A"], "ticketText": "$100K-$2M", "ticketMin": 100000, "ticketMax": 2000000, "portfolio": "True/CP Group telecom ecosystem", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "pilot": "Pilot first: offer True Corporation a paid pilot. With Thai corporate venture arms, a successful pilot with the parent company is often the route to investment."}, {"id": "idb-depa", "kind": "organization", "name": "depa (Digital Economy Promotion Agency)", "type": "Government agency", "typeLabel": "Government Agency", "website": "https://depa.or.th", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Digital", "Smart City", "All"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Grants $10K-$150K", "ticketMin": 10000, "ticketMax": 150000, "portfolio": "Thailand's digital transformation agency. Smart City initiatives", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "forCompany": {"intelsense": {"timing": "Not for the seed round: grants, not equity. Apply for non-dilutive grants alongside the round.", "groups": ["notseed"]}}}, {"id": "idb-nia", "kind": "organization", "name": "NIA (National Innovation Agency)", "type": "Government agency", "typeLabel": "Government Agency", "website": "https://nia.or.th", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Innovation", "All Sectors"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Grants up to ฿15M ($450K)", "ticketMin": 450000, "ticketMax": 450000, "portfolio": "1,000+ startup grants/year. Startup Thailand platform", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand"}, {"id": "idb-plug-and-play-thailand", "kind": "organization", "name": "Plug and Play Thailand", "type": "Accelerator / incubator", "typeLabel": "Accelerator / VC", "website": "https://plugandplaytechcenter.com/thailand", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Enterprise", "Mobility"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Non-dilutive + Investment", "ticketMin": null, "ticketMax": null, "portfolio": "Global network. Thailand chapter", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "parentCountry": "USA (Plug and Play)"}, {"id": "idb-example-angel", "kind": "individual", "name": "Example Angel (example)", "type": "Individual investor", "typeLabel": "Angel investor", "website": "", "linkedin": "", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "SaaS"], "stages": ["Pre-seed", "Seed"], "ticketText": "", "ticketMin": 25000, "ticketMax": 150000, "portfolio": "", "segment": "individuals", "contacts": [{"name": "Example Angel", "title": "Angel investor", "email": "angel@example.com", "phone": "", "linkedin": "https://www.linkedin.com/in/example", "checked": false, "flags": ["Email not confirmed"]}], "notes": "A made-up example so the demo shows how contacts and checks look.", "source": "Example", "verified": "unverified", "tags": ["Example"], "createdAt": "2026-10-12", "basedIn": "Thailand"}];
   // Community partners and the public Thailand event calendar (see COMMUNITY PARTNERS). Declared before loadCommunity() runs.
   var COMMUNITY_KEY = "partnerWAV_community";
   // the communities CloudWAV works with -- real starter records, private to CloudWAV
@@ -18917,9 +18922,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (state.idbLoc === "thailand" && idbAbroad(x)) return false;
     if (state.idbLoc === "abroad" && !idbAbroad(x)) return false;
     if (state.idbRoute === "pilot" && !x.pilot) return false;
-    if (IDB_GROUPS[state.idbRoute] && (x.tags || []).indexOf(IDB_GROUPS[state.idbRoute]) < 0) return false;
+    if (IDB_GROUP_NAMES[state.idbRoute]){ var fr = idbFor(x, idbCo()); if (!fr || (fr.groups || []).indexOf(state.idbRoute) < 0) return false; }
     if (chk === "checked" && (idbOpenFlags(x) || !(x.contacts || []).length)) return false;
-    if (q){ var hay = [x.name, x.type, x.city, idbBasedIn(x), x.parentCountry, x.portfolio, x.notes, x.affiliation, (x.focus || []).join(" "), (x.tags || []).join(" ")].concat((x.contacts || []).map(function(c){ return c.name + " " + c.title; })).join(" ").toLowerCase();
+    if (q){ var hay = [x.name, x.type, x.city, idbBasedIn(x), x.parentCountry, x.portfolio, x.notes, x.affiliation, (x.focus || []).join(" "), (x.tags || []).join(" ")].concat((x.contacts || []).map(function(c){ return c.name + " " + c.title; })).concat(idbForText(x, idbCo())).join(" ").toLowerCase();
       if (q.split(/\s+/).some(function(w){ return hay.indexOf(w) < 0; })) return false; }
     return true;
   }
@@ -18938,6 +18943,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return '<div class="card card-pad idb-card" data-idb-row="'+attr(x.id)+'">'
       + '<div class="idb-head"><div style="min-width:0;"><b class="idb-name">'+esc(x.name)+'</b><div class="field-note">'+esc([x.typeLabel || x.type, x.city].filter(Boolean).join(" · "))+(org ? ' · <a href="#" data-idb-open="'+attr(org.id)+'">'+esc(org.name)+'</a>' : '')+'</div></div>'
         + '<span class="idb-ticket">'+esc(idbTicket(x) || "--")+'</span></div>'
+      + idbGroupChips(x)
       + ((idbAbroad(x) || x.parentCountry || x.pilot) ? '<div class="meet-chips idb-chips">'
           + (idbAbroad(x) ? '<span class="badge warn" data-idb-abroad>Based in '+esc(idbBasedIn(x))+'</span>' : '')
           + (x.parentCountry ? '<span class="badge neutral" data-idb-parent title="Run from Thailand, with a parent company abroad">Parent: '+esc(x.parentCountry)+'</span>' : '')
@@ -18952,20 +18958,85 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + (x.affiliation ? '<div class="field-note"><b>Background:</b> '+esc(x.affiliation)+'</div>' : '')
           + '<div class="field-note"><b>Based in:</b> '+esc(idbBasedIn(x))+(x.city ? ' ('+esc(x.city)+')' : '')+(x.parentCountry ? ' · <b>Parent company:</b> '+esc(x.parentCountry) : '')+'</div>'
           + (x.pilot ? '<div class="cp-next idb-pilot"><b>Route in:</b> '+esc(x.pilot)+'</div>' : '')
-          + ((x.approach || x.channel) ? '<div class="cp-next"><b>Best way in:</b> '+esc(x.approach || x.channel)+'</div>' : '')
-          + (x.eventNotes ? '<div class="field-note"><b>At events:</b> '+esc(x.eventNotes)+'</div>' : '')
-          + (x.talkingPoints && x.talkingPoints.intelsense ? '<div class="field-note"><b>Talking point for Intelsense:</b> '+esc(x.talkingPoints.intelsense)+'</div>' : '')
-          + (x.timing ? '<div class="field-note idb-timing"><b>Timing:</b> '+esc(x.timing)+'</div>' : '')
+          + idbForHtml(x)
           + (x.notes ? '<div class="field-note cp-notes"><b>Notes:</b> '+esc(x.notes)+'</div>' : '')
-          + (x.fit && x.fit.intelsense ? '<div class="field-note"><b>Fit for Intelsense:</b> '+esc(x.fit.intelsense)+'</div>' : '')
           + '<div class="idb-contacts">'+((x.contacts || []).length ? x.contacts.map(function(c, i){ return idbContactHtml(x, c, i); }).join("") : '<span class="field-note">No contacts yet.</span>')+'</div>'
           + '<div class="field-note">Source: '+esc(x.source || "Added by CloudWAV")+(x.tags && x.tags.length ? ' · Tags: '+esc(x.tags.join(", ")) : '')+'</div>'
           + ((x.sources || []).length ? '<div class="field-note idb-sources" data-idb-sources><b>Checked against:</b> '+x.sources.map(function(u, k){ var h = safeHref(u); return h ? '<a href="'+attr(h)+'" target="_blank" rel="noopener noreferrer">'+esc(idbHost(u))+'</a>' : ''; }).filter(Boolean).join(" · ")+'</div>' : '')
           + '<div style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="btn secondary xs" data-idb-edit="'+attr(x.id)+'">Edit</button><button type="button" class="btn ghost xs" data-idb-delete="'+attr(x.id)+'">Remove</button></div></div>' : '')
       + '</div>';
   }
-  // sprint groups from a company's fundraising plan, kept as tags (the Intelsense seed sprint is the sample)
-  var IDB_GROUPS = { sprintA:"Intelsense sprint A (contact now)", sprintB:"Intelsense sprint B (pitch weeks 2-4)", seriesA:"Intelsense Series A pipeline", notseed:"Intelsense: not for seed" };
+  // ===== Investor program: the companies CloudWAV is taking through a raise (a paid monthly service).
+  // A company's own notes on an investor (fit, talking point, best way in, timing, sprint groups) sit on the investor record under
+  // forCompany[<company id>]. They show only when that company is switched on in the program AND chosen in "Notes for";
+  // the general view shows none of them, and switching a company off hides its notes everywhere without deleting them.
+  var IDB_GROUP_NAMES = { sprintA:"Sprint A: contact now", sprintB:"Sprint B: pitch in weeks 2-4", seriesA:"Series A pipeline", later:"Later rounds", notseed:"Not for this round", waveA:"Outreach list: wave A" };
+  var IDB_FITS = ["Very High", "High", "Medium", "Low"];
+  var IDB_LEGACY_TAGS = { "Intelsense sprint A (contact now)":"sprintA", "Intelsense sprint B (pitch weeks 2-4)":"sprintB", "Intelsense Series A pipeline":"seriesA", "Intelsense later rounds":"later", "Intelsense: not for seed":"notseed", "Intelsense wave A":"waveA" };
+  function idbProgramRec(){ return operatorSettings.filter(function(x){ return x.id === "investorProgram"; })[0] || { id:"investorProgram", companies:[{ id:"intelsense", name:"Intelsense AI", programId:"intelsense", active:true, joinedAt:"2026-10-12" }] }; }
+  function idbCompanies(){ return (idbProgramRec().companies || []).slice(); }
+  function idbCompany(id){ return idbCompanies().filter(function(c){ return c.id === id; })[0] || null; }
+  function idbSaveProgram(companies){
+    var r = Object.assign({}, idbProgramRec(), { companies:companies, updatedAt:todayIso() });
+    operatorSettings = operatorSettings.filter(function(x){ return x.id !== "investorProgram"; }).concat([r]);
+    if (typeof saveReferrals === "function") saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule(); state.idbV = (state.idbV || 0) + 1;
+  }
+  function idbCo(){ var c = idbCompany(state.idbCo || ""); return c && c.active ? c.id : ""; }   // the company whose notes are on screen, if it's switched on
+  function idbFor(x, co){ return (co && x.forCompany && x.forCompany[co]) || null; }
+  function idbForText(x, co){ var f = idbFor(x, co); return f ? [f.fit, f.talkingPoint, f.approach, f.timing, f.eventNotes].concat((f.groups || []).map(function(g){ return IDB_GROUP_NAMES[g] || g; })).filter(Boolean) : []; }
+  function idbGroupChips(x){
+    var f = idbFor(x, idbCo()); if (!f || !(f.groups || []).length) return "";
+    return '<div class="meet-chips idb-chips" data-idb-groups>'+f.groups.map(function(g){ return '<span class="badge accent">'+esc(IDB_GROUP_NAMES[g] || g)+'</span>'; }).join("")+'</div>';
+  }
+  function idbForHtml(x){
+    var co = idbCo(), f = idbFor(x, co); if (!f) return "";
+    return '<div class="idb-co" data-idb-co-notes="'+attr(co)+'"><div class="idb-co-head">Notes for '+esc(idbCompany(co).name)+'</div>'
+      + (f.fit ? '<div class="field-note"><b>Fit:</b> '+esc(f.fit)+'</div>' : '')
+      + (f.approach ? '<div class="cp-next"><b>Best way in:</b> '+esc(f.approach)+'</div>' : '')
+      + (f.talkingPoint ? '<div class="field-note"><b>Talking point:</b> '+esc(f.talkingPoint)+'</div>' : '')
+      + (f.timing ? '<div class="field-note idb-timing"><b>Timing:</b> '+esc(f.timing)+'</div>' : '')
+      + (f.eventNotes ? '<div class="field-note"><b>At events:</b> '+esc(f.eventNotes)+'</div>' : '')+'</div>';
+  }
+  // Records saved before the program existed kept Intelsense's notes in shared fields: move them under forCompany.intelsense
+  var IDB_LEGACY_FIELDS = ["talkingPoints", "fit", "approach", "timing", "channel", "eventNotes"];
+  function idbMigrate(){
+    var n = 0;
+    investorDb.forEach(function(x){
+      var legacyTags = (x.tags || []).filter(function(t){ return IDB_LEGACY_TAGS[t]; });
+      if (!legacyTags.length && !IDB_LEGACY_FIELDS.some(function(k){ return x[k] != null; })) return;
+      var it = Object.assign({}, x.forCompany && x.forCompany.intelsense), set = function(k, v){ if (v && !it[k]) it[k] = v; };
+      set("talkingPoint", x.talkingPoints && x.talkingPoints.intelsense); set("fit", x.fit && x.fit.intelsense); set("approach", x.approach || x.channel); set("timing", x.timing); set("eventNotes", x.eventNotes);
+      it.groups = (it.groups || []).slice(); legacyTags.forEach(function(t){ if (it.groups.indexOf(IDB_LEGACY_TAGS[t]) < 0) it.groups.push(IDB_LEGACY_TAGS[t]); });
+      if (!it.groups.length) delete it.groups;
+      IDB_LEGACY_FIELDS.forEach(function(k){ delete x[k]; });
+      x.tags = (x.tags || []).filter(function(t){ return !IDB_LEGACY_TAGS[t]; });
+      if (Object.keys(it).length){ x.forCompany = x.forCompany || {}; x.forCompany.intelsense = it; }
+      n++;
+    });
+    return n;
+  }
+  function idbProgramHtml(){
+    var cos = idbCompanies(), opts = (typeof programs !== "undefined" ? programs : []).filter(function(p){ return !cos.some(function(c){ return c.programId === p.id || c.id === p.id; }); });
+    var used = function(id){ return investorDb.filter(function(x){ return idbFor(x, id); }).length; };
+    return '<div class="card card-pad" id="idbProgBox" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"><h3 style="margin:0;font-size:1.05rem;">Investor program</h3>'
+      + '<p class="field-note" style="margin:0;">Companies CloudWAV is taking through a raise this month. Switch a company on to see its own notes on each investor (fit, talking points, best way in, timing and sprint groups) by choosing it in "Notes for". Switched off, its notes are hidden everywhere; nothing is deleted.</p>'
+      + (cos.length ? '<div class="idb-prog-list">'+cos.map(function(c){ return '<div class="idb-prog-row" data-idb-prog-row="'+attr(c.id)+'"><div style="min-width:0;"><b>'+esc(c.name)+'</b><div class="field-note">'+used(c.id)+' investor'+(used(c.id) === 1 ? '' : 's')+' with notes'+(c.joinedAt ? ' · joined '+esc(c.joinedAt) : '')+'</div></div>'
+          + '<span class="idb-actions"><button type="button" class="meet-chip" role="switch" aria-checked="'+(!!c.active)+'" aria-pressed="'+(!!c.active)+'" data-idb-prog-toggle="'+attr(c.id)+'">'+(c.active ? 'On' : 'Off')+'</button>'
+          + '<button type="button" class="btn ghost xs" data-idb-prog-remove="'+attr(c.id)+'">Remove</button></span></div>'; }).join("")+'</div>' : '<div class="field-note">No companies in the program yet.</div>')
+      + '<div class="idb-filters" style="margin:0;"><select id="idbProgPick" class="filter app-select" aria-label="Company"><option value="">Add a vendor program...</option>'+opts.map(function(p){ return '<option value="'+attr(p.id)+'">'+esc(p.name)+'</option>'; }).join("")+'</select>'
+      + '<input type="text" id="idbProgName" class="list-search" style="max-width:240px;" placeholder="...or type a company name" maxlength="80"><button type="button" class="btn primary sm" data-idb-prog-add>Add to the program</button>'
+      + '<button type="button" class="btn ghost sm" data-idb-prog-close>Done</button></div><div id="idbProgErr" class="login-msg bad" role="alert" hidden></div></div>';
+  }
+  function idbForFormHtml(x){
+    var co = idbCo(); if (!co) return "";
+    var f = idbFor(x, co) || {}, g = f.groups || [];
+    return '<fieldset class="va-set" data-idb-co-form="'+attr(co)+'"><legend>Notes for '+esc(idbCompany(co).name)+' (only shown in its view)</legend><div class="form-grid">'
+      + '<div class="field-row"><label for="idbCoFit">Fit</label><select id="idbCoFit" class="filter app-select"><option value="">Not rated</option>'+IDB_FITS.map(function(v){ return '<option'+(v === f.fit ? ' selected' : '')+'>'+esc(v)+'</option>'; }).join("")+'</select></div>'
+      + '<div class="field-row"><label for="idbCoApproach">Best way in</label><input type="text" id="idbCoApproach" value="'+attr(f.approach || "")+'" maxlength="600"></div>'
+      + '<div class="field-row"><label for="idbCoTiming">Timing</label><input type="text" id="idbCoTiming" value="'+attr(f.timing || "")+'" maxlength="600" placeholder="e.g. Series A pipeline: come back at $500K ARR"></div></div>'
+      + '<div class="field-row"><label for="idbCoTalk">Talking point</label><textarea id="idbCoTalk" rows="2" maxlength="1500">'+esc(f.talkingPoint || "")+'</textarea></div>'
+      + '<div class="field-row"><label>Groups</label><div class="meet-chips">'+Object.keys(IDB_GROUP_NAMES).map(function(k){ return '<button type="button" class="meet-chip" data-idb-cogroup="'+k+'" aria-pressed="'+(g.indexOf(k) > -1)+'">'+esc(IDB_GROUP_NAMES[k])+'</button>'; }).join("")+'</div></div></fieldset>';
+  }
   function idbFormHtml(x){
     x = x || { segment:state.idbSeg || "firms", type:IDB_TYPES[state.idbSeg || "firms"][0], focus:[], stages:[], contacts:[{}], tags:[] };
     var f = function(id, label, val, ph, type){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="'+(type || "text")+'" id="'+id+'" value="'+attr(val == null ? "" : val)+'" placeholder="'+attr(ph || "")+'" maxlength="300"></div>'; };
@@ -18978,11 +19049,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + f("idbCity", "City", x.city, "Bangkok") + f("idbBasedIn", "Based in (country)", idbBasedIn(x), "Thailand") + f("idbParent", "Parent company abroad (optional)", x.parentCountry, "e.g. Japan (MUFG)")
         + f("idbFormFocus", "Focus (comma separated)", (x.focus || []).join(", "), "AI, Fintech, SaaS")
         + f("idbTicketMin", "Smallest cheque (USD)", x.ticketMin, "e.g. 100K") + f("idbTicketMax", "Largest cheque (USD)", x.ticketMax, "e.g. 2M")
-        + f("idbPortfolio", "Portfolio / references", x.portfolio, "") + f("idbTags", "Tags (comma separated)", (x.tags || []).join(", "), "e.g. Intelsense sprint A, met at Startup Grind") + '</div>'
+        + f("idbPortfolio", "Portfolio / references", x.portfolio, "") + f("idbTags", "Tags (comma separated)", (x.tags || []).join(", "), "e.g. Met at Startup Grind, keen on voice AI") + '</div>'
       + '<div class="field-row"><label>Stages</label><div class="meet-chips">'+IDB_STAGES.map(function(s){ return '<button type="button" class="meet-chip" data-idb-stage="'+attr(s)+'" aria-pressed="'+((x.stages || []).indexOf(s) > -1)+'">'+esc(s)+'</button>'; }).join("")+'</div></div>'
       + '<fieldset class="va-set"><legend>Main contact</legend><div class="form-grid">'+f("idbCName", "Name", c0.name, "") + f("idbCTitle", "Title", c0.title, "") + f("idbCEmail", "Email", c0.email, "", "email") + f("idbCPhone", "Phone", c0.phone, "") + f("idbCLinkedin", "LinkedIn", c0.linkedin, "https://www.linkedin.com/in/...")+'</div></fieldset>'
       + '<div class="field-row"><label for="idbPilot">Route in (optional)</label><input type="text" id="idbPilot" value="'+attr(x.pilot || "")+'" maxlength="400" placeholder="e.g. Pilot first: offer True a paid pilot"></div>'
-      + '<div class="field-row"><label for="idbTiming">Timing (optional)</label><input type="text" id="idbTiming" value="'+attr(x.timing || "")+'" maxlength="600" placeholder="e.g. Series A pipeline: come back at $500K ARR"></div>'
+      + idbForFormHtml(x)
       + '<div class="field-row"><label for="idbNotes">Notes (only CloudWAV sees these)</label><textarea id="idbNotes" rows="3" maxlength="3000">'+esc(x.notes || "")+'</textarea></div>'
       + '<div id="idbErr" class="login-msg bad" role="alert" hidden></div>'
       + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-idb-save="'+attr(x.id || "")+'">Save</button><button type="button" class="btn secondary sm" data-idb-cancel>Cancel</button></div></div>';
@@ -19036,16 +19107,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return { recs:recs, dup:dup, cols:Object.keys(map) };
   }
   function idbCsvExport(list){
-    var rows = [["Segment", "Name", "Type", "City", "Country", "Parent company abroad", "Route in", "Website", "LinkedIn", "Focus", "Stages", "Ticket", "Portfolio", "Contact", "Title", "Email", "Phone", "Contact LinkedIn", "To check", "Tags", "Timing", "Notes", "Sources"]];
+    var co = idbCo(), cn = co ? idbCompany(co).name : "";
+    var rows = [["Segment", "Name", "Type", "City", "Country", "Parent company abroad", "Route in", "Website", "LinkedIn", "Focus", "Stages", "Ticket", "Portfolio", "Contact", "Title", "Email", "Phone", "Contact LinkedIn", "To check", "Tags", "Notes", "Sources"]
+      .concat(co ? [cn + ": groups", cn + ": fit", cn + ": best way in", cn + ": talking point", cn + ": timing"] : [])];
     list.forEach(function(x){ var segName = (IDB_SEGMENTS.filter(function(s){ return s[0] === idbSegment(x); })[0] || [,""])[1], cs = (x.contacts || []).length ? x.contacts : [{}];
-      cs.forEach(function(c){ rows.push([segName, x.name, x.type, x.city, idbBasedIn(x), x.parentCountry || "", x.pilot || "", x.website, x.linkedin, (x.focus || []).join(", "), (x.stages || []).join(", "), idbTicket(x), x.portfolio, c.name, c.title, c.email, c.phone, c.linkedin, c.checked ? "" : (c.flags || []).join("; "), (x.tags || []).join(", "), x.timing || "", x.notes, (x.sources || []).join(" ")]); }); });
+      cs.forEach(function(c){ rows.push([segName, x.name, x.type, x.city, idbBasedIn(x), x.parentCountry || "", x.pilot || "", x.website, x.linkedin, (x.focus || []).join(", "), (x.stages || []).join(", "), idbTicket(x), x.portfolio, c.name, c.title, c.email, c.phone, c.linkedin, c.checked ? "" : (c.flags || []).join("; "), (x.tags || []).join(", "), x.notes, (x.sources || []).join(" ")].concat(co ? (function(f){ f = f || {}; return [(f.groups || []).map(function(g){ return IDB_GROUP_NAMES[g] || g; }).join(", "), f.fit || "", f.approach || "", f.talkingPoint || "", f.timing || ""]; })(idbFor(x, co)) : [])); }); });
     var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿", rows.map(function(r){ return r.map(csvCell).join(","); }).join("\r\n")], { type:"text/csv" }));
-    a.download = "partnerwav-investor-database.csv"; document.body.appendChild(a); a.click(); a.remove();
+    a.download = "partnerwav-investor-database" + (co ? "-" + co : "") + ".csv"; document.body.appendChild(a); a.click(); a.remove();
   }
   function renderInvestorDb(force){
     var box = document.getElementById("investorDbContent");
     if (!box || state.screen !== "operator-investor-db") return;
-    var key = JSON.stringify([investorDb.length, state.idbSeg, state.idbStage, state.idbFocus, state.idbAmount, state.idbCheck, state.idbLoc, state.idbRoute, state.idbOpen, state.idbEdit, state.idbImport, state.idbV || 0]);
+    if (idbMigrate()) saveIdb();
+    var co = idbCo(); if (!co && IDB_GROUP_NAMES[state.idbRoute]) state.idbRoute = "";
+    var key = JSON.stringify([investorDb.length, state.idbSeg, state.idbStage, state.idbFocus, state.idbAmount, state.idbCheck, state.idbLoc, state.idbRoute, state.idbOpen, state.idbEdit, state.idbImport, state.idbV || 0, co, state.idbProg, JSON.stringify(idbCompanies())]);
     if (!force && box.getAttribute("data-k") === key) return;
     box.setAttribute("data-k", key);
     var seg = state.idbSeg || "", list = investorDb.filter(idbMatches).sort(function(a, b){ return String(a.name).localeCompare(b.name); });
@@ -19057,14 +19132,21 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="stat-tile"><span class="stat-label">Contacts to check</span><span class="stat-value">'+flagged+'</span><span class="stat-trend">Before reaching out</span></div></div>'
       + '<div class="cal-bar"><div class="cal-views" role="group" aria-label="Segment"><button type="button" class="cal-view" data-idb-seg="" aria-pressed="'+(!seg)+'">All ('+investorDb.length+')</button>'
         + IDB_SEGMENTS.map(function(s){ return '<button type="button" class="cal-view" data-idb-seg="'+s[0]+'" aria-pressed="'+(seg === s[0])+'">'+esc(s[1])+' ('+count(s[0])+')</button>'; }).join("")+'</div>'
-        + '<span style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;"><button type="button" class="btn primary sm" data-idb-new>+ Add</button><button type="button" class="btn secondary sm" data-idb-import>Import CSV</button><button type="button" class="btn secondary sm" data-idb-export>Download CSV</button></span></div>'
+        + '<span style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;"><select id="idbCo" class="filter app-select" aria-label="Notes for"><option value="">Notes for: none (general view)</option>'
+          + idbCompanies().filter(function(c){ return c.active; }).map(function(c){ return '<option value="'+attr(c.id)+'"'+(c.id === co ? ' selected' : '')+'>Notes for: '+esc(c.name)+'</option>'; }).join("")+'</select>'
+          + '<button type="button" class="btn secondary sm" data-idb-prog aria-expanded="'+(!!state.idbProg)+'">Investor program ('+idbCompanies().filter(function(c){ return c.active; }).length+' on)</button>'
+          + '<button type="button" class="btn primary sm" data-idb-new>+ Add</button><button type="button" class="btn secondary sm" data-idb-import>Import CSV</button><button type="button" class="btn secondary sm" data-idb-export>Download CSV</button></span></div>'
       + '<div class="idb-filters"><input type="search" id="idbQ" class="list-search" placeholder="Search name, focus, portfolio, contact..." value="'+attr(state.idbQ || "")+'" aria-label="Search">'
         + '<select id="idbStage" class="filter app-select" aria-label="Stage"><option value="">Any stage</option>'+IDB_STAGES.map(function(s){ return '<option'+(s === state.idbStage ? ' selected' : '')+'>'+esc(s)+'</option>'; }).join("")+'</select>'
         + '<select id="idbFocus" class="filter app-select" aria-label="Focus"><option value="">Any focus</option>'+topFocus.map(function(f){ return '<option'+(f === state.idbFocus ? ' selected' : '')+'>'+esc(f)+'</option>'; }).join("")+'</select>'
         + '<input type="text" id="idbAmount" class="list-search" style="max-width:190px;" placeholder="Raising (e.g. 1.5M)" value="'+attr(state.idbAmount || "")+'" aria-label="Amount being raised, in USD">'
         + '<select id="idbCheck" class="filter app-select" aria-label="Contacts"><option value="">All contacts</option><option value="needs"'+(state.idbCheck === "needs" ? ' selected' : '')+'>Contacts to check</option><option value="checked"'+(state.idbCheck === "checked" ? ' selected' : '')+'>All checked</option></select>'
         + '<select id="idbLoc" class="filter app-select" aria-label="Based in"><option value="">Based anywhere</option><option value="thailand"'+(state.idbLoc === "thailand" ? ' selected' : '')+'>Based in Thailand</option><option value="abroad"'+(state.idbLoc === "abroad" ? ' selected' : '')+'>Based outside Thailand</option></select>'
-        + '<select id="idbRoute" class="filter app-select" aria-label="Route in"><option value="">Any route in</option><option value="pilot"'+(state.idbRoute === "pilot" ? ' selected' : '')+'>Pilot first (corporates)</option><optgroup label="Sample: Intelsense seed sprint">'+Object.keys(IDB_GROUPS).map(function(k){ return '<option value="'+k+'"'+(state.idbRoute === k ? ' selected' : '')+'>'+esc(IDB_GROUPS[k].replace(/^Intelsense:? /, ""))+'</option>'; }).join("")+'</optgroup></select></div>';
+        + '<select id="idbRoute" class="filter app-select" aria-label="Route in"><option value="">Any route in</option><option value="pilot"'+(state.idbRoute === "pilot" ? ' selected' : '')+'>Pilot first (corporates)</option>'
+          + (co ? (function(){ var have = {}; investorDb.forEach(function(x){ ((idbFor(x, co) || {}).groups || []).forEach(function(g){ have[g] = 1; }); });
+              var ks = Object.keys(IDB_GROUP_NAMES).filter(function(k){ return have[k]; });
+              return ks.length ? '<optgroup label="'+attr(idbCompany(co).name)+'">'+ks.map(function(k){ return '<option value="'+k+'"'+(state.idbRoute === k ? ' selected' : '')+'>'+esc(IDB_GROUP_NAMES[k])+'</option>'; }).join("")+'</optgroup>' : ''; })() : '')+'</select></div>';
+    if (state.idbProg) html += idbProgramHtml();
     if (state.idbImport) html += '<div class="card card-pad" id="idbImportBox" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"><h3 style="margin:0;font-size:1.05rem;">Import from a spreadsheet</h3>'
       + '<p class="field-note" style="margin:0;">Save the sheet as CSV (File > Download / Save as > CSV) and choose it below, or paste it. Columns like the Intelsense research sheets are matched automatically. Names already in the database are skipped.</p>'
       + '<input type="file" id="idbFile" accept=".csv,text/csv"><textarea id="idbPaste" rows="4" placeholder="...or paste CSV here"></textarea>'
@@ -19088,10 +19170,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var old0 = (x.contacts || [])[0] || {}, sameC = old0.name === c0.name && old0.email === c0.email && old0.phone === c0.phone && old0.linkedin === c0.linkedin;
     var contacts = (x.contacts || []).slice(1);
     if (c0.name || c0.email || c0.linkedin) contacts.unshift(sameC ? Object.assign({}, old0, c0) : Object.assign(c0, { checked:true, flags:[] }));   // entered by CloudWAV: counted as checked
-    Object.assign(x, { name:name, type:type, kind:type === "Individual investor" || type === "Angel investor" ? "individual" : "organization", website:web, linkedin:li, city:g("idbCity"), basedIn:g("idbBasedIn") || "Thailand", parentCountry:g("idbParent"), pilot:g("idbPilot"), timing:g("idbTiming"),
+    Object.assign(x, { name:name, type:type, kind:type === "Individual investor" || type === "Angel investor" ? "individual" : "organization", website:web, linkedin:li, city:g("idbCity"), basedIn:g("idbBasedIn") || "Thailand", parentCountry:g("idbParent"), pilot:g("idbPilot"),
       focus:g("idbFormFocus").split(",").map(function(s){ return s.trim(); }).filter(Boolean), ticketMin:lo, ticketMax:hi == null ? lo : hi, ticketText:"", portfolio:g("idbPortfolio"),
       tags:g("idbTags").split(",").map(function(s){ return s.trim(); }).filter(Boolean), notes:g("idbNotes"), contacts:contacts, updatedAt:todayIso(),
       stages:[].slice.call(document.querySelectorAll("#idbForm [data-idb-stage][aria-pressed=true]")).map(function(b){ return b.getAttribute("data-idb-stage"); }) });
+    var co = document.querySelector("#idbForm [data-idb-co-form]") ? idbCo() : "";
+    if (co){
+      var nf = { fit:g("idbCoFit"), approach:g("idbCoApproach"), timing:g("idbCoTiming"), talkingPoint:g("idbCoTalk"),
+        groups:[].slice.call(document.querySelectorAll("#idbForm [data-idb-cogroup][aria-pressed=true]")).map(function(b){ return b.getAttribute("data-idb-cogroup"); }) };
+      var keep = Object.assign({}, idbFor(x, co)); Object.keys(nf).forEach(function(k){ if (nf[k] && (!Array.isArray(nf[k]) || nf[k].length)) keep[k] = nf[k]; else delete keep[k]; });
+      x.forCompany = x.forCompany || {}; if (Object.keys(keep).length) x.forCompany[co] = keep; else delete x.forCompany[co];
+    }
     x.segment = null; x.segment = idbSegment(x);
     state.idbEdit = null; state.idbOpen = x.id; saveIdb(); renderInvestorDb(true); toast("Saved");
   }
@@ -19099,7 +19188,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   document.addEventListener("input", function(ev){ var t = ev.target; if (!t) return;
     if (t.id === "idbQ" || t.id === "idbAmount"){ state[t.id] = t.value; clearTimeout(state.idbTimer); state.idbTimer = setTimeout(function(){ var pos = t.selectionStart; renderInvestorDb(true); var el = document.getElementById(t.id); if (el){ el.focus(); try { el.setSelectionRange(pos, pos); } catch(e){} } }, 200); } });
   document.addEventListener("change", function(ev){ var t = ev.target; if (!t) return;
-    if (t.id === "idbStage" || t.id === "idbFocus" || t.id === "idbCheck" || t.id === "idbLoc" || t.id === "idbRoute"){ state[t.id] = t.value; renderInvestorDb(true); }
+    if (t.id === "idbStage" || t.id === "idbFocus" || t.id === "idbCheck" || t.id === "idbLoc" || t.id === "idbRoute" || t.id === "idbCo"){ state[t.id] = t.value; if (t.id === "idbCo"){ state.idbRoute = state.idbRoute === "pilot" ? "pilot" : ""; state.idbEdit = null; } renderInvestorDb(true); }
     if (t.id === "idbFile" && t.files && t.files[0]){ var rd = new FileReader(); rd.onload = function(){ var pa = document.getElementById("idbPaste"); if (pa) pa.value = String(rd.result || ""); }; rd.readAsText(t.files[0]); } });
   document.addEventListener("click", function(ev){
     var t = ev.target && ev.target.closest ? ev.target : null; if (!t || !t.closest("#investorDbContent")) return; var b;
@@ -19110,7 +19199,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("[data-idb-new]")){ state.idbEdit = "new"; state.idbImport = false; renderInvestorDb(true); var nm = document.getElementById("idbName"); if (nm) nm.focus(); return; }
     if ((b = t.closest("[data-idb-edit]"))){ state.idbEdit = b.getAttribute("data-idb-edit"); state.idbImport = false; renderInvestorDb(true); var fm = document.getElementById("idbForm"); if (fm && fm.scrollIntoView) fm.scrollIntoView({ block:"start" }); return; }
     if (t.closest("[data-idb-cancel]")){ state.idbEdit = null; renderInvestorDb(true); return; }
-    if ((b = t.closest("[data-idb-stage]"))){ b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); return; }
+    if ((b = t.closest("[data-idb-stage]")) || (b = t.closest("[data-idb-cogroup]"))){ b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); return; }
+    if (t.closest("[data-idb-prog]")){ state.idbProg = !state.idbProg; renderInvestorDb(true); return; }
+    if (t.closest("[data-idb-prog-close]")){ state.idbProg = false; renderInvestorDb(true); return; }
+    if ((b = t.closest("[data-idb-prog-toggle]"))){ var tid = b.getAttribute("data-idb-prog-toggle");
+      idbSaveProgram(idbCompanies().map(function(c){ return c.id === tid ? Object.assign({}, c, { active:!c.active }) : c; }));
+      if (state.idbCo === tid && !idbCo()){ state.idbCo = ""; state.idbEdit = null; } renderInvestorDb(true); return; }
+    if ((b = t.closest("[data-idb-prog-remove]"))){ var rid = b.getAttribute("data-idb-prog-remove"), rc = idbCompany(rid);
+      if (rc && confirm("Take " + rc.name + " out of the investor program? Its notes on investors stay saved (hidden) in case it rejoins.")){ idbSaveProgram(idbCompanies().filter(function(c){ return c.id !== rid; })); if (state.idbCo === rid) state.idbCo = ""; renderInvestorDb(true); } return; }
+    if (t.closest("[data-idb-prog-add]")){ var pk = (document.getElementById("idbProgPick") || {}).value || "", nm2 = ((document.getElementById("idbProgName") || {}).value || "").trim(), pe = document.getElementById("idbProgErr");
+      var prog = pk && typeof programs !== "undefined" ? programs.filter(function(p){ return p.id === pk; })[0] : null, name2 = prog ? prog.name : nm2;
+      if (!name2){ pe.textContent = "Pick a vendor program or type a company name."; pe.hidden = false; return; }
+      var cid = prog ? prog.id : name2.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+      if (!cid || idbCompany(cid)){ pe.textContent = "That company is already in the program."; pe.hidden = false; return; }
+      idbSaveProgram(idbCompanies().concat([{ id:cid, name:name2, programId:prog ? prog.id : "", active:true, joinedAt:todayIso() }])); renderInvestorDb(true); toast(name2 + " added to the investor program"); return; }
     if ((b = t.closest("[data-idb-save]"))){ idbSaveForm(b.getAttribute("data-idb-save")); return; }
     if ((b = t.closest("[data-idb-delete]"))){ var dx = idbById(b.getAttribute("data-idb-delete")); if (dx && confirm("Remove " + dx.name + " from the database?")){ investorDb.splice(investorDb.indexOf(dx), 1); state.idbOpen = null; saveIdb(); renderInvestorDb(true); } return; }
     if ((b = t.closest("[data-idb-check]"))){ var pr = b.getAttribute("data-idb-check").split("|"), cx = idbById(pr[0]); if (cx && cx.contacts[pr[1]]){ cx.contacts[pr[1]].checked = true; cx.updatedAt = todayIso(); state.idbV = (state.idbV || 0) + 1; saveIdb(); renderInvestorDb(true); } return; }
