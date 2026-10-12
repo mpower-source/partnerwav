@@ -104,7 +104,11 @@ with sync_playwright() as p:
     ok(pg.locator('[data-ref-tab="vendors"]').count() == 0, "Partners have no Vendor introductions tab")
 
     # ----- Vendor Program Agreement: operator fee is CloudWAV's pay; Intelsense's special reseller rate is a named term
-    role(pg, "operator"); nav(pg, "operator-agreements")
+    # (the rate is CloudWAV's private enrollment note -- typed here, since the public page no longer carries it)
+    role(pg, "operator"); nav(pg, "operator-partners"); pg.wait_for_timeout(200)
+    pg.locator('[data-en-view="en-cloudwav-intelsense"]').first.click(); pg.wait_for_timeout(250)
+    pg.fill("#enNotes", "Commission override: 20% first year + 5% renewal on Unisense AI, Finsense AI, AI Hubspot and AlterCrew"); pg.locator("#enNotes").dispatch_event("input"); pg.wait_for_timeout(150)
+    nav(pg, "operator-agreements")
     pg.locator('#operatorAgreementsContent tr[data-agr-row="agr-vendor-intelsense"] [data-agr-view]').click(); pg.wait_for_timeout(300)
     t = " ".join(pg.inner_text(".agr-doc").split())
     ok("PartnerWAV does not also take an Override on the Partners it brings to the Program" in t and "PartnerWAV acts as Channel Manager" not in t, "5.2: the platform operator fee is CloudWAV's pay; no second override")

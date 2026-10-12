@@ -26,14 +26,24 @@ def settle(pg):
         pg.wait_for_timeout(150)
     return False
 
+# the real prospect list is loaded into Supabase once (partnerwav_private_seed.sql); here, one software house
+import psycopg2, json as _json
+_con = psycopg2.connect(mock.dsn); _con.autocommit = True; _cur = _con.cursor()
+_cur.execute("alter table public.portal_records disable trigger portal_records_guard")
+_cur.execute("insert into public.portal_records (collection, id, data, readers, writers, is_public) values ('mspProspects', 'sw-saffron-software', %s::jsonb, '{}', '{}', false)",
+             (_json.dumps({"id": "sw-saffron-software", "source": "research", "sample": False, "type": "Software house", "name": "Saffron Software", "city": "Bangkok",
+                           "country": "Thailand", "website": "saffron-software.example", "email": "info@saffron-software.example", "phone": "", "specialties": "Custom apps",
+                           "fit": "good", "stage": "new", "notes": "", "sources": []}),))
+_cur.execute("alter table public.portal_records enable trigger portal_records_guard"); _con.close()
+
 with sync_playwright() as p:
-    # operator: first sign-in, add Seven Peaks as an active referral partner
+    # operator: first sign-in, add Saffron Software as an active referral partner
     b, ctx, pg = session(p, "ops@cloudwav.test"); pg.wait_for_timeout(1500); settle(pg)
     nav(pg, "referrals"); pg.click('[data-ref-tab="houses"]'); pg.wait_for_timeout(150)
     ok("No software houses yet" in pg.inner_text("#referralsContent"), "Signed in: no demo software house")
     nav(pg, "operator-agreements")
     ok(pg.locator("[data-agr-row]").count() == 0, "Signed in: no demo agreements")
-    nav(pg, "operator-msp-prospects"); pg.click('[data-msp-house="sw-sevenpeakssoftware"]'); pg.wait_for_timeout(250)
+    nav(pg, "operator-msp-prospects"); pg.click('[data-msp-house="sw-saffron-software"]'); pg.wait_for_timeout(250)
     pg.select_option("#hf_status", "active"); pg.click("#hfSave"); pg.wait_for_timeout(300); settle(pg)
     h = db("softwareHouses"); ag = db("agreements")
     ok(len(h) == 1 and h[0]["readers"] == ["*"] and h[0]["data"]["terms"]["referralRate"] == 10, "Software house stored (visible to partners once active)")

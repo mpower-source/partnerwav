@@ -135,7 +135,7 @@ on conflict (collection, field) do update set allowed = excluded.allowed;
 -- Collections only CloudWAV can add records to (members may still edit where they're a writer)
 create or replace function public.portal_operator_only(c text)
 returns boolean language sql immutable as $$
-  select c = any (array['mspProspects','mspEngagements','landingPages','resources',
+  select c = any (array['mspProspects','mspEngagements','landingPages','resources','enrollmentNotes',
                         'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
                         'programFees','platformFees','affiliateSignups',
                         'vendorAssessments','pricingModel','agreementReviews',
@@ -206,7 +206,7 @@ begin
   end if;
 
   -- WhatsApp / LINE: your own contact details, groups and share log only
-  if new.collection = 'contactChannels' and new.id <> k then
+  if new.collection in ('contactChannels', 'integrationRequests') and new.id <> k then
     raise exception 'You can only save your own WhatsApp and LINE details';
   end if;
   -- investment round details: each company saves only its own

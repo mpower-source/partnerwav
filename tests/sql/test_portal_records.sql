@@ -578,4 +578,23 @@ select t('...list answers keep only plain values', (select data->'addons' = '["i
 select t('...a field of the wrong shape is dropped', (select not (data ? 'markets') and not (data ? 'website') from portal_records where collection = 'vendorAssessments' and data->>'company' = 'Evil Co'));
 select t('...the real answers are kept', (select data->>'partners' = '11-50' and data->>'notes' = 'Hello' and data->>'status' = 'new' from portal_records where collection = 'vendorAssessments' and data->>'company' = 'Evil Co'));
 
+-- ===== second review, fix step 2: private notes and integration requests
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('enrollmentNotes','en-siam-intelsense','{"id":"en-siam-intelsense","notes":"Override: 20%"}','{}','{}');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;   -- the partner on that enrollment
+select t('a partner cannot read CloudWAV''s enrollment notes', (select count(*) from portal_records where collection='enrollmentNotes') = 0);
+select t('...or write any', fails($$insert into portal_records(collection,id,data,readers,writers) values ('enrollmentNotes','en-x','{"id":"en-x","notes":"hi"}','{partner:siam-digital}','{partner:siam-digital}')$$));
+insert into portal_records(collection,id,data,readers,writers) values ('integrationRequests','partner:siam-digital','{"id":"partner:siam-digital","integrations":{"hubspot":{"requested":true}}}','{partner:siam-digital}','{partner:siam-digital}');
+select t('a member files its own integration request', (select count(*) from portal_records where collection='integrationRequests' and id='partner:siam-digital') = 1);
+select t('...but not one in another company''s name', fails($$insert into portal_records(collection,id,data,readers,writers) values ('integrationRequests','vendor:intelsense','{"id":"vendor:intelsense"}','{partner:siam-digital}','{partner:siam-digital}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- vendor intelsense
+select t('another company cannot see the request', (select count(*) from portal_records where collection='integrationRequests') = 0);
+select t('...or the enrollment notes', (select count(*) from portal_records where collection='enrollmentNotes') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV sees the notes and the requests', (select count(*) from portal_records where collection in ('enrollmentNotes','integrationRequests')) = 2);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

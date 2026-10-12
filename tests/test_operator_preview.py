@@ -81,7 +81,7 @@ with sync_playwright() as p:
     pp = [r for r in db("partnerProfiles") if r["id"] == "cloudwav-consulting"]
     en = [r for r in db("enrollments") if r["data"].get("partnerId") == "cloudwav-consulting"]
     ok(len(pp) == 1 and pp[0]["data"]["name"] == "CloudWAV Consulting" and pp[0]["writers"] == ["partner:cloudwav-consulting"], "CloudWAV Consulting partner profile created")
-    ok(len(en) == 1 and en[0]["data"]["programId"] == "intelsense" and "20% first year + 5% renewal" in en[0]["data"]["notes"], "Enrolled in Intelsense with the 20% + 5% rate noted")
+    ok(len(en) == 1 and en[0]["data"]["programId"] == "intelsense" and "notes" not in en[0]["data"], "Enrolled in Intelsense; its private rate note is never in the shared record (or the page)")
     nav(pg, "partner-messages"); pg.select_option("#msgNewTo", "vendor:intelsense"); pg.wait_for_timeout(250)
     pg.fill("#msgCompose", "CloudWAV here as a partner -- can we get a demo tenant?"); pg.click("#msgSendBtn"); pg.wait_for_timeout(400); settle(pg)
     ok(any(r["data"]["from"] == "partner:cloudwav-consulting" for r in db("messages")), "CloudWAV can message as its own partner account")
