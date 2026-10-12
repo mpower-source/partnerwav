@@ -673,8 +673,24 @@ insert into portal_records(collection,id,data,readers,writers) values
   ('investorProfiles','seed-fund','{"id":"seed-fund","name":"Seed Fund"}','{investor:seed-fund}','{investor:seed-fund}'),
   ('investorProfiles','angel-one','{"id":"angel-one","name":"Angel One"}','{investor:angel-one}','{investor:angel-one}');
 reset role;
--- the vendor shows its round to investors
+-- the vendor can't show its round until CloudWAV approves its investor-readiness check
 select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('no investor card before the readiness check is approved', fails($$insert into portal_records(collection,id,data,readers,writers) values ('investorListings','vendor:intelsense','{"id":"vendor:intelsense","company":"Intelsense","status":"raising"}','{investors,vendor:intelsense}','{vendor:intelsense}')$$));
+insert into portal_records(collection,id,data,readers,writers) values ('investorReadiness','vendor:intelsense','{"id":"vendor:intelsense","status":"submitted","score":82}','{vendor:intelsense}','{vendor:intelsense}');
+select t('a vendor sends its readiness check for review', (select data->>'status' from portal_records where collection='investorReadiness' and id='vendor:intelsense') = 'submitted');
+select t('...but cannot approve it itself', fails($$update portal_records set data = data || '{"status":"approved"}' where collection='investorReadiness' and id='vendor:intelsense'$$));
+select t('...or file one for another company', fails($$insert into portal_records(collection,id,data,readers,writers) values ('investorReadiness','vendor:botnoi','{"id":"vendor:botnoi","status":"submitted"}','{vendor:intelsense}','{vendor:intelsense}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+select t('another company cannot read the readiness check', (select count(*) from portal_records where collection='investorReadiness') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+update portal_records set data = data || '{"status":"approved","reviewNote":"Strong team"}' where collection='investorReadiness' and id='vendor:intelsense';
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('once approved, its answers cannot be changed quietly', fails($$update portal_records set data = data || '{"score":99}' where collection='investorReadiness' and id='vendor:intelsense'$$));
+update portal_records set data = data || '{"listed":true}' where collection='investorReadiness' and id='vendor:intelsense';
+select t('...but it can turn on showing its round', (select data->>'listed' from portal_records where collection='investorReadiness' and id='vendor:intelsense') = 'true');
 insert into portal_records(collection,id,data,readers,writers) values ('investorListings','vendor:intelsense','{"id":"vendor:intelsense","company":"Intelsense","status":"raising"}','{investors,vendor:intelsense}','{vendor:intelsense}');
 select t('a vendor shows its own round to investors', (select count(*) from portal_records where collection='investorListings') = 1);
 select t('...but not another company''s', fails($$insert into portal_records(collection,id,data,readers,writers) values ('investorListings','vendor:botnoi','{"id":"vendor:botnoi"}','{investors,vendor:intelsense}','{vendor:intelsense}')$$));

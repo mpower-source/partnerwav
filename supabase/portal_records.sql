@@ -141,7 +141,11 @@ insert into public.portal_field_rules (collection, field, allowed) values
   ('projectReferrals', 'rejectReason', '[null, ""]'),
   -- an investor asks for an introduction (or withdraws); only CloudWAV marks it introduced or answers
   ('introRequests',    'status',       '["requested", "withdrawn"]'),
-  ('introRequests',    'reply',        '["", null]')
+  ('introRequests',    'reply',        '["", null]'),
+  -- a company's investor-readiness check: it sends it for review; only CloudWAV approves it or asks for changes
+  ('investorReadiness','status',       '["draft", "submitted"]'),
+  ('investorReadiness','reviewNote',   '["", null]'),
+  ('investorReadiness','reviewedAt',   '["", null]')
 on conflict (collection, field) do update set allowed = excluded.allowed;
 
 -- Collections only CloudWAV can add records to (members may still edit where they're a writer)
@@ -277,8 +281,16 @@ begin
   if new.collection = 'introRequests' and 'investor:' || coalesce(new.data ->> 'investorId', '') <> k then
     raise exception 'You can only ask for introductions as yourself';
   end if;
-  if new.collection = 'investorListings' and (new.id <> k or k !~ '^(vendor|partner):') then
+  if new.collection = 'investorListings' and (new.id <> k or k !~ '^(vendor|partner|affiliate):') then
     raise exception 'Only the company itself can show its round to investors';
+  end if;
+  -- investors only see companies whose investor-readiness check CloudWAV has approved
+  if new.collection = 'investorListings' and not exists (select 1 from public.portal_records x
+       where x.collection = 'investorReadiness' and x.id = k and x.data ->> 'status' = 'approved') then
+    raise exception 'Your investor-readiness check needs to be approved by PartnerWAV first';
+  end if;
+  if new.collection = 'investorReadiness' and (new.id <> k or k !~ '^(vendor|partner|affiliate):') then
+    raise exception 'You can only save your own investor-readiness check';
   end if;
   if new.collection = 'investorListings' and exists (select 1 from unnest(new.readers) x where x not in ('investors', k)) then
     raise exception 'A company''s investor card is only for investors';
@@ -342,12 +354,12 @@ begin
   -- (a status they are allowed to set, which takes the approval away).
   if not is_new then
     select allowed into st from public.portal_field_rules where collection = new.collection and field = 'status'
-       and collection in ('deals', 'incentives', 'flyers', 'pendingResources', 'shopOrders', 'affiliatePrograms', 'agreements', 'projectReferrals');
+       and collection in ('deals', 'incentives', 'flyers', 'pendingResources', 'shopOrders', 'affiliatePrograms', 'agreements', 'projectReferrals', 'investorReadiness');
     if found and coalesce(prev.data -> 'status', 'null'::jsonb) <> 'null'::jsonb
        and not (st @> jsonb_build_array(prev.data -> 'status')) and prev.data ->> 'status' <> 'changes'
        and (new.data -> 'status') is not distinct from (prev.data -> 'status') then
       for fkey in select jsonb_object_keys(prev.data || new.data) loop
-        continue when fkey in ('unreadPartner', 'unreadVendor', 'unreadOperator', 'unreadAffiliate', 'thread', 'archivedAt');
+        continue when fkey in ('unreadPartner', 'unreadVendor', 'unreadOperator', 'unreadAffiliate', 'thread', 'archivedAt', 'listed');
         continue when coalesce(new.data -> fkey, 'null'::jsonb) = any(empty_vals) and coalesce(prev.data -> fkey, 'null'::jsonb) = any(empty_vals);
         if (new.data -> fkey) is distinct from (prev.data -> fkey) then
           raise exception 'This record is % by CloudWAV, so "%" can''t be changed. Send it back for review to edit it', prev.data ->> 'status', fkey;

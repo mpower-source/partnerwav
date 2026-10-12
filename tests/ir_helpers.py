@@ -1,0 +1,16 @@
+# Fills the investor-readiness check. ready=True answers every must-have; ready=False leaves the deck and financials unfinished.
+def pick(pg, k, v): pg.locator(f'[data-ir-wizard] input[data-ir-k="{k}"][value="{v}"]').check()
+def nxt(pg): pg.click("[data-ir-next]"); pg.wait_for_timeout(150)
+def fill_readiness(pg, ready=True, round_="Seed"):
+    pg.click("[data-ir-edit]"); pg.wait_for_timeout(150)
+    pg.fill("#ir_oneLiner", "Voice AI that answers customer calls for Thai SMEs"); pick(pg, "legalEntity", "Thai company limited"); pick(pg, "sector", "AI")
+    pick(pg, "round", round_); pg.fill("#ir_raiseAmount", "USD 1.5M"); pick(pg, "instrument", "SAFE"); pg.fill("#ir_committed", "USD 300K"); pick(pg, "runway", "12-18 months"); nxt(pg)
+    pick(pg, "founders", "2"); pick(pg, "skills", "Technology / product"); pick(pg, "skills", "Sales"); pick(pg, "teamSize", "8-15"); pick(pg, "experience", "Founded a company before"); nxt(pg)
+    pick(pg, "productStage", "Commercial and growing" if ready else "Prototype"); pick(pg, "customers", "11-100"); pick(pg, "mrr", "$25K-$200K" if ready else "Under $1K"); pick(pg, "growth", "15-20% a month" if False else "10-20% a month"); pick(pg, "retention", "Most customers stay"); nxt(pg)
+    pick(pg, "marketSized", "Yes -- TAM, SAM and SOM worked out"); pick(pg, "model", "Subscription"); pick(pg, "margin", "60-80%"); pick(pg, "unitEconomics", "We know both"); pick(pg, "competitors", "We know them, and how we're different"); pick(pg, "regional", "Thailand, with a plan for Southeast Asia"); nxt(pg)
+    pick(pg, "deck", "Ready" if ready else "Draft"); pg.fill("#ir_deckUrl", "https://example.com/deck.pdf"); pick(pg, "financialModel", "Ready" if ready else "Not started"); pick(pg, "accounts", "Up-to-date management accounts")
+    pick(pg, "growthPlan", "Ready"); pick(pg, "capTable", "Ready"); pick(pg, "dataRoom", "Ready")
+    for k, v in (("product", 40), ("sales", 30), ("hiring", 20), ("expansion", 10)): pg.fill(f'[data-ir-fund="{k}"]', str(v))
+    nxt(pg)
+    pick(pg, "ipOwned", "Yes, the company owns it"); pick(pg, "shareholderAgreement", "Yes"); pick(pg, "vesting", "Yes"); pick(pg, "ownership", "Thai-majority company"); pick(pg, "certified", "None yet")
+    pg.locator('[data-ir-k="confirm"]').check(); nxt(pg); pg.wait_for_timeout(200)

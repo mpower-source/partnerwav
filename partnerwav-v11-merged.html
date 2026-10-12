@@ -672,7 +672,29 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   .ev-qr .aff-qr{ flex-direction:column; text-align:center; }
   /* Community Partners (CloudWAV) and the public Thailand event calendar */
-  .roi-sample{ color:var(--ink-soft); font-style:italic; }
+  tr.op-sub > td:first-child{ padding-left:34px; }
+  .sub-prog-note{ display:block; }
+  .program-subs{ margin-top:12px; border-top:1px solid var(--line); padding-top:10px; display:flex; flex-direction:column; gap:8px; }
+  .program-subs-head{ font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); }
+  .program-sub{ display:flex; flex-direction:column; gap:8px; background:var(--surface-2); border-radius:12px; padding:10px 12px; border-left:3px solid var(--accent-line); }
+  .ir-start ul, .ir-gaps ul, .ir-help ul{ margin:8px 0 12px; padding-left:20px; display:flex; flex-direction:column; gap:4px; }
+  .ir-result{ display:flex; flex-direction:column; gap:12px; max-width:860px; }
+  .ir-score-row{ display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  .ir-score{ display:flex; align-items:baseline; gap:4px; padding:12px 16px; border-radius:14px; background:var(--accent-soft); color:var(--accent-strong); }
+  .ir-score b{ font-size:2rem; line-height:1; } .ir-score span{ font-size:.85rem; }
+  .ir-areas{ display:flex; flex-direction:column; gap:6px; }
+  .ir-area{ display:grid; grid-template-columns:150px 1fr 48px; gap:10px; align-items:center; font-size:.88rem; }
+  .ir-area b{ text-align:right; }
+  .ir-bar{ height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden; } .ir-bar i{ display:block; height:100%; background:var(--accent); border-radius:99px; }
+  .ir-gaps{ border-left:3px solid var(--accent-line); padding-left:12px; font-size:.92rem; }
+  .ir-help{ background:var(--surface-2); border-radius:12px; padding:12px 14px; font-size:.92rem; }
+  .ir-funds{ display:flex; flex-direction:column; gap:8px; max-width:460px; }
+  .ir-fund{ display:flex; justify-content:space-between; align-items:center; gap:12px; font-weight:600; }
+  .ir-pct{ display:inline-flex; align-items:center; gap:4px; } .ir-pct input{ width:80px; text-align:right; }
+  .ir-fund-total{ text-align:right; font-size:.9rem; color:var(--ink-soft); } .ir-fund-total.ok b{ color:var(--good, #1a8f5a); }
+  .ir-mini{ font-weight:800; font-size:.9rem; color:var(--accent-strong); }
+  @media (max-width:600px){ .ir-area{ grid-template-columns:110px 1fr 44px; } }
+  .roi-eg{ color:var(--ink-soft); font-style:italic; }
   .inv-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
   .inv-card{ display:flex; flex-direction:column; gap:8px; }
   .inv-summary{ margin:0; color:var(--ink-soft); font-size:.92rem; line-height:1.45; }
@@ -1106,6 +1128,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="partner-agreements"><span class="ic">📋</span>Agreements</button>
           <button class="navlink" data-screen="partner-my-leads"><span class="ic">💼</span>My Leads</button>
           <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
+          <button class="navlink" data-screen="investor-readiness"><span class="ic">💼</span>Investor Readiness</button>
         </div>
       </div>
       <div class="navsec" data-sec="programs">
@@ -1166,6 +1189,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
           <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
           <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
+          <button class="navlink" data-screen="investor-readiness"><span class="ic">💼</span>Investor Readiness</button>
         </div>
       </div>
       <div class="navsec" data-sec="learn">
@@ -1196,6 +1220,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
           <button class="navlink" data-screen="affiliate-projects"><span class="ic">📋</span>Partner Projects</button>
           <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
+          <button class="navlink" data-screen="investor-readiness"><span class="ic">💼</span>Investor Readiness</button>
         </div>
       </div>
       <div class="navsec" data-sec="learn">
@@ -2467,15 +2492,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
       <!-- ===== OPERATOR: OVERVIEW ===== -->
       <section id="scr-operator-overview" hidden>
-        <div id="operatorRoiCard"></div>
-        <div class="card card-pad" id="operatorRoiTable" hidden></div>
-        <div class="stat-row">
+        <div class="stat-row" style="margin-bottom:18px;">
           <div class="stat-tile"><span class="stat-label">Active programs</span><span class="stat-value">6</span><span class="stat-trend">↑ 2 this quarter</span></div>
           <div class="stat-tile"><span class="stat-label">Partners across programs</span><span class="stat-value">4</span><span class="stat-trend">↑ 1 this month</span></div>
           <div class="stat-tile"><span class="stat-label">Monthly commission volume</span><span class="stat-value">$226,860</span><span class="stat-trend">↑ 9%</span></div>
           <div class="stat-tile"><span class="stat-label">Pending approvals</span><span class="stat-value" id="statPending">2</span><span class="stat-trend down">Needs review</span></div>
           <div class="stat-tile"><span class="stat-label">Community posts this week</span><span class="stat-value">11</span><span class="stat-trend">Across 2 project threads</span></div>
         </div>
+        <div id="operatorRoiCard"></div>
+        <div class="card card-pad" id="operatorRoiTable" hidden></div>
         <div class="card card-pad">
           <div class="section-head"><h2>Program mix</h2><span class="hint">By relationship type</span></div>
           <div style="height:12px"></div>
@@ -2567,6 +2592,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div class="section-head"><h2>Investors</h2><span class="hint">Investor logins, the companies showing their round, and the introductions investors ask for</span></div>
         <div style="height:14px"></div>
         <div id="operatorInvestorsContent"></div>
+      </section>
+      <section id="scr-investor-readiness" hidden>
+        <div class="section-head"><h2>Investor Readiness</h2><span class="hint">Check you're ready before investors on PartnerWAV meet you</span></div>
+        <div style="height:14px"></div><div id="investorReadinessContent"></div>
       </section>
       <section id="scr-investor-overview" hidden><div id="investorOverviewContent"></div></section>
       <section id="scr-investor-profile" hidden>
@@ -3915,6 +3944,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-community":"Community Partners",
     "operator-investors":"Investors",
     "investor-overview":"Overview",
+    "investor-readiness":"Investor Readiness",
     "investor-profile":"My Profile",
     "investor-deals":"Companies Raising",
     "investor-intros":"My Introductions",
@@ -4018,6 +4048,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return items.length ? '<div class="social-links">'+items.join("")+'</div>' : '';
   }
 
+  // Products sold under another vendor's program: Unisense is Intelsense AI's product, so it sits under Intelsense in lists
+  var PROGRAM_PARENT = { unisense:"intelsense" };
+  function programChildren(id, list){ return (list || programs).filter(function(x){ return PROGRAM_PARENT[x.id] === id; }); }
+  // parents first, each followed by its products; a product whose parent isn't in the list stays on its own
+  function programsNested(list){
+    var ids = list.map(function(x){ return x.id; }), out = [];
+    list.forEach(function(p){ if (PROGRAM_PARENT[p.id] && ids.indexOf(PROGRAM_PARENT[p.id]) > -1) return; out.push(p); programChildren(p.id, list).forEach(function(c){ out.push(c); }); });
+    return out;
+  }
+  function subProgramNote(p){ var par = PROGRAM_PARENT[p.id] ? programById(PROGRAM_PARENT[p.id]) : null; return par ? '<span class="field-note sub-prog-note" data-sub-of="'+attr(par.id)+'">↳ Product of '+esc(par.name)+'</span>' : ''; }
   function programCard(p, opts){
     opts = opts || {};
     var enrolled = state.enrolled.indexOf(p.id) > -1;
@@ -4032,6 +4072,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<button class="btn ghost sm" data-detail="'+esc(p.id)+'">View details →</button>'
         + (opts.hideAction ? "" : actionBtn)
       + '</div>'
+      + ((opts.children || []).length ? '<div class="program-subs" data-program-subs="'+attr(p.id)+'"><div class="program-subs-head">Also from '+esc(p.name)+'</div>'
+          + opts.children.map(function(c){ var en = state.enrolled.indexOf(c.id) > -1;
+            return '<div class="program-sub" data-program-sub="'+attr(c.id)+'"><div style="min-width:0;"><div class="entity-name-row">'+logoOrFallback(c)+'<b>'+esc(c.name)+'</b>'+relBadges(c.relationships)+'</div><p class="program-desc" style="margin:4px 0 0;">'+esc(c.desc)+'</p></div>'
+              + '<div class="program-actions"><button class="btn ghost sm" data-detail="'+esc(c.id)+'">View details →</button>'+(opts.hideAction ? '' : en ? '<button class="btn secondary sm" disabled>Enrolled ✓</button>' : '<button class="btn primary sm" data-enroll="'+esc(c.id)+'">Enroll</button>')+'</div></div>'; }).join("")+'</div>' : '')
     + '</div>';
   }
 
@@ -5183,12 +5227,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var eventConnections = [];
   // Investors (see INVESTORS). Declared before loadInvestors() runs. Starter examples for the demo only.
   var INVESTOR_KEY = "partnerWAV_investors";
-  var investorProfiles = [{ id:"example-ventures", name:"Example Ventures (example)", kind:"VC fund", ticket:"USD 100K - 1M", stages:["Seed", "Series A"], sectors:"AI, B2B SaaS", countries:"Thailand, Southeast Asia",
-    website:"", thesis:"B2B software that sells through IT partners in Southeast Asia.", createdAt:"2026-10-12 10:30" }];
+  // Beacon VC is a real starter record (shared once when CloudWAV signs in), so CloudWAV can preview the investor workspace as Beacon VC
+  var investorProfiles = [{ id:"beacon-vc", _rev:1, name:"Beacon VC (KBANK)", kind:"Corporate VC", ticket:"", stages:["Seed", "Series A", "Series B+"],
+    sectors:"Fintech, consumer internet, enterprise technology", countries:"Thailand, Southeast Asia", website:"",
+    thesis:"Kasikornbank's corporate venture arm, investing in early- to growth-stage technology companies in Thailand and Southeast Asia.", createdAt:"2026-10-12 10:30" }];
   var investorListings = [
-    { id:"vendor:example-saas", company:"Example SaaS Co (example)", kind:"vendor", summary:"Customer-service AI for Thai SMEs, sold through IT partners.", website:"", status:"raising", round:"Seed", target:"USD 1.5M", raised:"USD 400K committed", updatedAt:"2026-10-12" },
+    { id:"vendor:example-saas", company:"Example SaaS Co (example)", kind:"vendor", summary:"Customer-service AI for Thai SMEs, sold through IT partners.", website:"", status:"raising", round:"Seed", target:"USD 1.5M", raised:"USD 400K committed",
+      stage:"Commercial and growing", mrr:"$25K-$200K", growth:"10-20% a month", teamSize:"8-15", sector:"AI, SaaS / software", score:82, reviewed:true, updatedAt:"2026-10-12" },
     { id:"partner:example-msp", company:"Example MSP (example)", kind:"partner", summary:"Managed IT for hotels in Bangkok and Phuket.", website:"", status:"raised", round:"Pre-seed", target:"USD 300K", raised:"USD 300K", updatedAt:"2026-10-01" }];
   var introRequests = [];
+  var investorReadiness = [];   // each company's investor-readiness check (see INVESTOR READINESS)
   // Community partners and the public Thailand event calendar (see COMMUNITY PARTNERS). Declared before loadCommunity() runs.
   var COMMUNITY_KEY = "partnerWAV_community";
   // the communities CloudWAV works with -- real starter records, private to CloudWAV
@@ -5200,6 +5248,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       perks:{}, opps:[], notes:"Online community of foreign and local founders, running since 2015: courses, a business directory and member perks.", createdAt:"2026-10-12 09:00", _rev:1 },
     { id:"org-claude-thailand", name:"Claude Thailand Community", website:"https://www.facebook.com/groups/1745892855948687", kind:"Tech & AI", status:"talking", city:"Bangkok", reach:"", contact:"Facebook group admins",
       nextStep:"Log the SaaS builders found in the group under Opportunities; offer to list the group's meetups", perks:{}, opps:[], notes:"", createdAt:"2026-10-12 09:00", _rev:1 },
+    { id:"org-startup-grind-bkk", name:"Startup Grind Bangkok", website:"https://www.startupgrind.com/bangkok/", kind:"Founders & startups", status:"prospect", city:"Bangkok",
+      reach:"Monthly events; part of Startup Grind's global network", contact:"Through their chapter page",
+      nextStep:"List their monthly events on the Thailand calendar; ask about a PartnerWAV talk or a VC reverse-pitch night with PartnerWAV investors",
+      perks:{}, opps:[], notes:"Monthly events that teach, inspire and connect founders, including VC and founder reverse-pitch nights. Partnered on the Create Lasting Impact Hackathon (17-18 Oct 2026, AIT School of Management).",
+      createdAt:"2026-10-12 11:30", _rev:1 },
     { id:"org-ted-fund", name:"TED Fund (Technology and Innovation-Based Enterprise Development Fund)", website:"https://tedfund.mhesi.go.th", kind:"Funding & grants", status:"prospect", city:"Bangkok",
       reach:"Government fund under MHESI", contact:"Through their website",
       nextStep:"Ask how PartnerWAV vendors can apply, and whether TED Fund would list its open calls and Open House on the Thailand calendar",
@@ -5678,7 +5731,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (dirGrid){
       var dirFiltered = filteredPrograms();
       dirGrid.innerHTML = dirFiltered.length
-        ? dirFiltered.map(function(p){ return programCard(p); }).join("")
+        ? dirFiltered.filter(function(p){ return !(PROGRAM_PARENT[p.id] && dirFiltered.some(function(x){ return x.id === PROGRAM_PARENT[p.id]; })); })
+            .map(function(p){ return programCard(p, { children:programChildren(p.id, dirFiltered) }); }).join("")
         : '<div class="empty">No programs match that relationship type yet.</div>';
     }
 
@@ -5742,11 +5796,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     // ---- operator programs ----
     var opRows = document.getElementById("operatorProgramRows");
     if (opRows){
-      opRows.innerHTML = programs.map(function(p){
+      opRows.innerHTML = programsNested(programs).map(function(p){
         var firstTier = p.tiers && p.tiers[0] ? esc(p.tiers[0].tier)+": "+esc(p.tiers[0].rate) : "--";
         var cfgNote = p.terms && p.terms.updatedAt ? "<div class='field-note'>Configured "+esc(p.terms.updatedAt)+"</div>" : "";
         var opLogo = safeImg(p.logo) ? "<img class='op-logo' src='"+esc(safeImg(p.logo))+"' alt=''>" : "<span class='op-logo op-logo-empty' aria-hidden='true'>"+esc((p.name || "?").charAt(0))+"</span>";
-        return "<tr><td><div class='op-prog-name'>"+opLogo+"<div>"+esc(p.name)+cfgNote+fundingPill("vendor:" + p.id)+(vrFor(p.id) ? "<div class='field-note' data-vr-note>Introduced by "+esc(vrReferrer(vrFor(p.id)))+"</div>" : "")+"</div></div></td><td>"+esc(p.vertical)+"</td><td>"+relBadges(p.relationships)+"</td><td style='font-size:.82rem;'>"+firstTier+"</td><td>"+statusPill(p.status)+"</td>"
+        return "<tr"+(PROGRAM_PARENT[p.id] ? " class='op-sub'" : "")+" data-op-prog='"+esc(p.id)+"'><td><div class='op-prog-name'>"+opLogo+"<div>"+esc(p.name)+subProgramNote(p)+cfgNote+fundingPill("vendor:" + p.id)+(vrFor(p.id) ? "<div class='field-note' data-vr-note>Introduced by "+esc(vrReferrer(vrFor(p.id)))+"</div>" : "")+"</div></div></td><td>"+esc(p.vertical)+"</td><td>"+relBadges(p.relationships)+"</td><td style='font-size:.82rem;'>"+firstTier+"</td><td>"+statusPill(p.status)+"</td>"
           + "<td class='row-actions'><button class='btn secondary sm' data-op-logo='"+esc(p.id)+"'>"+(p.logo ? "Change logo" : "Add logo")+"</button> <button class='btn secondary sm' data-acct-setup='vendor' data-acct-entity='"+esc(p.id)+"'>Login</button> <button class='btn secondary sm' data-configure='"+esc(p.id)+"'>Configure</button></td></tr>";
       }).join("");
     }
@@ -5788,6 +5842,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderOperatorCommunity();
     renderOperatorInvestors();
     renderInvestor();
+    renderReadiness();
     renderPublicEvents();
     renderAccounts();
     renderFunding();
@@ -10399,10 +10454,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(){ return { readers:[], writers:[] }; } },
     // Investors: each investor's profile is theirs and CloudWAV's; a company's investor card is read by every investor
     // login ("investors"); introduction requests are the investor's and CloudWAV's
-    { name:"investorProfiles", mode:"replace", get:function(){ return investorProfiles; }, set:function(a){ investorProfiles = a; },
+    { name:"investorProfiles", mode:"merge", get:function(){ return investorProfiles; }, set:function(a){ investorProfiles = a; },
       access:function(r){ var o = ["investor:" + r.id]; return { readers:o, writers:o }; } },
     { name:"investorListings", mode:"replace", get:function(){ return investorListings; }, set:function(a){ investorListings = a; },
       access:function(r){ return { readers:["investors", r.id], writers:[r.id] }; } },
+    { name:"investorReadiness", mode:"replace", get:function(){ return investorReadiness; }, set:function(a){ investorReadiness = a; },
+      access:function(r){ return { readers:[r.id], writers:[r.id] }; } },
     { name:"introRequests", mode:"replace", get:function(){ return introRequests; }, set:function(a){ introRequests = a; },
       access:function(r){ var o = ["investor:" + r.investorId]; return { readers:o, writers:o }; } },
     // Community partners: CloudWAV's private list (real starter records); events go public once listed
@@ -13719,8 +13776,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<p class="field-note" style="margin:6px 0 0;" data-roi-investor-note><span class="badge neutral">Sample</span> Uses the draft structure from the Fundraising Service Plan: CloudWAV is paid for running the raise and the regional expansion, not a percentage of the money raised. Not final -- counsel still to confirm.</p>'
       + '<div class="table-scroll" style="margin-top:10px;"><table><thead><tr><th>Investor</th><th style="text-align:right">Invested through PartnerWAV</th><th style="text-align:right">Regional expansion budget</th><th>CloudWAV equity</th><th>How CloudWAV is paid</th></tr></thead><tbody>'
       + list.map(function(x){ return '<tr data-roi-investor="'+attr(x.id)+'"><td>'+esc(x.name)+'<span class="field-note" style="display:block;">'+esc(x.about)+'</span></td>'
-          + num('<span class="roi-sample">'+money(x.invested)+'</span><span class="field-note" style="display:block;">one vendor\'s round</span>')
-          + num('<span class="roi-sample">'+money(x.invested * x.expansionPct / 100)+'</span><span class="field-note" style="display:block;">'+x.expansionPct+'% of the round</span>')
+          + num('<span class="roi-eg">'+money(x.invested)+'</span><span class="field-note" style="display:block;">one vendor\'s round</span>')
+          + num('<span class="roi-eg">'+money(x.invested * x.expansionPct / 100)+'</span><span class="field-note" style="display:block;">'+x.expansionPct+'% of the round</span>')
           + '<td>'+esc(x.equity)+'</td><td><span class="field-note">'+esc(x.paidBy)+'</span></td></tr>'; }).join("")
       + '</tbody></table></div>';
   }
@@ -13797,7 +13854,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     if (op){
       // Cross Connect is left out while it isn't coming onto the platform
-      var rows = programs.filter(function(x){ return x.id !== "cloudwav" && ROI_HIDDEN.indexOf(x.id) < 0; }).map(function(x){ return { p:x, r:roiVendor(x) }; });
+      var rows = programsNested(programs.filter(function(x){ return x.id !== "cloudwav" && ROI_HIDDEN.indexOf(x.id) < 0; })).map(function(x){ return { p:x, r:roiVendor(x) }; });
       var counted = rows.filter(function(x){ return x.r.real && !isSoftwareHouseProgram(x.p); }), sum = function(k){ return counted.reduce(function(t, x){ return t + x.r[k]; }, 0); };
       op.innerHTML = roiCardHtml(counted.length && sum("spend") > 0
         ? { key:"operator", kicker:"Return across all vendors", before:"Vendors' partner channels returned", big:roiPct(sum("net") / sum("spend") * 100) + " ROI", after:"Vendors kept " + money(sum("net")) + " after partner commissions and PartnerWAV costs.",
@@ -13817,15 +13874,15 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<div class="table-scroll" style="margin-top:10px;"><table><thead><tr><th>Vendor</th><th style="text-align:right">Sold by partners</th><th style="text-align:right">Commissions</th><th style="text-align:right">PartnerWAV</th><th style="text-align:right">Net return</th><th style="text-align:right">ROI</th></tr></thead><tbody>'
           + rows.map(function(x){ var r = x.r, house = isSoftwareHouseProgram(x.p), sm = sampleMode ? ROI_SAMPLE[x.p.id] : null;
               if (sm && (!!sm[3] !== house || (house && (houseSummaryFor(x.p.id) || {}).real))) sm = null;   // real figures, or a different kind of vendor now
-              if (sm){ var mm = function(n){ return '<span class="roi-sample">'+money(n)+'</span>'; }, snet = sm[0] - sm[1] - sm[2];
-                return '<tr data-roi-row="'+attr(x.p.id)+'" data-roi-sample><td>'+esc(x.p.name)+(sm[3] ? '<span class="field-note" style="display:block;">'+esc(sm[3])+'</span>' : '')+'</td>'
+              if (sm){ var mm = function(n){ return '<span class="roi-eg">'+money(n)+'</span>'; }, snet = sm[0] - sm[1] - sm[2];
+                return '<tr data-roi-row="'+attr(x.p.id)+'" data-roi-sample'+(PROGRAM_PARENT[x.p.id] ? ' class="op-sub"' : '')+'><td>'+esc(x.p.name)+subProgramNote(x.p)+(sm[3] ? '<span class="field-note" style="display:block;">'+esc(sm[3])+'</span>' : '')+'</td>'
                   + num(mm(sm[0]))+num(sm[3] ? '--' : mm(sm[1]))+num(mm(sm[2])+(sm[3] ? '<span class="field-note" style="display:block;">referral fees</span>' : ''))+num(mm(sm[3] ? sm[0] - sm[2] + (sm[4] || 0) : snet))
-                  + num('<b class="roi-sample">'+roiPct(sm[3] ? (sm[0] - sm[2] + (sm[4] || 0)) / sm[2] * 100 : snet / sm[2] * 100)+'</b>')+'</tr>'; }
+                  + num('<b class="roi-eg">'+roiPct(sm[3] ? (sm[0] - sm[2] + (sm[4] || 0)) / sm[2] * 100 : snet / sm[2] * 100)+'</b>')+'</tr>'; }
               if (isSoftwareHouseProgram(x.p)){ var hs2 = houseSummaryFor(x.p.id), c2 = hs2 ? hs2.currency : "USD";
                 return '<tr data-roi-row="'+attr(x.p.id)+'"><td>'+esc(x.p.name)+'<span class="field-note" style="display:block;">Software house · project referrals</span></td>'
                   + (hs2 && hs2.real ? num(fmtMoney(hs2.collected, c2))+num('--')+num(fmtMoney(hs2.fees, c2)+'<span class="field-note" style="display:block;">referral fees</span>')+num(fmtMoney(hs2.net, c2))+num('<b>'+roiPct(hs2.roi)+'</b>')
                     : num('--')+num('--')+num('--')+num('--')+num('<span class="field-note">'+(hs2 ? "No paid projects yet" : "Not linked to a software house")+'</span>'))+'</tr>'; }
-              return '<tr data-roi-row="'+attr(x.p.id)+'"><td>'+esc(x.p.name)+'</td>'+num(money(r.revenue))+num(r.revenue > 0 ? money(r.commission) : '--')+num(r.known ? money(r.spend) : '--')+num(r.real ? money(r.net) : '--')
+              return '<tr data-roi-row="'+attr(x.p.id)+'"'+(PROGRAM_PARENT[x.p.id] ? ' class="op-sub"' : '')+'><td>'+esc(x.p.name)+subProgramNote(x.p)+'</td>'+num(money(r.revenue))+num(r.revenue > 0 ? money(r.commission) : '--')+num(r.known ? money(r.spend) : '--')+num(r.real ? money(r.net) : '--')
                 + num(r.real ? '<b>'+roiPct(r.roi)+'</b>' : '<span class="field-note">'+(r.known ? "No partner sales yet" : "Subscription not entered")+'</span>')+'</tr>'; }).join("")
           + '</tbody></table></div>'
           + investorRoiHtml(sampleMode);
@@ -17271,6 +17328,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadEvents();
   loadCommunity();
   loadInvestors();
+  loadReadiness();
   loadFunding();
   loadBrandKits();
   loadShop();
@@ -18352,16 +18410,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function listingFor(key){ return investorListings.filter(function(l){ return l.id === key; })[0] || null; }
   // the investor-facing card for a company, kept in step with its investment round (see the round's "Show to investors")
-  function syncInvestorListing(key){
-    var f = fundingFor(key), old = listingFor(key);
-    var show = f && f.showToInvestors && (f.status === "raising" || f.status === "raised");
-    if (!show){ if (old){ investorListings.splice(investorListings.indexOf(old), 1); saveInvestors(); } return; }
-    var r = key.split(":")[0], id = key.slice(r.length + 1), e = r === "vendor" ? programById(id) : partnerById(id);
-    var rec = { id:key, company:(e && e.name) || keyName(key), kind:r, summary:String((e && (e.desc || e.tagline)) || "").slice(0, 400), website:(e && e.website) || "",
-      status:f.status, round:f.round || "", target:f.target || "", raised:f.raised || "", updatedAt:todayIso() };
-    if (old) investorListings[investorListings.indexOf(old)] = rec; else investorListings.push(rec);
-    saveInvestors();
-  }
+  // the investor card follows the company's approved investor-readiness check (see INVESTOR READINESS)
+  function syncInvestorListing(key){ irListingSync(key); }
   function irFor(investorId){ return introRequests.filter(function(x){ return x.investorId === investorId; }); }
   function irPill(st){ var s = IR_STATUS[st] || IR_STATUS.requested; return '<span class="pill '+s[1]+'" data-ir-status="'+attr(st)+'">'+esc(s[0])+'</span>'; }
   function invListingCard(l, myId){
@@ -18372,7 +18422,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><div><b>'+esc(l.company)+'</b><div class="field-note">'+(l.kind === "vendor" ? "Software vendor" : "IT partner")+(site ? ' · <a href="'+attr(site)+'" target="_blank" rel="noopener noreferrer">Website</a>' : '')+'</div></div>'
         + '<span class="pill '+(l.status === "raising" ? 'active' : '')+'">'+esc(FUND_STATUS[l.status] || "")+'</span></div>'
       + (l.summary ? '<p class="inv-summary">'+esc(l.summary)+'</p>' : '')
+      + (l.reviewed ? '<div><span class="badge accent" data-inv-reviewed>Reviewed by PartnerWAV'+(l.score ? ' · readiness '+esc(String(l.score))+'/100' : '')+'</span></div>' : '')
       + line("Round", l.round) + line(l.status === "raising" ? "Target" : "Round size", l.target) + line("Raised so far", l.raised)
+      + line("Product", l.stage) + line("Monthly revenue", l.mrr) + line("Growth", l.growth) + line("Team", l.teamSize) + line("Sector", l.sector)
       + (myId ? (ask ? '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;">'+irPill(ask.status)+'<span class="field-note">You asked '+esc(ask.createdAt || "")+'</span></div>'
           : '<button type="button" class="btn primary sm" style="margin-top:10px;" data-ir-ask="'+attr(l.id)+'">Ask PartnerWAV for an introduction</button>') : '')
       + '</div>';
@@ -18442,7 +18494,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function renderOperatorInvestors(force){
     var box = document.getElementById("operatorInvestorsContent");
     if (!box || state.screen !== "operator-investors") return;
-    var key = JSON.stringify([investorProfiles.length, investorListings.length, introRequests.length, state.oiTab, state.oiNew, state.invV || 0]);
+    var key = JSON.stringify([investorProfiles.length, investorListings.length, introRequests.length, investorReadiness.length, state.oiTab, state.oiNew, state.invV || 0]);
     if (!force && box.getAttribute("data-k") === key) return;
     box.setAttribute("data-k", key);
     var tab = state.oiTab || "intros", invs = investorProfiles.filter(function(x){ return !x.archivedAt; }), waiting = introRequests.filter(function(x){ return x.status === "requested"; });
@@ -18450,7 +18502,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="stat-tile"><span class="stat-label">Companies showing a round</span><span class="stat-value">'+investorListings.length+'</span><span class="stat-trend">Visible to investors</span></div>'
       + '<div class="stat-tile"><span class="stat-label">Introductions waiting</span><span class="stat-value">'+waiting.length+'</span><span class="stat-trend">'+introRequests.filter(function(x){ return x.status === "introduced"; }).length+' made</span></div></div>'
       + '<div class="cal-bar"><div class="cal-views" role="group" aria-label="Show">'
-      + [["intros", "Introduction requests"+(waiting.length ? " ("+waiting.length+")" : "")], ["investors", "Investors"], ["listings", "Companies raising"]].map(function(t){ return '<button type="button" class="cal-view" data-oi-tab="'+t[0]+'" aria-pressed="'+(tab === t[0])+'">'+esc(t[1])+'</button>'; }).join("")+'</div>'
+      + [["intros", "Introduction requests"+(waiting.length ? " ("+waiting.length+")" : "")], ["readiness", "Readiness reviews"+(investorReadiness.filter(function(r){ return r.status === "submitted"; }).length ? " ("+investorReadiness.filter(function(r){ return r.status === "submitted"; }).length+")" : "")], ["investors", "Investors"], ["listings", "Companies raising"]].map(function(t){ return '<button type="button" class="cal-view" data-oi-tab="'+t[0]+'" aria-pressed="'+(tab === t[0])+'">'+esc(t[1])+'</button>'; }).join("")+'</div>'
       + (tab === "investors" ? '<button type="button" class="btn primary sm" data-oi-new>+ Add an investor</button>' : '')+'</div>';
     if (tab === "intros"){
       html += introRequests.length ? '<div style="display:flex;flex-direction:column;gap:10px;">'+introRequests.slice().sort(function(a, b){ return (a.status === "requested" ? 0 : 1) - (b.status === "requested" ? 0 : 1) || String(b.createdAt).localeCompare(String(a.createdAt)); }).map(function(x){
@@ -18461,6 +18513,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + (x.status === "requested" ? '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"><input type="text" id="oiReply-'+attr(x.id)+'" class="aff-link-input" style="flex:1;min-width:200px;font-family:inherit;" placeholder="Message to the investor (optional)" maxlength="300">'
                 + '<button type="button" class="btn primary xs" data-oi-introduced="'+attr(x.id)+'">Mark introduced</button><button type="button" class="btn secondary xs" data-oi-decline="'+attr(x.id)+'">Not this time</button></div>' : (x.reply ? '<div class="cp-next"><b>You said:</b> '+esc(x.reply)+'</div>' : ''))+'</div>';
         }).join("")+'</div>' : '<div class="empty">No introduction requests yet.</div>';
+    } else if (tab === "readiness"){
+      html += irReviewHtml();
     } else if (tab === "investors"){
       if (state.oiNew) html += '<div class="card card-pad" id="oiNewForm" style="display:flex;flex-direction:column;gap:12px;margin:14px 0;"><div class="form-grid">'
         + '<div class="field-row"><label for="oiName">Firm or investor name</label><input type="text" id="oiName" maxlength="120"></div>'
@@ -18522,6 +18576,271 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (!ir) return; var rp = document.getElementById("oiReply-" + irId);
       ir.status = b.hasAttribute("data-oi-introduced") ? "introduced" : "declined"; ir.reply = rp ? rp.value.trim().slice(0, 300) : ""; ir.updatedAt = nowStamp();
       state.invV = (state.invV || 0) + 1; saveInvestors(); renderOperatorInvestors(true); return;
+    }
+  });
+
+  // ===== INVESTOR READINESS =====
+  // Before investors on PartnerWAV can see a vendor, partner or affiliate, the company passes this check and CloudWAV
+  // reviews it. Criteria from YC (seed deck, 12-18 months of runway), Founder Institute stage benchmarks and Thai
+  // investor expectations -- see claude/INVESTOR_READINESS_RESEARCH.md in the project.
+  var IR_KEY = "partnerWAV_investorReadiness";
+  var IR_STEPS = [
+    { id:"company", title:"Your company and your raise", fields:[
+      { k:"oneLiner", label:"What does the company do, in one line?", type:"text", req:true, ph:"e.g. Voice AI that answers customer calls for Thai SMEs" },
+      { k:"legalEntity", label:"How is the company set up?", type:"single", req:true, options:["Thai company limited","Singapore or other holding company","Company in another country","Not registered yet"] },
+      { k:"foundedYear", label:"Year founded", type:"text", ph:"e.g. 2023" },
+      { k:"sector", label:"Sector", type:"multi", options:["AI","SaaS / software","Fintech","E-commerce","Hardware / IoT","Services","Other"] },
+      { k:"round", label:"Which round are you raising?", type:"single", req:true, options:["Pre-seed","Seed","Series A","Grant / government fund"] },
+      { k:"raiseAmount", label:"How much are you raising?", type:"text", req:true, ph:"e.g. USD 1.5M" },
+      { k:"instrument", label:"How?", type:"single", options:["SAFE","Convertible note","Priced equity round","Grant","Not sure yet"] },
+      { k:"committed", label:"Committed so far", type:"text", ph:"e.g. USD 400K, or none yet" },
+      { k:"runway", label:"How long will this round last you?", type:"single", req:true, options:["Under 6 months","6-12 months","12-18 months","Over 18 months"] } ] },
+    { id:"team", title:"Your team", intro:"Investors in Thailand weigh the team heavily -- often more than the product.", fields:[
+      { k:"founders", label:"How many founders work on it full-time?", type:"single", req:true, options:["0","1","2","3 or more"] },
+      { k:"skills", label:"Which skills do the founders cover?", type:"multi", options:["Technology / product","Sales","Marketing","Operations / finance"] },
+      { k:"teamSize", label:"Team size, including founders", type:"single", options:["1-3","4-7","8-15","16+"] },
+      { k:"experience", label:"Founder experience", type:"multi", options:["Founded a company before","Sold or exited a company","10+ years in this industry","Worked at a well-known tech company"] } ] },
+    { id:"traction", title:"Product and traction", intro:"Compared with the Founder Institute benchmark for the round you chose.", fields:[
+      { k:"productStage", label:"Where is the product?", type:"single", req:true, options:["Idea","Prototype","MVP with users","Paying customers","Commercial and growing"] },
+      { k:"customers", label:"Paying customers", type:"single", options:["0","1-10","11-100","100+"] },
+      { k:"mrr", label:"Monthly recurring revenue (USD)", type:"single", req:true, options:["None yet","Under $1K","$1K-$5K","$5K-$25K","$25K-$200K","Over $200K"] },
+      { k:"growth", label:"Monthly revenue growth, last 3-6 months", type:"single", options:["Not growing yet","Under 10% a month","10-20% a month","20-30% a month","Over 30% a month"] },
+      { k:"retention", label:"Do customers stay?", type:"single", options:["Not measured yet","Customers often leave","Most customers stay","Very few leave (under 2% a month)"] },
+      { k:"pilots", label:"Pilots, letters of intent or big-name customers", type:"text", ph:"optional" } ] },
+    { id:"market", title:"Market and business model", fields:[
+      { k:"marketSized", label:"Have you sized your market?", type:"single", options:["Yes -- TAM, SAM and SOM worked out","Rough idea","Not yet"] },
+      { k:"model", label:"How do you make money?", type:"single", req:true, options:["Subscription","Usage / transaction fees","One-off sales","Hardware + subscription","Services","Other"] },
+      { k:"margin", label:"Gross margin", type:"single", options:["Under 30%","30-60%","60-80%","Over 80%","Don't know"] },
+      { k:"unitEconomics", label:"Customer acquisition cost and lifetime value", type:"single", options:["We know both","Rough idea","Not yet"] },
+      { k:"competitors", label:"Competitors", type:"single", options:["We know them, and how we're different","Some idea","Not yet"] },
+      { k:"regional", label:"Markets", type:"single", options:["Thailand only","Thailand, with a plan for Southeast Asia","Already selling in several countries"] },
+      { k:"insight", label:"What do you know that competitors don't?", type:"textarea" } ] },
+    { id:"documents", title:"Your investor documents", intro:"The must-haves: no investor sees you without a pitch deck, financials, a growth plan and how the money will be used.", fields:[
+      { k:"deck", label:"Pitch deck", type:"single", req:true, options:["Ready","Draft","Not started"] },
+      { k:"deckUrl", label:"Link to the deck (only PartnerWAV sees it; investors get it on introduction)", type:"url", ph:"https://" },
+      { k:"financialModel", label:"Financial model -- 3 years, with runway", type:"single", req:true, options:["Ready","Draft","Not started"] },
+      { k:"accounts", label:"Financial statements", type:"single", options:["Audited accounts","Up-to-date management accounts","Bank statements only","None yet"] },
+      { k:"growthPlan", label:"Growth plan / go-to-market", type:"single", req:true, options:["Ready","Draft","Not started"] },
+      { k:"funds", label:"How will the money be used? (% of the round)", type:"funds", req:true },
+      { k:"capTable", label:"Cap table (who owns what)", type:"single", req:true, options:["Ready","Not ready"] },
+      { k:"dataRoom", label:"Data room / investor folder", type:"single", options:["Ready","Partly","Not started"] } ] },
+    { id:"legal", title:"Legal and Thailand", fields:[
+      { k:"ipOwned", label:"Does the company own its IP (code, designs, brand)?", type:"single", req:true, options:["Yes, the company owns it","Partly -- founders or others own some","Not sure"] },
+      { k:"shareholderAgreement", label:"Shareholder agreement", type:"single", options:["Yes","No"] },
+      { k:"vesting", label:"Do founders' shares vest over time?", type:"single", options:["Yes","No","Not sure"] },
+      { k:"ownership", label:"Ownership", type:"single", options:["Thai-majority company","Foreign-owned with BOI promotion or a licence","Singapore / overseas holding company","Not sure"] },
+      { k:"certified", label:"Thai certifications and grants", type:"multi", options:["NIA certified","depa certified","NSTDA certified","Received a TED Fund, depa or NIA grant","None yet"] },
+      { k:"risks", label:"The biggest risks an investor will ask about", type:"textarea" },
+      { k:"confirm", label:"", type:"confirm" } ] }
+  ];
+  var IR_FUNDS = [["product","Product and technology"],["sales","Sales and marketing"],["hiring","Hiring"],["expansion","Regional expansion"],["other","Other"]];
+  var IR_BENCH = { "Pre-seed":{ mrr:2, label:"$1K-$25K MRR, 10-20% monthly growth, 2+ founders" }, "Seed":{ mrr:4, label:"$25K-$200K MRR, 15-30% monthly growth, team of 4+" },
+    "Series A":{ mrr:5, label:"$200K+ MRR, 25%+ monthly growth, team of 8+" }, "Grant / government fund":{ mrr:0, label:"a working prototype and a clear plan" } };
+  var IR_LEVELS = { ready:["Investor-ready","active"], almost:["Getting there","pending"], not:["Not ready yet",""] };
+  var RD_STATUS = { draft:"Not sent", submitted:"With PartnerWAV for review", approved:"Approved by PartnerWAV", changes:"PartnerWAV asked for changes" };
+  function loadReadiness(){ try { var d = JSON.parse(lsGet(IR_KEY) || "null"); if (Array.isArray(d)) investorReadiness = d; } catch(e){} }
+  function saveReadiness(){ try { lsSet(IR_KEY, JSON.stringify(investorReadiness)); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function readinessFor(key){ return investorReadiness.filter(function(r){ return r.id === key; })[0] || null; }
+  function irFundsTotal(a){ var f = a.funds || {}; return IR_FUNDS.reduce(function(t, x){ return t + (Number(f[x[0]]) || 0); }, 0); }
+  function irPick(map, v){ return map[v] || 0; }
+  function irHas(a, k, v){ return (a[k] || []).indexOf(v) > -1; }
+  // Score out of 100 plus the must-haves; the gaps say what to fix
+  function irScore(a){
+    var must = [
+      [a.deck === "Ready", "A pitch deck that is ready (problem, solution, traction, market, model, team, the ask)"],
+      [a.financialModel === "Ready", "A 3-year financial model that shows runway"],
+      [a.growthPlan === "Ready", "A growth plan / go-to-market"],
+      [irFundsTotal(a) === 100, "How the money will be used, adding up to 100%"],
+      [!!a.raiseAmount, "How much you are raising"],
+      [!!a.legalEntity && a.legalEntity !== "Not registered yet", "A registered company"],
+      [/^Yes/.test(a.ipOwned || ""), "The company owning its IP"],
+      [a.capTable === "Ready", "A cap table"],
+      [!!a.founders && a.founders !== "0", "At least one full-time founder"] ];
+    var team = irPick({ "1":5, "2":9, "3 or more":9 }, a.founders) + (irHas(a, "skills", "Technology / product") ? 3 : 0) + (irHas(a, "skills", "Sales") ? 3 : 0)
+      + Math.min(2, (irHas(a, "skills", "Marketing") ? 1 : 0) + (irHas(a, "skills", "Operations / finance") ? 1 : 0)) + Math.min(3, (a.experience || []).length);
+    var mrrIdx = IR_STEPS[2].fields[2].options.indexOf(a.mrr), bench = IR_BENCH[a.round] || IR_BENCH["Pre-seed"];
+    var trac = irPick({ "Prototype":2, "MVP with users":5, "Paying customers":8, "Commercial and growing":10 }, a.productStage)
+      + (mrrIdx < 0 ? 0 : mrrIdx >= bench.mrr ? 8 : mrrIdx === bench.mrr - 1 ? 4 : 0)
+      + irPick({ "Under 10% a month":1, "10-20% a month":3, "20-30% a month":4, "Over 30% a month":5 }, a.growth)
+      + irPick({ "Most customers stay":1, "Very few leave (under 2% a month)":2 }, a.retention);
+    var mkt = irPick({ "Yes -- TAM, SAM and SOM worked out":4, "Rough idea":2 }, a.marketSized) + irPick({ "30-60%":1, "60-80%":3, "Over 80%":3 }, a.margin)
+      + irPick({ "We know both":3, "Rough idea":1 }, a.unitEconomics) + irPick({ "We know them, and how we're different":3, "Some idea":1 }, a.competitors)
+      + irPick({ "Thailand, with a plan for Southeast Asia":1, "Already selling in several countries":2 }, a.regional);
+    var docs = irPick({ "Ready":6, "Draft":2 }, a.deck) + irPick({ "Ready":5, "Draft":2 }, a.financialModel) + irPick({ "Ready":4, "Draft":1 }, a.growthPlan)
+      + (irFundsTotal(a) === 100 ? 3 : 0) + irPick({ "Audited accounts":4, "Up-to-date management accounts":3, "Bank statements only":1 }, a.accounts) + irPick({ "Ready":3, "Partly":1 }, a.dataRoom);
+    var legal = (a.legalEntity && a.legalEntity !== "Not registered yet" ? 3 : 0) + (/^Yes/.test(a.ipOwned || "") ? 3 : 0) + (a.capTable === "Ready" ? 2 : 0)
+      + (a.shareholderAgreement === "Yes" ? 2 : 0) + (a.vesting === "Yes" ? 2 : 0) + ((a.certified || []).some(function(c){ return c !== "None yet"; }) ? 2 : 0) + (a.ownership && a.ownership !== "Not sure" ? 1 : 0);
+    var areas = [["Team", team, 20], ["Traction", trac, 25], ["Market and model", mkt, 15], ["Documents", docs, 25], ["Legal and Thailand", legal, 15]];
+    var score = areas.reduce(function(t, x){ return t + x[1]; }, 0), missing = must.filter(function(m){ return !m[0]; }).map(function(m){ return m[1]; });
+    var level = score >= 75 && !missing.length ? "ready" : score >= 50 ? "almost" : "not";
+    var tips = [];
+    if (mrrIdx >= 0 && mrrIdx < bench.mrr) tips.push("For a " + (a.round || "pre-seed") + " round investors usually expect about " + bench.label + " (Founder Institute benchmarks). Consider a smaller round or a grant first.");
+    if (a.runway === "Under 6 months" || a.runway === "6-12 months") tips.push("Raise enough for 12-18 months to reach your next milestone (YC's guidance).");
+    if (!irHas(a, "skills", "Sales")) tips.push("No founder covers sales -- investors will ask who sells.");
+    if (a.ownership === "Not sure") tips.push("Write a short structure note: who owns the company, where the IP sits and which entity signs contracts. Check foreign-ownership rules with counsel.");
+    if (!(a.certified || []).some(function(c){ return c !== "None yet"; }) && a.legalEntity === "Thai company limited") tips.push("NIA, depa or NSTDA certification lets Thai investors claim the capital gains tax exemption -- worth applying for.");
+    if (a.deck !== "Ready") tips.push("PartnerWAV can build your pitch deck with you (YC seed-deck structure).");
+    return { score:score, level:level, areas:areas, missing:missing, tips:tips };
+  }
+  function irKeyNow(){ var k = chMe(); return k && /^(vendor|partner|affiliate):/.test(k) ? k : null; }
+  function irFieldHtml(f, a){
+    var v = a[f.k], star = f.req ? ' *' : '';
+    if (f.type === "text" || f.type === "url") return '<div class="field-row"><label for="ir_'+f.k+'">'+esc(f.label)+star+'</label><input type="'+f.type+'" id="ir_'+f.k+'" data-ir-k="'+f.k+'" value="'+attr(v || "")+'" placeholder="'+attr(f.ph || "")+'" maxlength="300"></div>';
+    if (f.type === "textarea") return '<div class="field-row va-wide"><label for="ir_'+f.k+'">'+esc(f.label)+star+'</label><textarea id="ir_'+f.k+'" data-ir-k="'+f.k+'" rows="3" maxlength="1500">'+esc(v || "")+'</textarea></div>';
+    if (f.type === "single" || f.type === "multi"){ var multi = f.type === "multi";
+      return '<fieldset class="va-set va-wide"><legend>'+esc(f.label)+star+(multi ? ' <span class="field-note">(choose any)</span>' : '')+'</legend><div class="va-opts">'
+        + f.options.map(function(o){ var on = multi ? (v || []).indexOf(o) > -1 : v === o; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="'+(multi ? 'checkbox' : 'radio')+'" name="ir_'+f.k+'" data-ir-k="'+f.k+'" value="'+attr(o)+'"'+(on ? ' checked' : '')+'><span><b>'+esc(o)+'</b></span></label>'; }).join("")+'</div></fieldset>'; }
+    if (f.type === "funds"){ var fv = v || {};
+      return '<fieldset class="va-set va-wide"><legend>'+esc(f.label)+star+'</legend><div class="ir-funds">'+IR_FUNDS.map(function(x){ return '<label class="ir-fund"><span>'+esc(x[1])+'</span><span class="ir-pct"><input type="number" min="0" max="100" step="1" data-ir-fund="'+x[0]+'" value="'+attr(fv[x[0]] === undefined ? "" : fv[x[0]])+'" aria-label="'+attr(x[1])+' %">%</span></label>'; }).join("")
+        + '<div class="ir-fund-total" data-ir-fund-total>Total: <b>'+irFundsTotal(a)+'%</b></div></div></fieldset>'; }
+    if (f.type === "confirm") return '<label class="cfg-check va-wide" style="align-items:flex-start;"><input type="checkbox" data-ir-k="confirm"'+(v ? ' checked' : '')+'> <span>These answers are accurate. Once PartnerWAV approves, a summary (never the deck or financials) can be shown to investors on PartnerWAV.</span></label>';
+    return '';
+  }
+  function irRead(){
+    var d = state.irDraft; if (!d) return; var a = d.answers, groups = {};
+    document.querySelectorAll("[data-ir-wizard] [data-ir-k]").forEach(function(el){ var k = el.getAttribute("data-ir-k");
+      if (k === "confirm") a.confirm = el.checked;
+      else if (el.type === "checkbox"){ groups[k] = groups[k] || []; if (el.checked) groups[k].push(el.value); }
+      else if (el.type === "radio"){ if (el.checked) a[k] = el.value; }
+      else a[k] = el.value.trim(); });
+    Object.keys(groups).forEach(function(k){ a[k] = groups[k]; });
+    var fundEls = document.querySelectorAll("[data-ir-wizard] [data-ir-fund]");
+    if (fundEls.length){ a.funds = {}; fundEls.forEach(function(el){ var n = Number(el.value); if (el.value !== "" && !isNaN(n)) a.funds[el.getAttribute("data-ir-fund")] = Math.max(0, Math.min(100, Math.round(n))); }); }
+  }
+  function irProblems(){
+    var d = state.irDraft, a = d.answers, out = [];
+    IR_STEPS[d.step].fields.forEach(function(f){
+      if (f.type === "funds"){ if (irFundsTotal(a) !== 100) out.push("How the money will be used needs to add up to 100% (now " + irFundsTotal(a) + "%)."); return; }
+      if (f.type === "confirm"){ if (!a.confirm) out.push("Please confirm your answers are accurate."); return; }
+      if (f.req && !a[f.k]) out.push(/\?$/.test(f.label) ? "Please answer: " + f.label : f.label + " is needed.");
+      if (f.type === "url" && a[f.k] && !/^https?:\/\/\S+\.\S+/i.test(a[f.k])){ if (/^[^\s\/]+\.\S+/.test(a[f.k])) a[f.k] = "https://" + a[f.k]; else out.push("The deck link needs to be a web address (https://...)."); }
+    });
+    return out;
+  }
+  function irResultHtml(rec, key){
+    var r = irScore(rec.answers || {}), lv = IR_LEVELS[r.level], st = rec.status || "draft";
+    var listed = !!listingFor(key);
+    var html = '<div class="card card-pad ir-result" data-ir-result="'+r.level+'"><div class="ir-score-row"><div class="ir-score"><b>'+r.score+'</b><span>/ 100</span></div><div style="flex:1;min-width:200px;">'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><span class="pill '+lv[1]+'" data-ir-level>'+esc(lv[0])+'</span><span class="badge neutral" data-ir-status="'+st+'">'+esc(RD_STATUS[st] || st)+'</span></div>'
+      + '<p class="field-note" style="margin:6px 0 0;">'+(r.level === "ready" ? (st === "approved" ? "PartnerWAV has reviewed your answers. You can show your round to investors on PartnerWAV." : st === "submitted" ? "PartnerWAV is reviewing your answers. We'll let you know, usually within a few days." : "You meet every must-have. Send it to PartnerWAV to review before investors can see you.")
+          : "Investors on PartnerWAV only see companies that are investor-ready and reviewed by PartnerWAV. Close the gaps below, then check again.")+'</p></div></div>'
+      + '<div class="ir-areas">'+r.areas.map(function(x){ var pc = Math.round(x[1] / x[2] * 100); return '<div class="ir-area"><span>'+esc(x[0])+'</span><div class="ir-bar"><i style="width:'+pc+'%"></i></div><b>'+x[1]+'/'+x[2]+'</b></div>'; }).join("")+'</div>'
+      + (r.missing.length ? '<div class="ir-gaps" data-ir-missing><b>Must-haves still missing</b><ul>'+r.missing.map(function(m){ return '<li>'+esc(m)+'</li>'; }).join("")+'</ul></div>' : '')
+      + (r.tips.length ? '<div class="ir-gaps"><b>To strengthen your case</b><ul>'+r.tips.map(function(m){ return '<li>'+esc(m)+'</li>'; }).join("")+'</ul></div>' : '')
+      + (rec.reviewNote ? '<div class="cp-next"><b>PartnerWAV:</b> '+esc(rec.reviewNote)+'</div>' : '')
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">'
+        + (r.level === "ready" && (st === "draft" || st === "changes") ? '<button type="button" class="btn primary cta sm" data-ir-submit>Send to PartnerWAV for review</button>' : '')
+        + (st === "approved" ? '<label class="cfg-check" style="margin:0;"><input type="checkbox" data-ir-list'+(listed ? ' checked' : '')+'> <span><b>Show our round to investors on PartnerWAV</b> -- they see the summary and ask PartnerWAV for an introduction</span></label>' : '')
+        + '<button type="button" class="btn secondary sm" data-ir-edit>'+(rec.answers && Object.keys(rec.answers).length ? 'Update my answers' : 'Start the check')+'</button></div>';
+    if (r.level !== "ready") html += '<div class="ir-help"><b>Help getting there</b><ul>'
+      + '<li>PartnerWAV pitch deck and investor-preparation service -- <a href="#" data-goto-screen="partner-messages">message PartnerWAV</a></li>'
+      + '<li><a href="https://www.startupgrind.com/bangkok/" target="_blank" rel="noopener noreferrer">Startup Grind Bangkok</a> -- monthly events where founders meet investors, including VC reverse-pitch nights</li>'
+      + '<li><a href="https://fi.co/apply/bangkok" target="_blank" rel="noopener noreferrer">Founder Institute Bangkok</a> -- a 10-week online program for early-stage founders</li>'
+      + '<li>Thai grants that need no equity: <a href="https://tedfund.mhesi.go.th" target="_blank" rel="noopener noreferrer">TED Fund</a>, depa Digital Startup Fund and <a href="https://www.nia.or.th" target="_blank" rel="noopener noreferrer">NIA</a></li></ul></div>';
+    return html + '</div>';
+  }
+  function renderReadiness(){
+    var box = document.getElementById("investorReadinessContent");
+    if (!box || state.screen !== "investor-readiness") return;
+    var key = irKeyNow(), rec = key ? readinessFor(key) : null;
+    var k = JSON.stringify([key, state.irDraft ? state.irDraft.step : -1, state.irV || 0, rec ? rec.status : "", investorListings.length]);
+    if (box.getAttribute("data-k") === k) return;
+    box.setAttribute("data-k", k);
+    if (!key){ box.innerHTML = '<div class="empty">The investor-readiness check is for vendors, partners and affiliates.</div>'; return; }
+    var d = state.irDraft && state.irDraft.key === key ? state.irDraft : null;
+    if (d){
+      var st = IR_STEPS[d.step], last = d.step === IR_STEPS.length - 1, pct = Math.round((d.step + 1) / IR_STEPS.length * 100);
+      var a = d.answers, bench = IR_BENCH[a.round];
+      box.innerHTML = '<form class="card card-pad va-wizard" data-ir-wizard novalidate onsubmit="return false;">'
+        + '<div class="va-progress" role="progressbar" aria-valuemin="1" aria-valuemax="'+IR_STEPS.length+'" aria-valuenow="'+(d.step + 1)+'"><span style="width:'+pct+'%"></span></div>'
+        + '<div class="va-stepline">Step '+(d.step + 1)+' of '+IR_STEPS.length+'</div><h2 class="va-title">'+esc(st.title)+'</h2>'
+        + (st.intro ? '<p class="field-note" style="margin:0;">'+esc(st.intro)+(st.id === "traction" && bench ? ' For '+esc(a.round)+': about '+esc(bench.label)+'.' : '')+'</p>' : '')
+        + '<div class="va-fields">'+st.fields.map(function(f){ return irFieldHtml(f, a); }).join("")+'</div>'
+        + '<div id="irError" class="login-msg bad" role="alert" hidden></div>'
+        + '<div class="va-nav">'+(d.step > 0 ? '<button type="button" class="btn secondary" data-ir-back>Back</button>' : '<button type="button" class="btn secondary" data-ir-cancel>Cancel</button>')
+        + '<button type="button" class="btn primary'+(last ? ' cta' : '')+'" data-ir-next>'+(last ? 'See my result' : 'Next')+'</button></div></form>';
+      return;
+    }
+    box.innerHTML = '<p class="field-note" style="margin:0 0 14px;max-width:760px;">Investors on PartnerWAV only meet companies that are ready, so no one\'s time is wasted. The check takes about 10 minutes and is based on what Y Combinator, Founder Institute and investors in Thailand look for. Only you and PartnerWAV see your answers.</p>'
+      + (rec && rec.answers ? irResultHtml(rec, key) : '<div class="card card-pad ir-start"><b>What you\'ll need</b><ul><li>A pitch deck</li><li>A financial model and your latest financial statements</li><li>A growth plan</li><li>How the money will be used</li><li>Your cap table</li></ul><button type="button" class="btn primary cta sm" data-ir-edit>Start the check</button></div>');
+  }
+  function irListingSync(key){
+    var rec = readinessFor(key), old = listingFor(key);
+    var show = rec && rec.status === "approved" && rec.listed;
+    if (!show){ if (old){ investorListings.splice(investorListings.indexOf(old), 1); saveInvestors(); } return; }
+    var a = rec.answers || {}, r = irScore(a), role = key.split(":")[0], id = key.slice(role.length + 1);
+    var e = role === "vendor" ? programById(id) : role === "partner" ? partnerById(id) : affiliateProfiles.filter(function(x){ return x.id === id; })[0];
+    var out = { id:key, company:(e && e.name) || keyName(key), kind:role, summary:a.oneLiner || "", website:(e && e.website) || "", status:"raising", round:a.round || "", target:a.raiseAmount || "",
+      raised:a.committed || "", stage:a.productStage || "", mrr:a.mrr || "", growth:a.growth || "", teamSize:a.teamSize || "", sector:(a.sector || []).join(", "), score:r.score, reviewed:true, updatedAt:todayIso() };
+    if (old) investorListings[investorListings.indexOf(old)] = out; else investorListings.push(out);
+    saveInvestors();
+  }
+  document.addEventListener("input", function(ev){
+    if (!ev.target || !ev.target.hasAttribute || !ev.target.hasAttribute("data-ir-fund")) return;
+    var t = 0; document.querySelectorAll("[data-ir-fund]").forEach(function(el){ t += Number(el.value) || 0; });
+    var tot = document.querySelector("[data-ir-fund-total]"); if (tot){ tot.innerHTML = "Total: <b>" + t + "%</b>"; tot.classList.toggle("ok", t === 100); }
+  });
+  document.addEventListener("change", function(ev){
+    var t = ev.target; if (!t || !t.closest) return;
+    var opt = t.closest("[data-ir-wizard] .va-opt"); if (opt){ var set = opt.closest(".va-opts"); if (t.type === "radio") set.querySelectorAll(".va-opt").forEach(function(o){ o.classList.toggle("on", !!o.querySelector("input:checked")); }); else opt.classList.toggle("on", t.checked); }
+    if (t.hasAttribute("data-ir-list")){ var key = irKeyNow(), rec = key && readinessFor(key); if (!rec || isPreviewing()) { t.checked = !t.checked; return; }
+      rec.listed = t.checked; saveReadiness(); irListingSync(key); state.irV = (state.irV || 0) + 1; render(); toast(t.checked ? "Investors on PartnerWAV can now see your round" : "Hidden from investors"); }
+  });
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t) return;
+    if (t.closest("[data-ir-edit]")){ var key = irKeyNow(); if (!key) return; var rec = readinessFor(key);
+      state.irDraft = { key:key, step:0, answers:JSON.parse(JSON.stringify((rec && rec.answers) || { sector:[], skills:[], experience:[], certified:[], funds:{} })) }; state.irV = (state.irV || 0) + 1; renderReadiness(); window.scrollTo(0, 0); return; }
+    if (t.closest("[data-ir-cancel]")){ state.irDraft = null; state.irV = (state.irV || 0) + 1; renderReadiness(); return; }
+    if (t.closest("[data-ir-back]")){ irRead(); state.irDraft.step--; state.irV = (state.irV || 0) + 1; renderReadiness(); window.scrollTo(0, 0); return; }
+    if (t.closest("[data-ir-next]")){
+      irRead(); var probs = irProblems(), err = document.getElementById("irError");
+      if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; err.scrollIntoView && err.scrollIntoView({ block:"nearest" }); return; }
+      var d = state.irDraft;
+      if (d.step < IR_STEPS.length - 1){ d.step++; state.irV = (state.irV || 0) + 1; renderReadiness(); window.scrollTo(0, 0); return; }
+      var r0 = readinessFor(d.key), r = irScore(d.answers);
+      if (!r0){ r0 = { id:d.key, createdAt:nowStamp() }; investorReadiness.push(r0); }
+      var changed = JSON.stringify(r0.answers || {}) !== JSON.stringify(d.answers);
+      r0.answers = d.answers; r0.score = r.score; r0.level = r.level; r0.updatedAt = nowStamp();
+      // changed answers need a fresh review: investors stop seeing the round until PartnerWAV approves again
+      if (changed || !r0.status){ r0.status = "draft"; r0.listed = false; delete r0.reviewNote; }
+      state.irDraft = null; saveReadiness(); irListingSync(d.key); state.irV = (state.irV || 0) + 1; renderReadiness(); window.scrollTo(0, 0); return;
+    }
+    if (t.closest("[data-ir-submit]")){ var k2 = irKeyNow(), rc = k2 && readinessFor(k2); if (!rc || irScore(rc.answers || {}).level !== "ready") return;
+      rc.status = "submitted"; rc.submittedAt = nowStamp(); saveReadiness(); state.irV = (state.irV || 0) + 1; renderReadiness(); toast("Sent to PartnerWAV for review"); return; }
+  });
+
+  // ----- CloudWAV: readiness reviews (a tab on the Investors screen) -----
+  function irReviewHtml(){
+    var list = investorReadiness.filter(function(r){ return r.answers; }).slice().sort(function(a, b){ return (a.status === "submitted" ? 0 : 1) - (b.status === "submitted" ? 0 : 1) || (b.score || 0) - (a.score || 0); });
+    if (!list.length) return '<div class="empty" style="margin-top:14px;">No company has taken the investor-readiness check yet.</div>';
+    return '<div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">'+list.map(function(rec){
+      var a = rec.answers, r = irScore(a), lv = IR_LEVELS[r.level], deck = safeHref(a.deckUrl || "");
+      var line = function(l, v){ return v ? '<div class="tier-line"><span>'+esc(l)+'</span><b style="text-align:right;">'+esc(Array.isArray(v) ? v.join(", ") : v)+'</b></div>' : ''; };
+      return '<div class="card card-pad" data-ir-review="'+attr(rec.id)+'" style="display:flex;flex-direction:column;gap:8px;">'
+        + '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;"><b>'+esc(keyName(rec.id))+' <span class="badge neutral">'+esc(keyRoleLabel(rec.id))+'</span></b>'
+          + '<span style="display:flex;gap:6px;align-items:center;"><span class="ir-mini">'+r.score+'/100</span><span class="pill '+lv[1]+'">'+esc(lv[0])+'</span><span class="badge neutral">'+esc(RD_STATUS[rec.status] || rec.status)+'</span></span></div>'
+        + (a.oneLiner ? '<div class="field-note">'+esc(a.oneLiner)+'</div>' : '')
+        + '<details><summary>Answers and gaps</summary><div style="margin-top:8px;">'
+          + line("Raising", [a.round, a.raiseAmount, a.instrument].filter(Boolean).join(" · ")) + line("Committed", a.committed) + line("Runway", a.runway)
+          + line("Company", a.legalEntity) + line("Founders full-time", a.founders) + line("Team", a.teamSize) + line("Product", a.productStage) + line("MRR", a.mrr) + line("Growth", a.growth)
+          + line("Model", a.model) + line("Gross margin", a.margin) + line("Deck", a.deck) + line("Financial model", a.financialModel) + line("Accounts", a.accounts) + line("Growth plan", a.growthPlan)
+          + line("Use of funds", IR_FUNDS.filter(function(x){ return (a.funds || {})[x[0]]; }).map(function(x){ return x[1] + " " + a.funds[x[0]] + "%"; }).join(", "))
+          + line("Cap table", a.capTable) + line("IP", a.ipOwned) + line("Ownership", a.ownership) + line("Certified / grants", a.certified) + line("Risks", a.risks)
+          + (r.missing.length ? '<div class="ir-gaps"><b>Missing</b><ul>'+r.missing.map(function(m){ return '<li>'+esc(m)+'</li>'; }).join("")+'</ul></div>' : '')
+          + (deck ? '<a href="'+attr(deck)+'" target="_blank" rel="noopener noreferrer">Open the pitch deck</a>' : '')+'</div></details>'
+        + (rec.status === "submitted" || rec.status === "approved" ? '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"><input type="text" id="irNote-'+attr(rec.id)+'" class="aff-link-input" style="flex:1;min-width:200px;font-family:inherit;" placeholder="Note to the company (optional)" maxlength="400">'
+            + (rec.status === "submitted" ? '<button type="button" class="btn primary xs" data-ir-approve="'+attr(rec.id)+'">Approve</button>' : '')
+            + '<button type="button" class="btn secondary xs" data-ir-changes="'+attr(rec.id)+'">Ask for changes</button></div>' : '')+'</div>';
+    }).join("")+'</div>';
+  }
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t || !t.closest("#operatorInvestorsContent")) return; var b;
+    if ((b = t.closest("[data-ir-approve]")) || (b = t.closest("[data-ir-changes]"))){
+      var id = b.getAttribute("data-ir-approve") || b.getAttribute("data-ir-changes"), rec = readinessFor(id); if (!rec) return;
+      var note = document.getElementById("irNote-" + id);
+      rec.status = b.hasAttribute("data-ir-approve") ? "approved" : "changes"; rec.reviewNote = note ? note.value.trim().slice(0, 400) : ""; rec.reviewedAt = nowStamp();
+      if (rec.status !== "approved") rec.listed = false;
+      saveReadiness(); irListingSync(id); state.invV = (state.invV || 0) + 1; renderOperatorInvestors(true); toast(rec.status === "approved" ? "Approved -- they can now show their round to investors" : "Sent back with your note"); return;
     }
   });
 
@@ -18890,7 +19209,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var line = function(l, v){ return v ? '<div class="tier-line"><span>' + l + '</span><b>' + esc(v) + '</b></div>' : ''; };
       return '<div class="card card-pad" style="margin-top:16px;" data-funding-card>' + head
         + (f.status ? line("Status", FUND_STATUS[f.status]) + (hasRound ? line("Round", f.round) + line(f.status === "raising" ? "Target" : "Round size", f.target) + line("Raised so far", f.raised) + line("Investors", f.investors) : "")
-            + line("Notes", f.notes) + line("Investor introductions", f.openToIntros ? "Open to introductions from PartnerWAV" : "") + line("Investors on PartnerWAV", f.showToInvestors && hasRound ? "Can see this round" : "")
+            + line("Notes", f.notes) + line("Investor introductions", f.openToIntros ? "Open to introductions from PartnerWAV" : "") + line("Investors on PartnerWAV", listingFor(key) ? "Can see this round" : "")
           : '<p style="margin:0;color:var(--ink-soft);">' + (canEdit ? "Have you raised money, or are you raising now? Tell PartnerWAV which round you are in." : "Nothing shared yet.") + '</p>')
         + (canEdit ? '<div class="cfg-actions" style="margin-top:12px;"><button type="button" class="btn secondary sm" data-funding-edit>' + (f.status ? "Edit" : "Add investment round") + '</button></div>'
                    : (state.role === "operator" || isPreviewing() ? '<div class="field-note" style="margin-top:10px;">View only -- the company keeps this up to date.</div>' : '')) + '</div>';
@@ -18906,7 +19225,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="field-row"><label for="fundInvestors">Investors <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><input type="text" id="fundInvestors" value="' + a(f.investors) + '" placeholder="Lead or existing investors"></div></div>'
       + '<div class="field-row"><label for="fundNotes">Notes <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><textarea id="fundNotes" placeholder="Use of funds, timing, markets...">' + esc(f.notes || "") + '</textarea></div>'
       + '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500;"><input type="checkbox" id="fundIntros"' + (f.openToIntros ? " checked" : "") + '> <span>We are open to investor introductions from PartnerWAV</span></label>'
-      + '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500;"><input type="checkbox" id="fundShowInvestors"' + (f.showToInvestors ? " checked" : "") + '> <span>Show our round to investors on PartnerWAV<br><span class="field-note" style="font-weight:400;">They see your company name and description, round, target, amount raised and status -- never your notes or existing investors -- and ask PartnerWAV for an introduction.</span></span></label>'
+      + '<p class="field-note" style="margin:0;" data-funding-readiness>Want investors on PartnerWAV to see your round? Take the <a href="#" data-goto-screen="investor-readiness">investor-readiness check</a> -- once PartnerWAV approves it, you can show your round to investors.</p>'
       + '<div class="field-row"><label for="fundVisibility">Who can see this</label><select id="fundVisibility" class="filter app-select">' + opt("private", "Only my company and PartnerWAV", f.visibility || "private") + opt("public", "Everyone in PartnerWAV (shown on my profile)", f.visibility || "private") + '</select></div>'
       + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-funding-save>Save</button><button type="button" class="btn secondary sm" data-funding-cancel>Cancel</button></div></div></div>';
   }
@@ -18967,7 +19286,6 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var st = v("fundStatus"), hasRound = st === "raising" || st === "raised";
       var rec = { id:key, status:st, round:hasRound ? v("fundRound") : "", target:hasRound ? v("fundTarget") : "", raised:hasRound ? v("fundRaised") : "",
         investors:hasRound ? v("fundInvestors") : "", notes:v("fundNotes"), openToIntros:document.getElementById("fundIntros").checked,
-        showToInvestors:!!(document.getElementById("fundShowInvestors") || {}).checked,
         visibility:v("fundVisibility") === "public" ? "public" : "private", updatedAt:new Date().toISOString().slice(0, 10) };
       fundingProfiles = fundingProfiles.filter(function(f){ return f.id !== key; }); fundingProfiles.push(rec);
       state.fundingEdit = null; saveFunding(); syncInvestorListing(key); toast("Investment round saved"); render();

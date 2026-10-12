@@ -19,6 +19,7 @@ with sync_playwright() as p:
         .reduce((a, r) => a.map((v, i) => v + r[i]), [0, 0, 0, 0])""")
     ok(tot == [254000, 38100, 18664, 197236], "The sample rows add up to the card: " + str(tot))
     ok(pg.locator('[data-roi-row="crossconnect"]').count() == 0, "Cross Connect is left out")
+    ok(pg.locator("#scr-operator-overview .stat-row").bounding_box()["y"] < pg.locator("#operatorRoiCard").bounding_box()["y"], "Operator overview: the tiles sit above the return card")
     inv = pg.inner_text('[data-roi-investor="beacon-vc"]')
     ok("Beacon VC (KBANK)" in inv and "$1,500,000" in inv and "$600,000" in inv and "0.5-2%" in inv, "Return by investor: Beacon VC (KBANK) with the draft structure")
 

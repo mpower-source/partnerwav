@@ -1,4 +1,5 @@
 from harness import *
+from ir_helpers import fill_readiness
 import os, json
 
 # Investors: a fifth login type with its own workspace. Companies choose to show their round to investors;
@@ -14,31 +15,37 @@ with sync_playwright() as p:
     ok(visible_screen(pg) == ["scr-investor-overview"] and pg.get_attribute('[data-role="investor"]', "aria-pressed") == "true", "Investor opens the investor workspace, its button highlighted")
     ov = pg.inner_text("#investorOverviewContent")
     ok("Companies raising now" in ov and "Example SaaS Co" in ov, "The overview shows companies raising")
-    # a company turns on "Show our round to investors"
+    # a company passes the readiness check, PartnerWAV approves it, then it shows its round
     role(pg, "vendor"); nav(pg, "vendor-overview"); pg.click("[data-funding-edit]"); pg.wait_for_timeout(150)
-    ok(pg.locator("#fundShowInvestors").count() == 1, "The investment round has a 'Show our round to investors' option")
-    pg.select_option("#fundStatus", "raising"); pg.locator("#fundStatus").dispatch_event("change")
-    pg.select_option("#fundRound", "Seed"); pg.fill("#fundTarget", "USD 2M"); pg.fill("#fundRaised", "USD 500K"); pg.fill("#fundNotes", "Private note for PartnerWAV only")
-    pg.check("#fundShowInvestors"); pg.click("[data-funding-save]"); pg.wait_for_timeout(300)
-    me = "vendor:" + json.loads(pg.evaluate("localStorage.getItem('partnerWAV_funding')"))[-1]["id"].split(":", 1)[1]
+    ok(pg.locator("[data-funding-readiness]").count() == 1 and pg.locator("#fundShowInvestors").count() == 0, "The investment round points to the readiness check instead of a tick box")
+    pg.click("[data-funding-cancel]")
+    nav(pg, "investor-readiness"); pg.wait_for_timeout(200)
+    fill_readiness(pg, ready=True)
+    ok(pg.locator('[data-ir-result="ready"]').count() == 1, "The vendor is investor-ready")
+    pg.click("[data-ir-submit]"); pg.wait_for_timeout(200)
+    me = json.loads(pg.evaluate("localStorage.getItem('partnerWAV_investorReadiness')"))[0]["id"]
+    role(pg, "operator"); nav(pg, "operator-investors"); pg.click('[data-oi-tab="readiness"]'); pg.wait_for_timeout(200)
+    pg.locator(f'[data-ir-approve="{me}"]').click(); pg.wait_for_timeout(200)
+    role(pg, "vendor"); nav(pg, "investor-readiness"); pg.wait_for_timeout(200)
+    pg.check("[data-ir-list]"); pg.wait_for_timeout(300)
     lst = [l for l in inv(pg).get("listings", []) if l["id"] == me]
-    ok(lst and lst[0]["round"] == "Seed" and lst[0]["target"] == "USD 2M" and "notes" not in lst[0] and "Private note" not in json.dumps(lst[0]), "Saving creates an investor card without the private notes")
+    ok(lst and lst[0]["round"] == "Seed" and lst[0]["target"] == "USD 1.5M" and lst[0]["reviewed"] and "deckUrl" not in json.dumps(lst[0]), "Showing the round creates a reviewed investor card, without the deck link")
 
     # the investor sees it and asks for an introduction
     role(pg, "investor"); nav(pg, "investor-deals"); pg.wait_for_timeout(300)
     card = pg.locator(f'#investorDealsContent [data-inv-listing="{me}"]')
-    ok(card.count() == 1 and "USD 2M" in card.inner_text(), "The investor sees the company's round")
+    ok(card.count() == 1 and "USD 1.5M" in card.inner_text() and "Reviewed by PartnerWAV" in card.text_content(), "The investor sees the company's reviewed round")
     card.locator("[data-ir-ask]").click(); pg.wait_for_timeout(200)
     pg.fill("#irNote", "Interested in AI for SMEs"); pg.click("[data-ir-send]"); pg.wait_for_timeout(300)
     irs = inv(pg)["intros"]
-    ok(len(irs) == 1 and irs[0]["listingId"] == me and irs[0]["status"] == "requested" and irs[0]["investorId"] == "example-ventures", "The introduction request goes to PartnerWAV")
+    ok(len(irs) == 1 and irs[0]["listingId"] == me and irs[0]["status"] == "requested" and irs[0]["investorId"] == "beacon-vc", "The introduction request goes to PartnerWAV")
     ok("Waiting for PartnerWAV" in card.inner_text(), "The card shows it's waiting")
     nav(pg, "investor-intros"); pg.wait_for_timeout(200)
     ok("Interested in AI for SMEs" in pg.inner_text("#investorIntrosContent"), "My Introductions lists it")
     # profile
     nav(pg, "investor-profile"); pg.wait_for_timeout(200)
     pg.fill("#invTicket", "USD 250K - 2M"); pg.click('[data-inv-stage="Grants"]'); pg.click("[data-inv-save]"); pg.wait_for_timeout(200)
-    prof = [x for x in inv(pg)["profiles"] if x["id"] == "example-ventures"][0]
+    prof = [x for x in inv(pg)["profiles"] if x["id"] == "beacon-vc"][0]
     ok(prof["ticket"] == "USD 250K - 2M" and "Grants" in prof["stages"], "The investor edits its profile")
     # investors only message PartnerWAV
     nav(pg, "partner-messages"); pg.wait_for_timeout(200)
@@ -48,9 +55,9 @@ with sync_playwright() as p:
     ok(visible_screen(pg) == ["scr-calendar"], "Investors have Events & Calendar")
 
     # CloudWAV: Investors screen
-    role(pg, "operator"); nav(pg, "operator-investors"); pg.wait_for_timeout(300)
+    role(pg, "operator"); nav(pg, "operator-investors"); pg.click('[data-oi-tab="intros"]'); pg.wait_for_timeout(300)
     row = pg.locator(f'[data-oi-ir="{irs[0]["id"]}"]')
-    ok(row.count() == 1 and "Example Ventures" in row.inner_text(), "CloudWAV sees the request")
+    ok(row.count() == 1 and "Beacon VC" in row.inner_text(), "CloudWAV sees the request")
     pg.fill(f'#oiReply-{irs[0]["id"]}', "Intro email sent to the founders"); row.locator("[data-oi-introduced]").click(); pg.wait_for_timeout(200)
     ok(inv(pg)["intros"][0]["status"] == "introduced", "CloudWAV marks it introduced")
     pg.click('[data-oi-tab="investors"]'); pg.click("[data-oi-new]"); pg.fill("#oiName", "Bangkok Angels"); pg.click("[data-oi-create]"); pg.wait_for_timeout(200)

@@ -8,7 +8,7 @@ with sync_playwright() as p:
     role(pg, "operator"); nav(pg, "operator-programs")
     rows = pg.locator("#operatorProgramRows tr")
     ok(rows.count() >= 6, "Manage programs lists every program")
-    intel = rows.filter(has_text="Intelsense AI")
+    intel = pg.locator('#operatorProgramRows tr[data-op-prog="intelsense"]')
     ok("Reseller: 15% + 5%" in intel.inner_text(), "Commission column shows current rate")
 
     # --- opens a real screen pre-filled from the current listing
@@ -57,7 +57,7 @@ with sync_playwright() as p:
 
     pg.locator("[data-config-save]").last.click(); pg.wait_for_timeout(250)
     ok(visible_screen(pg) == ["scr-operator-programs"], "Save returns to Manage programs")
-    intel = pg.locator("#operatorProgramRows tr").filter(has_text="Intelsense AI")
+    intel = pg.locator('#operatorProgramRows tr[data-op-prog="intelsense"]')
     ok("Reseller: 18% + 5%" in intel.inner_text() and "Configured" in intel.inner_text(), "Table shows new rate + configured stamp")
 
     # --- flows through to what partners see
@@ -77,7 +77,7 @@ with sync_playwright() as p:
     # --- cancel discards
     pg.locator("[data-cfg-tier]").nth(0).locator(".cfg-t-fy").fill("30")
     pg.locator("[data-config-cancel]").first.click(); pg.wait_for_timeout(200)
-    ok("Reseller: 18% + 5%" in pg.locator("#operatorProgramRows tr").filter(has_text="Intelsense AI").inner_text(), "Cancel discards unsaved changes")
+    ok("Reseller: 18% + 5%" in pg.locator('#operatorProgramRows tr[data-op-prog="intelsense"]').inner_text(), "Cancel discards unsaved changes")
 
     # --- non-standard rates survive the round trip
     open_config(pg, "crossconnect")
@@ -90,7 +90,7 @@ with sync_playwright() as p:
     # --- persistence
     pg.reload(); pg.wait_for_timeout(700)
     role(pg, "operator"); nav(pg, "operator-programs")
-    ok("Reseller: 18% + 5%" in pg.locator("#operatorProgramRows tr").filter(has_text="Intelsense AI").inner_text(), "Configuration persists after reload")
+    ok("Reseller: 18% + 5%" in pg.locator('#operatorProgramRows tr[data-op-prog="intelsense"]').inner_text(), "Configuration persists after reload")
 
     # --- only operators
     role(pg, "vendor"); nav(pg, "vendor-network")
