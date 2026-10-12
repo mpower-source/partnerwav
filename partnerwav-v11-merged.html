@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}  .map-tiles-dark{ filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PartnerWAV Portal</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}  .map-tiles-dark{ filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
 
 
   #channelsContent a.btn, .ch-contact a.btn, #vendorAffiliateOffers a.btn{ text-decoration:none; }
@@ -4432,7 +4432,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ROI: what a partner channel is worth at a given size. All inputs are assumptions the operator (or vendor) can change.
   var VA_DEAL_VALUE = { "Under $1,000":500, "$1,000 - $10,000":5000, "$10,000 - $50,000":25000, "Over $50,000":75000 };
   function vaRoiDefaults(a){
-    var r = a.roi || {}, partnersNow = { "0":0, "1-10":5, "11-50":25, "51-200":100, "200+":250 }[a.partners] || 0;
+    // every ROI figure is a number, whatever the stored record holds (second security review, finding 1)
+    var r0 = a.roi || {}, r = {}, partnersNow = { "0":0, "1-10":5, "11-50":25, "51-200":100, "200+":250 }[a.partners] || 0;
+    ["partners","dealsPerPartner","dealValue","commissionPct","feePct","invitedPct"].forEach(function(k){ if (r0[k] != null && r0[k] !== "" && isFinite(Number(r0[k]))) r[k] = Number(r0[k]); });
     return { partners: r.partners != null ? r.partners : Math.max(10, partnersNow), dealsPerPartner: r.dealsPerPartner != null ? r.dealsPerPartner : 3,
       dealValue: r.dealValue != null ? r.dealValue : (VA_DEAL_VALUE[a.dealSize] || 5000), commissionPct: r.commissionPct != null ? r.commissionPct : 20, feePct: r.feePct != null ? r.feePct : vaFeeRates().operator,
       invitedPct: r.invitedPct != null ? r.invitedPct : 0 };   // feePct = platform operator fee on partners PartnerWAV brings; invitedPct = share of partners the vendor invites (lower fee)
@@ -4456,10 +4458,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + (c.multiple != null && c.multiple > 0 ? ' · about <b>'+(Math.round(c.multiple * 10) / 10)+'x</b> back for every $1 spent with PartnerWAV' : '')
         + (c.breakEven ? ' · the subscription pays for itself at <b>'+c.breakEven+' active partner'+(c.breakEven === 1 ? '' : 's')+'</b>' : '')+'</div>'
       + '<table class="va-lines va-roi-table" style="width:100%;margin-top:8px;"><thead><tr><th style="text-align:left;">Active partners</th><th style="text-align:right;">Revenue / year</th><th style="text-align:right;">You keep</th></tr></thead><tbody>'
-      + sizes.map(function(n){ var x = vaRoiCalc(r, monthly, n); return '<tr'+(n === r.partners ? ' class="on"' : '')+'><td>'+n+'</td><td style="text-align:right;">'+vaMoney(x.revenue)+'</td><td style="text-align:right;">'+vaMoney(x.keep)+'</td></tr>'; }).join("")+'</tbody></table>';
+      + sizes.map(function(n){ var x = vaRoiCalc(r, monthly, n); return '<tr'+(n === r.partners ? ' class="on"' : '')+'><td>'+esc(n)+'</td><td style="text-align:right;">'+vaMoney(x.revenue)+'</td><td style="text-align:right;">'+vaMoney(x.keep)+'</td></tr>'; }).join("")+'</tbody></table>';
   }
   function vaRoiInputsHtml(r, withFee){
-    var f = function(k, label, step, suffix){ return '<div class="field-row"><label for="roi_'+k+'">'+label+'</label><input type="number" min="0" step="'+step+'" id="roi_'+k+'" data-roi-in="'+k+'" value="'+r[k]+'" class="va-amt" style="width:100%;text-align:left;"></div>'; };
+    var f = function(k, label, step, suffix){ return '<div class="field-row"><label for="roi_'+k+'">'+label+'</label><input type="number" min="0" step="'+step+'" id="roi_'+k+'" data-roi-in="'+k+'" value="'+attr(r[k])+'" class="va-amt" style="width:100%;text-align:left;"></div>'; };
     return '<div class="form-grid">'+f("partners", "Active partners", 1)+f("dealsPerPartner", "Deals per partner, per year", 1)+f("dealValue", "Average deal value a year ($)", 500)+f("commissionPct", "Partner commission %", 1)+(withFee ? f("feePct", "Platform operator fee %", 0.5) : '')+f("invitedPct", "Partners you invite yourself %", 5)+'</div>';
   }
   function vaRoiRead(r){ document.querySelectorAll("[data-roi-in]").forEach(function(el){ var v = Number(el.value); r[el.getAttribute("data-roi-in")] = isNaN(v) || v < 0 ? 0 : v; }); return r; }
@@ -4744,7 +4746,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           return '<div class="msp-card" data-va-row="'+esc(x.id)+'"><div class="msp-main"><div class="msp-name">'+esc(x.company)+' <span class="badge '+st.cls+'">'+esc(st.label)+'</span>'+(x.bookedAt ? ' <span class="badge good">Call booked</span>' : '')+'</div>'
             + '<div class="msp-meta">'+esc([x.contactName, x.email].filter(Boolean).join(" · "))+'</div>'
             + '<div class="msp-meta">'+esc(x.source === "vendor-link" ? "Vendor link" : "Call")+' · '+esc(x.createdAt || "")+' · '+esc(x.partners ? x.partners + " partners" : "")+' · fits '+esc(pmItem("plans", (x.quote && x.quote.planId) || rec.plan).name)
-              + ((x.addons || []).length ? ' + '+x.addons.map(function(id){ var p2 = pmItem("addons", id); return p2 ? p2.name : id; }).join(", ") : '')+'</div></div>'
+              + ((x.addons || []).length ? ' + '+x.addons.map(function(id){ var p2 = pmItem("addons", id); return esc(p2 ? p2.name : id); }).join(", ") : '')+'</div></div>'
             + '<div class="msp-side" style="flex-basis:170px;min-width:150px;">'+(q && x.status !== "new" ? '<b class="mono-num">'+vaMoney(q.monthly)+' / mo</b>' : '')+'<button type="button" class="btn primary sm" data-va-open="'+esc(x.id)+'">'+(x.status === "new" ? "Review & quote" : "Open")+'</button></div></div>';
         }).join("") : '<div class="empty">'+(vendorAssessments.length ? "Nothing in this view." : "No assessments yet. Start one on a call, or send a vendor the link.")+'</div>')+'</div>';
   }
@@ -4786,7 +4788,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var pr = Object.assign({}, r, { feePct: vaFeeRates().operator }), c = vaRoiCalc(pr, 0);
     return '<div class="va-roi-big"><div><span>Partner-sold revenue a year</span><b>'+vaMoney(c.revenue)+'</b></div><div><span>After commissions and the platform fee</span><b data-roi-public="keep">'+vaMoney(c.revenue - c.commission - c.fee)+'</b></div></div>'
       + '<table class="va-lines va-roi-table" style="width:100%;margin-top:8px;"><thead><tr><th style="text-align:left;">Active partners</th><th style="text-align:right;">Revenue / year</th><th style="text-align:right;">After commissions and fee</th></tr></thead><tbody>'
-      + rows.map(function(n){ var x = vaRoiCalc(pr, 0, n); return '<tr'+(n === r.partners ? ' class="on"' : '')+'><td>'+n+'</td><td style="text-align:right;">'+vaMoney(x.revenue)+'</td><td style="text-align:right;">'+vaMoney(x.revenue - x.commission - x.fee)+'</td></tr>'; }).join("")+'</tbody></table>'
+      + rows.map(function(n){ var x = vaRoiCalc(pr, 0, n); return '<tr'+(n === r.partners ? ' class="on"' : '')+'><td>'+esc(n)+'</td><td style="text-align:right;">'+vaMoney(x.revenue)+'</td><td style="text-align:right;">'+vaMoney(x.revenue - x.commission - x.fee)+'</td></tr>'; }).join("")+'</tbody></table>'
       + '<p class="field-note" data-va-fee-note style="margin:8px 0 0;">'+esc(vaFeeNote())+' The monthly plan is not included in these figures.</p>'
       + '<p class="field-note" style="margin:8px 0 0;">An estimate from the numbers above, not a promise. Results depend on your product, pricing and how active your partners are.</p>';
   }
@@ -7300,7 +7302,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">'
           + '<div><div style="font-size:.78rem;color:var(--ink-faint);">'+typeIcon+' '+typeLabel+' • '+esc(r.vendor)+'</div>'
             + '<div style="font-weight:700;font-size:1rem;margin-top:2px;">'+esc(r.title)+'</div>'
-            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program)+' • '+details+'</div></div>'
+            + '<div style="font-size:.78rem;color:var(--ink-faint);margin-top:4px;">'+esc(r.program)+' • '+esc(details)+'</div></div>'
           + '<span class="badge accent2">Published</span>'
         + '</div>'
         + '<p style="margin:0;font-size:.88rem;color:var(--ink);line-height:1.45;">'+esc(r.summary)+'</p>'
@@ -10873,7 +10875,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function monthsFrom(iso, m){ var d = new Date(iso); d.setMonth(d.getMonth() + m); return d.toISOString().slice(0, 10); }
   function businessDaysFrom(iso, n){ var d = new Date(iso); while (n > 0){ d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) n--; } return d.toISOString().slice(0, 10); }
   function todayIso(){ return new Date().toISOString().slice(0, 10); }
-  function fmtMoney(n, cur){ n = Number(n) || 0; return (cur === "USD" ? "$" : cur === "THB" ? "฿" : (cur || "") + " ") + n.toLocaleString("en-US", { maximumFractionDigits: 0 }); }
+  function fmtMoney(n, cur){ n = Number(n) || 0; cur = /^[A-Z]{3}$/.test(String(cur || "")) ? cur : "";   // a currency code only, never markup
+    return (cur === "USD" ? "$" : cur === "THB" ? "฿" : cur ? cur + " " : "") + n.toLocaleString("en-US", { maximumFractionDigits: 0 }); }
 
   // ----- demo data (fictional software house; signed-in sessions start empty) -----
   var softwareHouses = [
@@ -12968,9 +12971,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '</div>'
       + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;"><div class="aff-section-title">Referral fee</div>'
         + (f.resell ? '<p style="margin:0;">Resell: you contract with the client and buy the work at <b>'+esc(f.t.resellDiscount)+'%</b> off the software house\'s standard rates.</p>'
-          : '<p class="field-note" style="margin:0;">'+esc(f.mainRate)+'% of collected fees'+(r.level === "referral" ? ' for '+f.t.windowMonths+' months, then '+f.t.stepDownRate+'% for '+f.t.stepDownMonths+' months' : ' for '+f.t.cosellMonths+' months')+(f.t.maintenanceHalf ? '; maintenance at half rate' : '')+'. '+(f.partnerPct ? keyName(r.referrerKey)+' receives '+f.partnerPct+'%, PartnerWAV '+(100 - f.partnerPct)+'%.' : 'PartnerWAV referral -- no partner share.')+(r.termsSnapshot ? '' : ' Terms are fixed when the referral is accepted.')+'</p>'
+          : '<p class="field-note" style="margin:0;">'+esc(f.mainRate)+'% of collected fees'+(r.level === "referral" ? ' for '+esc(f.t.windowMonths)+' months, then '+esc(f.t.stepDownRate)+'% for '+esc(f.t.stepDownMonths)+' months' : ' for '+esc(f.t.cosellMonths)+' months')+(f.t.maintenanceHalf ? '; maintenance at half rate' : '')+'. '+(f.partnerPct ? keyName(r.referrerKey)+' receives '+esc(f.partnerPct)+'%, PartnerWAV '+esc(100 - f.partnerPct)+'%.' : 'PartnerWAV referral -- no partner share.')+(r.termsSnapshot ? '' : ' Terms are fixed when the referral is accepted.')+'</p>'
           + (f.rows.length ? '<div class="table-scroll"><table class="ref-fee-table"><thead><tr><th>Collected</th><th style="text-align:right">Amount</th><th style="text-align:right">Rate</th><th style="text-align:right">Fee</th></tr></thead><tbody>'
-            + f.rows.map(function(x){ return '<tr><td>'+esc(x.date)+(x.note ? ' · '+esc(x.note) : '')+(x.maintenance ? ' · maintenance' : '')+'</td><td style="text-align:right">'+fmtMoney(x.amount, cur)+'</td><td style="text-align:right">'+x.rate+'%</td><td style="text-align:right">'+fmtMoney(x.fee, cur)+'</td></tr>'; }).join("")
+            + f.rows.map(function(x){ return '<tr><td>'+esc(x.date)+(x.note ? ' · '+esc(x.note) : '')+(x.maintenance ? ' · maintenance' : '')+'</td><td style="text-align:right">'+fmtMoney(x.amount, cur)+'</td><td style="text-align:right">'+esc(x.rate)+'%</td><td style="text-align:right">'+fmtMoney(x.fee, cur)+'</td></tr>'; }).join("")
             + '</tbody></table></div>' : '<div class="field-note">No payments collected yet. Estimated fee on the stated budget: '+fmtMoney(f.estimate, cur)+'.</div>')
           + '<div class="map-stats"><div class="map-stat"><b>'+fmtMoney(f.fee, cur)+'</b>total fee'+(f.minApplied ? ' (minimum)' : '')+(f.capApplied ? ' (capped)' : '')+'</div>'
           + (f.partnerPct ? '<div class="map-stat"><b>'+fmtMoney(f.partnerFee, cur)+'</b>'+esc(keyName(r.referrerKey))+'</div><div class="map-stat"><b>'+fmtMoney(f.cloudwavFee, cur)+'</b>PartnerWAV</div><div class="map-stat"><b>'+fmtMoney(f.paidOut, cur)+'</b>paid out</div>' : '')+'</div>')
@@ -16680,7 +16683,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     shown.forEach(function(p){
       if (p.lat == null || p.lng == null) return;
       var mk = L.circleMarker([p.lat, p.lng], { radius:9, weight:2, color:"#ffffff", fillColor: MAP_STATUS_COLOR[p.status] || "#888", fillOpacity:.95 })
-        .bindPopup(mapPopupHtml(p)).bindTooltip(p.name, { direction:"top", offset:[0,-8] });
+        .bindPopup(mapPopupHtml(p)).bindTooltip(esc(p.name), { direction:"top", offset:[0,-8] });   // the map library inserts tooltip text as HTML
       mk.on("click", function(){ state.mapSelectedId = p.id; highlightMapItem(p.id); });
       mk.addTo(mapState.map);
       mk.getElement && mk.getElement() && mk.getElement().setAttribute("data-marker-id", p.id);

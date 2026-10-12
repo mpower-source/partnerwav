@@ -160,7 +160,7 @@ with sync_playwright() as p:
     # ===== 6. Public landing page from Supabase, no sign-in
     b = p.chromium.launch(); ctx = b.new_context()
     umd = supabase_umd()
-    ctx.route("**/cdn.jsdelivr.net/npm/@supabase/**", lambda r: r.fulfill(status=200, content_type="application/javascript", body=umd))
+    ctx.route("**/cdn.jsdelivr.net/npm/@supabase/**", lambda r: r.fulfill(status=200, content_type="application/javascript", body=umd, headers={"access-control-allow-origin": "*"}))
     ctx.route(f"https://{SUPABASE_HOST}/**", mock.handle)
     pg = ctx.new_page(); _wire(pg); pg.goto(URL + "?lp=lp-intelsense-demo"); pg.wait_for_timeout(1500)
     ok("Intelsense AI" in pg.inner_text("#publicLandingContent") and "isn't available" not in pg.inner_text("#publicLandingContent"), "Public landing page loads from Supabase without signing in")

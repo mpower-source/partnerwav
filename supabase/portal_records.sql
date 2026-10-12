@@ -474,6 +474,12 @@ returns text language plpgsql security definer set search_path = public as $$
 declare
   new_id text := 'va-' || replace(gen_random_uuid()::text, '-', '');
   clean jsonb;
+  kept jsonb := '{}'::jsonb;
+  fk text;
+  -- the public form's own fields (VA_STEPS in the page); anything else a caller sends is dropped
+  text_fields text[] := array['budget','companyStage','contactRole','dealSize','hq','lineId','notes','partners','phone','productCount',
+                              'productSummary','programStage','raiseAmount','raising','support','timeline','website','introducedBy'];
+  list_fields text[] := array['addons','markets','needs','partnerTypes','productTypes'];
 begin
   if p_data is null or jsonb_typeof(p_data) <> 'object' or length(p_data::text) > 12000 then
     raise exception 'The form is empty or too long';
@@ -486,8 +492,21 @@ begin
     raise exception 'Please agree to be contacted about PartnerWAV';
   end if;
   if not public.portal_spam_check('assess', null, p_data ->> 'email', p_data) then return new_id; end if;
-  -- keep the answers, but CloudWAV-only fields can never be set from the public form
-  clean := (p_data - 'quote' - 'plan' - 'notesInternal' - 'statusLog' - 'hp' - 'elapsedMs' - 'captchaToken')
+  -- Second review, finding 1: keep only the form's own answers, as plain text or short lists of plain values.
+  -- CloudWAV-only fields (quote, plan, notes, ROI) and anything else a caller adds are never stored.
+  foreach fk in array text_fields loop
+    if jsonb_typeof(p_data -> fk) = 'string' then
+      kept := kept || jsonb_build_object(fk, left(p_data ->> fk, case when fk in ('notes', 'productSummary') then 2000 else 300 end));
+    end if;
+  end loop;
+  foreach fk in array list_fields loop
+    if jsonb_typeof(p_data -> fk) = 'array' then
+      kept := kept || jsonb_build_object(fk, coalesce((
+        select jsonb_agg(x.v) from (select v from jsonb_array_elements_text(p_data -> fk) as v limit 30) x
+         where x.v ~ '^[^<>"''`\\]{1,80}$'), '[]'::jsonb));
+    end if;
+  end loop;
+  clean := kept
     || jsonb_build_object('id', new_id, 'source', 'vendor-link', 'status', 'new',
          'email', left(lower(trim(p_data ->> 'email')), 160),
          'company', left(trim(p_data ->> 'company'), 160),

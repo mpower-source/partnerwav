@@ -564,4 +564,18 @@ delete from storage.objects where name = 'resources/res-rev/v2.pdf';
 reset role;
 select t('...and the owner can no longer swap it', (select count(*) from storage.objects where name = 'resources/res-rev/v2.pdf') = 1);
 
+-- ===== second review, finding 1: the public assessment keeps only the form's own answers
+delete from public.portal_submit_log;
+delete from public.portal_secrets where key = 'turnstile_secret';
+set role anon;
+select t('a hostile assessment is accepted (it is cleaned, not refused)', public.submit_vendor_assessment('{"company":"Evil Co","contactName":"Eve","email":"eve@evil.test","consent":true,
+  "partners":"11-50","notes":"Hello","addons":["investor","<img src=x onerror=alert(1)>","bad\"quote"],"roi":{"partners":"\"><img src=x onerror=alert(1)>"},
+  "plan":"enterprise","bookedAt":"yesterday","createdBy":"CloudWAV","markets":"not-a-list","website":{"href":"javascript:alert(1)"}}') like 'va-%');
+reset role;
+select t('...unknown and CloudWAV-only fields are dropped (roi, plan, bookedAt, createdBy)', (select not (data ? 'roi') and not (data ? 'plan') and not (data ? 'bookedAt') and not (data ? 'createdBy')
+  from portal_records where collection = 'vendorAssessments' and data->>'company' = 'Evil Co'));
+select t('...list answers keep only plain values', (select data->'addons' = '["investor"]'::jsonb from portal_records where collection = 'vendorAssessments' and data->>'company' = 'Evil Co'));
+select t('...a field of the wrong shape is dropped', (select not (data ? 'markets') and not (data ? 'website') from portal_records where collection = 'vendorAssessments' and data->>'company' = 'Evil Co'));
+select t('...the real answers are kept', (select data->>'partners' = '11-50' and data->>'notes' = 'Hello' and data->>'status' = 'new' from portal_records where collection = 'vendorAssessments' and data->>'company' = 'Evil Co'));
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

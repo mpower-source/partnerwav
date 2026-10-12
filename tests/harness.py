@@ -11,15 +11,16 @@ threading.Thread(target=srv.serve_forever, daemon=True).start()
 URL = "http://localhost:8766/partnerwav-v11-merged.html"
 SUPABASE_HOST = "lnawgyaapcpyrvdtkarp.supabase.co"
 
-# supabase-js v2 UMD build for the mocked-backend tests. tests/vendor/supabase.js is used
-# if present; otherwise it's fetched once from npm (npm pack @supabase/supabase-js@2).
+# supabase-js UMD build for the mocked-backend tests: the exact version the portal pins (its integrity hash
+# must match). tests/vendor/supabase.js is used if present; otherwise it's fetched once from npm.
+SUPABASE_JS_VERSION = "2.117.2"
 def supabase_umd():
     local = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "supabase.js")
     if os.path.exists(local):
         return open(local, encoding="utf8").read()
     import subprocess, tempfile, tarfile, glob
     d = tempfile.mkdtemp()
-    subprocess.run(["npm", "pack", "@supabase/supabase-js@2", "--silent"], cwd=d, check=True, capture_output=True)
+    subprocess.run(["npm", "pack", "@supabase/supabase-js@" + SUPABASE_JS_VERSION, "--silent"], cwd=d, check=True, capture_output=True)
     tgz = glob.glob(os.path.join(d, "*.tgz"))[0]
     with tarfile.open(tgz) as t:
         return t.extractfile("package/dist/umd/supabase.js").read().decode("utf8")
@@ -118,7 +119,7 @@ def open_page_supabase(p, mock, query="", ctx=None, viewport=None):
     if ctx is None:
         b = p.chromium.launch(); ctx = b.new_context(viewport=viewport or {"width": 1280, "height": 900})
         umd = supabase_umd()
-        ctx.route("**/cdn.jsdelivr.net/npm/@supabase/**", lambda r: r.fulfill(status=200, content_type="application/javascript", body=umd))
+        ctx.route("**/cdn.jsdelivr.net/npm/@supabase/**", lambda r: r.fulfill(status=200, content_type="application/javascript", body=umd, headers={"access-control-allow-origin": "*"}))
         ctx.route(f"https://{SUPABASE_HOST}/**", mock.handle)
         ctx.route_web_socket(f"wss://{SUPABASE_HOST}/**", lambda ws: None)
     pg = ctx.new_page(); _wire(pg)
