@@ -597,4 +597,42 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authent
 select t('CloudWAV sees the notes and the requests', (select count(*) from portal_records where collection in ('enrollmentNotes','integrationRequests')) = 2);
 reset role;
 
+-- ===== Event Connect: people met at events connect with WhatsApp or LINE; only CloudWAV sees them
+delete from public.portal_submit_log;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers,is_public) values
+  ('eventPages','ev-live','{"id":"ev-live","name":"Bangkok Tech Meetup","status":"published"}','{}','{}',true),
+  ('eventPages','ev-off','{"id":"ev-off","name":"Old Expo","status":"draft"}','{}','{}',false);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+select t('a member cannot make an event page', fails($$insert into portal_records(collection,id,data,readers,writers,is_public) values ('eventPages','ev-x','{"id":"ev-x","status":"published"}','{}','{}',true)$$));
+select t('...or write a connection directly', fails($$insert into portal_records(collection,id,data,readers,writers) values ('eventConnections','evc-x','{"id":"evc-x"}','{}','{}')$$));
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('anyone can read a live event page', (select count(*) from portal_records where collection='eventPages' and id='ev-live') = 1);
+select t('...but not a paused one', (select count(*) from portal_records where collection='eventPages' and id='ev-off') = 0);
+select t('a visitor connects with WhatsApp', public.submit_event_connection('ev-live', '{"name":"Ploy S.","company":"Riverside Hotel","channel":"whatsapp","contact":"+66 81 234 5678","interest":["partner","investor","admin","<b>"]}') like 'evc-%');
+select t('a visitor connects with LINE and no company', public.submit_event_connection('ev-live', '{"name":"Ken","channel":"line","contact":"@kenline"}') like 'evc-%');
+select t('no connections on a paused page', fails($$select public.submit_event_connection('ev-off', '{"name":"A","channel":"line","contact":"abc123"}')$$));
+select t('a name is needed', fails($$select public.submit_event_connection('ev-live', '{"name":" ","channel":"line","contact":"abc123"}')$$));
+select t('only WhatsApp or LINE', fails($$select public.submit_event_connection('ev-live', '{"name":"A","channel":"email","contact":"a@b.co"}')$$));
+select t('a WhatsApp number must look like a number', fails($$select public.submit_event_connection('ev-live', '{"name":"A","channel":"whatsapp","contact":"call me"}')$$));
+select t('a LINE ID must look like an ID', fails($$select public.submit_event_connection('ev-live', '{"name":"A","channel":"line","contact":"<script>"}')$$));
+select t('anon cannot read connections', (select count(*) from portal_records where collection='eventConnections') = 0);
+reset role;
+select t('...the connection keeps only the known interests', (select data->'interest' = '["investor","partner"]'::jsonb and data->>'eventName' = 'Bangkok Tech Meetup' and data->>'status' = 'new' and readers = '{}' and writers = '{}' and not is_public
+  from portal_records where collection='eventConnections' and data->>'name' = 'Ploy S.'));
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('a vendor cannot see the connections', (select count(*) from portal_records where collection='eventConnections') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV sees both connections', (select count(*) from portal_records where collection='eventConnections') = 2);
+update portal_records set data = data || '{"status":"contacted"}' where collection='eventConnections' and data->>'name' = 'Ken';
+select t('...and can mark one contacted', (select data->>'status' from portal_records where collection='eventConnections' and data->>'name' = 'Ken') = 'contacted');
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('a bot filling the hidden field is dropped quietly', public.submit_event_connection('ev-live', '{"name":"Bot","channel":"line","contact":"botty","hp":"x"}') like 'evc-%');
+reset role;
+select t('...and nothing is saved', (select count(*) from portal_records where collection='eventConnections' and data->>'name' = 'Bot') = 0);
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

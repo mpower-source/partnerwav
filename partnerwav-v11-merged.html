@@ -111,8 +111,9 @@
 <script>
   // Sign-in required unless ?demo=1 (walk-through mode) or a public ?apply= referral link
   (function(){ var q = location.search;
-    if (/[?&]demo=1(&|$)/.test(q)) document.documentElement.classList.add("demo-mode");
-    else if (/[?&](apply|lp|invite|assess|pp)=/.test(q)) document.documentElement.classList.add("public-apply");
+    if (/[?&]demo=1(&|$)/.test(q)){ document.documentElement.classList.add("demo-mode");
+      if (/[?&]meet=/.test(q)) document.documentElement.classList.add("public-apply"); }   // an event page looks the same in a demo
+    else if (/[?&](apply|lp|invite|assess|pp|meet)=/.test(q)) document.documentElement.classList.add("public-apply");
     else document.documentElement.classList.add("auth-locked");
   })();
 </script>
@@ -633,6 +634,39 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .modal.modal-wide{ width:min(760px, 96vw); max-width:none; }
   /* Resource Library viewer: about twice the size on desktop; phones keep the normal size (see max-width:700px below) */
   .modal.modal-res{ width:min(1120px, 96vw); max-width:none; }
+  /* Event Connect public page: one short screen, big tap targets */
+  .meet-wrap{ max-width:440px; margin:0 auto; padding:24px 16px 40px; }
+  .meet-card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:24px 20px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px; }
+  .meet-brand{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:1.05rem; color:var(--accent); }
+  .meet-brand b{ display:inline-grid; place-items:center; width:28px; height:28px; border-radius:8px; background:var(--accent); color:#fff; font-size:.9rem; }
+  .meet-event{ font-size:.8rem; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em; }
+  .meet-card h1{ font-size:1.6rem; line-height:1.2; margin:0; }
+  .meet-intro{ margin:0; color:var(--ink-soft); line-height:1.5; }
+  .meet-field label{ display:block; font-size:.88rem; font-weight:600; margin-bottom:6px; }
+  .meet-field input{ width:100%; font-size:1rem; padding:12px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); }
+  .meet-opt{ font-weight:400; color:var(--ink-faint); }
+  .meet-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .meet-chip{ border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:999px; padding:8px 14px; font-size:.9rem; cursor:pointer; }
+  .meet-chip[aria-pressed="true"]{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .meet-switch{ display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--surface-2); padding:4px; border-radius:12px; margin-bottom:8px; }
+  .meet-switch button{ border:0; background:transparent; padding:10px; border-radius:9px; font-weight:600; font-size:.95rem; color:var(--ink-soft); cursor:pointer; }
+  .meet-switch button[aria-pressed="true"]{ background:var(--surface); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .meet-go{ width:100%; font-size:1.05rem; padding:14px; }
+  .meet-small{ font-size:.8rem; color:var(--ink-faint); margin:0; text-align:center; }
+  .meet-done{ text-align:center; display:flex; flex-direction:column; gap:12px; }
+  .meet-done .btn{ text-decoration:none; padding:12px; font-size:1rem; }
+  .meet-wa{ background:#25D366 !important; border-color:#25D366 !important; color:#fff !important; }
+  .meet-line{ background:#06C755 !important; border-color:#06C755 !important; color:#fff !important; }
+  @media (max-width:600px){
+    .meet-wrap{ padding:8px 0 24px; }
+    .meet-card{ padding:18px 16px; gap:12px; border-radius:14px; }
+    .meet-card h1{ font-size:1.4rem; }
+    .meet-intro{ font-size:.95rem; line-height:1.45; }
+    .meet-field input{ padding:11px 12px; }
+    .meet-chip{ padding:7px 12px; }
+  }
+  .ev-qr .aff-qr{ flex-direction:column; text-align:center; }
+  .ev-qr .aff-qr img{ width:180px; height:180px; }
   .modal.modal-res .res-preview iframe{ height:min(1040px, 78vh); }
   .modal.modal-res .res-preview video, .modal.modal-res .res-preview img{ max-height:min(1040px, 78vh); }
   @media (max-width:700px){ .modal.modal-res .res-preview iframe{ height:380px; } .modal.modal-res .res-preview video, .modal.modal-res .res-preview img{ max-height:520px; } } .book-frame{ width:100%; height:min(680px, 72vh); border:0; border-radius:10px; background:#fff; }
@@ -1112,6 +1146,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="operator-partner-map"><span class="ic">🗺️</span>Partner Discovery Map</button>
           <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
           <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
+          <button class="navlink" data-screen="operator-events"><span class="ic">📇</span>Event Connect</button>
           <button class="navlink" data-own-partner><span class="ic">🤝</span>CloudWAV as Partner</button>
         </div>
       </div>
@@ -2403,6 +2438,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="partnerPagesContent"></div>
       </section>
 
+      <section id="scr-operator-events" hidden>
+        <div class="section-head"><h2>Event Connect</h2><span class="hint">A one-screen page for the people you meet at events: name, company and WhatsApp or LINE</span></div>
+        <div style="height:14px"></div>
+        <div id="operatorEventsContent"></div>
+      </section>
+
+      <!-- ===== PUBLIC: EVENT CONNECT (?meet=id, no sign-in) ===== -->
+      <section id="scr-public-meet" hidden>
+        <div id="publicMeetContent"></div>
+      </section>
+
       <!-- ===== PUBLIC: PARTNER LANDING PAGE (?pp=id, no sign-in) ===== -->
       <section id="scr-public-partner-page" hidden>
         <div id="publicPartnerPageContent"></div>
@@ -3645,6 +3691,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('lp')) { state.screen = "public-landing"; state.publicLpId = urlParams.get('lp'); }
   if (urlParams.get('pp')) { state.screen = "public-partner-page"; state.publicPpId = urlParams.get('pp'); }
+  if (urlParams.get('meet')) { state.screen = "public-meet"; state.publicMeetId = urlParams.get('meet'); }
   if (urlParams.has('assess')) { state.screen = "public-assess"; }
   if (urlParams.get('invite')) { state.screen = "public-invite"; state.publicInviteId = urlParams.get('invite'); state.publicInviteRef = (urlParams.get('ref') || "").slice(0, 60); }
   if (urlParams.has('apply') && urlParams.get('apply') === 'vendor') {
@@ -3718,6 +3765,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "branding":"Branding",
     "partner-pages":"Landing Pages",
     "public-partner-page":"",
+    "public-meet":"",
+    "operator-events":"Event Connect",
     "landing-page-editor":"Landing Page",
     "public-landing":"",
     "public-invite":"",
@@ -4976,6 +5025,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var fundingProfiles = [];
   // partner landing pages (see PARTNER LANDING PAGES). Declared here, before loadPartnerPages() runs at start-up.
   var PP_KEY = "partnerWAV_partnerPages", partnerPages = [];
+  // Event Connect pages and the people who connected (see EVENT CONNECT). Declared here, before loadEvents() runs at start-up.
+  var EVENTS_KEY = "partnerWAV_eventConnect";
+  var EV_INTRO = "PartnerWAV connects software vendors with the partners, affiliates and investors who help them grow. Leave your details and we'll message you.";
+  var eventPages = [{ id:"ev-demo", name:"Bangkok Tech Meetup (example)", intro:EV_INTRO, status:"published", createdAt:"2026-10-12 08:00", updatedAt:"2026-10-12 08:00" }];
+  var eventConnections = [];
   // brand kits (Branding screen). Declared here, before loadBrandKits() runs at start-up.
   var BRAND_KEY = "partnerWAV_brandKits";
   // Starter: Botnoi's colours, matched by PartnerWAV from botnoigroup.com (charcoal background, sky-blue buttons, IBM Plex Sans Thai)
@@ -5372,7 +5426,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     });
     document.getElementById("topEyebrow").textContent = roleLabel(state.role);
     document.getElementById("topTitle").textContent = titles[state.screen] || "";
-    var topbarEl = document.querySelector(".topbar"); if (topbarEl) topbarEl.hidden = state.screen === "public-landing" || state.screen === "public-invite" || state.screen === "public-assess" || state.screen === "public-partner-page";
+    var topbarEl = document.querySelector(".topbar"); if (topbarEl) topbarEl.hidden = state.screen === "public-landing" || state.screen === "public-invite" || state.screen === "public-assess" || state.screen === "public-partner-page" || state.screen === "public-meet";
 
     // ---- partner overview ----
     var banner = document.getElementById("profileBanner");
@@ -5508,6 +5562,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderBranding();
     renderPartnerPages();
     renderPublicPartnerPage();
+    renderOperatorEvents();
+    renderPublicMeet();
     renderAccounts();
     renderFunding();
     renderReferrals();
@@ -10108,6 +10164,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ return { readers:["vendor:" + r.vendorId], writers:[] }; } },
     { name:"calendarEvents", mode:"replace", get:function(){ return calendarEvents; }, set:function(a){ calendarEvents = a; },
       access:function(r){ return { readers: calPrivate(r) ? [r.ownerKey] : EVERYONE, writers:[r.ownerKey] }; } },
+    // Event Connect: pages are public once live (CloudWAV writes them); the people who connect are CloudWAV's only
+    { name:"eventPages", mode:"replace", get:function(){ return eventPages; }, set:function(a){ eventPages = a; },
+      access:function(r){ var live = r.status === "published" && !r.deletedAt; return { readers: live ? EVERYONE : [], writers:[], pub: live }; } },
+    { name:"eventConnections", mode:"replace", get:function(){ return eventConnections; }, set:function(a){ eventConnections = a; },
+      access:function(){ return { readers:[], writers:[] }; } },
     { name:"partnerPages", mode:"replace", get:function(){ return partnerPages; }, set:function(a){ partnerPages = a; },
       // a partner's landing pages: public once published, edited only by that partner
       access:function(r){ var o = ["partner:" + r.partnerId], live = r.status === "published" && !r.deletedAt; return { readers: live ? EVERYONE : o, writers:o, pub: live }; } },
@@ -16932,6 +16993,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadCalendar();
   loadLeads();
   loadPartnerPages();
+  loadEvents();
   loadFunding();
   loadBrandKits();
   loadShop();
@@ -16944,10 +17006,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // can edit themselves.
   var AUTH_QS = new URLSearchParams(window.location.search);
   var DEMO_MODE = AUTH_QS.get("demo") === "1";
-  var PUBLIC_APPLY = !DEMO_MODE && (AUTH_QS.has("apply") || AUTH_QS.has("lp") || AUTH_QS.has("invite") || AUTH_QS.has("assess") || AUTH_QS.has("pp"));
+  var PUBLIC_APPLY = !DEMO_MODE && (AUTH_QS.has("apply") || AUTH_QS.has("lp") || AUTH_QS.has("invite") || AUTH_QS.has("assess") || AUTH_QS.has("pp") || AUTH_QS.has("meet"));
   var AUTH_REQUIRED = !DEMO_MODE && !PUBLIC_APPLY;
   // public pages: read the company name and CAPTCHA site key (no sign-in needed), then redraw the form with the CAPTCHA
-  if (PUBLIC_APPLY) setTimeout(function(){ cloudLoadPublicSettings().then(function(ok){ if (ok && captchaOn()){ ["invite", "pp", "assess", "apply"].forEach(function(k){ var el = document.getElementById("hp_" + k);
+  if (PUBLIC_APPLY) setTimeout(function(){ cloudLoadPublicSettings().then(function(ok){ if (ok && captchaOn()){ ["invite", "pp", "assess", "apply", "meet"].forEach(function(k){ var el = document.getElementById("hp_" + k);
     if (el && !document.querySelector('[data-captcha="' + k + '"]')){ var box = document.createElement("div"); box.className = "captcha-box"; box.setAttribute("data-captcha", k); el.closest(".hp-field").after(box); } }); captchaMount(); } }); }, 0);
   var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", operator:"operator-overview" };
   var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", operator:"Program Operator" };
@@ -17826,6 +17888,169 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   });
   document.addEventListener("input", function(ev){ if (ev.target && ev.target.closest && ev.target.closest("#ppEditForm")){ ppReadForm(); var pv = document.getElementById("ppPreview"); if (pv) pv.innerHTML = ppPageHtml(state.ppDraft, true); } });
   document.addEventListener("change", function(ev){ if (ev.target && ev.target.closest && ev.target.closest("#ppEditForm")){ ppReadForm(); var pv = document.getElementById("ppPreview"); if (pv) pv.innerHTML = ppPageHtml(state.ppDraft, true); } });
+
+  // ===== EVENT CONNECT (?meet=<id>): a one-screen page for people met at events =====
+  // They give a name, company (optional) and WhatsApp or LINE, and may tap what interests them. Their details go
+  // to CloudWAV only (eventConnections); in a live session through submit_event_connection(), with the spam checks.
+  var EV_INTERESTS = [["vendor", "Vendor"], ["partner", "Partner"], ["affiliate", "Affiliate"], ["investor", "Investor"]];
+  function loadEvents(){ try { var d = JSON.parse(lsGet(EVENTS_KEY) || "null"); if (d){ if (Array.isArray(d.pages)) eventPages = d.pages; if (Array.isArray(d.connections)) eventConnections = d.connections; } } catch(e){} }
+  function saveEvents(){ try { lsSet(EVENTS_KEY, JSON.stringify({ pages:eventPages, connections:eventConnections })); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function evById(id){ return eventPages.filter(function(e){ return e.id === id; })[0] || null; }
+  function evUrl(e){ return appBaseUrl() + "?meet=" + encodeURIComponent(e.id); }
+  function evLive(e){ return !!e && e.status === "published" && !e.deletedAt; }
+  function evContactOk(ch, v){ v = String(v || "").trim(); return ch === "line" ? /^@?[A-Za-z0-9._-]{2,40}$/.test(v) : /^\+?[\d\s().-]{7,20}$/.test(v) && v.replace(/\D/g, "").length >= 7; }
+  function evChatUrl(c){ return c.channel === "line" ? lineChatUrl(c.contact) : waChatUrl(c.contact, "Hi " + String(c.name || "").split(" ")[0] + ", it's PartnerWAV -- great to meet you" + (c.eventName ? " at " + c.eventName : "") + "!"); }
+  function evInterestText(c){ return (c.interest || []).map(function(k){ var x = EV_INTERESTS.filter(function(i){ return i[0] === k; })[0]; return x ? x[1] : ""; }).filter(Boolean).join(", ") || "Not sure yet"; }
+  // a CSV cell that spreadsheets show as text, never run as a formula
+  function csvCell(v){ v = String(v == null ? "" : v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+
+  // ----- CloudWAV: Event Connect screen -----
+  function renderOperatorEvents(force){
+    var box = document.getElementById("operatorEventsContent");
+    if (!box || state.screen !== "operator-events") return;
+    var key = JSON.stringify([eventPages.length, eventConnections.length, state.evNew, state.evFilter, state.evV || 0]);
+    if (!force && box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    var pages = eventPages.filter(function(e){ return !e.deletedAt; });
+    var count = function(id){ return eventConnections.filter(function(c){ return c.eventId === id; }).length; };
+    var html = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"><button type="button" class="btn primary sm" data-ev-new>+ New event page</button></div>';
+    if (state.evNew) html += '<div class="card card-pad" id="evNewForm" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">'
+      + '<div class="field-row"><label for="evName">Event name</label><input type="text" id="evName" maxlength="120" placeholder="e.g. Bangkok Tech Meetup, 14 Nov"></div>'
+      + '<div class="field-row"><label for="evIntro">Short overview (what visitors read first)</label><textarea id="evIntro" rows="3" maxlength="300">'+esc(EV_INTRO)+'</textarea></div>'
+      + '<div id="evErr" class="login-msg bad" hidden></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-ev-create>Create page</button><button type="button" class="btn secondary sm" data-ev-cancel>Cancel</button></div></div>';
+    html += pages.length ? '<div class="msp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">' + pages.map(function(e){
+        var live = evLive(e), n = count(e.id), slug = String(e.name || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        return '<div class="card card-pad" data-ev-row="'+attr(e.id)+'" style="display:flex;flex-direction:column;gap:10px;">'
+          + '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><b>'+esc(e.name)+'</b><span class="pill '+(live ? 'active' : 'pending')+'">'+(live ? 'Live' : 'Paused')+'</span></div>'
+          + '<div class="aff-link-row"><input type="text" class="aff-link-input" readonly value="'+attr(evUrl(e))+'" aria-label="Link for '+attr(e.name)+'"><button type="button" class="btn secondary sm" data-ev-copy="'+attr(e.id)+'">Copy</button></div>'
+          + '<div class="ev-qr">'+qrSlotHtml(evUrl(e), e.name + " connect page", slug + "-partnerwav-qr.png", 180)+'</div>'
+          + '<div style="display:flex;gap:8px;flex-wrap:wrap;"><a class="btn secondary sm" href="'+attr(evUrl(e))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open page</a>'
+          + '<button type="button" class="btn secondary sm" data-ev-toggle="'+attr(e.id)+'">'+(live ? 'Pause' : 'Go live')+'</button>'
+          + '<button type="button" class="btn ghost sm" data-ev-filter="'+attr(e.id)+'">'+n+' connection'+(n === 1 ? '' : 's')+'</button></div></div>';
+      }).join("") + '</div>' : '<div class="empty">No event pages yet. Create one for your next event, then print or show its QR code.</div>';
+    var list = eventConnections.filter(function(c){ return !state.evFilter || c.eventId === state.evFilter; }).slice().sort(function(a, b){ return String(b.createdAt).localeCompare(String(a.createdAt)); });
+    var fe = state.evFilter ? evById(state.evFilter) : null;
+    html += '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1.1rem;">People who connected'+(fe ? ' at '+esc(fe.name) : '')+'</h2>'
+      + '<span style="display:flex;gap:8px;">'+(fe ? '<button type="button" class="btn ghost sm" data-ev-filter="">Show all</button>' : '')+(list.length ? '<button type="button" class="btn secondary sm" data-ev-csv>Download CSV</button>' : '')+'</span></div>'
+      + (list.length ? '<div class="table-scroll"><table class="data-table" id="evPeople"><thead><tr><th>Name</th><th>Company</th><th>Interested as</th><th>Reach them</th><th>Event</th><th>When</th><th>Status</th></tr></thead><tbody>'
+        + list.map(function(c){
+          return '<tr data-ev-person="'+attr(c.id)+'"><td>'+esc(c.name)+'</td><td>'+esc(c.company || "--")+'</td><td>'+esc(evInterestText(c))+'</td>'
+            + '<td><a class="btn '+(c.channel === "line" ? 'meet-line' : 'meet-wa')+' sm" href="'+attr(safeHref(evChatUrl(c)))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">'+(c.channel === "line" ? 'LINE' : 'WhatsApp')+'</a> <span class="field-note">'+esc(c.contact)+'</span></td>'
+            + '<td>'+esc(c.eventName || "")+'</td><td class="mono-num">'+esc(c.createdAt || "")+'</td>'
+            + '<td><button type="button" class="btn '+(c.status === "contacted" ? 'secondary' : 'primary')+' xs" data-ev-status="'+attr(c.id)+'">'+(c.status === "contacted" ? 'Contacted' : 'Mark contacted')+'</button></td></tr>';
+        }).join("") + '</tbody></table></div>'
+        : '<div class="empty">Nobody yet. When someone fills in an event page, they show up here with a button to message them.</div>');
+    box.innerHTML = html;
+    if (typeof fillQrCodes === "function") fillQrCodes();
+  }
+  function evDownloadCsv(){
+    var list = eventConnections.filter(function(c){ return !state.evFilter || c.eventId === state.evFilter; });
+    var rows = [["Name", "Company", "Interested as", "Channel", "WhatsApp / LINE", "Event", "When", "Status"]].concat(list.map(function(c){
+      return [c.name, c.company || "", evInterestText(c), c.channel === "line" ? "LINE" : "WhatsApp", c.contact, c.eventName || "", c.createdAt || "", c.status === "contacted" ? "Contacted" : "New"]; }));
+    var csv = rows.map(function(r){ return r.map(csvCell).join(","); }).join("\r\n");
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff", csv], { type:"text/csv" })); a.download = "partnerwav-event-connections.csv"; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  // ----- public page -----
+  async function cloudLoadPublicEvent(id){
+    if (!supabase) return false;
+    await cloudLoadPublicSettings(); cloudLoadOperatorContact();
+    try { var r = await supabase.from("portal_records").select("data").eq("collection", "eventPages").eq("id", id).maybeSingle();
+      if (r.error || !r.data) return false;
+      var d = r.data.data, ex = evById(d.id); if (ex) eventPages[eventPages.indexOf(ex)] = d; else eventPages.push(d); return true;
+    } catch(e){ return false; }
+  }
+  function renderPublicMeet(){
+    var box = document.getElementById("publicMeetContent");
+    if (!box || state.screen !== "public-meet") return;
+    if (box.querySelector("#meetForm") || box.querySelector("[data-meet-done]")) return;   // keep what's being typed
+    var e = evById(state.publicMeetId);
+    if (!evLive(e) && !state.publicMeetTried && supabase && !DEMO_MODE){
+      state.publicMeetTried = true; box.innerHTML = '<div class="empty" style="padding:40px;text-align:center;">Loading…</div>';
+      cloudLoadPublicEvent(state.publicMeetId).then(function(){ box.innerHTML = ""; renderPublicMeet(); }); return;
+    }
+    if (!evLive(e)){ box.innerHTML = '<div class="meet-wrap"><div class="meet-card"><div class="meet-brand"><b>P</b>PartnerWAV</div><p class="meet-intro">This page isn\'t taking connections right now.</p></div></div>'; return; }
+    state.meetChannel = state.meetChannel || "whatsapp"; state.meetInterest = state.meetInterest || [];
+    box.innerHTML = '<div class="meet-wrap"><form class="meet-card" id="meetForm" data-meet-page novalidate>'
+      + '<div class="meet-brand"><b>P</b>PartnerWAV</div>'
+      + (e.name ? '<div class="meet-event">'+esc(e.name)+'</div>' : '')
+      + '<h1>Let\'s connect</h1>'
+      + '<p class="meet-intro">'+esc(e.intro || EV_INTRO)+'</p>'
+      + '<div class="meet-field"><label>I\'m interested as <span class="meet-opt">(optional)</span></label><div class="meet-chips">'
+        + EV_INTERESTS.map(function(i){ return '<button type="button" class="meet-chip" data-meet-interest="'+i[0]+'" aria-pressed="'+(state.meetInterest.indexOf(i[0]) > -1)+'">'+i[1]+'</button>'; }).join("") + '</div></div>'
+      + '<div class="meet-field"><label for="meetName">Your name</label><input type="text" id="meetName" autocomplete="name" maxlength="120"></div>'
+      + '<div class="meet-field"><label for="meetCompany">Company <span class="meet-opt">(optional)</span></label><input type="text" id="meetCompany" autocomplete="organization" maxlength="160"></div>'
+      + '<div class="meet-field"><label>How should we reach you?</label><div class="meet-switch" role="group" aria-label="WhatsApp or LINE">'
+        + '<button type="button" data-meet-channel="whatsapp" aria-pressed="'+(state.meetChannel === "whatsapp")+'">WhatsApp</button><button type="button" data-meet-channel="line" aria-pressed="'+(state.meetChannel === "line")+'">LINE</button></div>'
+        + '<input type="'+(state.meetChannel === "line" ? 'text' : 'tel')+'" id="meetContact" maxlength="40" autocomplete="'+(state.meetChannel === "line" ? 'off' : 'tel')+'" aria-label="'+(state.meetChannel === "line" ? 'Your LINE ID' : 'Your WhatsApp number')+'" placeholder="'+(state.meetChannel === "line" ? 'Your LINE ID' : 'WhatsApp number, e.g. +66 81 234 5678')+'"></div>'
+      + spamFieldsHtml("meet")
+      + '<div id="meetError" class="login-msg bad" role="alert" hidden></div>'
+      + '<button type="submit" class="btn primary meet-go" id="meetSubmit">Connect</button>'
+      + '<p class="meet-small">By tapping Connect you agree PartnerWAV can message you. We never share your details.</p>'
+      + '</form></div>';
+    document.title = "Connect with PartnerWAV" + (e.name ? " · " + e.name : "");
+    captchaMount();
+  }
+  async function submitMeet(ev){
+    ev.preventDefault();
+    var e = evById(state.publicMeetId); if (!evLive(e)) return;
+    var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var d = { name:g("meetName"), company:g("meetCompany"), channel:state.meetChannel === "line" ? "line" : "whatsapp", contact:g("meetContact"), interest:(state.meetInterest || []).slice() };
+    var probs = [];
+    if (!d.name) probs.push("Please add your name.");
+    if (!evContactOk(d.channel, d.contact)) probs.push(d.channel === "line" ? "Please add your LINE ID." : "Please add your WhatsApp number, with the country code.");
+    if (!probs.length && captchaMissing("meet")) probs.push("Please complete the security check.");
+    var err = document.getElementById("meetError");
+    if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+    err.hidden = true;
+    var btn = document.getElementById("meetSubmit"); btn.disabled = true; btn.textContent = "Connecting…";
+    if (supabase && !DEMO_MODE){
+      try { var r = await supabase.rpc("submit_event_connection", { p_event: e.id, p_data: Object.assign({}, d, spamPayload("meet")) }); if (r.error) throw r.error; }
+      catch(x){ btn.disabled = false; btn.textContent = "Connect"; captchaReset("meet");
+        err.textContent = /not available|not taking/i.test((x && x.message) || "") ? "This page isn't taking connections right now." : spamErrorText(x, "Sorry, that didn't go through. Please check your connection and try again."); err.hidden = false; return; }
+    } else if (!spamTrap("meet")){
+      eventConnections.push(Object.assign({ id:"evc-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), eventId:e.id, eventName:e.name, status:"new", createdAt:nowStamp() }, d));
+      saveEvents();
+    }
+    var oc = vaOperatorContact(), first = String(d.name).split(" ")[0];
+    var hi = "Hi PartnerWAV, I'm " + d.name + (d.company ? " from " + d.company : "") + (e.name ? " -- we met at " + e.name : "") + ".";
+    var wa = oc.whatsapp ? waChatUrl(oc.whatsapp, hi) : "", ln = oc.line ? lineChatUrl(oc.line) : "";
+    document.getElementById("publicMeetContent").innerHTML = '<div class="meet-wrap"><div class="meet-card meet-done" data-meet-done>'
+      + '<div class="meet-brand" style="justify-content:center;"><b>P</b>PartnerWAV</div>'
+      + '<h1>Thanks, '+esc(first)+'!</h1>'
+      + '<p class="meet-intro">We\'ll message you on '+(d.channel === "line" ? 'LINE' : 'WhatsApp')+' soon.</p>'
+      + (wa || ln ? '<p class="meet-small" style="margin-top:4px;">Want to say hi now?</p>' : '')
+      + (wa ? '<a class="btn meet-wa" href="'+attr(safeHref(wa))+'" target="_blank" rel="noopener noreferrer" data-meet-wa>Message PartnerWAV on WhatsApp</a>' : '')
+      + (ln ? '<a class="btn meet-line" href="'+attr(safeHref(ln))+'" target="_blank" rel="noopener noreferrer" data-meet-line>Add PartnerWAV on LINE</a>' : '')
+      + '</div></div>';
+  }
+  document.addEventListener("submit", function(ev){ if (ev.target && ev.target.id === "meetForm") submitMeet(ev); });
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t) return; var b;
+    if ((b = t.closest("[data-meet-interest]"))){ var k = b.getAttribute("data-meet-interest"), list = state.meetInterest = state.meetInterest || [], i = list.indexOf(k);
+      if (i > -1) list.splice(i, 1); else list.push(k); b.setAttribute("aria-pressed", String(i < 0)); return; }
+    if ((b = t.closest("[data-meet-channel]"))){ state.meetChannel = b.getAttribute("data-meet-channel");
+      document.querySelectorAll("[data-meet-channel]").forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); });
+      var inp = document.getElementById("meetContact"), line = state.meetChannel === "line";
+      if (inp){ inp.type = line ? "text" : "tel"; inp.value = ""; inp.placeholder = line ? "Your LINE ID" : "WhatsApp number, e.g. +66 81 234 5678"; inp.setAttribute("aria-label", line ? "Your LINE ID" : "Your WhatsApp number"); inp.focus(); }
+      return; }
+    if (!t.closest("#operatorEventsContent")) return;
+    if (t.closest("[data-ev-new]")){ state.evNew = true; renderOperatorEvents(true); var nm = document.getElementById("evName"); if (nm) nm.focus(); return; }
+    if (t.closest("[data-ev-cancel]")){ state.evNew = false; renderOperatorEvents(true); return; }
+    if (t.closest("[data-ev-create]")){
+      var name = (document.getElementById("evName").value || "").trim(), intro = (document.getElementById("evIntro").value || "").trim();
+      if (!name){ var er = document.getElementById("evErr"); er.textContent = "Give the event a name."; er.hidden = false; return; }
+      eventPages.unshift({ id:"ev-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name:name, intro:intro || EV_INTRO, status:"published", createdAt:nowStamp(), updatedAt:nowStamp() });
+      state.evNew = false; saveEvents(); renderOperatorEvents(true); toast("Event page created -- print or show its QR code"); return;
+    }
+    if ((b = t.closest("[data-ev-copy]"))){ var ec = evById(b.getAttribute("data-ev-copy")); if (ec) copyText(evUrl(ec), "Link copied"); return; }
+    if ((b = t.closest("[data-ev-toggle]"))){ var et = evById(b.getAttribute("data-ev-toggle")); if (et){ et.status = evLive(et) ? "draft" : "published"; et.updatedAt = nowStamp(); saveEvents(); state.evV = (state.evV || 0) + 1; renderOperatorEvents(true); } return; }
+    if ((b = t.closest("[data-ev-filter]"))){ state.evFilter = b.getAttribute("data-ev-filter") || ""; renderOperatorEvents(true); return; }
+    if ((b = t.closest("[data-ev-status]"))){ var pc = eventConnections.filter(function(c){ return c.id === b.getAttribute("data-ev-status"); })[0];
+      if (pc){ pc.status = pc.status === "contacted" ? "new" : "contacted"; saveEvents(); state.evV = (state.evV || 0) + 1; renderOperatorEvents(true); } return; }
+    if (t.closest("[data-ev-csv]")){ evDownloadCsv(); return; }
+  });
 
   // ===== INVESTMENT ROUND (vendors and partners; private to the company and PartnerWAV unless they share it) =====
   function loadFunding(){ try { var d = JSON.parse(lsGet(FUNDING_KEY) || "null"); if (Array.isArray(d)) fundingProfiles = d; } catch(e){} }

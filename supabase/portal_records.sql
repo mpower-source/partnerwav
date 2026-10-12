@@ -139,7 +139,8 @@ returns boolean language sql immutable as $$
                         'shopProducts','shopAccess','levelRules','enrollments','softwareHouses',
                         'programFees','platformFees','affiliateSignups',
                         'vendorAssessments','pricingModel','agreementReviews',
-                        'operatorSettings','vendorReferrals','houseSummaries'])
+                        'operatorSettings','vendorReferrals','houseSummaries',
+                        'eventPages','eventConnections'])
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -185,6 +186,9 @@ begin
   -- a sign-up on a partner's public landing page arrives through submit_partner_page_lead() below
   if new.collection = 'leads' and tg_op = 'INSERT'
      and current_setting('portal.page_lead', true) = 'on' then return new; end if;
+  -- someone CloudWAV met at an event connects through submit_event_connection() below
+  if new.collection = 'eventConnections' and tg_op = 'INSERT'
+     and current_setting('portal.event_connect', true) = 'on' then return new; end if;
   -- a vendor's fit assessment sent from the public form arrives through submit_vendor_assessment() below
   if new.collection = 'vendorAssessments'
      and current_setting('portal.vendor_assessment', true) = 'on' then return new; end if;
@@ -468,6 +472,53 @@ begin
 end $$;
 revoke all on function public.submit_partner_page_lead(text, jsonb) from public;
 grant execute on function public.submit_partner_page_lead(text, jsonb) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Event Connect: someone CloudWAV met at an event scans the QR code and leaves their name,
+-- company and WhatsApp number or LINE ID (no sign-in). Only CloudWAV can read the connection.
+-- ---------------------------------------------------------------------------
+create or replace function public.submit_event_connection(p_event text, p_data jsonb)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  page jsonb;
+  new_id text := 'evc-' || replace(gen_random_uuid()::text, '-', '');
+  ch text;
+  contact text;
+  interest jsonb;
+begin
+  select data into page from public.portal_records
+   where collection = 'eventPages' and id = p_event and is_public;
+  if page is null or page ->> 'status' is distinct from 'published' then
+    raise exception 'This page is not available';
+  end if;
+  if p_data is null or jsonb_typeof(p_data) <> 'object' or length(p_data::text) > 3000 then
+    raise exception 'Details are missing or too long';
+  end if;
+  if coalesce(trim(p_data ->> 'name'), '') = '' then raise exception 'Please add your name'; end if;
+  ch := p_data ->> 'channel';
+  if ch is null or ch not in ('whatsapp', 'line') then raise exception 'Please choose WhatsApp or LINE'; end if;
+  contact := trim(coalesce(p_data ->> 'contact', ''));
+  if ch = 'line' and contact !~ '^@?[A-Za-z0-9._-]{2,40}$' then raise exception 'Please add your LINE ID'; end if;
+  if ch = 'whatsapp' and (contact !~ '^\+?[0-9 ().-]{7,20}$' or length(regexp_replace(contact, '[^0-9]', '', 'g')) < 7) then
+    raise exception 'Please add your WhatsApp number, with the country code';
+  end if;
+  select coalesce(jsonb_agg(distinct v), '[]'::jsonb) into interest
+    from jsonb_array_elements_text(case when jsonb_typeof(p_data -> 'interest') = 'array' then p_data -> 'interest' else '[]'::jsonb end) v
+   where v in ('vendor', 'partner', 'affiliate', 'investor');
+  if not public.portal_spam_check('meet', p_event, ch || ':' || lower(contact), p_data) then return new_id; end if;
+  perform set_config('portal.event_connect', 'on', true);
+  insert into public.portal_records (collection, id, data, readers, writers, is_public)
+  values ('eventConnections', new_id, jsonb_build_object(
+    'id', new_id, 'eventId', p_event, 'eventName', left(coalesce(page ->> 'name', ''), 160),
+    'name', left(trim(p_data ->> 'name'), 120), 'company', left(trim(coalesce(p_data ->> 'company', '')), 160),
+    'channel', ch, 'contact', left(contact, 60), 'interest', interest, 'status', 'new',
+    'createdAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI')),
+    '{}', '{}', false);
+  perform set_config('portal.event_connect', 'off', true);
+  return new_id;
+end $$;
+revoke all on function public.submit_event_connection(text, jsonb) from public;
+grant execute on function public.submit_event_connection(text, jsonb) to anon, authenticated;
 
 create or replace function public.submit_vendor_assessment(p_data jsonb)
 returns text language plpgsql security definer set search_path = public as $$
