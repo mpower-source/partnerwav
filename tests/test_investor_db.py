@@ -8,7 +8,7 @@ CSV = '''Company Name,Website,City,Investment Focus,Company Type,Ticket Size (US
 Example Seed Fund,examplefund.vc,Bangkok,"AI, SaaS",VC,$250K-$1M,Pre-seed - Seed,Ann Example,Partner,ann@examplefund.vc,linkedin.com/in/annexample,Met at Techsauce
 Example Hackathon Hub,examplehub.co,Chiang Mai,"AI, Climate",Accelerator,$20K-$50K,Pre-seed,,,,,Runs a pitch night monthly
 Jane Angel,,Bangkok,"Fintech, AI",Angel Investor,$50K-$200K,Seed,Jane Angel,Angel,jane@example.com,linkedin.com/in/janeangelexample,
-SCB 10X (Siam Commercial Bank),scb10x.com,Bangkok,AI,Corporate VC,$1M-$20M,Seed-Growth,,,,,
+SCB 10X (SCBX),scb10x.com,Bangkok,AI,Corporate VC,$1M-$20M,Seed-Growth,,,,,
 =HYPERLINK("http://bad.test"),,,,VC,,,,,,,
 '''
 
@@ -30,10 +30,11 @@ with sync_playwright() as p:
     pg.click('[data-idb-seg=""]'); pg.wait_for_timeout(150)
     pg.fill("#idbQ", "fintech"); pg.wait_for_timeout(400)
     found = pg.evaluate("[...document.querySelectorAll('.idb-name')].map(e => e.textContent)")
-    ok("SCB 10X (Siam Commercial Bank)" in found and "depa (Digital Economy Promotion Agency)" not in found and "Example Angel (example)" not in found, "Search by focus: " + ", ".join(found))
+    ok("SCB 10X (SCBX)" in found and "depa (Digital Economy Promotion Agency)" not in found and "Example Angel (example)" not in found, "Search by focus: " + ", ".join(found))
     pg.fill("#idbQ", ""); pg.wait_for_timeout(400)
     pg.fill("#idbAmount", "15M"); pg.wait_for_timeout(400)
-    ok(pg.evaluate("[...document.querySelectorAll('.idb-name')].map(e => e.textContent)") == ["SCB 10X (Siam Commercial Bank)"] or "SCB 10X (Siam Commercial Bank)" in pg.inner_text("#investorDbContent") and "Example Angel" not in pg.inner_text(".idb-grid"), "A USD 15M raise shows only investors whose cheques fit")
+    fit = pg.evaluate("[...document.querySelectorAll('.idb-name')].map(e => e.textContent)")
+    ok("Openspace Ventures" in fit and not any(n.startswith(("SCB 10X", "Beacon", "Example Angel", "depa")) for n in fit), "A USD 15M raise leaves out investors whose cheques are too small: " + str(fit))
     pg.fill("#idbAmount", ""); pg.wait_for_timeout(400)
     pg.select_option("#idbStage", "Pre-seed"); pg.wait_for_timeout(200)
     ok("Example Angel (example)" in pg.inner_text(".idb-grid") and "SCB 10X" not in pg.inner_text(".idb-grid"), "Filter by stage")
@@ -81,6 +82,8 @@ with sync_playwright() as p:
     rows = pg.evaluate("[...document.querySelectorAll('[data-idb-row]')].map(e => e.dataset.idbRow)")
     ok(sorted(rows) == ["idb-beacon-venture-capital", "idb-scb-10x", "idb-true-incube"], "Filter: pilot first: " + str(rows))
     pg.locator('[data-idb-row="idb-scb-10x"] [data-idb-open]').first.click(); pg.wait_for_timeout(200)
+    row = pg.locator('[data-idb-row="idb-scb-10x"]')
+    ok("One FYI Center" in row.inner_text() and row.locator('[data-idb-sources] a').count() == 2 and row.locator('[data-idb-sources] a').first.get_attribute("href").startswith("https://"), "Details show a contact's note and the sources the record was checked against")
     ok("Pilot first: offer SCB / SCBX a paid pilot" in pg.inner_text('[data-idb-row="idb-scb-10x"]') and "Based in: Thailand" in pg.inner_text('[data-idb-row="idb-scb-10x"]'), "Details show the route in and where they are based")
     # sprint groups from a company's fundraising plan (Intelsense seed sprint as the sample); Techsauce has passed, so it is no longer a filter
     opts = pg.evaluate("[...document.querySelectorAll('#idbRoute option')].map(o => o.textContent)")
