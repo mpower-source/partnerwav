@@ -656,6 +656,14 @@ select t('a non-https link is refused', fails($$select public.submit_community_e
 select t('the organizer''s contact is needed', fails($$select public.submit_community_event(jsonb_build_object('orgName','A','title','B','start',to_char(now() + interval '3 days','YYYY-MM-DD"T"HH24:MI:SS"Z"'),'link','https://a.co/x'))$$));
 select t('anon cannot see the waiting event', (select count(*) from portal_records where collection='communityEvents') = 1);
 reset role;
+select t('an event sent in without a kind is a community event', (select data->>'category' from portal_records where collection='communityEvents' and data->>'title' = 'Beach Drinks') = 'community');
+select public.submit_community_event(jsonb_build_object('orgName','AIT','title','Hack Weekend','category','hackathon',
+  'start',to_char(now() + interval '12 days','YYYY-MM-DD"T"HH24:MI:SS"Z"'),'link','https://example.com/hack','name','Ann','contact','@ann'));
+select public.submit_community_event(jsonb_build_object('orgName','X','title','Odd Night','category','<b>',
+  'start',to_char(now() + interval '13 days','YYYY-MM-DD"T"HH24:MI:SS"Z"'),'link','https://example.com/odd','name','Bo','contact','@bo'));
+select t('a hackathon keeps its kind', (select data->>'category' from portal_records where collection='communityEvents' and data->>'title' = 'Hack Weekend') = 'hackathon');
+select t('...and an unknown kind falls back to community', (select data->>'category' from portal_records where collection='communityEvents' and data->>'title' = 'Odd Night') = 'community');
+delete from portal_records where collection='communityEvents' and data->>'title' in ('Hack Weekend', 'Odd Night');
 select t('...it waits unlisted, with only the form''s fields (no status or org link from the visitor)', (select data->>'status' = 'pending' and not is_public and readers = '{}' and data->>'city' = 'Other'
   and not (data ? 'orgId') and data->'submitter'->>'contact' = '@noknok' from portal_records where collection='communityEvents' and data->>'title' = 'Beach Drinks'));
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
@@ -721,6 +729,22 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authent
 update portal_records set data = data || '{"status":"introduced","reply":"Meeting set"}' where collection='introRequests' and id='ir-1';
 select t('CloudWAV marks the introduction made', (select data->>'status' from portal_records where collection='introRequests' and id='ir-1') = 'introduced');
 select t('CloudWAV can set up an investor login', (public.portal_setup_account('new@vc.test', 'investor', 'seed-fund', 'Seed Fund', 'temp-pass-123') ->> 'role') = 'investor');
+reset role;
+
+-- ===== The investor & incubator database is CloudWAV's alone
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('investorDb','idb-x','{"id":"idb-x","name":"Example Fund","contacts":[{"name":"A","email":"a@x.test"}]}','{}','{}');
+select t('CloudWAV adds to the investor database', (select count(*) from portal_records where collection='investorDb') = 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000021'); set role authenticated;   -- an investor
+select t('an investor cannot read the investor database', (select count(*) from portal_records where collection='investorDb') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- a vendor
+select t('a vendor cannot read it', (select count(*) from portal_records where collection='investorDb') = 0);
+select t('...or add to it', fails($$insert into portal_records(collection,id,data,readers,writers) values ('investorDb','idb-y','{"id":"idb-y"}','{vendor:intelsense}','{vendor:intelsense}')$$));
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('the public cannot read it', (select count(*) from portal_records where collection='investorDb') = 0);
 reset role;
 
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

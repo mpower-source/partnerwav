@@ -156,7 +156,7 @@ returns boolean language sql immutable as $$
                         'programFees','platformFees','affiliateSignups',
                         'vendorAssessments','pricingModel','agreementReviews',
                         'operatorSettings','vendorReferrals','houseSummaries',
-                        'eventPages','eventConnections','communityOrgs','communityEvents'])
+                        'eventPages','eventConnections','communityOrgs','communityEvents','investorDb'])
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -599,6 +599,7 @@ begin
   insert into public.portal_records (collection, id, data, readers, writers, is_public)
   values ('communityEvents', new_id, jsonb_build_object(
     'id', new_id, 'status', 'pending', 'orgName', left(trim(p_data ->> 'orgName'), 120), 'title', left(trim(p_data ->> 'title'), 160),
+    'category', case when p_data ->> 'category' in ('pitch', 'hackathon', 'opencall') then p_data ->> 'category' else 'community' end,
     'start', to_char(st at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS".000Z"'), 'durationMin', dur, 'city', city,
     'venue', left(trim(coalesce(p_data ->> 'venue', '')), 160), 'price', left(trim(coalesce(p_data ->> 'price', '')), 60),
     'link', link, 'desc', left(trim(coalesce(p_data ->> 'desc', '')), 800),

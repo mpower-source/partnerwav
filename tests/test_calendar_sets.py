@@ -23,7 +23,7 @@ with sync_playwright() as p:
         ok(pg.locator("#calSetFilter").is_visible() and pg.locator("#calTypeFilter").is_visible(), who + ": a calendar picker sits next to the type filter")
     role(pg, "partner"); nav(pg, "calendar"); pg.wait_for_timeout(200)
     opts = pg.evaluate("[...document.querySelectorAll('#calSetFilter option')].map(o => o.textContent)")
-    ok(opts == ["All calendars", "Trainings & events", "Demos", "Community events"], "Calendars: " + ", ".join(opts))
+    ok(opts == ["All calendars", "Trainings & events", "Demos", "Community events", "Pitch events & hackathons"], "Calendars: " + ", ".join(opts))
     pg.click('[data-cal-view="list"]'); pg.wait_for_timeout(200)
     t = titles(pg)
     ok("Unisense partner training" in t and "Demo for Riverside Hotels" in t and any("(example)" in x for x in t), "All calendars shows everything: " + str(len(t)))

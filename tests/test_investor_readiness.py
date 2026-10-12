@@ -45,6 +45,8 @@ with sync_playwright() as p:
     pg.click("[data-ir-submit]"); pg.wait_for_timeout(200)
     vk = rd(pg)[-1]["id"] if rd(pg)[-1]["id"].startswith("vendor:") else [r for r in rd(pg) if r["id"].startswith("vendor:")][0]["id"]
     ok([r for r in rd(pg) if r["id"] == vk][0]["status"] == "submitted", "Sent to PartnerWAV for review")
+    pg.reload(); pg.wait_for_timeout(600); role(pg, "vendor"); nav(pg, "investor-readiness"); pg.wait_for_timeout(300)
+    ok(pg.locator('[data-ir-result="ready"]').count() == 1 and pg.locator('[data-ir-status="submitted"]').count() == 1, "The check is still there after reloading the page")
     role(pg, "operator"); nav(pg, "operator-investors"); pg.click('[data-oi-tab="readiness"]'); pg.wait_for_timeout(200)
     card = pg.locator(f'[data-ir-review="{vk}"]')
     ok(card.count() == 1 and "Investor-ready" in card.text_content() and "deck.pdf" in card.inner_html(), "CloudWAV sees the answers, score and deck link")

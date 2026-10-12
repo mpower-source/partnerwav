@@ -672,6 +672,24 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   .ev-qr .aff-qr{ flex-direction:column; text-align:center; }
   /* Community Partners (CloudWAV) and the public Thailand event calendar */
+  .idb-filters{ display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+  .idb-filters .list-search{ flex:1; min-width:200px; }
+  .idb-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; align-items:start; }
+  .idb-card{ display:flex; flex-direction:column; gap:8px; }
+  .idb-head{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+  .idb-name{ font-size:1rem; }
+  .idb-ticket{ font-weight:800; color:var(--accent-strong); white-space:nowrap; font-size:.9rem; }
+  .idb-chips .badge{ font-size:.68rem; }
+  .idb-foot{ display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; border-top:1px solid var(--line); padding-top:8px; }
+  .idb-actions{ display:inline-flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .idb-actions .btn{ text-decoration:none; }
+  .idb-li{ background:#0a66c2 !important; border-color:#0a66c2 !important; color:#fff !important; }
+  .idb-warn{ color:var(--warn, #b26a00); font-weight:700; }
+  .idb-detail{ display:flex; flex-direction:column; gap:8px; background:var(--surface-2); border-radius:12px; padding:12px; }
+  .idb-contacts{ display:flex; flex-direction:column; gap:8px; }
+  .idb-contact{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px; }
+  .idb-flags{ display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; } .idb-flags .badge{ font-size:.66rem; }
+  @media (max-width:600px){ .idb-grid{ grid-template-columns:1fr; } .idb-filters > *{ flex:1 1 100%; max-width:none !important; } }
   tr.op-sub > td:first-child{ padding-left:34px; }
   .sub-prog-note{ display:block; }
   .program-subs{ margin-top:12px; border-top:1px solid var(--line); padding-top:10px; display:flex; flex-direction:column; gap:8px; }
@@ -725,6 +743,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .tec-month{ display:flex; flex-direction:column; gap:10px; }
   .tec-ev{ display:flex; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:var(--shadow); }
   .tec-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .tec-kind{ align-self:flex-start; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; padding:3px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent-strong); }
+  .tec-kind-hackathon{ background:#e2f6f1; color:#0b7a64; } .tec-kind-opencall{ background:#fff3dc; color:#9a6200; }
   .tec-body h3{ margin:0; font-size:1.1rem; line-height:1.3; }
   .tec-host{ font-size:.9rem; font-weight:600; }
   .tec-meta{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:.88rem; color:var(--ink-soft); }
@@ -982,6 +1002,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .cal-bar .cal-add{ margin-left:auto; }
   .cal-set-note{ margin:-6px 0 14px; }
   .cal-views{ display:inline-flex; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:3px; gap:2px; }
+  .cal-views{ flex-wrap:wrap; max-width:100%; }   /* long tab labels wrap on a phone instead of pushing the page sideways */
   .cal-view{ display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; color:var(--ink-soft); font-weight:700; font-size:.82rem; padding:6px 12px; border-radius:9px; cursor:pointer; }
   .cal-view svg{ width:16px; height:16px; }
   .cal-view[aria-pressed="true"]{ background:var(--accent-soft); color:var(--accent); }
@@ -1285,6 +1306,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="operator-events"><span class="ic">📇</span>Event Connect</button>
           <button class="navlink" data-screen="operator-community"><span class="ic">🤝</span>Community Partners</button>
           <button class="navlink" data-screen="operator-investors"><span class="ic">💼</span>Investors</button>
+          <button class="navlink" data-screen="operator-investor-db"><span class="ic">🗃️</span>Investor Database</button>
           <button class="navlink" data-own-partner><span class="ic">🤝</span>CloudWAV as Partner</button>
         </div>
       </div>
@@ -2593,6 +2615,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div style="height:14px"></div>
         <div id="operatorInvestorsContent"></div>
       </section>
+      <section id="scr-operator-investor-db" hidden>
+        <div class="section-head"><h2>Investor Database</h2><span class="hint">Investors, incubators and programs -- only CloudWAV can see this</span></div>
+        <div style="height:14px"></div><div id="investorDbContent"></div>
+      </section>
       <section id="scr-investor-readiness" hidden>
         <div class="section-head"><h2>Investor Readiness</h2><span class="hint">Check you're ready before investors on PartnerWAV meet you</span></div>
         <div style="height:14px"></div><div id="investorReadinessContent"></div>
@@ -3864,7 +3890,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   if (urlParams.get('lp')) { state.screen = "public-landing"; state.publicLpId = urlParams.get('lp'); }
   if (urlParams.get('pp')) { state.screen = "public-partner-page"; state.publicPpId = urlParams.get('pp'); }
   if (urlParams.get('meet')) { state.screen = "public-meet"; state.publicMeetId = urlParams.get('meet'); }
-  if (urlParams.has('events')) { state.screen = "public-events"; state.publicEventsOrg = (urlParams.get('org') || "").slice(0, 80); }
+  if (urlParams.has('events')) { state.screen = "public-events"; state.publicEventsOrg = (urlParams.get('org') || "").slice(0, 80); if (/^(pitch|hackathon|opencall|community)$/.test(urlParams.get('kind') || "")) state.tecKind = urlParams.get('kind'); }
   if (urlParams.has('assess')) { state.screen = "public-assess"; }
   if (urlParams.get('invite')) { state.screen = "public-invite"; state.publicInviteId = urlParams.get('invite'); state.publicInviteRef = (urlParams.get('ref') || "").slice(0, 60); }
   if (urlParams.has('apply') && urlParams.get('apply') === 'vendor') {
@@ -3943,6 +3969,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "public-events":"",
     "operator-community":"Community Partners",
     "operator-investors":"Investors",
+    "operator-investor-db":"Investor Database",
     "investor-overview":"Overview",
     "investor-readiness":"Investor Readiness",
     "investor-profile":"My Profile",
@@ -5236,7 +5263,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       stage:"Commercial and growing", mrr:"$25K-$200K", growth:"10-20% a month", teamSize:"8-15", sector:"AI, SaaS / software", score:82, reviewed:true, updatedAt:"2026-10-12" },
     { id:"partner:example-msp", company:"Example MSP (example)", kind:"partner", summary:"Managed IT for hotels in Bangkok and Phuket.", website:"", status:"raised", round:"Pre-seed", target:"USD 300K", raised:"USD 300K", updatedAt:"2026-10-01" }];
   var introRequests = [];
+  var IR_KEY = "partnerWAV_investorReadiness";   // declared here, before loadReadiness() runs at start-up
   var investorReadiness = [];   // each company's investor-readiness check (see INVESTOR READINESS)
+  // CloudWAV's investor & incubator database (see INVESTOR DATABASE). The demo shows a few organisations (public company
+  // information only) and one made-up example; the real records are loaded into Supabase from a private seed.
+  var IDB_KEY = "partnerWAV_investorDb";   // declared here, before loadIdb() runs at start-up
+  var investorDb = [{"id": "idb-beacon-venture-capital", "kind": "organization", "name": "Beacon Venture Capital (Kasikornbank)", "type": "Corporate VC", "typeLabel": "Corporate VC", "website": "https://beaconvc.fund", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Enterprise", "Consumer"], "stages": ["Seed", "Series A", "Series B+", "Growth"], "ticketText": "$500K-$5M", "ticketMin": 500000, "ticketMax": 5000000, "portfolio": "$135M fund. KBANK CVC. EventPop, FlowAccount, Quantified Energy", "segment": "firms", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12"}, {"id": "idb-scb-10x", "kind": "organization", "name": "SCB 10X (Siam Commercial Bank)", "type": "Corporate VC", "typeLabel": "Corporate VC", "website": "https://scb10x.com", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Blockchain", "Deep Tech"], "stages": ["Seed", "Series A", "Series B+", "Growth"], "ticketText": "$1M-$20M", "ticketMin": 1000000, "ticketMax": 20000000, "portfolio": "$800M+ across global funds. together.xyz, Hearvana", "segment": "firms", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12"}, {"id": "idb-true-incube", "kind": "organization", "name": "True Incube (True Corporation)", "type": "Accelerator / incubator", "typeLabel": "Corporate VC / Accelerator", "website": "https://trueincube.com", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Telecom", "IoT", "5G"], "stages": ["Seed", "Series A"], "ticketText": "$100K-$2M", "ticketMin": 100000, "ticketMax": 2000000, "portfolio": "True/CP Group telecom ecosystem", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12"}, {"id": "idb-depa", "kind": "organization", "name": "depa (Digital Economy Promotion Agency)", "type": "Government agency", "typeLabel": "Government Agency", "website": "https://depa.or.th", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Digital", "Smart City", "All"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Grants $10K-$150K", "ticketMin": 10000, "ticketMax": 150000, "portfolio": "Thailand's digital transformation agency. Smart City initiatives", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12"}, {"id": "idb-nia", "kind": "organization", "name": "NIA (National Innovation Agency)", "type": "Government agency", "typeLabel": "Government Agency", "website": "https://nia.or.th", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Innovation", "All Sectors"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Grants up to ฿15M ($450K)", "ticketMin": 450000, "ticketMax": 450000, "portfolio": "1,000+ startup grants/year. Startup Thailand platform", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12"}, {"id": "idb-plug-and-play-thailand", "kind": "organization", "name": "Plug and Play Thailand", "type": "Accelerator / incubator", "typeLabel": "Accelerator / VC", "website": "https://plugandplaytechcenter.com/thailand", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Enterprise", "Mobility"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Non-dilutive + Investment", "ticketMin": null, "ticketMax": null, "portfolio": "Global network. Thailand chapter", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12"}, {"id": "idb-example-angel", "kind": "individual", "name": "Example Angel (example)", "type": "Individual investor", "typeLabel": "Angel investor", "website": "", "linkedin": "", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "SaaS"], "stages": ["Pre-seed", "Seed"], "ticketText": "", "ticketMin": 25000, "ticketMax": 150000, "portfolio": "", "segment": "individuals", "contacts": [{"name": "Example Angel", "title": "Angel investor", "email": "angel@example.com", "phone": "", "linkedin": "https://www.linkedin.com/in/example", "checked": false, "flags": ["Email not confirmed"]}], "notes": "A made-up example so the demo shows how contacts and checks look.", "source": "Example", "verified": "unverified", "tags": ["Example"], "createdAt": "2026-10-12"}];
   // Community partners and the public Thailand event calendar (see COMMUNITY PARTNERS). Declared before loadCommunity() runs.
   var COMMUNITY_KEY = "partnerWAV_community";
   // the communities CloudWAV works with -- real starter records, private to CloudWAV
@@ -5278,8 +5310,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       city:"Bangkok", venue:"Example coworking space, Silom", price:"Free", link:"https://www.facebook.com/groups/1745892855948687", desc:"Show what you've built with Claude: five-minute demos and Q&A.", status:"published", createdAt:"2026-10-12 09:00" },
     { id:"ce-demo-3", orgName:"Chiang Mai SaaS Founders (example)", title:"SaaS Growth Workshop (example)", start:ceSeedStart(20, 14, 0), durationMin:180, city:"Chiang Mai", venue:"Example cafe, Nimman",
       price:"300 THB", link:"https://example.com/register", desc:"Pricing, partner channels and first sales hires for small software companies.", status:"published", createdAt:"2026-10-12 09:00" },
+    { id:"ce-demo-5", category:"hackathon", orgId:"org-startup-grind-bkk", orgName:"Startup Grind Bangkok", orgUrl:"https://www.startupgrind.com/bangkok/", title:"Create Lasting Impact Hackathon 2026", start:"2026-10-17T02:00:00.000Z", durationMin:2160,
+      city:"Bangkok", venue:"AIT School of Management", price:"Free", link:"https://www.startupgrind.com/bangkok/", desc:"In-person hackathon partnered with Startup Grind Bangkok.", status:"published", createdAt:"2026-10-12 11:50" },
+    { id:"ce-demo-6", category:"pitch", orgName:"Bangkok Founders Pitch Night (example)", title:"Investor Pitch Night (example)", start:ceSeedStart(16, 18, 30), durationMin:150, city:"Bangkok", venue:"Example venue, Sathorn",
+      price:"Free to attend", link:"https://example.com/pitch", desc:"Five early-stage startups pitch to a panel of VCs and angels, then open networking.", status:"published", createdAt:"2026-10-12 11:50" },
     { id:"ce-demo-4", orgName:"Phuket Startup Drinks (example)", title:"Startup Drinks by the Beach (example)", start:ceSeedStart(14, 19, 0), durationMin:120, city:"Phuket", venue:"Example bar, Kata",
-      price:"Free", link:"https://example.com/phuket", desc:"Monthly casual meetup.", status:"pending", submitter:{ name:"Example organizer", contact:"@example-line" }, createdAt:"2026-10-12 09:00" }
+      price:"Free", link:"https://example.com/phuket", desc:"Monthly casual meetup.", status:"pending", submitter:{ name:"Example organizer", contact:"@example-line" }, createdAt:"2026-10-12 09:00" },
+    { id:"ce-demo-7", category:"opencall", orgName:"Example Accelerator (example)", title:"Seed Accelerator: applications open (example)", start:ceSeedStart(25, 9, 0), durationMin:60, city:"Online", venue:"",
+      price:"No equity for the program", link:"https://example.com/apply", desc:"Twelve-week program for pre-seed and seed startups. Applications close on this date.", status:"published", createdAt:"2026-10-12 12:00" }
   ];
   // brand kits (Branding screen). Declared here, before loadBrandKits() runs at start-up.
   var BRAND_KEY = "partnerWAV_brandKits";
@@ -5295,9 +5333,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var CAL_KEY = "partnerWAV_calendar";
   var CAL_TYPES = ["Vendor training","PartnerWAV training","Webinar","In-person event","Meetup","Demo","Other"];
   // Separate calendars, picked next to the type filter: trainings & events, demos, and community events
-  var CAL_SETS = [["", "All calendars"], ["training", "Trainings & events"], ["demos", "Demos"], ["community", "Community events"]];
-  function calSetOf(ev){ return ev.community ? "community" : ev.type === "Demo" ? "demos" : "training"; }
-  function calSetTypes(cs){ return cs === "community" ? ["Community event"] : cs === "demos" ? ["Demo"] : cs === "training" ? CAL_TYPES.filter(function(t){ return t !== "Demo"; }) : CAL_TYPES.concat(["Community event"]); }
+  var CAL_SETS = [["", "All calendars"], ["training", "Trainings & events"], ["demos", "Demos"], ["community", "Community events"], ["pitch", "Pitch events & hackathons"]];
+  function calSetOf(ev){ return ev.pitch ? "pitch" : ev.community ? "community" : ev.type === "Demo" ? "demos" : "training"; }
+  function calSetTypes(cs){ return cs === "community" ? ["Community event"] : cs === "pitch" ? ["Pitch event", "Hackathon", "Open call"] : cs === "demos" ? ["Demo"] : cs === "training" ? CAL_TYPES.filter(function(t){ return t !== "Demo"; }) : CAL_TYPES.concat(["Community event", "Pitch event", "Hackathon", "Open call"]); }
   function calFilterMatch(x){ var cs = state.calSet || "", tf = state.calType || "", hf = state.role === "operator" ? (state.calHost || "") : "";
     return (!cs || calSetOf(x) === cs) && (!tf || x.type === tf) && (!hf || x.ownerKey === hf); }
   function saveCalendar(){ try { lsSet(CAL_KEY, JSON.stringify({ events:calendarEvents, bookings:bookings })); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
@@ -5329,7 +5367,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function calLocalInput(iso){ var d = new Date(iso), z = function(n){ return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()) + "T" + z(d.getHours()) + ":" + z(d.getMinutes()); }
   // Each event type gets a line icon and a palette tone, used by the list cards, the month grid and the day pop-up.
-  var CAL_TYPE_LOOK = { "Community event":["users","pink"], "Vendor training":["cap","violet"], "PartnerWAV training":["award","orange"], "Webinar":["chat","teal"], "In-person event":["pin","pink"], "Meetup":["users","teal"], "Demo":["target","amber"], "Other":["calendar","violet"] };
+  var CAL_TYPE_LOOK = { "Community event":["users","pink"], "Pitch event":["target","orange"], "Hackathon":["award","teal"], "Open call":["cap","amber"], "Vendor training":["cap","violet"], "PartnerWAV training":["award","orange"], "Webinar":["chat","teal"], "In-person event":["pin","pink"], "Meetup":["users","teal"], "Demo":["target","amber"], "Other":["calendar","violet"] };
   function calLook(ev){ return CAL_TYPE_LOOK[ev.type] || ["calendar","violet"]; }
   function calIc(name){ return (typeof PW_ICONS === "object" && PW_ICONS && PW_ICONS[name]) ? pwIcon(name) : ""; }
   function calMi(name){ return '<span class="collab-mi" aria-hidden="true">'+calIc(name)+'</span>'; }
@@ -5398,9 +5436,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<select id="calSetFilter" class="filter app-select" aria-label="Calendar">'+CAL_SETS.map(function(c){ return '<option value="'+c[0]+'"'+(c[0] === cs ? ' selected' : '')+'>'+esc(c[1])+'</option>'; }).join("")+'</select>'
       + (setTypes.length > 1 ? '<select id="calTypeFilter" class="filter app-select" aria-label="Type"><option value="">All types</option>'+setTypes.map(function(t){ return '<option'+(t === tf ? ' selected' : '')+'>'+esc(t)+'</option>'; }).join("")+'</select>' : '')
       + (isOpView ? '<select id="calHostFilter" class="filter app-select" aria-label="Host"><option value="">All companies</option>'+hosts.map(function(h){ return '<option value="'+attr(h)+'"'+(h === hf ? ' selected' : '')+'>'+esc(keyName(h))+'</option>'; }).join("")+'</select>' : '')
-      + (cs === "community" ? (isOpView ? '<button type="button" class="btn primary cta sm cal-add" data-goto-screen="operator-community">+ Add a community event</button>' : '')
+      + (cs === "community" || cs === "pitch" ? (isOpView ? '<button type="button" class="btn primary cta sm cal-add" data-goto-screen="operator-community">+ Add '+(cs === "pitch" ? 'a pitch event or hackathon' : 'a community event')+'</button>' : '')
           : me ? '<button type="button" class="btn primary cta sm cal-add" data-cal-new>'+(cs === "demos" ? '+ Schedule a demo' : '+ Add an event')+'</button>' : '')+'</div>'
       + (cs === "community" ? '<p class="field-note cal-set-note" data-cal-set-note>Meetups and founder nights from Thailand\'s tech and business communities, listed by PartnerWAV. <a href="'+attr(calendarUrl())+'" target="_blank" rel="noopener noreferrer">Open the public Thailand calendar</a> to share it.</p>'
+        : cs === "pitch" ? '<p class="field-note cal-set-note" data-cal-set-note>Pitch nights, demo days, hackathons and accelerator open calls in Thailand -- the big chances to get a new company in front of investors. <a href="'+attr(calendarUrl() + "&kind=pitch")+'" target="_blank" rel="noopener noreferrer">Open them on the public calendar</a>.</p>'
         : cs === "demos" ? '<p class="field-note cal-set-note" data-cal-set-note>Demos are private: only your company'+(isOpView ? ' and PartnerWAV' : '')+' can see them.</p>' : '');
     if (view === "calendar"){
       box.innerHTML = usage + bar + calMonthHtml(visible.filter(calFilterMatch));
@@ -5409,7 +5448,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     box.innerHTML = usage + bar
       + '<div style="display:flex;flex-direction:column;gap:10px;" id="calList">'+(list.length ? list.map(function(x){ return calCardHtml(x, me); }).join("")
-        : '<div class="empty">'+(tab !== "upcoming" ? "No past events." : cs === "demos" ? "No demos scheduled." : cs === "community" ? "No community events listed yet." : "No upcoming events yet. Add a training, webinar or in-person event and everyone can put it on their calendar.")+'</div>')+'</div>';
+        : '<div class="empty">'+(tab !== "upcoming" ? "No past events." : cs === "demos" ? "No demos scheduled." : cs === "community" ? "No community events listed yet." : cs === "pitch" ? "No pitch events or hackathons listed yet." : "No upcoming events yet. Add a training, webinar or in-person event and everyone can put it on their calendar.")+'</div>')+'</div>';
     if (typeof applyStatIcons === "function") applyStatIcons();
   }
   function calDayKey(d){ var z = function(n){ return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); }
@@ -5843,6 +5882,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderOperatorInvestors();
     renderInvestor();
     renderReadiness();
+    renderInvestorDb();
     renderPublicEvents();
     renderAccounts();
     renderFunding();
@@ -10458,6 +10498,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ var o = ["investor:" + r.id]; return { readers:o, writers:o }; } },
     { name:"investorListings", mode:"replace", get:function(){ return investorListings; }, set:function(a){ investorListings = a; },
       access:function(r){ return { readers:["investors", r.id], writers:[r.id] }; } },
+    // the investor database is CloudWAV's alone (a paid service): nobody else can read or write it
+    { name:"investorDb", mode:"replace", get:function(){ return investorDb; }, set:function(a){ investorDb = a; },
+      access:function(){ return { readers:[], writers:[] }; } },
     { name:"investorReadiness", mode:"replace", get:function(){ return investorReadiness; }, set:function(a){ investorReadiness = a; },
       access:function(r){ return { readers:[r.id], writers:[r.id] }; } },
     { name:"introRequests", mode:"replace", get:function(){ return introRequests; }, set:function(a){ introRequests = a; },
@@ -17329,6 +17372,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadCommunity();
   loadInvestors();
   loadReadiness();
+  loadIdb();
   loadFunding();
   loadBrandKits();
   loadShop();
@@ -18440,7 +18484,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var live = investorListings.filter(function(l){ return l.status === "raising" || l.status === "raised"; });
     if (scr === "investor-overview"){
       var raising = live.filter(function(l){ return l.status === "raising"; }), waiting = mine.filter(function(x){ return x.status === "requested"; });
-      var upcoming = communityEvents.filter(function(e){ return ceLive(e) && ceUpcoming(e); }).sort(function(a, b){ return new Date(a.start) - new Date(b.start); }).slice(0, 3);
+      var upcoming = communityEvents.filter(function(e){ return ceLive(e) && ceUpcoming(e); }).sort(function(a, b){ return (cePitchy(b) ? 1 : 0) - (cePitchy(a) ? 1 : 0) || new Date(a.start) - new Date(b.start); }).slice(0, 3);
       var oc = vaOperatorContact(), hi = "Hi PartnerWAV, it's " + ((me && me.name) || "an investor") + " -- ";
       box.innerHTML = (me && me.needsProfile ? '<div class="card card-pad inv-nudge" data-inv-nudge><b>Tell us what you invest in</b><span class="field-note">Stages, ticket size and sectors help PartnerWAV bring you the right companies.</span><button type="button" class="btn primary sm" data-goto-screen="investor-profile">Finish my profile</button></div>' : '')
         + '<div class="stat-row"><div class="stat-tile"><span class="stat-label">Companies raising now</span><span class="stat-value">'+raising.length+'</span><span class="stat-trend">'+live.length+' showing their round to investors</span></div>'
@@ -18583,7 +18627,6 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Before investors on PartnerWAV can see a vendor, partner or affiliate, the company passes this check and CloudWAV
   // reviews it. Criteria from YC (seed deck, 12-18 months of runway), Founder Institute stage benchmarks and Thai
   // investor expectations -- see claude/INVESTOR_READINESS_RESEARCH.md in the project.
-  var IR_KEY = "partnerWAV_investorReadiness";
   var IR_STEPS = [
     { id:"company", title:"Your company and your raise", fields:[
       { k:"oneLiner", label:"What does the company do, in one line?", type:"text", req:true, ph:"e.g. Voice AI that answers customer calls for Thai SMEs" },
@@ -18844,6 +18887,218 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
   });
 
+  // ===== INVESTOR DATABASE (CloudWAV only) =====
+  // CloudWAV's own database of investors, incubators and programs -- a paid service, so only CloudWAV sees it.
+  // Segmented like the research: investment firms, accelerators / incubators / government, angels and individuals.
+  // The real records are loaded once from a private seed (never in this public page); the demo shows a few examples.
+  var IDB_SEGMENTS = [["firms", "Investment firms", "VCs, corporate VCs and bank / conglomerate venture arms"], ["programs", "Accelerators, incubators & government", "Programs, grants and innovation hubs"], ["individuals", "Angels & individuals", "Individual investors and angels"]];
+  var IDB_TYPES = { firms:["VC fund", "Corporate VC", "Micro VC", "Corporate innovation", "Family office"], programs:["Accelerator / incubator", "Government agency", "Innovation hub"], individuals:["Individual investor", "Angel investor"] };
+  var IDB_STAGES = ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"];
+  function loadIdb(){ try { var d = JSON.parse(lsGet(IDB_KEY) || "null"); if (Array.isArray(d)) investorDb = d; } catch(e){} }
+  function saveIdb(){ try { lsSet(IDB_KEY, JSON.stringify(investorDb)); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function idbById(id){ return investorDb.filter(function(x){ return x.id === id; })[0] || null; }
+  function idbSegment(x){ if (x.segment) return x.segment; for (var k in IDB_TYPES) if (IDB_TYPES[k].indexOf(x.type) > -1) return k; return "firms"; }
+  function idbUsd(n){ if (n == null || n === "") return ""; n = Number(n); return n >= 1e6 ? "$" + (Math.round(n / 1e5) / 10) + "M" : n >= 1e3 ? "$" + Math.round(n / 1e3) + "K" : "$" + n; }
+  function idbTicket(x){ return x.ticketMin || x.ticketMax ? (x.ticketMin === x.ticketMax || !x.ticketMax ? idbUsd(x.ticketMin) : idbUsd(x.ticketMin) + " - " + idbUsd(x.ticketMax)) : (x.ticketText || ""); }
+  function idbOpenFlags(x){ return (x.contacts || []).reduce(function(n, c){ return n + (c.checked ? 0 : (c.flags || []).length); }, 0); }
+  function idbParseMoney(v){ v = String(v || "").replace(/,/g, "").trim(); var m = /^\$?\s*([\d.]+)\s*([kKmM])?/.exec(v); if (!m) return null; var n = parseFloat(m[1]); return Math.round(n * ({ k:1e3, m:1e6 }[(m[2] || "").toLowerCase()] || 1)); }
+  function idbMatches(x){
+    var q = (state.idbQ || "").toLowerCase().trim(), seg = state.idbSeg || "", st = state.idbStage || "", fo = state.idbFocus || "", amt = idbParseMoney(state.idbAmount), chk = state.idbCheck || "";
+    if (seg && idbSegment(x) !== seg) return false;
+    if (st && (x.stages || []).indexOf(st) < 0) return false;
+    if (fo && !(x.focus || []).some(function(f){ return f.toLowerCase() === fo.toLowerCase(); })) return false;
+    if (amt && x.ticketMin != null && x.ticketMax != null && (amt < x.ticketMin * 0.5 || amt > x.ticketMax * 2)) return false;   // within a sensible range of their usual ticket
+    if (chk === "needs" && !idbOpenFlags(x)) return false;
+    if (chk === "checked" && (idbOpenFlags(x) || !(x.contacts || []).length)) return false;
+    if (q){ var hay = [x.name, x.type, x.city, x.portfolio, x.notes, x.affiliation, (x.focus || []).join(" "), (x.tags || []).join(" ")].concat((x.contacts || []).map(function(c){ return c.name + " " + c.title; })).join(" ").toLowerCase();
+      if (q.split(/\s+/).some(function(w){ return hay.indexOf(w) < 0; })) return false; }
+    return true;
+  }
+  function idbContactHtml(x, c, i){
+    var flags = c.checked ? [] : (c.flags || []), li = safeHref(c.linkedin || ""), mail = c.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c.email) ? "mailto:" + c.email : "";
+    return '<div class="idb-contact" data-idb-contact="'+attr(x.id)+'|'+i+'"><div style="min-width:0;"><b>'+esc(c.name || "General contact")+'</b>'+(c.title ? '<span class="field-note"> · '+esc(c.title)+'</span>' : '')
+      + '<div class="field-note">'+esc([c.email, c.phone].filter(Boolean).join(" · "))+'</div>'
+      + (flags.length ? '<div class="idb-flags">'+flags.map(function(f){ return '<span class="badge warn">'+esc(f)+'</span>'; }).join("")+'</div>' : (c.checked ? '<div class="idb-flags"><span class="badge good">Checked</span></div>' : ''))+'</div>'
+      + '<div class="idb-actions">'+(li ? '<a class="btn idb-li xs" href="'+attr(li)+'" target="_blank" rel="noopener noreferrer">LinkedIn</a>' : '')+(mail ? '<a class="btn secondary xs" href="'+attr(mail)+'">Email</a>' : '')
+        + (flags.length ? '<button type="button" class="btn ghost xs" data-idb-check="'+attr(x.id)+'|'+i+'">Mark checked</button>' : '')+'</div></div>';
+  }
+  function idbCardHtml(x){
+    var site = safeHref(x.website || ""), li = safeHref(x.linkedin || ""), seg = idbSegment(x), open = state.idbOpen === x.id, fl = idbOpenFlags(x), org = x.orgId ? idbById(x.orgId) : null;
+    return '<div class="card card-pad idb-card" data-idb-row="'+attr(x.id)+'">'
+      + '<div class="idb-head"><div style="min-width:0;"><b class="idb-name">'+esc(x.name)+'</b><div class="field-note">'+esc([x.typeLabel || x.type, x.city].filter(Boolean).join(" · "))+(org ? ' · <a href="#" data-idb-open="'+attr(org.id)+'">'+esc(org.name)+'</a>' : '')+'</div></div>'
+        + '<span class="idb-ticket">'+esc(idbTicket(x) || "--")+'</span></div>'
+      + ((x.focus || []).length ? '<div class="meet-chips idb-chips">'+x.focus.slice(0, 6).map(function(f){ return '<span class="badge neutral">'+esc(f)+'</span>'; }).join("")+'</div>' : '')
+      + ((x.stages || []).length ? '<div class="field-note"><b>Stages:</b> '+esc(x.stages.join(", "))+'</div>' : '')
+      + (x.portfolio ? '<div class="field-note"><b>Portfolio:</b> '+esc(x.portfolio)+'</div>' : '')
+      + '<div class="idb-foot"><span class="field-note">'+(x.contacts || []).length+' contact'+((x.contacts || []).length === 1 ? '' : 's')+(fl ? ' · <span class="idb-warn">'+fl+' to check</span>' : '')+'</span>'
+        + '<span class="idb-actions">'+(li ? '<a class="btn idb-li xs" href="'+attr(li)+'" target="_blank" rel="noopener noreferrer">LinkedIn</a>' : '')+(site ? '<a class="btn secondary xs" href="'+attr(site)+'" target="_blank" rel="noopener noreferrer">Website</a>' : '')
+        + '<button type="button" class="btn ghost xs" data-idb-open="'+attr(x.id)+'">'+(open ? 'Close' : 'Details')+'</button></span></div>'
+      + (open ? '<div class="idb-detail">'
+          + (x.affiliation ? '<div class="field-note"><b>Background:</b> '+esc(x.affiliation)+'</div>' : '')
+          + (x.channel ? '<div class="cp-next"><b>Best way in:</b> '+esc(x.channel)+'</div>' : '')
+          + (x.notes ? '<div class="field-note cp-notes"><b>Notes:</b> '+esc(x.notes)+'</div>' : '')
+          + (x.fit && x.fit.intelsense ? '<div class="field-note"><b>Fit for Intelsense:</b> '+esc(x.fit.intelsense)+'</div>' : '')
+          + '<div class="idb-contacts">'+((x.contacts || []).length ? x.contacts.map(function(c, i){ return idbContactHtml(x, c, i); }).join("") : '<span class="field-note">No contacts yet.</span>')+'</div>'
+          + '<div class="field-note">Source: '+esc(x.source || "Added by CloudWAV")+(x.tags && x.tags.length ? ' · Tags: '+esc(x.tags.join(", ")) : '')+'</div>'
+          + '<div style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="btn secondary xs" data-idb-edit="'+attr(x.id)+'">Edit</button><button type="button" class="btn ghost xs" data-idb-delete="'+attr(x.id)+'">Remove</button></div></div>' : '')
+      + '</div>';
+  }
+  function idbFormHtml(x){
+    x = x || { segment:state.idbSeg || "firms", type:IDB_TYPES[state.idbSeg || "firms"][0], focus:[], stages:[], contacts:[{}], tags:[] };
+    var f = function(id, label, val, ph, type){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="'+(type || "text")+'" id="'+id+'" value="'+attr(val == null ? "" : val)+'" placeholder="'+attr(ph || "")+'" maxlength="300"></div>'; };
+    var allTypes = [].concat(IDB_TYPES.firms, IDB_TYPES.programs, IDB_TYPES.individuals), c0 = (x.contacts || [])[0] || {};
+    return '<div class="card card-pad" id="idbForm" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">'
+      + '<h3 style="margin:0;font-size:1.05rem;">'+(x.id ? 'Edit '+esc(x.name) : 'Add to the database')+'</h3>'
+      + '<div class="form-grid">'+f("idbName", "Name *", x.name, "Firm, program or person")
+        + '<div class="field-row"><label for="idbType">Type</label><select id="idbType" class="filter app-select">'+allTypes.map(function(t){ return '<option'+(t === x.type ? ' selected' : '')+'>'+esc(t)+'</option>'; }).join("")+'</select></div>'
+        + f("idbWebsite", "Website", x.website, "https://") + f("idbLinkedin", "LinkedIn (company or person)", x.linkedin, "https://www.linkedin.com/...")
+        + f("idbCity", "City", x.city, "Bangkok") + f("idbFormFocus", "Focus (comma separated)", (x.focus || []).join(", "), "AI, Fintech, SaaS")
+        + f("idbTicketMin", "Smallest cheque (USD)", x.ticketMin, "e.g. 100K") + f("idbTicketMax", "Largest cheque (USD)", x.ticketMax, "e.g. 2M")
+        + f("idbPortfolio", "Portfolio / references", x.portfolio, "") + f("idbTags", "Tags (comma separated)", (x.tags || []).join(", "), "e.g. Techsauce 2026, met at event") + '</div>'
+      + '<div class="field-row"><label>Stages</label><div class="meet-chips">'+IDB_STAGES.map(function(s){ return '<button type="button" class="meet-chip" data-idb-stage="'+attr(s)+'" aria-pressed="'+((x.stages || []).indexOf(s) > -1)+'">'+esc(s)+'</button>'; }).join("")+'</div></div>'
+      + '<fieldset class="va-set"><legend>Main contact</legend><div class="form-grid">'+f("idbCName", "Name", c0.name, "") + f("idbCTitle", "Title", c0.title, "") + f("idbCEmail", "Email", c0.email, "", "email") + f("idbCPhone", "Phone", c0.phone, "") + f("idbCLinkedin", "LinkedIn", c0.linkedin, "https://www.linkedin.com/in/...")+'</div></fieldset>'
+      + '<div class="field-row"><label for="idbNotes">Notes (only CloudWAV sees these)</label><textarea id="idbNotes" rows="3" maxlength="3000">'+esc(x.notes || "")+'</textarea></div>'
+      + '<div id="idbErr" class="login-msg bad" role="alert" hidden></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-idb-save="'+attr(x.id || "")+'">Save</button><button type="button" class="btn secondary sm" data-idb-cancel>Cancel</button></div></div>';
+  }
+  // CSV import: the same columns as the research spreadsheets (save the sheet as CSV), or any sheet with similar headings
+  var IDB_COLS = { name:/^(company name|name \/ company|investor name|name|organisation|organization|company)$/, website:/^(website|website \/ linkedin|url)$/, linkedin:/^(linkedin|company linkedin)$/,
+    city:/^city$/, country:/^country$/, type:/^(company type|investor type|type)$/, focus:/^(investment focus|focus|sectors?)$/, ticket:/^(ticket size \(usd\)|check \/ ticket size|typical check size|ticket|cheque size)$/,
+    stage:/^(stage focus|stages?)$/, portfolio:/^(ai portfolio \/ references|portfolio \/ ai refs|notable investments \/ portfolio|portfolio)$/, notes:/^(notes & strategy|notes)$/, channel:/^best outreach channel$/,
+    c1name:/^(contact 1 name|contact name)$/, c1title:/^(contact 1 (designation|title)|title)$/, c1email:/^(contact 1 email|email)$/, c1phone:/^(contact 1 phone|phone)$/, c1li:/^contact 1 linkedin$/,
+    c2name:/^contact 2 name$/, c2title:/^contact 2 (designation|title)$/, c2email:/^contact 2 email$/, c2phone:/^contact 2 phone$/, c2li:/^contact 2 linkedin$/ };
+  function idbCsvParse(text){
+    var rows = [], row = [], cell = "", q = false;
+    for (var i = 0; i < text.length; i++){ var ch = text[i];
+      if (q){ if (ch === '"'){ if (text[i + 1] === '"'){ cell += '"'; i++; } else q = false; } else cell += ch; }
+      else if (ch === '"') q = true; else if (ch === ","){ row.push(cell); cell = ""; } else if (ch === "\n" || ch === "\r"){ if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; } else cell += ch; }
+    if (cell || row.length){ row.push(cell); rows.push(row); }
+    return rows.filter(function(r){ return r.some(function(c){ return String(c).trim(); }); });
+  }
+  function idbTypeFrom(t){ t = String(t || "").toLowerCase();
+    return /government/.test(t) ? "Government agency" : /accelerator|incubator/.test(t) ? "Accelerator / incubator" : /innovation hub/.test(t) ? "Innovation hub" : /corporate innovation|conglomerate/.test(t) ? "Corporate innovation"
+      : /corporate vc|cvc|holding/.test(t) ? "Corporate VC" : /micro vc/.test(t) ? "Micro VC" : /family office/.test(t) ? "Family office" : /angel|individual|founder|executive|ceo|investor$/.test(t) ? "Individual investor" : /vc|venture|capital|fund/.test(t) ? "VC fund" : "VC fund"; }
+  function idbStagesFrom(v){ v = String(v || "").toLowerCase(); if (/all/.test(v)) return IDB_STAGES.slice();
+    var idx = function(t){ return /pre/.test(t) ? 0 : /seed/.test(t) ? 1 : /series a|^a$/.test(t) ? 2 : /series [b-z]/.test(t) ? 3 : /growth/.test(t) ? 4 : -1; }, out = {};
+    v.split(/\s*(?:,|\/|&| and )\s*/).forEach(function(p){ var m = /^(.*?[a-z])\s*-\s*([a-z].*)$/.exec(p.replace(/^pre-seed/, "preseed"));
+      if (m){ var a = idx(m[1]), b = idx(m[2]); if (a > -1 && b > -1){ for (var i = a; i <= b; i++) out[IDB_STAGES[i]] = 1; return; } }
+      var k = idx(p); if (k > -1) out[IDB_STAGES[k]] = 1; });
+    return IDB_STAGES.filter(function(s){ return out[s]; }); }
+  function idbFromRow(map, r, tag){
+    var g = function(k){ return map[k] != null ? String(r[map[k]] || "").trim() : ""; }, name = g("name"); if (!name) return null;
+    var usd = (g("ticket").match(/\$\s?[\d.]+\s*[kKmM]?/g) || []).map(idbParseMoney).filter(function(n){ return n != null; });
+    var web = g("website"), li = g("linkedin"); if (/linkedin\.com/i.test(web)){ li = li || web; web = ""; }
+    var withProto = function(u){ return !u ? "" : /^https?:\/\//i.test(u) ? u : "https://" + u.replace(/^\/+/, ""); };
+    var mk = function(p){ var c = { name:g(p + "name"), title:g(p + "title"), email:g(p + "email").toLowerCase(), phone:g(p + "phone"), linkedin:withProto(g(p + "li")), checked:false, flags:[] };
+      if (!c.name && !c.email && !c.linkedin) return null; if (c.email) c.flags.push("Email not confirmed"); if (/-000-/.test(c.phone)) c.flags.push("Phone looks like a placeholder"); return c; };
+    var type = idbTypeFrom(g("type"));
+    return { id:"idb-" + (name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "record"), kind:type === "Individual investor" ? "individual" : "organization", name:name.slice(0, 160), type:type, typeLabel:g("type").slice(0, 80),
+      website:withProto(web), linkedin:withProto(li), country:g("country") || "Thailand", city:g("city"), focus:g("focus").split(",").map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 12),
+      stages:idbStagesFrom(g("stage")), ticketText:g("ticket"), ticketMin:usd.length ? Math.min.apply(null, usd) : null, ticketMax:usd.length ? Math.max.apply(null, usd) : null,
+      portfolio:g("portfolio").slice(0, 600), contacts:[mk("c1"), mk("c2")].filter(Boolean), channel:g("channel").slice(0, 400), notes:g("notes").slice(0, 3000),
+      verified:"unverified", source:"Imported " + todayIso(), tags:tag ? [tag] : [], createdAt:todayIso() };
+  }
+  function idbImportPreview(text, tag){
+    var rows = idbCsvParse(text); if (rows.length < 2) return { error:"No rows found. Save the sheet as CSV with a heading row." };
+    var hdr = rows[0].map(function(h){ return String(h).trim().toLowerCase(); }), map = {};
+    Object.keys(IDB_COLS).forEach(function(k){ var i = hdr.findIndex(function(h){ return IDB_COLS[k].test(h); }); if (i > -1) map[k] = i; });
+    if (map.name == null) return { error:"Couldn't find a name column (e.g. 'Company Name' or 'Investor Name')." };
+    var have = {}; investorDb.forEach(function(x){ have[x.name.toLowerCase()] = 1; });
+    var recs = [], dup = 0, ids = {}; investorDb.forEach(function(x){ ids[x.id] = 1; });
+    rows.slice(1).forEach(function(r){ var x = idbFromRow(map, r, tag); if (!x) return; if (have[x.name.toLowerCase()]){ dup++; return; } have[x.name.toLowerCase()] = 1;
+      var base = x.id, n = 2; while (ids[x.id]) x.id = base + "-" + (n++); ids[x.id] = 1; x.segment = idbSegment(x); recs.push(x); });
+    return { recs:recs, dup:dup, cols:Object.keys(map) };
+  }
+  function idbCsvExport(list){
+    var rows = [["Segment", "Name", "Type", "City", "Website", "LinkedIn", "Focus", "Stages", "Ticket", "Portfolio", "Contact", "Title", "Email", "Phone", "Contact LinkedIn", "To check", "Tags", "Notes"]];
+    list.forEach(function(x){ var segName = (IDB_SEGMENTS.filter(function(s){ return s[0] === idbSegment(x); })[0] || [,""])[1], cs = (x.contacts || []).length ? x.contacts : [{}];
+      cs.forEach(function(c){ rows.push([segName, x.name, x.type, x.city, x.website, x.linkedin, (x.focus || []).join(", "), (x.stages || []).join(", "), idbTicket(x), x.portfolio, c.name, c.title, c.email, c.phone, c.linkedin, c.checked ? "" : (c.flags || []).join("; "), (x.tags || []).join(", "), x.notes]); }); });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿", rows.map(function(r){ return r.map(csvCell).join(","); }).join("\r\n")], { type:"text/csv" }));
+    a.download = "partnerwav-investor-database.csv"; document.body.appendChild(a); a.click(); a.remove();
+  }
+  function renderInvestorDb(force){
+    var box = document.getElementById("investorDbContent");
+    if (!box || state.screen !== "operator-investor-db") return;
+    var key = JSON.stringify([investorDb.length, state.idbSeg, state.idbStage, state.idbFocus, state.idbAmount, state.idbCheck, state.idbOpen, state.idbEdit, state.idbImport, state.idbV || 0]);
+    if (!force && box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    var seg = state.idbSeg || "", list = investorDb.filter(idbMatches).sort(function(a, b){ return String(a.name).localeCompare(b.name); });
+    var count = function(s){ return investorDb.filter(function(x){ return idbSegment(x) === s; }).length; };
+    var focuses = {}; investorDb.forEach(function(x){ (x.focus || []).forEach(function(f){ var k = f.trim(); if (k) focuses[k] = (focuses[k] || 0) + 1; }); });
+    var topFocus = Object.keys(focuses).sort(function(a, b){ return focuses[b] - focuses[a] || a.localeCompare(b); }).slice(0, 30);
+    var flagged = investorDb.filter(function(x){ return idbOpenFlags(x) > 0; }).length;
+    var html = '<div class="stat-row" style="margin-bottom:14px;">'+IDB_SEGMENTS.map(function(s){ return '<div class="stat-tile"><span class="stat-label">'+esc(s[1])+'</span><span class="stat-value" data-idb-count="'+s[0]+'">'+count(s[0])+'</span><span class="stat-trend">'+esc(s[2])+'</span></div>'; }).join("")
+      + '<div class="stat-tile"><span class="stat-label">Contacts to check</span><span class="stat-value">'+flagged+'</span><span class="stat-trend">Before reaching out</span></div></div>'
+      + '<div class="cal-bar"><div class="cal-views" role="group" aria-label="Segment"><button type="button" class="cal-view" data-idb-seg="" aria-pressed="'+(!seg)+'">All ('+investorDb.length+')</button>'
+        + IDB_SEGMENTS.map(function(s){ return '<button type="button" class="cal-view" data-idb-seg="'+s[0]+'" aria-pressed="'+(seg === s[0])+'">'+esc(s[1])+' ('+count(s[0])+')</button>'; }).join("")+'</div>'
+        + '<span style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;"><button type="button" class="btn primary sm" data-idb-new>+ Add</button><button type="button" class="btn secondary sm" data-idb-import>Import CSV</button><button type="button" class="btn secondary sm" data-idb-export>Download CSV</button></span></div>'
+      + '<div class="idb-filters"><input type="search" id="idbQ" class="list-search" placeholder="Search name, focus, portfolio, contact..." value="'+attr(state.idbQ || "")+'" aria-label="Search">'
+        + '<select id="idbStage" class="filter app-select" aria-label="Stage"><option value="">Any stage</option>'+IDB_STAGES.map(function(s){ return '<option'+(s === state.idbStage ? ' selected' : '')+'>'+esc(s)+'</option>'; }).join("")+'</select>'
+        + '<select id="idbFocus" class="filter app-select" aria-label="Focus"><option value="">Any focus</option>'+topFocus.map(function(f){ return '<option'+(f === state.idbFocus ? ' selected' : '')+'>'+esc(f)+'</option>'; }).join("")+'</select>'
+        + '<input type="text" id="idbAmount" class="list-search" style="max-width:190px;" placeholder="Raising (e.g. 1.5M)" value="'+attr(state.idbAmount || "")+'" aria-label="Amount being raised, in USD">'
+        + '<select id="idbCheck" class="filter app-select" aria-label="Contacts"><option value="">All contacts</option><option value="needs"'+(state.idbCheck === "needs" ? ' selected' : '')+'>Contacts to check</option><option value="checked"'+(state.idbCheck === "checked" ? ' selected' : '')+'>All checked</option></select></div>';
+    if (state.idbImport) html += '<div class="card card-pad" id="idbImportBox" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"><h3 style="margin:0;font-size:1.05rem;">Import from a spreadsheet</h3>'
+      + '<p class="field-note" style="margin:0;">Save the sheet as CSV (File > Download / Save as > CSV) and choose it below, or paste it. Columns like the Intelsense research sheets are matched automatically. Names already in the database are skipped.</p>'
+      + '<input type="file" id="idbFile" accept=".csv,text/csv"><textarea id="idbPaste" rows="4" placeholder="...or paste CSV here"></textarea>'
+      + '<div class="field-row"><label for="idbTag">Tag every imported record (optional)</label><input type="text" id="idbTag" placeholder="e.g. Techsauce 2026" maxlength="60"></div>'
+      + '<div id="idbImportOut" class="field-note"></div><div style="display:flex;gap:8px;"><button type="button" class="btn secondary sm" data-idb-preview>Check the file</button><button type="button" class="btn primary sm" data-idb-commit hidden>Import</button><button type="button" class="btn ghost sm" data-idb-import-cancel>Cancel</button></div></div>';
+    if (state.idbEdit) html += idbFormHtml(state.idbEdit === "new" ? null : idbById(state.idbEdit));
+    html += '<div class="field-note" style="margin:4px 0 10px;" data-idb-shown>Showing '+list.length+' of '+investorDb.length+'</div>'
+      + (list.length ? '<div class="idb-grid">'+list.map(idbCardHtml).join("")+'</div>' : '<div class="empty">'+(investorDb.length ? 'Nothing matches. Try fewer filters.' : 'The database is empty. Import a CSV or add the first record.')+'</div>');
+    box.innerHTML = html;
+  }
+  function idbSaveForm(id){
+    var g = function(k){ var el = document.getElementById(k); return el ? el.value.trim() : ""; }, err = document.getElementById("idbErr"), name = g("idbName");
+    if (!name){ err.textContent = "Add a name."; err.hidden = false; return; }
+    var fix = function(u){ return !u ? "" : /^https?:\/\//i.test(u) ? u : "https://" + u; }, web = fix(g("idbWebsite")), li = fix(g("idbLinkedin")), cli = fix(g("idbCLinkedin"));
+    if ((web && !safeHref(web)) || (li && !safeHref(li)) || (cli && !safeHref(cli))){ err.textContent = "Check the web addresses."; err.hidden = false; return; }
+    var lo = idbParseMoney(g("idbTicketMin")), hi = idbParseMoney(g("idbTicketMax"));
+    var x = id ? idbById(id) : null;
+    if (!x){ var base = "idb-" + (name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "record"), nid = base, n = 2; while (idbById(nid)) nid = base + "-" + (n++);
+      x = { id:nid, source:"Added by CloudWAV", verified:"unverified", createdAt:todayIso(), contacts:[] }; investorDb.push(x); }
+    var type = g("idbType"), c0 = { name:g("idbCName"), title:g("idbCTitle"), email:g("idbCEmail").toLowerCase(), phone:g("idbCPhone"), linkedin:cli };
+    var old0 = (x.contacts || [])[0] || {}, sameC = old0.name === c0.name && old0.email === c0.email && old0.phone === c0.phone && old0.linkedin === c0.linkedin;
+    var contacts = (x.contacts || []).slice(1);
+    if (c0.name || c0.email || c0.linkedin) contacts.unshift(sameC ? Object.assign({}, old0, c0) : Object.assign(c0, { checked:true, flags:[] }));   // entered by CloudWAV: counted as checked
+    Object.assign(x, { name:name, type:type, kind:type === "Individual investor" || type === "Angel investor" ? "individual" : "organization", website:web, linkedin:li, city:g("idbCity"),
+      focus:g("idbFormFocus").split(",").map(function(s){ return s.trim(); }).filter(Boolean), ticketMin:lo, ticketMax:hi == null ? lo : hi, ticketText:"", portfolio:g("idbPortfolio"),
+      tags:g("idbTags").split(",").map(function(s){ return s.trim(); }).filter(Boolean), notes:g("idbNotes"), contacts:contacts, updatedAt:todayIso(),
+      stages:[].slice.call(document.querySelectorAll("#idbForm [data-idb-stage][aria-pressed=true]")).map(function(b){ return b.getAttribute("data-idb-stage"); }) });
+    x.segment = null; x.segment = idbSegment(x);
+    state.idbEdit = null; state.idbOpen = x.id; saveIdb(); renderInvestorDb(true); toast("Saved");
+  }
+  var idbPending = null;
+  document.addEventListener("input", function(ev){ var t = ev.target; if (!t) return;
+    if (t.id === "idbQ" || t.id === "idbAmount"){ state[t.id] = t.value; clearTimeout(state.idbTimer); state.idbTimer = setTimeout(function(){ var pos = t.selectionStart; renderInvestorDb(true); var el = document.getElementById(t.id); if (el){ el.focus(); try { el.setSelectionRange(pos, pos); } catch(e){} } }, 200); } });
+  document.addEventListener("change", function(ev){ var t = ev.target; if (!t) return;
+    if (t.id === "idbStage" || t.id === "idbFocus" || t.id === "idbCheck"){ state[t.id] = t.value; renderInvestorDb(true); }
+    if (t.id === "idbFile" && t.files && t.files[0]){ var rd = new FileReader(); rd.onload = function(){ var pa = document.getElementById("idbPaste"); if (pa) pa.value = String(rd.result || ""); }; rd.readAsText(t.files[0]); } });
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t || !t.closest("#investorDbContent")) return; var b;
+    if ((b = t.closest("[data-idb-seg]"))){ state.idbSeg = b.getAttribute("data-idb-seg"); renderInvestorDb(true); return; }
+    if ((b = t.closest("[data-idb-open]"))){ ev.preventDefault(); var oid = b.getAttribute("data-idb-open"); state.idbOpen = state.idbOpen === oid ? null : oid;
+      if (state.idbOpen && !investorDb.filter(idbMatches).some(function(x){ return x.id === oid; })){ state.idbQ = ""; state.idbSeg = ""; state.idbStage = ""; state.idbFocus = ""; state.idbAmount = ""; state.idbCheck = ""; }
+      renderInvestorDb(true); var row = document.querySelector('[data-idb-row="' + oid + '"]'); if (row && row.scrollIntoView && b.tagName === "A") row.scrollIntoView({ block:"nearest" }); return; }
+    if (t.closest("[data-idb-new]")){ state.idbEdit = "new"; state.idbImport = false; renderInvestorDb(true); var nm = document.getElementById("idbName"); if (nm) nm.focus(); return; }
+    if ((b = t.closest("[data-idb-edit]"))){ state.idbEdit = b.getAttribute("data-idb-edit"); state.idbImport = false; renderInvestorDb(true); var fm = document.getElementById("idbForm"); if (fm && fm.scrollIntoView) fm.scrollIntoView({ block:"start" }); return; }
+    if (t.closest("[data-idb-cancel]")){ state.idbEdit = null; renderInvestorDb(true); return; }
+    if ((b = t.closest("[data-idb-stage]"))){ b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); return; }
+    if ((b = t.closest("[data-idb-save]"))){ idbSaveForm(b.getAttribute("data-idb-save")); return; }
+    if ((b = t.closest("[data-idb-delete]"))){ var dx = idbById(b.getAttribute("data-idb-delete")); if (dx && confirm("Remove " + dx.name + " from the database?")){ investorDb.splice(investorDb.indexOf(dx), 1); state.idbOpen = null; saveIdb(); renderInvestorDb(true); } return; }
+    if ((b = t.closest("[data-idb-check]"))){ var pr = b.getAttribute("data-idb-check").split("|"), cx = idbById(pr[0]); if (cx && cx.contacts[pr[1]]){ cx.contacts[pr[1]].checked = true; cx.updatedAt = todayIso(); state.idbV = (state.idbV || 0) + 1; saveIdb(); renderInvestorDb(true); } return; }
+    if (t.closest("[data-idb-export]")){ idbCsvExport(investorDb.filter(idbMatches)); return; }
+    if (t.closest("[data-idb-import]")){ state.idbImport = true; state.idbEdit = null; idbPending = null; renderInvestorDb(true); return; }
+    if (t.closest("[data-idb-import-cancel]")){ state.idbImport = false; idbPending = null; renderInvestorDb(true); return; }
+    if (t.closest("[data-idb-preview]")){ var res = idbImportPreview(document.getElementById("idbPaste").value || "", (document.getElementById("idbTag").value || "").trim()), out = document.getElementById("idbImportOut");
+      if (res.error){ out.textContent = res.error; idbPending = null; document.querySelector("[data-idb-commit]").hidden = true; return; }
+      idbPending = res.recs;
+      var segs = {}; res.recs.forEach(function(x){ segs[idbSegment(x)] = (segs[idbSegment(x)] || 0) + 1; });
+      out.innerHTML = '<b>'+res.recs.length+' new record'+(res.recs.length === 1 ? '' : 's')+'</b>'+(res.dup ? ', '+res.dup+' already in the database (skipped)' : '')+'. '
+        + IDB_SEGMENTS.filter(function(s){ return segs[s[0]]; }).map(function(s){ return esc(s[1])+': '+segs[s[0]]; }).join(" · ")+'<br>Matched columns: '+esc(res.cols.join(", "))+'. Contact details come in marked "to check".';
+      document.querySelector("[data-idb-commit]").hidden = !res.recs.length; return; }
+    if (t.closest("[data-idb-commit]")){ if (!idbPending || !idbPending.length) return; var n = idbPending.length; idbPending.forEach(function(x){ investorDb.push(x); }); idbPending = null; state.idbImport = false; saveIdb(); renderInvestorDb(true); toast(n + " added to the investor database"); return; }
+  });
+
   // ===== PHONE MENU: a bar across the top; "Menu" opens it over the page, choosing a screen closes it =====
   function mnavIsOpen(){ return document.documentElement.classList.contains("mnav-open"); }
   function mnavSet(open){
@@ -18868,6 +19123,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var CO_KINDS = ["Founders & startups","Tech & AI","Business network","Incubator / accelerator","Funding & grants","Government agency","Industry association","Coworking space","Other"];
   var CO_PERKS = [["listEvents","We list their events"],["mention","They mention PartnerWAV"],["sponsor","PartnerWAV sponsors"],["speaking","Speaking slot"],["logoSwap","Logos on each other's sites"]];
   var CO_OPP_TYPES = [["vendor","SaaS / software vendor"],["partner","Partner (MSP / reseller)"],["affiliate","Affiliate"],["investor","Investor"],["other","Other"]];
+  // Kinds of event: pitch nights, hackathons and open calls form their own calendar -- the big chances to get a new company noticed
+  var CE_KINDS = [["community", "Community event", "Meetups, talks and networking"], ["pitch", "Pitch event", "Pitch nights, demo days and investor events"], ["hackathon", "Hackathon", "Build something in a weekend"], ["opencall", "Open call", "Accelerator, incubator or grant applications"]];
+  function ceKind(e){ return CE_KINDS.some(function(k){ return k[0] === e.category; }) ? e.category : "community"; }
+  function ceKindName(e){ return CE_KINDS.filter(function(k){ return k[0] === ceKind(e); })[0][1]; }
+  function cePitchy(e){ return ceKind(e) !== "community"; }
   var CE_CITIES = ["Bangkok","Chiang Mai","Phuket","Pattaya","Khon Kaen","Hua Hin","Online","Other"];
   var BKK_MS = 7 * 3600000;   // Thailand is UTC+7 all year (no daylight saving)
   function loadCommunity(){ try { var d = JSON.parse(lsGet(COMMUNITY_KEY) || "null"); if (d){ if (Array.isArray(d.orgs)) communityOrgs = d.orgs; if (Array.isArray(d.events)) communityEvents = d.events; } } catch(e){} }
@@ -18887,7 +19147,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function bkkFmt(iso, opts){ try { return new Date(iso).toLocaleString("en-GB", Object.assign({ timeZone:"Asia/Bangkok" }, opts)); } catch(e){ return ""; } }
   function ceWhen(e){ return bkkFmt(e.start, { weekday:"short", day:"numeric", month:"short" }) + " · " + bkkFmt(e.start, { hour:"2-digit", minute:"2-digit" }) + "-" + bkkFmt(ceEnd(e).toISOString(), { hour:"2-digit", minute:"2-digit" }) + " (Bangkok time)"; }
   // the same event in the shape the member calendar uses
-  function ceAsCal(e){ return { id:"cal-" + e.id, ceId:e.id, community:true, title:e.title, type:"Community event", start:e.start, durationMin:Number(e.durationMin) || 120,
+  function ceAsCal(e){ return { id:"cal-" + e.id, ceId:e.id, community:true, pitch:cePitchy(e), title:e.title, type:ceKindName(e), start:e.start, durationMin:Number(e.durationMin) || 120,
     location:ceWhere(e), link:e.link || "", desc:[e.desc, e.price ? "Entry: " + e.price : ""].filter(Boolean).join("\n"), ownerKey:"community:" + e.id }; }
   function calAll(){ return calendarEvents.concat(communityEvents.filter(ceLive).map(ceAsCal)); }
   function ceGoogleUrl(e){ return calGoogleUrl(ceAsCal(e)); }
@@ -18916,6 +19176,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var f = function(id, label, val, ph, type){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="'+(type || "text")+'" id="'+id+'" value="'+attr(val == null ? "" : val)+'" placeholder="'+attr(ph || "")+'" maxlength="300"></div>'; };
     return '<div class="card card-pad" id="ceForm" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">'
       + '<h3 style="margin:0;font-size:1.05rem;">'+(e.id ? 'Edit event' : 'Add an event to the Thailand calendar')+'</h3>'
+      + '<div class="field-row"><label>Kind of event</label><div class="meet-chips">'+CE_KINDS.map(function(k){ return '<button type="button" class="meet-chip" data-ce-kind="'+k[0]+'" aria-pressed="'+(ceKind(e) === k[0])+'" title="'+attr(k[2])+'">'+esc(k[1])+'</button>'; }).join("")+'</div></div>'
       + '<div class="form-grid"><div class="field-row"><label for="ceOrg">Community</label><select id="ceOrg" class="filter app-select"><option value="">Not in my list</option>'
           + orgs.map(function(o){ return '<option value="'+attr(o.id)+'"'+(o.id === e.orgId ? ' selected' : '')+'>'+esc(o.name)+'</option>'; }).join("")+'</select></div>'
         + f("ceOrgName", "...or the organizer's name", e.orgId ? "" : e.orgName, "e.g. The MarTech Collective")
@@ -18935,7 +19196,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return '<div class="card card-pad cp-ev" data-ce-row="'+attr(e.id)+'">'
       + '<div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span></div>'
       + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><b>'+esc(e.title)+'</b>'+(pending ? '<span class="pill pending">Waiting for review</span>' : e.status === "declined" ? '<span class="pill">Declined</span>' : ceUpcoming(e) ? '<span class="pill active">Listed</span>' : '<span class="pill">Past</span>')+'</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><b>'+esc(e.title)+'</b>'+(cePitchy(e) ? '<span class="badge accent" data-ce-kind-badge>'+esc(ceKindName(e))+'</span>' : '')+(pending ? '<span class="pill pending">Waiting for review</span>' : e.status === "declined" ? '<span class="pill">Declined</span>' : ceUpcoming(e) ? '<span class="pill active">Listed</span>' : '<span class="pill">Past</span>')+'</div>'
         + '<div class="field-note">'+esc(ceHost(e))+' · '+esc(ceWhen(e))+' · '+esc(ceWhere(e))+(e.price ? ' · '+esc(e.price) : '')+'</div>'
         + (pending && e.submitter ? '<div class="field-note" data-ce-submitter>Sent in by '+esc(e.submitter.name || "")+(e.submitter.contact ? ' ('+esc(e.submitter.contact)+')' : '')+' -- approving adds '+esc(e.orgName || "them")+' to your communities</div>' : '')
         + (e.desc ? '<div class="field-note">'+esc(e.desc)+'</div>' : '')
@@ -19026,7 +19287,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var e = id ? ceById(id) : null;
     if (!e){ e = { id:"ce-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), status:"published", createdAt:nowStamp() }; communityEvents.push(e); }
     var org = coById(orgId);
-    Object.assign(e, { orgId:org ? org.id : "", orgName:org ? org.name : g("ceOrgName"), orgUrl:org ? (org.website || "") : (e.orgId ? "" : e.orgUrl || ""), title:title, start:start, durationMin:dur,
+    var kb = document.querySelector('#ceForm [data-ce-kind][aria-pressed="true"]');
+    Object.assign(e, { category:kb ? kb.getAttribute("data-ce-kind") : "community", orgId:org ? org.id : "", orgName:org ? org.name : g("ceOrgName"), orgUrl:org ? (org.website || "") : (e.orgId ? "" : e.orgUrl || ""), title:title, start:start, durationMin:dur,
       city:g("ceCity"), venue:g("ceVenue"), price:g("cePrice"), link:link, desc:g("ceDesc"), updatedAt:nowStamp() });
     if (org && org.perks && !org.perks.listEvents){ org.perks.listEvents = true; org.updatedAt = nowStamp(); }
     state.ceEdit = null; state.coEventOrg = ""; state.coTab = "events"; saveCommunity(); renderOperatorCommunity(true); toast("On the Thailand calendar");
@@ -19064,7 +19326,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var reg = safeHref(e.link || ""), host = ceHostUrl(e);
     return '<article class="tec-ev" data-tec-event="'+attr(e.id)+'">'
       + '<div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span><i>'+esc(bkkFmt(e.start, { weekday:"short" }))+'</i></div>'
-      + '<div class="tec-body"><h3>'+esc(e.title)+'</h3>'
+      + '<div class="tec-body">'+(cePitchy(e) ? '<span class="tec-kind tec-kind-'+ceKind(e)+'">'+esc(ceKindName(e))+'</span>' : '')+'<h3>'+esc(e.title)+'</h3>'
         + '<div class="tec-host">'+(host ? '<a href="'+attr(host)+'" target="_blank" rel="noopener noreferrer">'+esc(ceHost(e))+'</a>' : esc(ceHost(e)))+'</div>'
         + '<div class="tec-meta"><span>'+esc(bkkFmt(e.start, { hour:"2-digit", minute:"2-digit" }))+' - '+esc(bkkFmt(ceEnd(e).toISOString(), { hour:"2-digit", minute:"2-digit" }))+'</span><span>'+esc(ceWhere(e))+'</span>'+(e.price ? '<span>'+esc(e.price)+'</span>' : '')+'</div>'
         + (e.desc ? '<p>'+esc(e.desc)+'</p>' : '')
@@ -19079,6 +19341,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="tec-form-grid">' + f("tecOrg", "Community or organizer", "e.g. Bangkok Founders Club") + f("tecTitle", "Event name", "e.g. AI for SMEs night")
         + f("tecStart", "Date and start time (Bangkok time)", "", "datetime-local") + f("tecDuration", "Length in minutes", "120", "number", true)
         + '<div class="meet-field"><label for="tecCity">City</label><select id="tecCity">'+CE_CITIES.map(function(c){ return '<option>'+esc(c)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="meet-field"><label for="tecKindSel">Kind of event</label><select id="tecKindSel">'+CE_KINDS.map(function(k){ return '<option value="'+k[0]+'">'+esc(k[1])+'</option>'; }).join("")+'</select></div>'
         + f("tecVenue", "Venue", "e.g. Glowfish Sathorn", "text", true) + f("tecLink", "Registration link", "https://www.meetup.com/...", "url") + f("tecPrice", "Entry", "e.g. Free", "text", true)
         + f("tecName", "Your name", "") + f("tecContact", "Your LINE, WhatsApp or email", "So we can say thanks and check details") + '</div>'
       + '<div class="meet-field"><label for="tecDesc">Short description <span class="meet-opt">(optional)</span></label><textarea id="tecDesc" rows="3" maxlength="800"></textarea></div>'
@@ -19090,7 +19353,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function renderPublicEvents(){
     var box = document.getElementById("publicEventsContent");
     if (!box || state.screen !== "public-events") return;
-    var key = JSON.stringify([communityEvents.length, state.tecCity || "", state.publicEventsOrg || "", state.tecSent ? 1 : 0, state.tecShowForm ? 1 : 0, state.tecV || 0]);
+    var key = JSON.stringify([communityEvents.length, state.tecCity || "", state.tecKind || "", state.publicEventsOrg || "", state.tecSent ? 1 : 0, state.tecShowForm ? 1 : 0, state.tecV || 0]);
     if (box.getAttribute("data-k") === key) return;
     if (!state.tecTried && supabase && !DEMO_MODE){
       state.tecTried = true; box.innerHTML = '<div class="empty" style="padding:40px;text-align:center;">Loading events…</div>';
@@ -19102,7 +19365,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var forOrg = orgF ? all.filter(function(e){ return e.orgId === orgF; }) : all;
     var orgName = orgF ? (forOrg[0] ? ceHost(forOrg[0]) : (coById(orgF) || {}).name || "") : "";
     var cities = CE_CITIES.filter(function(c){ return forOrg.some(function(e){ return e.city === c; }); });
-    var list = forOrg.filter(function(e){ return !cityF || e.city === cityF; });
+    var kindF = state.tecKind || "", kinds = CE_KINDS.filter(function(k){ return forOrg.some(function(e){ return ceKind(e) === k[0]; }); });
+    var list = forOrg.filter(function(e){ return (!cityF || e.city === cityF) && (!kindF || (kindF === "pitch" ? cePitchy(e) : ceKind(e) === kindF)); });
     var months = [], byMonth = {};
     list.forEach(function(e){ var m = bkkFmt(e.start, { month:"long", year:"numeric" }); if (!byMonth[m]){ byMonth[m] = []; months.push(m); } byMonth[m].push(e); });
     var hosts = []; all.forEach(function(e){ var n = ceHost(e); if (hosts.filter(function(h){ return h[0] === n; }).length === 0) hosts.push([n, ceHostUrl(e)]); });
@@ -19111,6 +19375,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<h1>'+(orgName ? esc(orgName) + ' events' : 'Thailand Tech &amp; Startup Events')+'</h1>'
       + '<p>'+(orgName ? 'Upcoming events from '+esc(orgName)+', on the PartnerWAV Thailand calendar.' : 'Meetups, workshops and founder nights from Thailand\'s tech and business communities, in one place. All times are Bangkok time.')+'</p>'
       + (orgF ? '<a class="tec-all" href="'+attr(calendarUrl())+'">See every community\'s events</a>' : '')+'</header>';
+    if (kinds.length > 1) html += '<div class="meet-chips tec-filter" role="group" aria-label="Kind of event"><button type="button" class="meet-chip" data-tec-kind="" aria-pressed="'+!kindF+'">All events</button>'
+      + (kinds.some(function(k){ return k[0] !== "community"; }) ? '<button type="button" class="meet-chip" data-tec-kind="pitch" aria-pressed="'+(kindF === "pitch")+'">Pitch events &amp; hackathons</button>' : '');
+    if (kinds.length > 1) html += kinds.map(function(k){ return '<button type="button" class="meet-chip" data-tec-kind="'+k[0]+'" aria-pressed="'+(kindF === k[0])+'">'+esc(k[1] + "s")+'</button>'; }).join("") + '</div>';
     if (cities.length > 1) html += '<div class="meet-chips tec-filter" role="group" aria-label="City"><button type="button" class="meet-chip" data-tec-city="" aria-pressed="'+!cityF+'">All cities</button>'
       + cities.map(function(c){ return '<button type="button" class="meet-chip" data-tec-city="'+attr(c)+'" aria-pressed="'+(c === cityF)+'">'+esc(c)+'</button>'; }).join("") + '</div>';
     html += months.length ? months.map(function(m){ return '<section class="tec-month"><h2>'+esc(m)+'</h2>'+byMonth[m].map(tecCardHtml).join("")+'</section>'; }).join("")
@@ -19128,7 +19395,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   async function submitTec(ev){
     ev.preventDefault();
     var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
-    var d = { orgName:g("tecOrg"), title:g("tecTitle"), start:bkkParse(g("tecStart")), durationMin:Number(g("tecDuration")) || 120, city:g("tecCity"), venue:g("tecVenue"), link:g("tecLink"), price:g("tecPrice"), desc:g("tecDesc"), name:g("tecName"), contact:g("tecContact") };
+    var d = { category:g("tecKindSel") || "community", orgName:g("tecOrg"), title:g("tecTitle"), start:bkkParse(g("tecStart")), durationMin:Number(g("tecDuration")) || 120, city:g("tecCity"), venue:g("tecVenue"), link:g("tecLink"), price:g("tecPrice"), desc:g("tecDesc"), name:g("tecName"), contact:g("tecContact") };
     if (d.link && !/^https?:\/\//i.test(d.link)) d.link = "https://" + d.link;
     var probs = [];
     if (!d.orgName) probs.push("Please add the community or organizer.");
@@ -19146,7 +19413,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       try { var r = await supabase.rpc("submit_community_event", { p_data: Object.assign({}, d, spamPayload("tec")) }); if (r.error) throw r.error; }
       catch(x){ btn.disabled = false; btn.textContent = "Send for listing"; captchaReset("tec"); err.textContent = spamErrorText(x, /check|please/i.test((x && x.message) || "") ? String(x.message) : "Sorry, that didn't go through. Please try again."); err.hidden = false; return; }
     } else if (!spamTrap("tec")){
-      communityEvents.push({ id:"ce-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), status:"pending", orgName:d.orgName, title:d.title, start:d.start, durationMin:d.durationMin, city:d.city, venue:d.venue,
+      communityEvents.push({ id:"ce-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), status:"pending", category:d.category, orgName:d.orgName, title:d.title, start:d.start, durationMin:d.durationMin, city:d.city, venue:d.venue,
         link:d.link, price:d.price, desc:d.desc, submitter:{ name:d.name, contact:d.contact }, createdAt:nowStamp() });
       saveCommunity();
     }
@@ -19157,6 +19424,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var t = ev.target && ev.target.closest ? ev.target : null; if (!t) return; var b;
     if (t.closest("#publicEventsContent")){
       if ((b = t.closest("[data-tec-city]"))){ state.tecCity = b.getAttribute("data-tec-city"); renderPublicEvents(); return; }
+      if ((b = t.closest("[data-tec-kind]"))){ state.tecKind = b.getAttribute("data-tec-kind"); renderPublicEvents(); return; }
       if (t.closest("[data-tec-show]")){ state.tecShowForm = true; renderPublicEvents(); var o = document.getElementById("tecOrg"); if (o) o.focus(); return; }
       if (t.closest("[data-tec-again]")){ state.tecSent = false; state.tecShowForm = true; renderPublicEvents(); return; }
       if ((b = t.closest("[data-tec-ics]"))){ var ce = ceById(b.getAttribute("data-tec-ics")); if (!ce) return;
@@ -19176,6 +19444,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       (org.opps = org.opps || []).push({ company:co.value.trim().slice(0, 120), type:document.getElementById("coOppType-" + oid).value, note:document.getElementById("coOppNote-" + oid).value.trim().slice(0, 200), addedAt:nowStamp() });
       org.updatedAt = nowStamp(); state.coOpen = oid; state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); return; }
     if ((b = t.closest("[data-co-opp-del]"))){ var pr = b.getAttribute("data-co-opp-del").split("|"), og = coById(pr[0]); if (og && og.opps){ og.opps.splice(Number(pr[1]), 1); og.updatedAt = nowStamp(); state.coOpen = og.id; state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
+    if ((b = t.closest("[data-ce-kind]"))){ document.querySelectorAll("#ceForm [data-ce-kind]").forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); }); return; }
     if ((b = t.closest("[data-ce-new]"))){ state.coTab = "events"; state.ceEdit = "new"; state.coEventOrg = b.getAttribute("data-ce-new") || ""; renderOperatorCommunity(true); var ti = document.getElementById("ceTitle"); if (ti) ti.focus(); return; }
     if ((b = t.closest("[data-ce-edit]"))){ var ee = ceById(b.getAttribute("data-ce-edit")); if (!ee) return; state.coTab = "events"; state.ceEdit = ee.id; renderOperatorCommunity(true); return; }
     if (t.closest("[data-ce-cancel]")){ state.ceEdit = null; renderOperatorCommunity(true); return; }
