@@ -20,6 +20,8 @@ with sync_playwright() as p:
     role(pg, "operator")
     ok(in_menu(pg, "operator-investor-db"), "CloudWAV has the Investor Database")
     nav(pg, "operator-investor-db"); pg.wait_for_timeout(300)
+    r = pg.evaluate("[...document.querySelectorAll('#navOperator .ic')].map(e => [e.closest('button').innerText.trim(), (e.querySelector('svg') || {}).nodeName || ''])")
+    ok(all(x[1] for x in r) and pg.get_attribute('#navOperator [data-screen="operator-investor-db"] .ic', "data-pw-icon") == "database", "Menu: line icons only, including Investor Database and Event Connect: " + str([x[0] for x in r if not x[1]]))
     counts = pg.evaluate("Object.fromEntries([...document.querySelectorAll('[data-idb-count]')].map(e => [e.dataset.idbCount, +e.textContent]))")
     ok(counts == {"firms": 3, "programs": 4, "individuals": 1}, "Segmented like the research: " + str(counts))
     tabs = pg.evaluate("[...document.querySelectorAll('[data-idb-seg]')].map(b => b.textContent)")
