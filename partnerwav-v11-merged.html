@@ -240,6 +240,9 @@
     overflow:hidden; text-overflow:ellipsis;
   }
   .role-btn[aria-pressed="true"]{ background:var(--accent); color:#fff; }
+  .role-btn.role-op{ grid-column:1 / -1; }
+  .role-btn:disabled{ opacity:.38; cursor:not-allowed; }
+  .role-btn:disabled[aria-pressed="true"]{ opacity:1; }
 
   .navgroup{ display:flex; flex-direction:column; gap:2px; }
   .navgroup-label{
@@ -343,7 +346,9 @@
 html.auth-locked .shell{ display:none; }
 html.auth-locked #loginScreen{ display:flex; }
 html.public-apply .sidebar, html.public-apply .topbar-right, html.public-apply #topEyebrow{ display:none; }
-html:not(.demo-mode) .role-switch{ display:none; }
+html:not(.demo-mode):not(.has-account) .role-switch{ display:none; }
+/* signed in: your own account type is highlighted, the others are greyed out; only CloudWAV has the Operator row */
+html.has-account:not(.op-preview) .role-btn.role-op{ display:none; }
 html.op-preview .role-switch{ display:grid; }
 .preview-banner{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:10px 14px; border-radius:10px;
   background:var(--accent-soft, #ede9fe); color:var(--ink); border:1px solid var(--accent); font-size:.85rem; }
@@ -667,6 +672,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   .ev-qr .aff-qr{ flex-direction:column; text-align:center; }
   /* Community Partners (CloudWAV) and the public Thailand event calendar */
+  .roi-sample{ color:var(--ink-soft); font-style:italic; }
+  .inv-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
+  .inv-card{ display:flex; flex-direction:column; gap:8px; }
+  .inv-summary{ margin:0; color:var(--ink-soft); font-size:.92rem; line-height:1.45; }
+  .inv-nudge{ display:flex; flex-direction:column; gap:8px; align-items:flex-start; margin-bottom:16px; border-color:var(--accent-line); background:var(--accent-soft); }
+  @media (max-width:600px){ .inv-grid{ grid-template-columns:1fr; } }
   .cp-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; }
   .cp-org{ display:flex; flex-direction:column; gap:10px; }
   .cp-link{ font-size:.88rem; word-break:break-all; }
@@ -1080,7 +1091,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="role-btn" data-role="partner" aria-pressed="true">Partner</button>
       <button class="role-btn" data-role="vendor" aria-pressed="false">Vendor</button>
       <button class="role-btn" data-role="affiliate" aria-pressed="false">Affiliate</button>
-      <button class="role-btn" data-role="operator" aria-pressed="false">Operator</button>
+      <button class="role-btn" data-role="investor" aria-pressed="false">Investor</button>
+      <button class="role-btn role-op" data-role="operator" aria-pressed="false">Operator (CloudWAV)</button>
     </div>
 
     <nav class="navgroup" id="navPartner">
@@ -1204,6 +1216,26 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       </div>
     </nav>
 
+    <nav class="navgroup" id="navInvestor" hidden>
+      <div class="navgroup-label">Investor</div>
+      <button class="navlink" data-screen="investor-overview"><span class="ic">📊</span>Overview</button>
+      <button class="navlink" data-screen="investor-profile"><span class="ic">👤</span>My Profile</button>
+      <div class="navsec" data-sec="dealflow">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💼</span><span class="navsec-name">Deal Flow</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="investor-deals"><span class="ic">🚀</span>Companies Raising</button>
+          <button class="navlink" data-screen="investor-intros"><span class="ic">🤝</span>My Introductions</button>
+        </div>
+      </div>
+      <div class="navsec" data-sec="connect">
+        <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💬</span><span class="navsec-name">Connect</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
+        <div class="navsec-items" hidden>
+          <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+          <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
+        </div>
+      </div>
+    </nav>
+
     <nav class="navgroup" id="navOperator" hidden>
       <div class="navgroup-label">Program Operator</div>
       <button class="navlink" data-screen="operator-overview"><span class="ic">📊</span>Overview</button>
@@ -1227,6 +1259,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
           <button class="navlink" data-screen="operator-events"><span class="ic">📇</span>Event Connect</button>
           <button class="navlink" data-screen="operator-community"><span class="ic">🤝</span>Community Partners</button>
+          <button class="navlink" data-screen="operator-investors"><span class="ic">💼</span>Investors</button>
           <button class="navlink" data-own-partner><span class="ic">🤝</span>CloudWAV as Partner</button>
         </div>
       </div>
@@ -2530,6 +2563,25 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="operatorCommunityContent"></div>
       </section>
 
+      <section id="scr-operator-investors" hidden>
+        <div class="section-head"><h2>Investors</h2><span class="hint">Investor logins, the companies showing their round, and the introductions investors ask for</span></div>
+        <div style="height:14px"></div>
+        <div id="operatorInvestorsContent"></div>
+      </section>
+      <section id="scr-investor-overview" hidden><div id="investorOverviewContent"></div></section>
+      <section id="scr-investor-profile" hidden>
+        <div class="section-head"><h2>My Profile</h2><span class="hint">What you invest in, so PartnerWAV can bring you the right companies</span></div>
+        <div style="height:14px"></div><div id="investorProfileContent"></div>
+      </section>
+      <section id="scr-investor-deals" hidden>
+        <div class="section-head"><h2>Companies Raising</h2><span class="hint">Vendors and partners on PartnerWAV that are showing their round to investors</span></div>
+        <div style="height:14px"></div><div id="investorDealsContent"></div>
+      </section>
+      <section id="scr-investor-intros" hidden>
+        <div class="section-head"><h2>My Introductions</h2><span class="hint">Introductions you've asked PartnerWAV to make</span></div>
+        <div style="height:14px"></div><div id="investorIntrosContent"></div>
+      </section>
+
       <!-- ===== PUBLIC: THAILAND EVENT CALENDAR (?events=thailand, optional &org=id, no sign-in) ===== -->
       <section id="scr-public-events" hidden>
         <div id="publicEventsContent"></div>
@@ -3800,7 +3852,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
 
   function roleLabel(role){
-    return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "operator" ? "Program Operator" : "Partner workspace"));
+    return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "investor" ? "Investor workspace" : (role === "operator" ? "Program Operator" : "Partner workspace")));
   }
 
   var titles = {
@@ -3861,6 +3913,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-events":"Event Connect",
     "public-events":"",
     "operator-community":"Community Partners",
+    "operator-investors":"Investors",
+    "investor-overview":"Overview",
+    "investor-profile":"My Profile",
+    "investor-deals":"Companies Raising",
+    "investor-intros":"My Introductions",
     "landing-page-editor":"Landing Page",
     "public-landing":"",
     "public-invite":"",
@@ -5113,7 +5170,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // link and a calendar file (.ics) that Apple Calendar and desktop Outlook open. No calendar account is connected.
   // Times are stored in UTC and shown in each viewer's own timezone.
   // account set-up and investment rounds (functions live next to the sign-in code)
-  var ACCT_ROLES = { vendor:"Vendor", partner:"Partner", affiliate:"Affiliate" };
+  var ACCT_ROLES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor" };
   var acctList = null, acctListErr = "", acctListBusy = false;
   var FUNDING_KEY = "partnerWAV_funding";
   var fundingProfiles = [];
@@ -5124,6 +5181,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var EV_INTRO = "PartnerWAV connects software vendors with the partners, affiliates and investors who help them grow. Leave your details and we'll message you.";
   var eventPages = [{ id:"ev-demo", name:"Bangkok Tech Meetup (example)", intro:EV_INTRO, status:"published", createdAt:"2026-10-12 08:00", updatedAt:"2026-10-12 08:00" }];
   var eventConnections = [];
+  // Investors (see INVESTORS). Declared before loadInvestors() runs. Starter examples for the demo only.
+  var INVESTOR_KEY = "partnerWAV_investors";
+  var investorProfiles = [{ id:"example-ventures", name:"Example Ventures (example)", kind:"VC fund", ticket:"USD 100K - 1M", stages:["Seed", "Series A"], sectors:"AI, B2B SaaS", countries:"Thailand, Southeast Asia",
+    website:"", thesis:"B2B software that sells through IT partners in Southeast Asia.", createdAt:"2026-10-12 10:30" }];
+  var investorListings = [
+    { id:"vendor:example-saas", company:"Example SaaS Co (example)", kind:"vendor", summary:"Customer-service AI for Thai SMEs, sold through IT partners.", website:"", status:"raising", round:"Seed", target:"USD 1.5M", raised:"USD 400K committed", updatedAt:"2026-10-12" },
+    { id:"partner:example-msp", company:"Example MSP (example)", kind:"partner", summary:"Managed IT for hotels in Bangkok and Phuket.", website:"", status:"raised", round:"Pre-seed", target:"USD 300K", raised:"USD 300K", updatedAt:"2026-10-01" }];
+  var introRequests = [];
   // Community partners and the public Thailand event calendar (see COMMUNITY PARTNERS). Declared before loadCommunity() runs.
   var COMMUNITY_KEY = "partnerWAV_community";
   // the communities CloudWAV works with -- real starter records, private to CloudWAV
@@ -5134,7 +5199,22 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       reach:"22,000+ members (their figure)", contact:"Register on their site, or X @BKKEntrepreneur", nextStep:"Ask about becoming one of their ecosystem partners (they list coworking spaces, incubators and advisors)",
       perks:{}, opps:[], notes:"Online community of foreign and local founders, running since 2015: courses, a business directory and member perks.", createdAt:"2026-10-12 09:00", _rev:1 },
     { id:"org-claude-thailand", name:"Claude Thailand Community", website:"https://www.facebook.com/groups/1745892855948687", kind:"Tech & AI", status:"talking", city:"Bangkok", reach:"", contact:"Facebook group admins",
-      nextStep:"Log the SaaS builders found in the group under Opportunities; offer to list the group's meetups", perks:{}, opps:[], notes:"", createdAt:"2026-10-12 09:00", _rev:1 }
+      nextStep:"Log the SaaS builders found in the group under Opportunities; offer to list the group's meetups", perks:{}, opps:[], notes:"", createdAt:"2026-10-12 09:00", _rev:1 },
+    { id:"org-ted-fund", name:"TED Fund (Technology and Innovation-Based Enterprise Development Fund)", website:"https://tedfund.mhesi.go.th", kind:"Funding & grants", status:"prospect", city:"Bangkok",
+      reach:"Government fund under MHESI", contact:"Through their website",
+      nextStep:"Ask how PartnerWAV vendors can apply, and whether TED Fund would list its open calls and Open House on the Thailand calendar",
+      perks:{}, opps:[], notes:"Grants for Thai tech and innovation startups: youth startups (about 100,000 - 1M baht), scaling-up (about 2M baht), and a matching fund alongside venture capital. Also runs incubation and networking. Figures from Bangkok Post reporting; check current calls on their site.",
+      createdAt:"2026-10-12 10:30", _rev:1 },
+    { id:"org-fosterbridge", name:"FosterBridge", website:"https://fosterbridge.asia", kind:"Incubator / accelerator", status:"prospect", city:"Seoul / Bangkok",
+      reach:"Investors from 20+ countries at its forum", contact:"Through their website",
+      nextStep:"Ask about the Bangkok edition: a PartnerWAV booth or talk, and bringing Korean software vendors to Thai partners",
+      perks:{}, opps:[], notes:"Korean cross-border startup and investment platform: an annual forum in Seoul with reverse pitches from global investors. Signed an MOU with Techsauce (Thailand) for cross-border programs and has talked about co-hosting an edition in Bangkok in 2026.",
+      createdAt:"2026-10-12 10:30", _rev:1 },
+    { id:"org-nia", name:"National Innovation Agency (NIA)", website:"https://www.nia.or.th", kind:"Government agency", status:"prospect", city:"Bangkok",
+      reach:"Thailand's national innovation agency", contact:"02-017 5555, or the contact page on their site",
+      nextStep:"Find the startup promotion team; ask about listing NIA startup events and joining its partner network",
+      perks:{}, opps:[], notes:"Public organization supporting innovation: financial support, the Thai Innovation Account, company certification (capital gains tax scheme), corporate co-funding, and Startup Thailand. Office: 73/2 Rama 6 Road, Ratchathewi, Bangkok.",
+      createdAt:"2026-10-12 10:30", _rev:1 }
   ];
   // starter examples for the demo (cleared when CloudWAV signs in; the public page shows only what's really listed)
   function ceSeedStart(days, hh, mm){ var d = new Date(Date.now() + days * 86400000 + 7 * 3600000); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), hh - 7, mm)).toISOString(); }
@@ -5531,8 +5611,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("navVendor").hidden = state.role !== "vendor";
     document.getElementById("navAffiliate").hidden = state.role !== "affiliate";
     document.getElementById("navOperator").hidden = state.role !== "operator";
+    document.getElementById("navInvestor").hidden = state.role !== "investor";
+    // signed in (not previewing as CloudWAV): only your own account type can be picked
+    var roleLock = state.account && !canPreview() ? state.account.role : null;
     document.querySelectorAll(".role-btn").forEach(function(b){
-      b.setAttribute("aria-pressed", b.getAttribute("data-role")===state.role ? "true":"false");
+      var r = b.getAttribute("data-role");
+      b.setAttribute("aria-pressed", r===state.role ? "true":"false");
+      b.disabled = !!roleLock && r !== roleLock;
+      if (roleLock){ if (r === roleLock) b.title = "Your login is a " + (ROLE_NAMES[r] || r) + " account"; else b.title = "Your login is a " + (ROLE_NAMES[roleLock] || roleLock) + " account"; } else b.removeAttribute("title");
     });
 
     // screens
@@ -5700,6 +5786,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderOperatorEvents();
     renderPublicMeet();
     renderOperatorCommunity();
+    renderOperatorInvestors();
+    renderInvestor();
     renderPublicEvents();
     renderAccounts();
     renderFunding();
@@ -7355,14 +7443,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ----- direct messages -----
   function myMsgKey(){
     if (state.account && !isPreviewing()) return state.account.role + ":" + (state.account.entityId || "");
-    var id = state.role === "partner" ? state.myProfileId : state.role === "vendor" ? state.myVendorId : state.role === "affiliate" ? myAffiliateProfileId() : "";
+    var id = state.role === "partner" ? state.myProfileId : state.role === "vendor" ? state.myVendorId : state.role === "affiliate" ? myAffiliateProfileId() : state.role === "investor" ? myInvestorId() : "";
     return state.role + ":" + (id || "");
   }
   function keyName(k){
     var r = String(k || "").split(":")[0], id = String(k || "").slice(r.length + 1);
     if (r === "operator") return "PartnerWAV";
     if (r === "community"){ var ce0 = communityEvents.filter(function(x){ return x.id === id; })[0]; return ce0 ? ceHost(ce0) : "Community event"; }
-    var e = r === "partner" ? partnerById(id) : r === "vendor" ? programById(id) : r === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : null;
+    var e = r === "partner" ? partnerById(id) : r === "vendor" ? programById(id) : r === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : r === "investor" ? investorById(id) : null;
     return e ? e.name : (id || r);
   }
   function keyRoleLabel(k){ var r = String(k).split(":")[0]; return r === "operator" ? "Program operator" : cap(r); }
@@ -7393,7 +7481,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return !seen || seen < last.at;
   }
   function openConversationWith(name, type, subject){
-    var me = myMsgKey(), other = /^(partner|vendor|affiliate|operator):/.test(name || "") ? name : resolveMsgKey(name, type);
+    var me = myMsgKey(), other = /^(partner|vendor|affiliate|investor|operator):/.test(name || "") ? name : resolveMsgKey(name, type);
     if (!other){ toast(name + " isn't on PartnerWAV yet -- invite them first"); return; }
     if (other === me){ toast("That's you"); return; }
     var id = convoIdFor(me, other), c = convoById(id);
@@ -7406,6 +7494,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function msgContacts(me){
     var out = [];
     if (me !== "operator:") out.push(["operator:", "PartnerWAV (program operator)"]);
+    if (/^investor:/.test(me || "")) return out;   // investors reach companies through PartnerWAV introductions
+    if (me === "operator:") investorProfiles.forEach(function(v){ if (!v.archivedAt) out.push(["investor:" + v.id, v.name + " · Investor"]); });
     partnerProfiles.forEach(function(p){ if (!p.archivedAt) out.push(["partner:" + p.id, p.name + " · Partner"]); });
     programs.forEach(function(v){ out.push(["vendor:" + v.id, v.name + " · Vendor"]); });
     affiliateProfiles.forEach(function(a){ if (!a.archivedAt) out.push(["affiliate:" + a.id, a.name + " · Affiliate"]); });
@@ -10307,6 +10397,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ var live = r.status === "published" && !r.deletedAt; return { readers: live ? EVERYONE : [], writers:[], pub: live }; } },
     { name:"eventConnections", mode:"replace", get:function(){ return eventConnections; }, set:function(a){ eventConnections = a; },
       access:function(){ return { readers:[], writers:[] }; } },
+    // Investors: each investor's profile is theirs and CloudWAV's; a company's investor card is read by every investor
+    // login ("investors"); introduction requests are the investor's and CloudWAV's
+    { name:"investorProfiles", mode:"replace", get:function(){ return investorProfiles; }, set:function(a){ investorProfiles = a; },
+      access:function(r){ var o = ["investor:" + r.id]; return { readers:o, writers:o }; } },
+    { name:"investorListings", mode:"replace", get:function(){ return investorListings; }, set:function(a){ investorListings = a; },
+      access:function(r){ return { readers:["investors", r.id], writers:[r.id] }; } },
+    { name:"introRequests", mode:"replace", get:function(){ return introRequests; }, set:function(a){ introRequests = a; },
+      access:function(r){ var o = ["investor:" + r.investorId]; return { readers:o, writers:o }; } },
     // Community partners: CloudWAV's private list (real starter records); events go public once listed
     { name:"communityOrgs", mode:"merge", get:function(){ return communityOrgs; }, set:function(a){ communityOrgs = a; },
       access:function(){ return { readers:[], writers:[] }; } },
@@ -13604,6 +13702,28 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Partner: commission earned on approved deals, less anything spent in the Shop (PartnerWAV itself is free to partners).
   // Operator: the same vendor figures for every vendor, and all vendors together.
   // Until there are real numbers, the card shows an example and says so.
+  // Return by vendor: Cross Connect isn't coming onto the platform for now. Sample rows when nothing real is recorded:
+  // [sold by partners, partner commissions (15%), paid to PartnerWAV, software-house label, client-introduction earnings].
+  // The vendor rows add up to the example on the card: $254,000 / $38,100 / $18,664 / $197,236.
+  var ROI_HIDDEN = ["crossconnect"];
+  var ROI_SAMPLE = { intelsense:[160000, 24000, 9000], unisense:[52000, 7800, 4500], botnoi:[28000, 4200, 3164], zipevent:[14000, 2100, 2000],
+    "portonics-dev":[120000, 0, 12000, "Software house · project referrals", 5696] };
+  // Investors: how CloudWAV is paid follows the draft Fundraising Service Plan (paid for running the raise and the
+  // regional expansion, not a percentage of money raised -- counsel still to confirm). Sample until real figures exist.
+  var INVESTOR_ROI_SAMPLE = [{ id:"beacon-vc", name:"Beacon VC (KBANK)", about:"Kasikornbank's corporate venture arm: fintech, consumer internet, enterprise tech in Thailand and Southeast Asia",
+    invested:1500000, expansionPct:40, equity:"0.5-2% advisory equity", paidBy:"Monthly fee while the raise runs; expansion mandate from the regional budget; performance equity on regional revenue" }];
+  function investorRoiHtml(sampleMode){
+    var list = INVESTOR_ROI_SAMPLE;
+    var num = function(x){ return '<td class="mono-num" style="text-align:right">'+x+'</td>'; };
+    return '<div class="section-head" style="margin-top:22px;"><h2>Return by investor</h2><span class="hint">Money invested in PartnerWAV companies, and how CloudWAV is paid for it</span></div>'
+      + '<p class="field-note" style="margin:6px 0 0;" data-roi-investor-note><span class="badge neutral">Sample</span> Uses the draft structure from the Fundraising Service Plan: CloudWAV is paid for running the raise and the regional expansion, not a percentage of the money raised. Not final -- counsel still to confirm.</p>'
+      + '<div class="table-scroll" style="margin-top:10px;"><table><thead><tr><th>Investor</th><th style="text-align:right">Invested through PartnerWAV</th><th style="text-align:right">Regional expansion budget</th><th>CloudWAV equity</th><th>How CloudWAV is paid</th></tr></thead><tbody>'
+      + list.map(function(x){ return '<tr data-roi-investor="'+attr(x.id)+'"><td>'+esc(x.name)+'<span class="field-note" style="display:block;">'+esc(x.about)+'</span></td>'
+          + num('<span class="roi-sample">'+money(x.invested)+'</span><span class="field-note" style="display:block;">one vendor\'s round</span>')
+          + num('<span class="roi-sample">'+money(x.invested * x.expansionPct / 100)+'</span><span class="field-note" style="display:block;">'+x.expansionPct+'% of the round</span>')
+          + '<td>'+esc(x.equity)+'</td><td><span class="field-note">'+esc(x.paidBy)+'</span></td></tr>'; }).join("")
+      + '</tbody></table></div>';
+  }
   function roiVendor(p){
     var f = feeFor(p.id), monthly = Number(f.monthlyFee) || 0, start = f.subscriptionStart || "";
     var months = monthly ? (start ? Math.max(1, Math.min(12, monthsBetween(start, todayIso()) + 1)) : 12) : 0;
@@ -13676,7 +13796,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             note:"An example. Your own figure appears when your first deal is approved.", facts:[["13", "approved deals"], ["$0", "paid to PartnerWAV"]] });
     }
     if (op){
-      var rows = programs.filter(function(x){ return x.id !== "cloudwav"; }).map(function(x){ return { p:x, r:roiVendor(x) }; });
+      // Cross Connect is left out while it isn't coming onto the platform
+      var rows = programs.filter(function(x){ return x.id !== "cloudwav" && ROI_HIDDEN.indexOf(x.id) < 0; }).map(function(x){ return { p:x, r:roiVendor(x) }; });
       var counted = rows.filter(function(x){ return x.r.real && !isSoftwareHouseProgram(x.p); }), sum = function(k){ return counted.reduce(function(t, x){ return t + x.r[k]; }, 0); };
       op.innerHTML = roiCardHtml(counted.length && sum("spend") > 0
         ? { key:"operator", kicker:"Return across all vendors", before:"Vendors' partner channels returned", big:roiPct(sum("net") / sum("spend") * 100) + " ROI", after:"Vendors kept " + money(sum("net")) + " after partner commissions and PartnerWAV costs.",
@@ -13689,16 +13810,25 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (tb){
         tb.hidden = false;
         var num = function(x){ return '<td class="mono-num" style="text-align:right">'+x+'</td>'; };
+        // Until a vendor's subscription and partner sales are recorded, the table shows the same example as the card above
+        var sampleMode = !(counted.length && sum("spend") > 0);
         tb.innerHTML = '<div class="section-head"><h2>Return by vendor</h2><span class="hint">Partner sales less partner commissions and PartnerWAV costs, last 12 months</span></div>'
+          + (sampleMode ? '<p class="field-note" style="margin:6px 0 0;" data-roi-sample-note><span class="badge neutral">Sample</span> Example figures that add up to the card above. Each vendor\'s real figures replace these once its subscription and partner sales are recorded.</p>' : '')
           + '<div class="table-scroll" style="margin-top:10px;"><table><thead><tr><th>Vendor</th><th style="text-align:right">Sold by partners</th><th style="text-align:right">Commissions</th><th style="text-align:right">PartnerWAV</th><th style="text-align:right">Net return</th><th style="text-align:right">ROI</th></tr></thead><tbody>'
-          + rows.map(function(x){ var r = x.r;
+          + rows.map(function(x){ var r = x.r, house = isSoftwareHouseProgram(x.p), sm = sampleMode ? ROI_SAMPLE[x.p.id] : null;
+              if (sm && (!!sm[3] !== house || (house && (houseSummaryFor(x.p.id) || {}).real))) sm = null;   // real figures, or a different kind of vendor now
+              if (sm){ var mm = function(n){ return '<span class="roi-sample">'+money(n)+'</span>'; }, snet = sm[0] - sm[1] - sm[2];
+                return '<tr data-roi-row="'+attr(x.p.id)+'" data-roi-sample><td>'+esc(x.p.name)+(sm[3] ? '<span class="field-note" style="display:block;">'+esc(sm[3])+'</span>' : '')+'</td>'
+                  + num(mm(sm[0]))+num(sm[3] ? '--' : mm(sm[1]))+num(mm(sm[2])+(sm[3] ? '<span class="field-note" style="display:block;">referral fees</span>' : ''))+num(mm(sm[3] ? sm[0] - sm[2] + (sm[4] || 0) : snet))
+                  + num('<b class="roi-sample">'+roiPct(sm[3] ? (sm[0] - sm[2] + (sm[4] || 0)) / sm[2] * 100 : snet / sm[2] * 100)+'</b>')+'</tr>'; }
               if (isSoftwareHouseProgram(x.p)){ var hs2 = houseSummaryFor(x.p.id), c2 = hs2 ? hs2.currency : "USD";
                 return '<tr data-roi-row="'+attr(x.p.id)+'"><td>'+esc(x.p.name)+'<span class="field-note" style="display:block;">Software house · project referrals</span></td>'
                   + (hs2 && hs2.real ? num(fmtMoney(hs2.collected, c2))+num('--')+num(fmtMoney(hs2.fees, c2)+'<span class="field-note" style="display:block;">referral fees</span>')+num(fmtMoney(hs2.net, c2))+num('<b>'+roiPct(hs2.roi)+'</b>')
                     : num('--')+num('--')+num('--')+num('--')+num('<span class="field-note">'+(hs2 ? "No paid projects yet" : "Not linked to a software house")+'</span>'))+'</tr>'; }
               return '<tr data-roi-row="'+attr(x.p.id)+'"><td>'+esc(x.p.name)+'</td>'+num(money(r.revenue))+num(r.revenue > 0 ? money(r.commission) : '--')+num(r.known ? money(r.spend) : '--')+num(r.real ? money(r.net) : '--')
                 + num(r.real ? '<b>'+roiPct(r.roi)+'</b>' : '<span class="field-note">'+(r.known ? "No partner sales yet" : "Subscription not entered")+'</span>')+'</tr>'; }).join("")
-          + '</tbody></table></div>';
+          + '</tbody></table></div>'
+          + investorRoiHtml(sampleMode);
       }
     }
   }
@@ -15352,7 +15482,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (roleBtn){
       console.log("Role button clicked");
       state.role = roleBtn.getAttribute("data-role");
-      state.screen = state.role === "partner" ? "partner-overview" : (state.role === "vendor" ? "vendor-overview" : (state.role === "affiliate" ? "affiliate-overview" : "operator-overview"));
+      state.screen = HOME_SCREEN[state.role] || "operator-overview";
       render();
       return;
     }
@@ -17140,6 +17270,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadPartnerPages();
   loadEvents();
   loadCommunity();
+  loadInvestors();
   loadFunding();
   loadBrandKits();
   loadShop();
@@ -17157,8 +17288,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // public pages: read the company name and CAPTCHA site key (no sign-in needed), then redraw the form with the CAPTCHA
   if (PUBLIC_APPLY) setTimeout(function(){ cloudLoadPublicSettings().then(function(ok){ if (ok && captchaOn()){ ["invite", "pp", "assess", "apply", "meet", "tec"].forEach(function(k){ var el = document.getElementById("hp_" + k);
     if (el && !document.querySelector('[data-captcha="' + k + '"]')){ var box = document.createElement("div"); box.className = "captcha-box"; box.setAttribute("data-captcha", k); el.closest(".hp-field").after(box); } }); captchaMount(); } }); }, 0);
-  var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", operator:"operator-overview" };
-  var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", operator:"Program Operator" };
+  var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", investor:"investor-overview", operator:"operator-overview" };
+  var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", operator:"Program Operator" };
   state.account = null;
 
   function setAuthLocked(locked){ document.documentElement.classList.toggle("auth-locked", !!locked); }
@@ -17204,7 +17335,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function entityNameFor(role, id){
     var e = role === "vendor" ? programById(id) : role === "partner" ? partnerById(id)
-      : role === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : null;
+      : role === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : role === "investor" ? investorById(id) : null;
     return e ? e.name : (role === "operator" ? "PartnerWAV" : "");
   }
 
@@ -17250,9 +17381,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (role === "partner"){ add("cloudwav-consulting", "CloudWAV Consulting (your partner account)"); partnerProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
       enrollments.forEach(function(e){ add(e.partnerId, e.partner); }); PREVIEW_KNOWN.partner.forEach(function(id){ add(id); }); }
     if (role === "affiliate"){ affiliateProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); }); PREVIEW_KNOWN.affiliate.forEach(function(id){ add(id); }); }
+    if (role === "investor") investorProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
     return out;
   }
-  function previewCurrentId(role){ return role === "vendor" ? state.myVendorId : role === "partner" ? state.myProfileId : role === "affiliate" ? state.myAffiliateId : null; }
+  function previewCurrentId(role){ return role === "vendor" ? state.myVendorId : role === "partner" ? state.myProfileId : role === "affiliate" ? state.myAffiliateId : role === "investor" ? state.myInvestorId : null; }
   function previewPick(role){
     if (role === "operator"){ startPreview("operator"); return; }
     var list = previewChoices(role), cur = previewCurrentId(role) || (state.previewLast || {})[role] || (list[0] || {}).id;
@@ -17280,6 +17412,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (role === "vendor") state.myVendorId = id;
     if (role === "partner") state.myProfileId = id;
     if (role === "affiliate") state.myAffiliateId = id;
+    if (role === "investor") state.myInvestorId = id;
     if (id){ state.previewLast = state.previewLast || {}; state.previewLast[role] = id; }
     state.activeConversation = null;
     state.screen = HOME_SCREEN[role];
@@ -17310,13 +17443,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ===== ACCOUNT SETUP (PartnerWAV sets up a company + login from a name and an email) =====
   function acctEntities(role){
     return role === "vendor" ? programs : role === "partner" ? partnerProfiles.filter(function(x){ return !x.archivedAt; })
-      : affiliateProfiles.filter(function(x){ return !x.archivedAt; });
+      : role === "investor" ? investorProfiles.filter(function(x){ return !x.archivedAt; }) : affiliateProfiles.filter(function(x){ return !x.archivedAt; });
   }
   function acctEntity(role, id){ return acctEntities(role).filter(function(x){ return x.id === id; })[0] || null; }
   function acctSlug(role, name){
     var base = String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || role;
     var id = base, n = 2;
-    while (programById(id) || partnerById(id) || affiliateProfiles.some(function(a){ return a.id === id; })) id = base + "-" + (n++);
+    while (programById(id) || partnerById(id) || affiliateProfiles.some(function(a){ return a.id === id; }) || investorProfiles.some(function(a){ return a.id === id; })) id = base + "-" + (n++);
     return id;
   }
   // 12 characters, no look-alikes (0/O, 1/l/I), always a letter, a digit and a capital
@@ -17334,6 +17467,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         tiers:[{ tier:"Reseller", rate:"To be agreed", base:"To be agreed" }], agreement:{ type:"Vendor Program Agreement", status:"draft" },
         status:"onboarding", logo:"", logoSetup:2, website:"", social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[], products:[] };
       programs.push(e); saveVendorEdits();
+    } else if (role === "investor"){
+      e = { id:id, needsProfile:true, name:name, kind:INV_KINDS[0], ticket:"", stages:[], sectors:"", countries:"", website:"", thesis:"", createdAt:nowStamp() };
+      investorProfiles.push(e); saveInvestors();
     } else {
       e = { id:id, needsProfile:true, name:name, init:name.substring(0, 2).toUpperCase(), country:"", tagline:"", specialties:[], credentials:[],
         services:[], pastProjects:[], logo:"", website:"", social:{ linkedin:"", twitter:"", facebook:"" }, status:"active", archivedAt:null };
@@ -18198,6 +18334,197 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("[data-ev-csv]")){ evDownloadCsv(); return; }
   });
 
+  // ===== INVESTORS =====
+  // Investors sign in to their own workspace: their profile (what they invest in), the companies on PartnerWAV
+  // that chose to show their round to investors, and introductions they ask PartnerWAV to make. Investors never
+  // contact companies directly: PartnerWAV makes each introduction. Companies choose what is shown (company,
+  // round, target, raised, status) -- never their notes or existing investors.
+  var INV_KINDS = ["VC fund","Angel investor","Corporate VC","Government fund / grant","Family office","Accelerator / incubator","Other"];
+  var INV_STAGES = ["Pre-seed","Seed","Series A","Series B+","Grants","Growth / revenue-based"];
+  var IR_STATUS = { requested:["Waiting for PartnerWAV","pending"], introduced:["Introduced","active"], declined:["Not this time",""], withdrawn:["Withdrawn",""] };
+  function loadInvestors(){ try { var d = JSON.parse(lsGet(INVESTOR_KEY) || "null"); if (d){ if (Array.isArray(d.profiles)) investorProfiles = d.profiles; if (Array.isArray(d.listings)) investorListings = d.listings; if (Array.isArray(d.intros)) introRequests = d.intros; } } catch(e){} }
+  function saveInvestors(){ try { lsSet(INVESTOR_KEY, JSON.stringify({ profiles:investorProfiles, listings:investorListings, intros:introRequests })); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function investorById(id){ return investorProfiles.filter(function(x){ return x.id === id && !x.archivedAt; })[0] || null; }
+  function myInvestorId(){
+    if (state.role !== "investor") return null;
+    if (state.myInvestorId) return state.myInvestorId;
+    return state.account ? null : ((investorProfiles.filter(function(x){ return !x.archivedAt; })[0] || {}).id || null);
+  }
+  function listingFor(key){ return investorListings.filter(function(l){ return l.id === key; })[0] || null; }
+  // the investor-facing card for a company, kept in step with its investment round (see the round's "Show to investors")
+  function syncInvestorListing(key){
+    var f = fundingFor(key), old = listingFor(key);
+    var show = f && f.showToInvestors && (f.status === "raising" || f.status === "raised");
+    if (!show){ if (old){ investorListings.splice(investorListings.indexOf(old), 1); saveInvestors(); } return; }
+    var r = key.split(":")[0], id = key.slice(r.length + 1), e = r === "vendor" ? programById(id) : partnerById(id);
+    var rec = { id:key, company:(e && e.name) || keyName(key), kind:r, summary:String((e && (e.desc || e.tagline)) || "").slice(0, 400), website:(e && e.website) || "",
+      status:f.status, round:f.round || "", target:f.target || "", raised:f.raised || "", updatedAt:todayIso() };
+    if (old) investorListings[investorListings.indexOf(old)] = rec; else investorListings.push(rec);
+    saveInvestors();
+  }
+  function irFor(investorId){ return introRequests.filter(function(x){ return x.investorId === investorId; }); }
+  function irPill(st){ var s = IR_STATUS[st] || IR_STATUS.requested; return '<span class="pill '+s[1]+'" data-ir-status="'+attr(st)+'">'+esc(s[0])+'</span>'; }
+  function invListingCard(l, myId){
+    var ask = myId ? introRequests.filter(function(x){ return x.investorId === myId && x.listingId === l.id && x.status !== "withdrawn"; })[0] : null;
+    var line = function(lab, v){ return v ? '<div class="tier-line"><span>'+lab+'</span><b>'+esc(v)+'</b></div>' : ''; };
+    var site = safeHref(l.website || "");
+    return '<div class="card card-pad inv-card" data-inv-listing="'+attr(l.id)+'">'
+      + '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><div><b>'+esc(l.company)+'</b><div class="field-note">'+(l.kind === "vendor" ? "Software vendor" : "IT partner")+(site ? ' · <a href="'+attr(site)+'" target="_blank" rel="noopener noreferrer">Website</a>' : '')+'</div></div>'
+        + '<span class="pill '+(l.status === "raising" ? 'active' : '')+'">'+esc(FUND_STATUS[l.status] || "")+'</span></div>'
+      + (l.summary ? '<p class="inv-summary">'+esc(l.summary)+'</p>' : '')
+      + line("Round", l.round) + line(l.status === "raising" ? "Target" : "Round size", l.target) + line("Raised so far", l.raised)
+      + (myId ? (ask ? '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;">'+irPill(ask.status)+'<span class="field-note">You asked '+esc(ask.createdAt || "")+'</span></div>'
+          : '<button type="button" class="btn primary sm" style="margin-top:10px;" data-ir-ask="'+attr(l.id)+'">Ask PartnerWAV for an introduction</button>') : '')
+      + '</div>';
+  }
+  function renderInvestor(){
+    var scr = state.screen; if (state.role !== "investor" || scr.indexOf("investor-") !== 0) return;
+    var box = document.getElementById(scr === "investor-overview" ? "investorOverviewContent" : scr === "investor-profile" ? "investorProfileContent" : scr === "investor-deals" ? "investorDealsContent" : "investorIntrosContent");
+    if (!box) return;
+    var id = myInvestorId(), me = id ? investorById(id) : null, mine = id ? irFor(id) : [];
+    var key = JSON.stringify([scr, id, investorProfiles.length, investorListings.length, introRequests.length, state.invEdit, state.invV || 0, communityEvents.length]);
+    if (box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    var live = investorListings.filter(function(l){ return l.status === "raising" || l.status === "raised"; });
+    if (scr === "investor-overview"){
+      var raising = live.filter(function(l){ return l.status === "raising"; }), waiting = mine.filter(function(x){ return x.status === "requested"; });
+      var upcoming = communityEvents.filter(function(e){ return ceLive(e) && ceUpcoming(e); }).sort(function(a, b){ return new Date(a.start) - new Date(b.start); }).slice(0, 3);
+      var oc = vaOperatorContact(), hi = "Hi PartnerWAV, it's " + ((me && me.name) || "an investor") + " -- ";
+      box.innerHTML = (me && me.needsProfile ? '<div class="card card-pad inv-nudge" data-inv-nudge><b>Tell us what you invest in</b><span class="field-note">Stages, ticket size and sectors help PartnerWAV bring you the right companies.</span><button type="button" class="btn primary sm" data-goto-screen="investor-profile">Finish my profile</button></div>' : '')
+        + '<div class="stat-row"><div class="stat-tile"><span class="stat-label">Companies raising now</span><span class="stat-value">'+raising.length+'</span><span class="stat-trend">'+live.length+' showing their round to investors</span></div>'
+        + '<div class="stat-tile"><span class="stat-label">Introductions waiting</span><span class="stat-value">'+waiting.length+'</span><span class="stat-trend">'+mine.filter(function(x){ return x.status === "introduced"; }).length+' made so far</span></div>'
+        + '<div class="stat-tile"><span class="stat-label">Community events coming up</span><span class="stat-value">'+communityEvents.filter(function(e){ return ceLive(e) && ceUpcoming(e); }).length+'</span><span class="stat-trend">Founder nights and meetups in Thailand</span></div></div>'
+        + '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1.1rem;">Raising now</h2><button type="button" class="btn ghost sm" data-goto-screen="investor-deals">See all companies</button></div>'
+        + (raising.length ? '<div class="inv-grid">'+raising.slice(0, 4).map(function(l){ return invListingCard(l, id); }).join("")+'</div>' : '<div class="empty">No companies are showing a round right now. PartnerWAV will let you know when one does.</div>')
+        + '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1.1rem;">Coming up in Thailand</h2><button type="button" class="btn ghost sm" data-goto-screen="calendar">Events &amp; Calendar</button></div>'
+        + (upcoming.length ? '<div style="display:flex;flex-direction:column;gap:10px;">'+upcoming.map(function(e){ return '<div class="card card-pad cp-ev"><div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span></div><div><b>'+esc(e.title)+'</b><div class="field-note">'+esc(ceHost(e))+' · '+esc(ceWhen(e))+' · '+esc(ceWhere(e))+'</div></div></div>'; }).join("")+'</div>' : '<div class="empty">No community events listed yet.</div>')
+        + ((oc.whatsapp || oc.line) ? '<div class="card card-pad" style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;"><b style="margin-right:auto;">Talk to PartnerWAV</b>'
+            + (oc.whatsapp ? '<a class="btn meet-wa sm" style="text-decoration:none;" href="'+attr(safeHref(waChatUrl(oc.whatsapp, hi)))+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>' : '')
+            + (oc.line ? '<a class="btn meet-line sm" style="text-decoration:none;" href="'+attr(safeHref(lineChatUrl(oc.line)))+'" target="_blank" rel="noopener noreferrer">LINE</a>' : '')+'</div>' : '');
+    } else if (scr === "investor-deals"){
+      box.innerHTML = '<p class="field-note" style="margin:0 0 14px;">Companies on PartnerWAV that chose to show their round to investors. Ask for an introduction and PartnerWAV will connect you with the founders.</p>'
+        + (live.length ? '<div class="inv-grid">'+live.slice().sort(function(a, b){ return (a.status === "raising" ? 0 : 1) - (b.status === "raising" ? 0 : 1) || String(a.company).localeCompare(b.company); }).map(function(l){ return invListingCard(l, id); }).join("")+'</div>'
+          : '<div class="empty">No companies are showing a round right now.</div>');
+    } else if (scr === "investor-intros"){
+      box.innerHTML = mine.length ? '<div style="display:flex;flex-direction:column;gap:10px;">'+mine.slice().sort(function(a, b){ return String(b.createdAt).localeCompare(String(a.createdAt)); }).map(function(x){
+          return '<div class="card card-pad" data-ir-row="'+attr(x.id)+'" style="display:flex;flex-direction:column;gap:6px;"><div style="display:flex;justify-content:space-between;gap:8px;"><b>'+esc(x.company)+'</b>'+irPill(x.status)+'</div>'
+            + '<div class="field-note">Asked '+esc(x.createdAt || "")+(x.note ? ' -- "'+esc(x.note)+'"' : '')+'</div>'
+            + (x.reply ? '<div class="cp-next"><b>PartnerWAV:</b> '+esc(x.reply)+'</div>' : '')
+            + (x.status === "requested" ? '<div><button type="button" class="btn ghost xs" data-ir-withdraw="'+attr(x.id)+'">Withdraw</button></div>' : '')+'</div>';
+        }).join("")+'</div>' : '<div class="empty">No introductions yet. Open Companies Raising and ask PartnerWAV to introduce you.</div>';
+    } else if (scr === "investor-profile"){
+      if (!me){ box.innerHTML = '<div class="empty">No investor profile is linked to this login yet. Ask PartnerWAV to set it up.</div>'; return; }
+      var a = function(x){ return attr(x || ""); };
+      box.innerHTML = '<div class="card card-pad" id="invProfileForm" style="display:flex;flex-direction:column;gap:12px;max-width:760px;">'
+        + '<p class="field-note" style="margin:0;">Only PartnerWAV sees your profile. We use it to bring you companies that fit.</p>'
+        + '<div class="form-grid"><div class="field-row"><label for="invName">Firm or investor name</label><input type="text" id="invName" value="'+a(me.name)+'" maxlength="120"></div>'
+        + '<div class="field-row"><label for="invKind">Type</label><select id="invKind" class="filter app-select">'+INV_KINDS.map(function(k){ return '<option'+(k === me.kind ? ' selected' : '')+'>'+esc(k)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="invTicket">Typical cheque size</label><input type="text" id="invTicket" value="'+a(me.ticket)+'" placeholder="e.g. USD 100K - 500K" maxlength="80"></div>'
+        + '<div class="field-row"><label for="invWebsite">Website</label><input type="url" id="invWebsite" value="'+a(me.website)+'" placeholder="https://" maxlength="200"></div>'
+        + '<div class="field-row"><label for="invSectors">Sectors</label><input type="text" id="invSectors" value="'+a(me.sectors)+'" placeholder="e.g. AI, SaaS, fintech" maxlength="200"></div>'
+        + '<div class="field-row"><label for="invCountries">Countries</label><input type="text" id="invCountries" value="'+a(me.countries)+'" placeholder="e.g. Thailand, Southeast Asia" maxlength="200"></div></div>'
+        + '<div class="field-row"><label>Stages</label><div class="meet-chips">'+INV_STAGES.map(function(s){ return '<button type="button" class="meet-chip" data-inv-stage="'+attr(s)+'" aria-pressed="'+((me.stages || []).indexOf(s) > -1)+'">'+esc(s)+'</button>'; }).join("")+'</div></div>'
+        + '<div class="field-row"><label for="invThesis">What you look for</label><textarea id="invThesis" rows="4" maxlength="1500">'+esc(me.thesis || "")+'</textarea></div>'
+        + '<div id="invErr" class="login-msg bad" role="alert" hidden></div>'
+        + '<div><button type="button" class="btn primary sm" data-inv-save>Save profile</button></div></div>';
+    }
+  }
+  function invAskModal(listingId){
+    var l = listingFor(listingId); if (!l) return;
+    var back = openModal('<div class="modal-head"><h2>Introduction to '+esc(l.company)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="modal-body" style="display:flex;flex-direction:column;gap:12px;"><p class="field-note" style="margin:0;">PartnerWAV checks with the company and, if they agree, introduces you to the founders.</p>'
+      + '<div class="field-row"><label for="irNote">A note for PartnerWAV <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><textarea id="irNote" rows="3" maxlength="600" placeholder="What interests you about them, and timing"></textarea></div></div>'
+      + '<div class="modal-actions"><button type="button" class="btn secondary" data-ir-cancel>Cancel</button><button type="button" class="btn primary" data-ir-send="'+attr(l.id)+'">Send to PartnerWAV</button></div>');
+    var ta = back.querySelector("#irNote"); if (ta) ta.focus();
+  }
+
+  // ----- CloudWAV: Investors screen -----
+  function renderOperatorInvestors(force){
+    var box = document.getElementById("operatorInvestorsContent");
+    if (!box || state.screen !== "operator-investors") return;
+    var key = JSON.stringify([investorProfiles.length, investorListings.length, introRequests.length, state.oiTab, state.oiNew, state.invV || 0]);
+    if (!force && box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    var tab = state.oiTab || "intros", invs = investorProfiles.filter(function(x){ return !x.archivedAt; }), waiting = introRequests.filter(function(x){ return x.status === "requested"; });
+    var html = '<div class="stat-row" style="margin-bottom:14px;"><div class="stat-tile"><span class="stat-label">Investors</span><span class="stat-value">'+invs.length+'</span><span class="stat-trend">With an investor profile</span></div>'
+      + '<div class="stat-tile"><span class="stat-label">Companies showing a round</span><span class="stat-value">'+investorListings.length+'</span><span class="stat-trend">Visible to investors</span></div>'
+      + '<div class="stat-tile"><span class="stat-label">Introductions waiting</span><span class="stat-value">'+waiting.length+'</span><span class="stat-trend">'+introRequests.filter(function(x){ return x.status === "introduced"; }).length+' made</span></div></div>'
+      + '<div class="cal-bar"><div class="cal-views" role="group" aria-label="Show">'
+      + [["intros", "Introduction requests"+(waiting.length ? " ("+waiting.length+")" : "")], ["investors", "Investors"], ["listings", "Companies raising"]].map(function(t){ return '<button type="button" class="cal-view" data-oi-tab="'+t[0]+'" aria-pressed="'+(tab === t[0])+'">'+esc(t[1])+'</button>'; }).join("")+'</div>'
+      + (tab === "investors" ? '<button type="button" class="btn primary sm" data-oi-new>+ Add an investor</button>' : '')+'</div>';
+    if (tab === "intros"){
+      html += introRequests.length ? '<div style="display:flex;flex-direction:column;gap:10px;">'+introRequests.slice().sort(function(a, b){ return (a.status === "requested" ? 0 : 1) - (b.status === "requested" ? 0 : 1) || String(b.createdAt).localeCompare(String(a.createdAt)); }).map(function(x){
+          var inv = investorById(x.investorId);
+          return '<div class="card card-pad" data-oi-ir="'+attr(x.id)+'" style="display:flex;flex-direction:column;gap:6px;"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><b>'+esc(inv ? inv.name : x.investorId)+' → '+esc(x.company)+'</b>'+irPill(x.status)+'</div>'
+            + '<div class="field-note">'+esc([inv && inv.kind, inv && inv.ticket].filter(Boolean).join(" · "))+(x.createdAt ? ' · asked '+esc(x.createdAt) : '')+'</div>'
+            + (x.note ? '<div class="field-note">"'+esc(x.note)+'"</div>' : '')
+            + (x.status === "requested" ? '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"><input type="text" id="oiReply-'+attr(x.id)+'" class="aff-link-input" style="flex:1;min-width:200px;font-family:inherit;" placeholder="Message to the investor (optional)" maxlength="300">'
+                + '<button type="button" class="btn primary xs" data-oi-introduced="'+attr(x.id)+'">Mark introduced</button><button type="button" class="btn secondary xs" data-oi-decline="'+attr(x.id)+'">Not this time</button></div>' : (x.reply ? '<div class="cp-next"><b>You said:</b> '+esc(x.reply)+'</div>' : ''))+'</div>';
+        }).join("")+'</div>' : '<div class="empty">No introduction requests yet.</div>';
+    } else if (tab === "investors"){
+      if (state.oiNew) html += '<div class="card card-pad" id="oiNewForm" style="display:flex;flex-direction:column;gap:12px;margin:14px 0;"><div class="form-grid">'
+        + '<div class="field-row"><label for="oiName">Firm or investor name</label><input type="text" id="oiName" maxlength="120"></div>'
+        + '<div class="field-row"><label for="oiKind">Type</label><select id="oiKind" class="filter app-select">'+INV_KINDS.map(function(k){ return '<option>'+esc(k)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="oiWebsite">Website</label><input type="url" id="oiWebsite" placeholder="https://" maxlength="200"></div></div>'
+        + '<div id="oiErr" class="login-msg bad" hidden></div><div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-oi-create>Add investor</button><button type="button" class="btn secondary sm" data-oi-cancel>Cancel</button></div></div>';
+      html += invs.length ? '<div class="inv-grid" style="margin-top:14px;">'+invs.map(function(v){
+          var site = safeHref(v.website || "");
+          return '<div class="card card-pad inv-card" data-oi-inv="'+attr(v.id)+'"><b>'+esc(v.name)+'</b><div class="field-note">'+esc([v.kind, v.ticket].filter(Boolean).join(" · "))+'</div>'
+            + ((v.stages || []).length ? '<div class="meet-chips">'+v.stages.map(function(s){ return '<span class="badge accent">'+esc(s)+'</span>'; }).join("")+'</div>' : '')
+            + (v.sectors ? '<div class="field-note"><b>Sectors:</b> '+esc(v.sectors)+'</div>' : '') + (v.countries ? '<div class="field-note"><b>Countries:</b> '+esc(v.countries)+'</div>' : '')
+            + (v.thesis ? '<div class="field-note">'+esc(v.thesis)+'</div>' : '') + (site ? '<a href="'+attr(site)+'" target="_blank" rel="noopener noreferrer" class="cp-link">'+esc(String(v.website).replace(/^https?:\/\/(www\.)?/, ""))+'</a>' : '')
+            + '<div style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="btn secondary xs" data-acct-setup="investor" data-acct-entity="'+attr(v.id)+'">Set up login</button><span class="field-note">'+irFor(v.id).length+' introduction request'+(irFor(v.id).length === 1 ? '' : 's')+'</span></div></div>';
+        }).join("")+'</div>' : '<div class="empty" style="margin-top:14px;">No investors yet. Add one, then set up their login.</div>';
+    } else {
+      html += investorListings.length ? '<div class="inv-grid" style="margin-top:14px;">'+investorListings.map(function(l){ return invListingCard(l, null); }).join("")+'</div>'
+        : '<div class="empty" style="margin-top:14px;">No company is showing its round to investors yet. Companies turn this on in their Investment round.</div>';
+    }
+    box.innerHTML = html;
+  }
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t) return; var b;
+    if ((b = t.closest("[data-ir-ask]"))){ invAskModal(b.getAttribute("data-ir-ask")); return; }
+    if (t.closest("[data-ir-cancel]")){ closeModal(); return; }
+    if ((b = t.closest("[data-ir-send]"))){
+      var l = listingFor(b.getAttribute("data-ir-send")), inv = myInvestorId(); if (!l || !inv) return;
+      if (isPreviewing()){ closeModal(); toast("Previewing -- requests can't be sent from here"); return; }
+      var ta = document.getElementById("irNote");
+      introRequests.push({ id:"ir-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), investorId:inv, listingId:l.id, company:l.company, note:ta ? ta.value.trim().slice(0, 600) : "", status:"requested", createdAt:nowStamp() });
+      closeModal(); state.invV = (state.invV || 0) + 1; saveInvestors(); render(); toast("Sent -- PartnerWAV will be in touch"); return;
+    }
+    if ((b = t.closest("[data-ir-withdraw]"))){ var w = introRequests.filter(function(x){ return x.id === b.getAttribute("data-ir-withdraw"); })[0]; if (w && w.status === "requested"){ w.status = "withdrawn"; w.updatedAt = nowStamp(); state.invV = (state.invV || 0) + 1; saveInvestors(); render(); } return; }
+    if ((b = t.closest("[data-inv-stage]"))){ b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); return; }
+    if (t.closest("[data-inv-save]")){
+      var me = investorById(myInvestorId()); if (!me) return;
+      var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; }, name = g("invName"), site = g("invWebsite");
+      var err = document.getElementById("invErr");
+      if (!name){ err.textContent = "Add your firm or investor name."; err.hidden = false; return; }
+      if (site && !/^https?:\/\//i.test(site)) site = "https://" + site;
+      if (site && !safeHref(site)){ err.textContent = "The website doesn't look like a web address."; err.hidden = false; return; }
+      Object.assign(me, { name:name, kind:g("invKind"), ticket:g("invTicket"), website:site, sectors:g("invSectors"), countries:g("invCountries"), thesis:g("invThesis"),
+        stages:[].slice.call(document.querySelectorAll("[data-inv-stage][aria-pressed=true]")).map(function(x){ return x.getAttribute("data-inv-stage"); }), updatedAt:nowStamp() });
+      delete me.needsProfile; state.invV = (state.invV || 0) + 1; saveInvestors(); render(); toast("Profile saved"); return;
+    }
+    if (!t.closest("#operatorInvestorsContent")) return;
+    if ((b = t.closest("[data-oi-tab]"))){ state.oiTab = b.getAttribute("data-oi-tab"); state.oiNew = false; renderOperatorInvestors(true); return; }
+    if (t.closest("[data-oi-new]")){ state.oiNew = true; renderOperatorInvestors(true); var n = document.getElementById("oiName"); if (n) n.focus(); return; }
+    if (t.closest("[data-oi-cancel]")){ state.oiNew = false; renderOperatorInvestors(true); return; }
+    if (t.closest("[data-oi-create]")){
+      var nm = (document.getElementById("oiName").value || "").trim(), ws = (document.getElementById("oiWebsite").value || "").trim(), er = document.getElementById("oiErr");
+      if (!nm){ er.textContent = "Add the investor's name."; er.hidden = false; return; }
+      if (ws && !/^https?:\/\//i.test(ws)) ws = "https://" + ws;
+      var e = acctCreateEntity("investor", nm); e.kind = document.getElementById("oiKind").value; e.website = safeHref(ws) ? ws : ""; saveInvestors();
+      state.oiNew = false; renderOperatorInvestors(true); toast(nm + " added -- set up their login next"); return;
+    }
+    var ir = null;
+    if ((b = t.closest("[data-oi-introduced]")) || (b = t.closest("[data-oi-decline]"))){
+      var irId = b.getAttribute("data-oi-introduced") || b.getAttribute("data-oi-decline"); ir = introRequests.filter(function(x){ return x.id === irId; })[0];
+      if (!ir) return; var rp = document.getElementById("oiReply-" + irId);
+      ir.status = b.hasAttribute("data-oi-introduced") ? "introduced" : "declined"; ir.reply = rp ? rp.value.trim().slice(0, 300) : ""; ir.updatedAt = nowStamp();
+      state.invV = (state.invV || 0) + 1; saveInvestors(); renderOperatorInvestors(true); return;
+    }
+  });
+
   // ===== PHONE MENU: a bar across the top; "Menu" opens it over the page, choosing a screen closes it =====
   function mnavIsOpen(){ return document.documentElement.classList.contains("mnav-open"); }
   function mnavSet(open){
@@ -18219,7 +18546,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // which organizers can share; anyone running a community can send an event in for review.
   // Members also see the listed events in their own Events & Calendar.
   var CO_STATUS = [["prospect","Not contacted yet"],["talking","Talking"],["partner","Community partner"],["paused","Paused"]];
-  var CO_KINDS = ["Founders & startups","Tech & AI","Business network","Industry association","Coworking / incubator","Other"];
+  var CO_KINDS = ["Founders & startups","Tech & AI","Business network","Incubator / accelerator","Funding & grants","Government agency","Industry association","Coworking space","Other"];
   var CO_PERKS = [["listEvents","We list their events"],["mention","They mention PartnerWAV"],["sponsor","PartnerWAV sponsors"],["speaking","Speaking slot"],["logoSwap","Logos on each other's sites"]];
   var CO_OPP_TYPES = [["vendor","SaaS / software vendor"],["partner","Partner (MSP / reseller)"],["affiliate","Affiliate"],["investor","Investor"],["other","Other"]];
   var CE_CITIES = ["Bangkok","Chiang Mai","Phuket","Pattaya","Khon Kaen","Hua Hin","Online","Other"];
@@ -18563,7 +18890,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var line = function(l, v){ return v ? '<div class="tier-line"><span>' + l + '</span><b>' + esc(v) + '</b></div>' : ''; };
       return '<div class="card card-pad" style="margin-top:16px;" data-funding-card>' + head
         + (f.status ? line("Status", FUND_STATUS[f.status]) + (hasRound ? line("Round", f.round) + line(f.status === "raising" ? "Target" : "Round size", f.target) + line("Raised so far", f.raised) + line("Investors", f.investors) : "")
-            + line("Notes", f.notes) + line("Investor introductions", f.openToIntros ? "Open to introductions from PartnerWAV" : "")
+            + line("Notes", f.notes) + line("Investor introductions", f.openToIntros ? "Open to introductions from PartnerWAV" : "") + line("Investors on PartnerWAV", f.showToInvestors && hasRound ? "Can see this round" : "")
           : '<p style="margin:0;color:var(--ink-soft);">' + (canEdit ? "Have you raised money, or are you raising now? Tell PartnerWAV which round you are in." : "Nothing shared yet.") + '</p>')
         + (canEdit ? '<div class="cfg-actions" style="margin-top:12px;"><button type="button" class="btn secondary sm" data-funding-edit>' + (f.status ? "Edit" : "Add investment round") + '</button></div>'
                    : (state.role === "operator" || isPreviewing() ? '<div class="field-note" style="margin-top:10px;">View only -- the company keeps this up to date.</div>' : '')) + '</div>';
@@ -18579,6 +18906,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="field-row"><label for="fundInvestors">Investors <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><input type="text" id="fundInvestors" value="' + a(f.investors) + '" placeholder="Lead or existing investors"></div></div>'
       + '<div class="field-row"><label for="fundNotes">Notes <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><textarea id="fundNotes" placeholder="Use of funds, timing, markets...">' + esc(f.notes || "") + '</textarea></div>'
       + '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500;"><input type="checkbox" id="fundIntros"' + (f.openToIntros ? " checked" : "") + '> <span>We are open to investor introductions from PartnerWAV</span></label>'
+      + '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:500;"><input type="checkbox" id="fundShowInvestors"' + (f.showToInvestors ? " checked" : "") + '> <span>Show our round to investors on PartnerWAV<br><span class="field-note" style="font-weight:400;">They see your company name and description, round, target, amount raised and status -- never your notes or existing investors -- and ask PartnerWAV for an introduction.</span></span></label>'
       + '<div class="field-row"><label for="fundVisibility">Who can see this</label><select id="fundVisibility" class="filter app-select">' + opt("private", "Only my company and PartnerWAV", f.visibility || "private") + opt("public", "Everyone in PartnerWAV (shown on my profile)", f.visibility || "private") + '</select></div>'
       + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-funding-save>Save</button><button type="button" class="btn secondary sm" data-funding-cancel>Cancel</button></div></div></div>';
   }
@@ -18639,9 +18967,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var st = v("fundStatus"), hasRound = st === "raising" || st === "raised";
       var rec = { id:key, status:st, round:hasRound ? v("fundRound") : "", target:hasRound ? v("fundTarget") : "", raised:hasRound ? v("fundRaised") : "",
         investors:hasRound ? v("fundInvestors") : "", notes:v("fundNotes"), openToIntros:document.getElementById("fundIntros").checked,
+        showToInvestors:!!(document.getElementById("fundShowInvestors") || {}).checked,
         visibility:v("fundVisibility") === "public" ? "public" : "private", updatedAt:new Date().toISOString().slice(0, 10) };
       fundingProfiles = fundingProfiles.filter(function(f){ return f.id !== key; }); fundingProfiles.push(rec);
-      state.fundingEdit = null; saveFunding(); toast("Investment round saved"); render();
+      state.fundingEdit = null; saveFunding(); syncInvestorListing(key); toast("Investment round saved"); render();
       return;
     }
   });
@@ -18653,8 +18982,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (acct.role === "vendor" && acct.entity_id) state.myVendorId = acct.entity_id;
     if (acct.role === "partner") state.myProfileId = acct.entity_id || null;
     if (acct.role === "affiliate") state.myAffiliateId = acct.entity_id || null;
+    if (acct.role === "investor") state.myInvestorId = acct.entity_id || null;
     state.screen = HOME_SCREEN[acct.role];
     document.documentElement.classList.toggle("op-preview", canPreview());
+    document.documentElement.classList.add("has-account");
     setAuthLocked(false);
     updateAccountMenu();
     render();
@@ -18670,7 +19001,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   async function handleSession(session){
     if (!session){
-      sessionUserId = null; state.account = null; document.documentElement.classList.remove("op-preview");
+      sessionUserId = null; state.account = null; document.documentElement.classList.remove("op-preview"); document.documentElement.classList.remove("has-account");
       showLoginPanel("SignIn"); setAuthLocked(true); return;
     }
     if (sessionUserId === session.user.id && state.account) return; // token refresh / tab refocus

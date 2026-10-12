@@ -23,6 +23,14 @@ create table if not exists public.portal_records (
 create index if not exists portal_records_readers_idx on public.portal_records using gin (readers);
 alter table public.portal_records enable row level security;
 
+-- Logins can be partner, vendor, affiliate, investor or operator (CloudWAV)
+do $$ begin
+  if to_regclass('public.portal_users') is not null then
+    alter table public.portal_users drop constraint if exists portal_users_role_check;
+    alter table public.portal_users add constraint portal_users_role_check check (role in ('partner','vendor','affiliate','investor','operator'));
+  end if;
+end $$;
+
 -- ---------------------------------------------------------------------------
 -- 2. Who is calling: "role:entity" from portal_users (NOT from user-editable metadata)
 -- ---------------------------------------------------------------------------
@@ -52,7 +60,8 @@ create policy "portal_records member read" on public.portal_records
     or (public.portal_key() is not null and (
           '*' = any(readers)
           or public.portal_key() = any(readers)
-          or public.portal_key() = any(writers)))
+          or public.portal_key() = any(writers)
+          or ('investors' = any(readers) and public.portal_key() like 'investor:%')))
   );
 
 create policy "portal_records insert" on public.portal_records
@@ -129,7 +138,10 @@ insert into public.portal_field_rules (collection, field, allowed) values
   ('projectReferrals', 'payments',     '[[], null]'),
   ('projectReferrals', 'payouts',      '[[], null]'),
   ('projectReferrals', 'termsSnapshot','[null]'),
-  ('projectReferrals', 'rejectReason', '[null, ""]')
+  ('projectReferrals', 'rejectReason', '[null, ""]'),
+  -- an investor asks for an introduction (or withdraws); only CloudWAV marks it introduced or answers
+  ('introRequests',    'status',       '["requested", "withdrawn"]'),
+  ('introRequests',    'reply',        '["", null]')
 on conflict (collection, field) do update set allowed = excluded.allowed;
 
 -- Collections only CloudWAV can add records to (members may still edit where they're a writer)
@@ -256,6 +268,20 @@ begin
   end if;
   if new.collection in ('socialGroups', 'broadcasts') and (new.data ->> 'ownerKey') is distinct from k then
     raise exception 'You can only save your own groups';
+  end if;
+  -- investors: each saves only its own profile and its own introduction requests; a company's investor card
+  -- (what investors see of its round) is saved only by that vendor or partner, and is read by investor logins
+  if new.collection = 'investorProfiles' and 'investor:' || new.id <> k then
+    raise exception 'You can only save your own investor profile';
+  end if;
+  if new.collection = 'introRequests' and 'investor:' || coalesce(new.data ->> 'investorId', '') <> k then
+    raise exception 'You can only ask for introductions as yourself';
+  end if;
+  if new.collection = 'investorListings' and (new.id <> k or k !~ '^(vendor|partner):') then
+    raise exception 'Only the company itself can show its round to investors';
+  end if;
+  if new.collection = 'investorListings' and exists (select 1 from unnest(new.readers) x where x not in ('investors', k)) then
+    raise exception 'A company''s investor card is only for investors';
   end if;
   -- calendar events belong to whoever created them; a booking is recorded by the person who booked
   if new.collection = 'calendarEvents' and (new.data ->> 'ownerKey') is distinct from k then
@@ -673,11 +699,11 @@ declare u uuid; used_at timestamptz; cur_role text; cur_entity text; mail text :
         hash text; coll text;
 begin
   if not public.is_portal_operator() then raise exception 'Only CloudWAV can set up accounts'; end if;
-  if p_role is null or p_role not in ('partner', 'vendor', 'affiliate') then raise exception 'Choose vendor, partner or affiliate'; end if;
+  if p_role is null or p_role not in ('partner', 'vendor', 'affiliate', 'investor') then raise exception 'Choose partner, vendor, affiliate or investor'; end if;
   if ent = '' then raise exception 'The account needs a company'; end if;
   if mail !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' then raise exception 'Enter a valid email address'; end if;
   if p_password is null or length(p_password) < 8 then raise exception 'The temporary password needs at least 8 characters'; end if;
-  coll := case p_role when 'vendor' then 'programs' when 'partner' then 'partnerProfiles' else 'affiliateProfiles' end;
+  coll := case p_role when 'vendor' then 'programs' when 'partner' then 'partnerProfiles' when 'investor' then 'investorProfiles' else 'affiliateProfiles' end;
   if not exists (select 1 from public.portal_records where collection = coll and id = ent and coalesce(data->>'_deleted', '') <> 'true') then
     raise exception 'That company could not be found (%). It needs to be saved before it can have a login.', ent;
   end if;

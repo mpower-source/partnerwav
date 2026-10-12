@@ -662,4 +662,49 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authent
 select t('CloudWAV sees it for review', (select count(*) from portal_records where collection='communityEvents' and data->>'status' = 'pending') = 1);
 reset role;
 
+-- ===== Investors: their own workspace; companies opt in to showing their round; intros go through CloudWAV
+insert into auth.users(id, email) values ('00000000-0000-0000-0000-000000000021', 'vc@fund.test'), ('00000000-0000-0000-0000-000000000022', 'angel@other.test');
+insert into public.portal_users (id,email,role,entity_id,display_name) values
+ ('00000000-0000-0000-0000-000000000021','vc@fund.test','investor','seed-fund','Seed Fund'),
+ ('00000000-0000-0000-0000-000000000022','angel@other.test','investor','angel-one','Angel One');
+select t('an investor login can be created', (select count(*) from public.portal_users where role = 'investor') = 2);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values
+  ('investorProfiles','seed-fund','{"id":"seed-fund","name":"Seed Fund"}','{investor:seed-fund}','{investor:seed-fund}'),
+  ('investorProfiles','angel-one','{"id":"angel-one","name":"Angel One"}','{investor:angel-one}','{investor:angel-one}');
+reset role;
+-- the vendor shows its round to investors
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('investorListings','vendor:intelsense','{"id":"vendor:intelsense","company":"Intelsense","status":"raising"}','{investors,vendor:intelsense}','{vendor:intelsense}');
+select t('a vendor shows its own round to investors', (select count(*) from portal_records where collection='investorListings') = 1);
+select t('...but not another company''s', fails($$insert into portal_records(collection,id,data,readers,writers) values ('investorListings','vendor:botnoi','{"id":"vendor:botnoi"}','{investors,vendor:intelsense}','{vendor:intelsense}')$$));
+select t('...and only to investors', fails($$update portal_records set readers = '{*,vendor:intelsense}' where collection='investorListings' and id='vendor:intelsense'$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;   -- a partner
+select t('a partner cannot see the investor card', (select count(*) from portal_records where collection='investorListings') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000021'); set role authenticated;   -- investor seed-fund
+select t('an investor sees the companies showing their round', (select count(*) from portal_records where collection='investorListings') = 1);
+select t('...and its own profile, not another investor''s', (select array_agg(id) from portal_records where collection='investorProfiles') = '{seed-fund}');
+update portal_records set data = data || '{"thesis":"B2B SaaS"}' where collection='investorProfiles' and id='seed-fund';
+select t('an investor edits its own profile', (select data->>'thesis' from portal_records where collection='investorProfiles' and id='seed-fund') = 'B2B SaaS');
+select t('...but not another investor''s', fails($$insert into portal_records(collection,id,data,readers,writers) values ('investorProfiles','angel-one','{"id":"angel-one","name":"x"}','{investor:seed-fund}','{investor:seed-fund}') on conflict (collection,id) do update set data = excluded.data$$));
+insert into portal_records(collection,id,data,readers,writers) values ('introRequests','ir-1','{"id":"ir-1","investorId":"seed-fund","listingId":"vendor:intelsense","status":"requested"}','{investor:seed-fund}','{investor:seed-fund}');
+select t('an investor asks for an introduction', (select count(*) from portal_records where collection='introRequests') = 1);
+select t('...cannot mark it introduced itself', fails($$update portal_records set data = data || '{"status":"introduced"}' where collection='introRequests' and id='ir-1'$$));
+select t('...cannot ask in another investor''s name', fails($$insert into portal_records(collection,id,data,readers,writers) values ('introRequests','ir-2','{"id":"ir-2","investorId":"angel-one","status":"requested"}','{investor:seed-fund}','{investor:seed-fund}')$$));
+select t('an investor cannot read vendor-only records', (select count(*) from portal_records where collection='enrollmentNotes') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000022'); set role authenticated;   -- another investor
+select t('another investor cannot see the request', (select count(*) from portal_records where collection='introRequests') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('the vendor does not see investor requests', (select count(*) from portal_records where collection='introRequests') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+update portal_records set data = data || '{"status":"introduced","reply":"Meeting set"}' where collection='introRequests' and id='ir-1';
+select t('CloudWAV marks the introduction made', (select data->>'status' from portal_records where collection='introRequests' and id='ir-1') = 'introduced');
+select t('CloudWAV can set up an investor login', (public.portal_setup_account('new@vc.test', 'investor', 'seed-fund', 'Seed Fund', 'temp-pass-123') ->> 'role') = 'investor');
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

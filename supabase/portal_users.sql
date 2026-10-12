@@ -2,7 +2,7 @@
 -- PartnerWAV sign-in: portal_users
 -- Maps each Supabase Auth login to a portal role and the company it
 -- belongs to. The portal reads this after sign-in to decide which
--- workspace to open (Partner / Vendor / Affiliate / Operator).
+-- workspace to open (Partner / Vendor / Affiliate / Investor / Operator).
 --
 -- Run in: Supabase dashboard -> SQL Editor. Safe to re-run.
 -- =====================================================================
@@ -10,11 +10,12 @@
 create table if not exists public.portal_users (
   id           uuid primary key references auth.users(id) on delete cascade,
   email        text not null,
-  role         text not null check (role in ('partner','vendor','affiliate','operator')),
+  role         text not null check (role in ('partner','vendor','affiliate','investor','operator')),
   -- Which company this login acts for. Must match the ids in partnerwav-v11-merged.html:
   --   vendor    -> vendor program id   (intelsense, crossconnect, botnoi, zipevent, portonics-dev, unisense)
   --   partner   -> partner profile id  (siam-digital, gulf-coast, portonics, riverside)
   --   affiliate -> affiliate id        (techbridge-aff, asian-connect-aff)
+--   investor  -> investor profile id (set up from Investors or Accounts & Logins in the portal)
   --   operator  -> null
   entity_id    text,
   display_name text,

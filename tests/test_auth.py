@@ -46,7 +46,8 @@ with sync_playwright() as p:
     login(pg, "vendor@intelsense.test", "vend-pass-123")
     ok(not pg.locator("#loginScreen").is_visible() and pg.locator(".shell").is_visible(), "Vendor signs in")
     ok(visible_screen(pg) == ["scr-vendor-overview"], "Lands on vendor overview")
-    ok(not pg.locator(".role-switch").is_visible(), "Role switcher hidden when signed in")
+    rs = pg.evaluate("[...document.querySelectorAll('.role-btn')].filter(b => b.offsetParent).map(b => [b.dataset.role, b.getAttribute('aria-pressed'), b.disabled])")
+    ok(rs == [["partner", "false", True], ["vendor", "true", False], ["affiliate", "false", True], ["investor", "false", True]], "Signed in: Vendor highlighted, the other types greyed out, no Operator: " + str(rs))
     ok(pg.inner_text("#accountBtn") == "IA", "Avatar shows account initials: " + pg.inner_text("#accountBtn"))
     rest_calls = [c for c in mock.calls if c[1] == "/rest/v1/portal_users"]
     ok(rest_calls and mock.uid_from_auth(rest_calls[-1][2]) == USERS["vendor@intelsense.test"]["id"], "Role looked up with the user's own session token")
