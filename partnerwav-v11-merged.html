@@ -723,6 +723,25 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     .idb-split.has-sel .idb-panel .idb-detail{ border-radius:0; min-height:100%; }
     .idb-dp-close{ display:inline-flex; }
   }
+  .perk-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; align-items:stretch; margin-top:12px; }
+  .perk-card{ display:flex; flex-direction:column; gap:10px; padding:16px; height:236px; overflow:hidden; }
+  .perk-hidden{ opacity:.6; }
+  .perk-head{ display:flex; align-items:flex-start; gap:10px; }
+  .perk-head > div{ flex:1; }
+  .perk-mark{ flex:none; width:36px; height:36px; border-radius:10px; display:grid; place-items:center; font-weight:800; background:var(--surface-2); color:var(--accent); }
+  .perk-name{ display:block; }
+  .perk-value{ font-weight:700; line-height:1.35; }
+  .perk-card .perk-value{ display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; flex:1; }
+  .perk-card .perk-name, .perk-card .perk-sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .perk-badges{ display:flex; gap:6px; flex-wrap:wrap; }
+  .perk-modal{ position:fixed; inset:0; z-index:450; background:rgba(15,15,30,.45); display:grid; place-items:center; padding:20px; }
+  .perk-modal-box{ width:min(620px,100%); max-height:calc(100vh - 40px); overflow:auto; padding:20px; display:flex; flex-direction:column; gap:12px; }
+  html.perk-modal-open body{ overflow:hidden; }
+  @media (max-width:600px){ .perk-modal{ padding:0; } .perk-modal-box{ width:100%; height:100%; max-height:none; border-radius:0; } }
+  .perk-partner{ border-left:3px solid var(--warn, #b26a00); padding-left:8px; }
+  .perk-foot{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:nowrap; border-top:1px solid var(--line); padding-top:10px; }
+  .perk-op-note{ margin-top:12px; border-left:3px solid var(--accent); }
+  @media (max-width:600px){ .perk-grid{ grid-template-columns:1fr; } }
   .idb-co{ display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--accent-line, var(--line)); border-left:3px solid var(--accent); border-radius:10px; padding:10px 12px; }
   .idb-co-head{ font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); }
   .idb-prog-list{ display:flex; flex-direction:column; gap:8px; }
@@ -1189,6 +1208,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="partner-my-leads"><span class="ic">💼</span>My Leads</button>
           <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
           <button class="navlink" data-screen="investor-readiness"><span class="ic">💼</span>Investor Readiness</button>
+          <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
         </div>
       </div>
       <div class="navsec" data-sec="programs">
@@ -1250,6 +1270,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="partner-projects"><span class="ic">🚀</span>Projects</button>
           <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
           <button class="navlink" data-screen="investor-readiness"><span class="ic">💼</span>Investor Readiness</button>
+          <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
         </div>
       </div>
       <div class="navsec" data-sec="learn">
@@ -1281,6 +1302,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="affiliate-projects"><span class="ic">📋</span>Partner Projects</button>
           <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
           <button class="navlink" data-screen="investor-readiness"><span class="ic">💼</span>Investor Readiness</button>
+          <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
         </div>
       </div>
       <div class="navsec" data-sec="learn">
@@ -1346,6 +1368,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="operator-community"><span class="ic">🤝</span>Community Partners</button>
           <button class="navlink" data-screen="operator-investors"><span class="ic">💼</span>Investors</button>
           <button class="navlink" data-screen="operator-investor-db"><span class="ic">🗃️</span>Investor Database</button>
+          <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
           <button class="navlink" data-own-partner><span class="ic">🤝</span>CloudWAV as Partner</button>
         </div>
       </div>
@@ -2657,6 +2680,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-operator-investor-db" hidden>
         <div class="section-head"><h2>Investor Database</h2><span class="hint">Investors, incubators and programs -- only CloudWAV can see this</span></div>
         <div style="height:14px"></div><div id="investorDbContent"></div>
+      </section>
+      <section id="scr-startup-perks" hidden>
+        <div class="section-head"><h2>Startup Perks</h2><span class="hint">Free credits and discounts from software companies for startups</span></div>
+        <div style="height:14px"></div><div id="perksContent"></div>
       </section>
       <section id="scr-investor-readiness" hidden>
         <div class="section-head"><h2>Investor Readiness</h2><span class="hint">Check you're ready before investors on PartnerWAV meet you</span></div>
@@ -4009,6 +4036,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-community":"Community Partners",
     "operator-investors":"Investors",
     "operator-investor-db":"Investor Database",
+    "startup-perks":"Startup Perks",
     "investor-overview":"Overview",
     "investor-readiness":"Investor Readiness",
     "investor-profile":"My Profile",
@@ -5306,6 +5334,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var investorReadiness = [];   // each company's investor-readiness check (see INVESTOR READINESS)
   // CloudWAV's investor & incubator database (see INVESTOR DATABASE). The demo shows a few organisations (public company
   // information only) and one made-up example; the real records are loaded into Supabase from a private seed.
+  var PERKS_KEY = "partnerWAV_startupPerks";   // declared here, before loadPerks() runs at start-up
+  // Startup perks: free credits and discounts from software companies. Public program information, checked on the date shown;
+  // CloudWAV keeps the list current (add, edit, hide). Members see the visible ones.
+  var startupPerks = [{"id": "perk-claude", "provider": "Anthropic", "program": "Claude Startups", "category": "ai", "value": "A free year of Claude Team (up to 5 Premium seats) + USD 1,000 in Claude API credits", "who": "Companies founded in the last 5 years, or funded in the last 2. Claude Team offer is for companies new to Team. API credits expire 6 months after they're granted and work only on Anthropic's own API (not Amazon Bedrock or Google Vertex AI).", "how": "Apply with a Claude Console account and a company email on your website's domain. Most reviews are automatic; manual reviews take 2-3 business days. Also includes up to USD 45K in partner offers (e.g. ElevenLabs, Hex, Granola, ClickHouse, Gamma), office hours with Anthropic's Applied AI team, and events.", "url": "https://claude.com/programs/startups", "partnerOnly": false, "partnerRoute": "Up to USD 100K more in API credits through your VC, where your VC is a partner.", "checkedOn": "2026-10-12", "sources": ["https://techradar.com/pro/anthropic-offers-a-free-year-of-claude-team-and-usd1-000-in-credits-to-startups", "https://tech-ish.com/2026/10/07/claude-startups-free-team-year-and-api-credits/"], "hidden": false}, {"id": "perk-notion", "provider": "Notion", "program": "Notion for Startups", "category": "productivity", "value": "Up to 6 months free on the Business plan, including Notion AI", "who": "New Notion customers not on a paid plan. 6 months with a partner code (company email, public website, under 100 employees); 3 months without a partner; 1 month for small service businesses and teams under 10.", "how": "Apply on Notion's startup form; replies in 3-5 business days. One offer per company; not for Enterprise plans.", "url": "https://www.notion.com/startups", "partnerOnly": false, "partnerRoute": "6 months needs a code from a Notion partner (VC, accelerator or community). CloudWAV can apply to become one.", "checkedOn": "2026-10-12", "sources": ["https://Notion.com/help/notion-for-startups"], "hidden": false}, {"id": "perk-aws", "provider": "Amazon Web Services", "program": "AWS Activate", "category": "cloud", "value": "USD 1,000 in AWS credits (Founders), or up to USD 200,000 through an Activate Provider (Portfolio)", "who": "Founded in the last 10 years with a working company website. Founders tier: self-funded, new to Activate. Portfolio tier: pre-Series B, linked to an Activate Provider (VC, accelerator or incubator), applying within 12 months of the latest round.", "how": "Join AWS Activate and apply on the credits page; replies in about 7-10 business days. Credits usually last 1-2 years.", "url": "https://aws.amazon.com/startups/credits", "partnerOnly": false, "partnerRoute": "Portfolio credits need an Organization ID from an Activate Provider.", "checkedOn": "2026-10-12", "sources": ["https://aws.amazon.com/aws-startups/learn/everything-you-need-to-know-about-aws-activate-credits/"], "hidden": false}, {"id": "perk-google-cloud", "provider": "Google", "program": "Google for Startups Cloud Program", "category": "cloud", "value": "Up to USD 200,000 in Google Cloud credits over 2 years; up to USD 350,000 for AI-first startups", "who": "Start tier for early tech startups planning to raise (smaller credit amount); Scale and AI tiers need VC or institutional equity funding. Not for agencies, consultancies, non-profits or companies that are public or acquired.", "how": "Apply at Google Cloud's startup page with your billing account ID and a business email on your website's domain. Most decisions take a few business days.", "url": "https://cloud.google.com/startup", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://cloud.google.com/startup/faq", "https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-microsoft", "provider": "Microsoft", "program": "Microsoft for Startups (Founders Hub)", "category": "cloud", "value": "Up to USD 150,000 in Azure credits, plus GitHub Enterprise, Microsoft 365 and LinkedIn Premium", "who": "Privately held B2B companies building software or AI, pre-seed to Series C. Credits unlock in steps as you use Azure; activate within 90 days, use within 2 years.", "how": "Sign up for Founders Hub; an investor-network referral can start you at a higher credit level.", "url": "https://www.microsoft.com/en-us/startups", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-cloudflare", "provider": "Cloudflare", "program": "Cloudflare for Startups", "category": "cloud", "value": "USD 10,000 in credits for bootstrapped startups; USD 100,000-350,000 through partners", "who": "Software companies incorporated within 10 years, funded up to Series B, first-time applicants. The USD 10K tier is for startups that have raised under USD 1M.", "how": "Apply on Cloudflare's startup page. Credits last one year or until used.", "url": "https://www.cloudflare.com/forstartups/", "partnerOnly": false, "partnerRoute": "The larger tiers need funding from a Cloudflare partner.", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-openai", "provider": "OpenAI", "program": "OpenAI for Startups", "category": "ai", "value": "Build hours, resources and events; API credits only through partner VCs", "who": "Open to all founders for the resources; API credits need a referral from a VC in OpenAI's partner network.", "how": "Ask your VC whether it is an OpenAI partner.", "url": "", "partnerOnly": true, "partnerRoute": "API credits come only through partner VCs.", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-nvidia", "provider": "NVIDIA", "program": "NVIDIA Inception", "category": "ai", "value": "Free program: cloud credits from NVIDIA and partners, hardware discounts, training and go-to-market help", "who": "AI startups; a pitch deck is required. Not for consultancies, resellers, crypto companies or public companies.", "how": "Apply on NVIDIA's Inception page.", "url": "https://www.nvidia.com/en-us/startups/", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-hubspot", "provider": "HubSpot", "program": "HubSpot for Startups", "category": "sales", "value": "Partner offers for HubSpot startup customers, e.g. 20% off Stripe Atlas, USD 1,000 Notion credit, USD 1,200 Retool credits, Deel contractors free for 3 months", "who": "HubSpot for Startups customers; some partner offers have their own limits (for example Retool: founded within 2 years, under USD 5M raised, under 20 staff).", "how": "Join HubSpot for Startups, then claim offers from its offers page.", "url": "https://www.hubspot.com/startups", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://www.hubspot.com/startups/resources/offers?device=c"], "hidden": false}, {"id": "perk-mixpanel", "provider": "Mixpanel", "program": "Mixpanel for Startups", "category": "ops", "value": "First year free on the Startup plan (product analytics)", "who": "Incorporated less than 5 years ago, with under USD 8M raised.", "how": "Apply on Mixpanel's startup page.", "url": "https://mixpanel.com/startups", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}];
   var IDB_KEY = "partnerWAV_investorDb";   // declared here, before loadIdb() runs at start-up
   var investorDb = [{"id": "idb-beacon-venture-capital", "kind": "organization", "name": "Beacon Venture Capital (Kasikornbank)", "type": "Corporate VC", "typeLabel": "Corporate VC", "website": "https://beaconvc.fund", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Enterprise", "Consumer"], "stages": ["Seed", "Series A", "Series B+", "Growth"], "ticketText": "$500K-$5M", "ticketMin": 500000, "ticketMax": 5000000, "portfolio": "", "segment": "firms", "linkedin": "", "contacts": [], "notes": "KBank's corporate venture arm. Recent: WIZ.AI Series B (Nov 2025), Quantified Energy (Dec 2025).", "sources": ["https://www.cbinsights.com/investor/beacon-venture-capital"], "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "pilot": "Pilot first: offer Kasikornbank (KBank) a paid pilot. With Thai corporate venture arms, a successful pilot with the parent company is often the route to investment.", "forCompany": {"intelsense": {"timing": "Series A pipeline: a corporate venture process takes 6-12 weeks at least. Start with a pilot; the full cheque is likelier at Series A.", "groups": ["sprintA", "seriesA"]}}}, {"id": "idb-scb-10x", "kind": "organization", "name": "SCB 10X (SCBX)", "type": "Corporate VC", "typeLabel": "Corporate VC", "website": "https://www.scb10x.com", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Blockchain", "Deep Tech"], "stages": ["Seed", "Series A", "Series B+", "Growth"], "ticketText": "$100K-$5M first cheque", "ticketMin": 100000, "ticketMax": 5000000, "portfolio": "", "segment": "firms", "linkedin": "", "contacts": [{"name": "", "title": "VC team: pitch decks and intros", "email": "scb10x-vc@scb10x.com", "phone": "", "linkedin": "", "note": "One FYI Center, Rama 4 Road, Klongtoei, Bangkok 10110", "checked": true, "flags": []}], "notes": "SCBX's venture arm. Global mandate, seed to Series C+.", "sources": ["https://www.scb10x.com/llms.txt", "https://www.openvc.app/fund/SCB%2010X"], "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "pilot": "Pilot first: offer SCB / SCBX a paid pilot. With Thai corporate venture arms, a successful pilot with the parent company is often the route to investment."}, {"id": "idb-openspace-ventures", "kind": "organization", "name": "Openspace Ventures", "type": "VC fund", "typeLabel": "VC", "website": "https://openspace.vc", "country": "Singapore", "basedIn": "Singapore", "city": "Singapore", "focus": ["AI", "Enterprise", "SaaS"], "stages": ["Series A", "Series B+"], "ticketText": "$1M-$10M", "ticketMin": 1000000, "ticketMax": 10000000, "portfolio": "Southeast Asian enterprise portfolio", "segment": "firms", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "forCompany": {"intelsense": {"timing": "Series A pipeline: invests from Series A. Connect now, pitch once revenue is well past seed stage.", "groups": ["seriesA"]}}}, {"id": "idb-true-incube", "kind": "organization", "name": "True Incube (True Corporation)", "type": "Accelerator / incubator", "typeLabel": "Corporate VC / Accelerator", "website": "https://trueincube.com", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Telecom", "IoT", "5G"], "stages": ["Seed", "Series A"], "ticketText": "$100K-$2M", "ticketMin": 100000, "ticketMax": 2000000, "portfolio": "True/CP Group telecom ecosystem", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "pilot": "Pilot first: offer True Corporation a paid pilot. With Thai corporate venture arms, a successful pilot with the parent company is often the route to investment."}, {"id": "idb-depa", "kind": "organization", "name": "depa (Digital Economy Promotion Agency)", "type": "Government agency", "typeLabel": "Government Agency", "website": "https://depa.or.th", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Digital", "Smart City", "All"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Grants $10K-$150K", "ticketMin": 10000, "ticketMax": 150000, "portfolio": "Thailand's digital transformation agency. Smart City initiatives", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "forCompany": {"intelsense": {"timing": "Not for the seed round: grants, not equity. Apply for non-dilutive grants alongside the round.", "groups": ["notseed"]}}}, {"id": "idb-nia", "kind": "organization", "name": "NIA (National Innovation Agency)", "type": "Government agency", "typeLabel": "Government Agency", "website": "https://nia.or.th", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Innovation", "All Sectors"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Grants up to ฿15M ($450K)", "ticketMin": 450000, "ticketMax": 450000, "portfolio": "1,000+ startup grants/year. Startup Thailand platform", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand"}, {"id": "idb-plug-and-play-thailand", "kind": "organization", "name": "Plug and Play Thailand", "type": "Accelerator / incubator", "typeLabel": "Accelerator / VC", "website": "https://plugandplaytechcenter.com/thailand", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "Fintech", "Enterprise", "Mobility"], "stages": ["Pre-seed", "Seed", "Series A", "Series B+", "Growth"], "ticketText": "Non-dilutive + Investment", "ticketMin": null, "ticketMax": null, "portfolio": "Global network. Thailand chapter", "segment": "programs", "linkedin": "", "contacts": [], "notes": "", "source": "Example (public company information)", "verified": "unverified", "tags": [], "createdAt": "2026-10-12", "basedIn": "Thailand", "parentCountry": "USA (Plug and Play)"}, {"id": "idb-example-angel", "kind": "individual", "name": "Example Angel (example)", "type": "Individual investor", "typeLabel": "Angel investor", "website": "", "linkedin": "", "country": "Thailand", "city": "Bangkok", "focus": ["AI", "SaaS"], "stages": ["Pre-seed", "Seed"], "ticketText": "", "ticketMin": 25000, "ticketMax": 150000, "portfolio": "", "segment": "individuals", "contacts": [{"name": "Example Angel", "title": "Angel investor", "email": "angel@example.com", "phone": "", "linkedin": "https://www.linkedin.com/in/example", "checked": false, "flags": ["Email not confirmed"]}], "notes": "A made-up example so the demo shows how contacts and checks look.", "source": "Example", "verified": "unverified", "tags": ["Example"], "createdAt": "2026-10-12", "basedIn": "Thailand"}];
   // Community partners and the public Thailand event calendar (see COMMUNITY PARTNERS). Declared before loadCommunity() runs.
@@ -5922,6 +5954,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderInvestor();
     renderReadiness();
     renderInvestorDb();
+    renderPerks();
     renderPublicEvents();
     renderAccounts();
     renderFunding();
@@ -10537,6 +10570,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ var o = ["investor:" + r.id]; return { readers:o, writers:o }; } },
     { name:"investorListings", mode:"replace", get:function(){ return investorListings; }, set:function(a){ investorListings = a; },
       access:function(r){ return { readers:["investors", r.id], writers:[r.id] }; } },
+    // startup perks: CloudWAV keeps the list; everyone signed in reads the visible ones
+    { name:"startupPerks", mode:"merge", get:function(){ return startupPerks; }, set:function(a){ startupPerks = a; },
+      access:function(r){ return r.hidden ? { readers:[], writers:[] } : { readers:EVERYONE, writers:[] }; } },
     // the investor database is CloudWAV's alone (a paid service): nobody else can read or write it
     { name:"investorDb", mode:"replace", get:function(){ return investorDb; }, set:function(a){ investorDb = a; },
       access:function(){ return { readers:[], writers:[] }; } },
@@ -17414,6 +17450,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadInvestors();
   loadReadiness();
   loadIdb();
+  loadPerks();
   loadFunding();
   loadBrandKits();
   loadShop();
@@ -19273,6 +19310,109 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("[data-idb-commit]")){ if (!idbPending || !idbPending.length) return; var n = idbPending.length; idbPending.forEach(function(x){ investorDb.push(x); }); idbPending = null; state.idbImport = false; saveIdb(); renderInvestorDb(true); toast(n + " added to the investor database"); return; }
   });
 
+
+  // ===== STARTUP PERKS: free credits and discounts for startups (Claude, Notion, AWS, Google Cloud...) =====
+  var PERK_CATS = [["", "All"], ["ai", "AI"], ["cloud", "Cloud & hosting"], ["productivity", "Productivity"], ["sales", "Sales & marketing"], ["ops", "Operations & analytics"]];
+  function loadPerks(){ try { var d = JSON.parse(lsGet(PERKS_KEY) || "null"); if (Array.isArray(d)) startupPerks = d; } catch(e){} }
+  function savePerks(){ try { lsSet(PERKS_KEY, JSON.stringify(startupPerks)); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function perkById(id){ return startupPerks.filter(function(x){ return x.id === id; })[0] || null; }
+  function perkDate(d){ var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ""); return m ? Number(m[3]) + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][Number(m[2]) - 1] + " " + m[1] : ""; }
+  function perkCatName(x){ return (PERK_CATS.filter(function(c){ return c[0] === x.category; })[0] || [, ""])[1]; }
+  function perkBadge(x){ return x.hidden ? '<span class="badge neutral">Hidden</span>' : x.partnerOnly ? '<span class="badge warn">Through a partner</span>' : '<span class="badge good">Open to apply</span>'; }
+  // every card is the same size: the offer in short; the full terms open in a details window
+  function perkCardHtml(x, isOp){
+    var url = safeHref(x.url || "");
+    return '<div class="card perk-card'+(x.hidden ? ' perk-hidden' : '')+'" data-perk="'+attr(x.id)+'">'
+      + '<div class="perk-head"><span class="perk-mark" aria-hidden="true">'+esc((x.provider || "?").charAt(0))+'</span><div style="min-width:0;"><b class="perk-name">'+esc(x.program || x.provider)+'</b><div class="field-note perk-sub">'+esc([x.provider, perkCatName(x)].filter(Boolean).join(" · "))+'</div></div></div>'
+      + '<div class="perk-value">'+esc(x.value)+'</div>'
+      + '<div class="perk-badges">'+perkBadge(x)+(x.partnerRoute && !x.partnerOnly ? '<span class="badge accent">More through a partner</span>' : '')+'</div>'
+      + '<div class="perk-foot"><span class="field-note">Checked '+esc(perkDate(x.checkedOn) || "--")+'</span>'
+        + '<span class="idb-actions"><button type="button" class="btn secondary xs" data-perk-open="'+attr(x.id)+'">Details</button>'
+        + (url ? '<a class="btn primary xs" href="'+attr(url)+'" target="_blank" rel="noopener noreferrer" data-perk-apply>Go to offer</a>' : '')+'</span></div></div>';
+  }
+  function perkDetailHtml(x, isOp){
+    var url = safeHref(x.url || "");
+    var src = (x.sources || []).map(function(u){ var h = safeHref(u); return h ? '<a href="'+attr(h)+'" target="_blank" rel="noopener noreferrer">'+esc(idbHost(u))+'</a>' : ''; }).filter(Boolean).join(" · ");
+    return '<div class="perk-modal" role="dialog" aria-modal="true" aria-label="'+attr(x.program || x.provider)+'" data-perk-detail="'+attr(x.id)+'"><div class="perk-modal-box card">'
+      + '<div class="idb-dp-head"><div class="perk-head" style="flex:1;"><span class="perk-mark" aria-hidden="true">'+esc((x.provider || "?").charAt(0))+'</span><div><h3 class="idb-dp-name">'+esc(x.program || x.provider)+'</h3><div class="field-note">'+esc([x.provider, perkCatName(x)].filter(Boolean).join(" · "))+'</div></div></div>'
+        + '<button type="button" class="btn ghost xs" data-perk-close aria-label="Close">Close</button></div>'
+      + '<div class="perk-value">'+esc(x.value)+'</div><div class="perk-badges">'+perkBadge(x)+'</div>'
+      + '<div class="field-note"><b>Who qualifies:</b> '+esc(x.who || "")+'</div>'
+      + (x.how ? '<div class="field-note"><b>How to get it:</b> '+esc(x.how)+'</div>' : '')
+      + (x.partnerRoute ? '<div class="field-note perk-partner"><b>Through a partner:</b> '+esc(x.partnerRoute)+'</div>' : '')
+      + '<div class="field-note">Checked '+esc(perkDate(x.checkedOn) || "--")+(src ? ' · Sources: '+src : '')+'. Offers change, so read the terms on the offer page before applying.</div>'
+      + '<div class="idb-actions">'+(url ? '<a class="btn primary sm" href="'+attr(url)+'" target="_blank" rel="noopener noreferrer">Go to offer</a>' : '')
+        + (isOp ? '<button type="button" class="btn secondary sm" data-perk-edit="'+attr(x.id)+'">Edit</button><button type="button" class="btn ghost sm" data-perk-hide="'+attr(x.id)+'">'+(x.hidden ? 'Show to members' : 'Hide from members')+'</button>' : '')+'</div>'
+      + '</div></div>';
+  }
+  function perkFormHtml(x){
+    x = x || { category:"ai", checkedOn:todayIso(), sources:[] };
+    var f = function(id, label, val, ph){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" value="'+attr(val || "")+'" placeholder="'+attr(ph || "")+'" maxlength="400"></div>'; };
+    var ta = function(id, label, val){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><textarea id="'+id+'" rows="2" maxlength="1200">'+esc(val || "")+'</textarea></div>'; };
+    return '<div class="card card-pad" id="perkForm" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;"><h3 style="margin:0;font-size:1.05rem;">'+(x.id ? 'Edit '+esc(x.program || x.provider) : 'Add a perk')+'</h3>'
+      + '<div class="form-grid">'+f("perkProvider", "Company *", x.provider, "e.g. Notion")+f("perkProgram", "Program", x.program, "e.g. Notion for Startups")
+        + '<div class="field-row"><label for="perkCat">Category</label><select id="perkCat" class="filter app-select">'+PERK_CATS.slice(1).map(function(c){ return '<option value="'+c[0]+'"'+(c[0] === x.category ? ' selected' : '')+'>'+esc(c[1])+'</option>'; }).join("")+'</select></div>'
+        + f("perkUrl", "Link to the offer", x.url, "https://")+f("perkChecked", "Checked on", x.checkedOn, "YYYY-MM-DD")+'</div>'
+      + f("perkValue", "What startups get *", x.value, "e.g. 3 months free on the Business plan")
+      + ta("perkWho", "Who qualifies", x.who)+ta("perkHow", "How to get it", x.how)+ta("perkPartner", "Through a partner (optional)", x.partnerRoute)
+      + f("perkSources", "Sources (space separated links)", (x.sources || []).join(" "), "https://...")
+      + '<label class="field-note" style="display:flex;gap:8px;align-items:center;"><input type="checkbox" id="perkPartnerOnly"'+(x.partnerOnly ? ' checked' : '')+'> Only available through a partner</label>'
+      + '<div id="perkErr" class="login-msg bad" role="alert" hidden></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-perk-save="'+attr(x.id || "")+'">Save</button><button type="button" class="btn secondary sm" data-perk-cancel>Cancel</button>'
+      + (x.id ? '<button type="button" class="btn ghost sm" data-perk-delete="'+attr(x.id)+'" style="margin-left:auto;">Remove</button>' : '')+'</div></div>';
+  }
+  function renderPerks(force){
+    var box = document.getElementById("perksContent");
+    if (!box || state.screen !== "startup-perks") return;
+    var isOp = state.role === "operator", cat = state.perkCat || "", q = (state.perkQ || "").toLowerCase().trim();
+    var key = JSON.stringify([startupPerks.length, isOp, cat, q, state.perkEdit, state.perkOpen, state.perkV || 0]);
+    if (!force && box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    var vis = startupPerks.filter(function(x){ return isOp || !x.hidden; });
+    var list = vis.filter(function(x){ return (!cat || x.category === cat) && (!q || [x.provider, x.program, x.value, x.who, x.how].join(" ").toLowerCase().indexOf(q) > -1); });
+    var html = '<p class="field-note" style="margin:0 0 12px;">Free credits, free months and discounts that software companies offer startups. Each offer was checked on the date shown, but companies change their terms, so read the offer page before applying.'
+      + (isOp ? ' <b>Only CloudWAV can add, edit or hide perks.</b>' : '')+'</p>'
+      + '<div class="cal-bar"><div class="cal-views" role="group" aria-label="Category">'+PERK_CATS.map(function(c){ var n = c[0] ? vis.filter(function(x){ return x.category === c[0]; }).length : vis.length; return n || !c[0] ? '<button type="button" class="cal-view" data-perk-cat="'+c[0]+'" aria-pressed="'+(cat === c[0])+'">'+esc(c[1])+' ('+n+')</button>' : ''; }).join("")+'</div>'
+        + '<span style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;"><input type="search" id="perkQ" class="list-search" style="max-width:240px;" placeholder="Search perks..." value="'+attr(state.perkQ || "")+'" aria-label="Search perks">'
+        + (isOp ? '<button type="button" class="btn primary sm" data-perk-new>+ Add a perk</button>' : '')+'</span></div>';
+    if (isOp && state.perkEdit) html += perkFormHtml(state.perkEdit === "new" ? null : perkById(state.perkEdit));
+    if (isOp){ var po = startupPerks.filter(function(x){ return x.partnerRoute; });
+      if (po.length) html += '<div class="card card-pad perk-op-note" data-perk-partner-note><b>Unlock more for members:</b> '+po.length+' of these give more through a partner (for example Notion\'s 6 months, AWS Portfolio credits, Cloudflare\'s larger tiers). CloudWAV can apply to be a partner so members get the bigger offers.</div>'; }
+    html += list.length ? '<div class="perk-grid">'+list.map(function(x){ return perkCardHtml(x, isOp); }).join("")+'</div>' : '<div class="empty">No perks match. Try another category.</div>';
+    var op = state.perkOpen && perkById(state.perkOpen); if (op && (isOp || !op.hidden)) html += perkDetailHtml(op, isOp);
+    document.documentElement.classList.toggle("perk-modal-open", !!(op && (isOp || !op.hidden)));
+    box.innerHTML = html;
+  }
+  function perkSave(id){
+    var g = function(k){ var el = document.getElementById(k); return el ? el.value.trim() : ""; }, err = document.getElementById("perkErr");
+    var provider = g("perkProvider"), value = g("perkValue"), url = g("perkUrl");
+    if (!provider || !value){ err.textContent = "Add the company and what startups get."; err.hidden = false; return; }
+    if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
+    if (url && !safeHref(url)){ err.textContent = "Check the link."; err.hidden = false; return; }
+    var srcs = g("perkSources").split(/\s+/).filter(Boolean).map(function(u){ return /^https?:\/\//i.test(u) ? u : "https://" + u; }).filter(function(u){ return safeHref(u); });
+    var x = id ? perkById(id) : null;
+    if (!x){ var base = "perk-" + (provider.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "offer"), nid = base, n = 2; while (perkById(nid)) nid = base + "-" + (n++);
+      x = { id:nid, hidden:false }; startupPerks.push(x); }
+    Object.assign(x, { provider:provider, program:g("perkProgram"), category:g("perkCat") || "ai", url:url, checkedOn:/^\d{4}-\d{2}-\d{2}$/.test(g("perkChecked")) ? g("perkChecked") : todayIso(),
+      value:value, who:g("perkWho"), how:g("perkHow"), partnerRoute:g("perkPartner"), partnerOnly:!!(document.getElementById("perkPartnerOnly") || {}).checked, sources:srcs, updatedAt:todayIso() });
+    state.perkEdit = null; savePerks(); renderPerks(true); toast("Saved");
+  }
+  document.addEventListener("keydown", function(ev){ if (ev.key === "Escape" && state.perkOpen && state.screen === "startup-perks"){ state.perkOpen = null; renderPerks(true); } });
+  document.addEventListener("input", function(ev){ var t = ev.target; if (!t || t.id !== "perkQ") return;
+    state.perkQ = t.value; clearTimeout(state.perkTimer); state.perkTimer = setTimeout(function(){ var pos = t.selectionStart; renderPerks(true); var el = document.getElementById("perkQ"); if (el){ el.focus(); try { el.setSelectionRange(pos, pos); } catch(e){} } }, 200); });
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t || !t.closest("#perksContent")) return; var b;
+    if ((b = t.closest("[data-perk-cat]"))){ state.perkCat = b.getAttribute("data-perk-cat"); renderPerks(true); return; }
+    if ((b = t.closest("[data-perk-open]"))){ state.perkOpen = b.getAttribute("data-perk-open"); renderPerks(true); var cl = document.querySelector("[data-perk-close]"); if (cl) cl.focus(); return; }
+    if (t.closest("[data-perk-close]") || t.classList.contains("perk-modal")){ state.perkOpen = null; renderPerks(true); return; }
+    if (state.role !== "operator") return;
+    if (t.closest("[data-perk-new]")){ state.perkEdit = "new"; renderPerks(true); var pv = document.getElementById("perkProvider"); if (pv) pv.focus(); return; }
+    if ((b = t.closest("[data-perk-edit]"))){ state.perkOpen = null; state.perkEdit = b.getAttribute("data-perk-edit"); renderPerks(true); var fm = document.getElementById("perkForm"); if (fm && fm.scrollIntoView) fm.scrollIntoView({ block:"start" }); return; }
+    if (t.closest("[data-perk-cancel]")){ state.perkEdit = null; renderPerks(true); return; }
+    if ((b = t.closest("[data-perk-save]"))){ perkSave(b.getAttribute("data-perk-save")); return; }
+    if ((b = t.closest("[data-perk-hide]"))){ var hx = perkById(b.getAttribute("data-perk-hide")); if (hx){ hx.hidden = !hx.hidden; hx.updatedAt = todayIso(); state.perkV = (state.perkV || 0) + 1; savePerks(); renderPerks(true); } return; }
+    if ((b = t.closest("[data-perk-delete]"))){ var dx = perkById(b.getAttribute("data-perk-delete")); if (dx && confirm("Remove " + (dx.program || dx.provider) + " from Startup Perks?")){ startupPerks.splice(startupPerks.indexOf(dx), 1); state.perkEdit = null; savePerks(); renderPerks(true); } return; }
+  });
   // ===== PHONE MENU: a bar across the top; "Menu" opens it over the page, choosing a screen closes it =====
   function mnavIsOpen(){ return document.documentElement.classList.contains("mnav-open"); }
   function mnavSet(open){

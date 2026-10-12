@@ -747,4 +747,22 @@ select pg_temp.as_user(''); set role anon;
 select t('the public cannot read it', (select count(*) from portal_records where collection='investorDb') = 0);
 reset role;
 
+-- ===== Startup perks: CloudWAV keeps the list; everyone signed in reads the visible ones
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('startupPerks','perk-x','{"id":"perk-x","provider":"Example"}','{*}','{}');
+insert into portal_records(collection,id,data,readers,writers) values ('startupPerks','perk-h','{"id":"perk-h","provider":"Hidden","hidden":true}','{}','{}');
+select t('CloudWAV adds startup perks', (select count(*) from portal_records where collection='startupPerks') = 2);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- a vendor
+select t('a vendor reads the visible perks, not hidden ones', (select array_agg(id) from portal_records where collection='startupPerks') = array['perk-x']);
+select t('...but cannot add one', fails($$insert into portal_records(collection,id,data,readers,writers) values ('startupPerks','perk-y','{"id":"perk-y"}','{*}','{vendor:intelsense}')$$));
+update portal_records set data = data || '{"provider":"Changed"}' where collection='startupPerks' and id='perk-x';
+reset role;
+select t('...or change one', (select data->>'provider' from portal_records where collection='startupPerks' and id='perk-x') = 'Example');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('the public cannot read perks', (select count(*) from portal_records where collection='startupPerks') = 0);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

@@ -156,7 +156,7 @@ returns boolean language sql immutable as $$
                         'programFees','platformFees','affiliateSignups',
                         'vendorAssessments','pricingModel','agreementReviews',
                         'operatorSettings','vendorReferrals','houseSummaries',
-                        'eventPages','eventConnections','communityOrgs','communityEvents','investorDb'])
+                        'eventPages','eventConnections','communityOrgs','communityEvents','investorDb','startupPerks'])
 $$;
 
 -- ---------------------------------------------------------------------------
