@@ -627,7 +627,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .int-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:16px; align-items:start; }
   .int-card{ display:flex; flex-direction:column; gap:10px; } .int-head{ display:flex; align-items:center; gap:10px; } .int-head h3{ margin:0; font-size:1.05rem; flex:1; }
   .int-logo{ width:40px; height:40px; border-radius:10px; display:grid; place-items:center; font-weight:800; color:#fff; flex:none; font-family:"Space Grotesk",sans-serif; }
-  .modal.modal-wide{ width:min(760px, 96vw); max-width:none; } .book-frame{ width:100%; height:min(680px, 72vh); border:0; border-radius:10px; background:#fff; }
+  .modal.modal-wide{ width:min(760px, 96vw); max-width:none; }
+  /* Resource Library viewer: about twice the size on desktop; phones keep the normal size (see max-width:700px below) */
+  .modal.modal-res{ width:min(1120px, 96vw); max-width:none; }
+  .modal.modal-res .res-preview iframe{ height:min(1040px, 78vh); }
+  .modal.modal-res .res-preview video, .modal.modal-res .res-preview img{ max-height:min(1040px, 78vh); }
+  @media (max-width:700px){ .modal.modal-res .res-preview iframe{ height:380px; } .modal.modal-res .res-preview video, .modal.modal-res .res-preview img{ max-height:520px; } } .book-frame{ width:100%; height:min(680px, 72vh); border:0; border-radius:10px; background:#fff; }
   /* dropdowns that sit on their own (not in a form row): same look as the app's buttons and inputs */
   select.filter.app-select{ -webkit-appearance:none; appearance:none; font-family:inherit; font-size:.86rem; font-weight:600; padding:9px 34px 9px 12px; border-radius:10px; min-height:38px; cursor:pointer;
     border:1px solid var(--line); background-color:var(--surface); color:var(--ink); max-width:100%; text-overflow:ellipsis;
@@ -15594,7 +15599,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var openResBtn = e.target.closest("[data-open-resource]");
     if (openResBtn){
       var orr = resources.filter(function(x){ return x.id === openResBtn.getAttribute("data-open-resource"); })[0];
-      if (orr) openModal('<div class="modal-head"><h2>'+esc(orr.title)+'</h2><button class="modal-close" aria-label="Close">×</button></div><div id="resPreviewSlot" data-res-id="'+esc(orr.id)+'">'+resourcePreviewHtml(orr)+'</div>');
+      if (orr) openModal('<div class="modal-head"><h2>'+esc(orr.title)+'</h2><button class="modal-close" aria-label="Close">×</button></div><div id="resPreviewSlot" data-res-id="'+esc(orr.id)+'">'+resourcePreviewHtml(orr)+'</div>').querySelector(".modal").classList.add("modal-res");
       return;
     }
 
