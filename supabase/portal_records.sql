@@ -140,7 +140,7 @@ returns boolean language sql immutable as $$
                         'programFees','platformFees','affiliateSignups',
                         'vendorAssessments','pricingModel','agreementReviews',
                         'operatorSettings','vendorReferrals','houseSummaries',
-                        'eventPages','eventConnections'])
+                        'eventPages','eventConnections','communityOrgs','communityEvents'])
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -189,6 +189,9 @@ begin
   -- someone CloudWAV met at an event connects through submit_event_connection() below
   if new.collection = 'eventConnections' and tg_op = 'INSERT'
      and current_setting('portal.event_connect', true) = 'on' then return new; end if;
+  -- an organizer sends an event in for the public Thailand calendar through submit_community_event() below
+  if new.collection = 'communityEvents' and tg_op = 'INSERT'
+     and current_setting('portal.community_event', true) = 'on' then return new; end if;
   -- a vendor's fit assessment sent from the public form arrives through submit_vendor_assessment() below
   if new.collection = 'vendorAssessments'
      and current_setting('portal.vendor_assessment', true) = 'on' then return new; end if;
@@ -519,6 +522,56 @@ begin
 end $$;
 revoke all on function public.submit_event_connection(text, jsonb) from public;
 grant execute on function public.submit_event_connection(text, jsonb) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Thailand event calendar: anyone running a community can send an event in (no sign-in). It waits,
+-- unlisted, until CloudWAV approves it; only CloudWAV sees the organizer's contact details.
+-- ---------------------------------------------------------------------------
+create or replace function public.submit_community_event(p_data jsonb)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  new_id text := 'ce-' || replace(gen_random_uuid()::text, '-', '');
+  st timestamptz;
+  dur int;
+  link text;
+  city text;
+begin
+  if p_data is null or jsonb_typeof(p_data) <> 'object' or length(p_data::text) > 5000 then
+    raise exception 'The event details are missing or too long';
+  end if;
+  if coalesce(trim(p_data ->> 'orgName'), '') = '' or coalesce(trim(p_data ->> 'title'), '') = '' then
+    raise exception 'Please add the community and the event name';
+  end if;
+  if coalesce(trim(p_data ->> 'name'), '') = '' or coalesce(trim(p_data ->> 'contact'), '') = '' then
+    raise exception 'Please add your name and a LINE, WhatsApp or email';
+  end if;
+  begin
+    st := (p_data ->> 'start')::timestamptz;
+  exception when others then st := null;
+  end;
+  if st is null or st < now() or st > now() + interval '2 years' then raise exception 'Please choose a date in the future'; end if;
+  link := trim(coalesce(p_data ->> 'link', ''));
+  if link !~ '^https://[^\s"<>]+\.[^\s"<>]+$' or length(link) > 400 then raise exception 'Please add the registration link (https://...)'; end if;
+  dur := case when coalesce(p_data ->> 'durationMin', '') ~ '^[0-9]{1,5}$' then (p_data ->> 'durationMin')::int else 120 end;
+  if dur < 15 or dur > 10080 then dur := 120; end if;
+  city := coalesce(p_data ->> 'city', '');
+  if city not in ('Bangkok', 'Chiang Mai', 'Phuket', 'Pattaya', 'Khon Kaen', 'Hua Hin', 'Online', 'Other') then city := 'Other'; end if;
+  if not public.portal_spam_check('tec', 'calendar', lower(trim(p_data ->> 'contact')), p_data) then return new_id; end if;
+  perform set_config('portal.community_event', 'on', true);
+  insert into public.portal_records (collection, id, data, readers, writers, is_public)
+  values ('communityEvents', new_id, jsonb_build_object(
+    'id', new_id, 'status', 'pending', 'orgName', left(trim(p_data ->> 'orgName'), 120), 'title', left(trim(p_data ->> 'title'), 160),
+    'start', to_char(st at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS".000Z"'), 'durationMin', dur, 'city', city,
+    'venue', left(trim(coalesce(p_data ->> 'venue', '')), 160), 'price', left(trim(coalesce(p_data ->> 'price', '')), 60),
+    'link', link, 'desc', left(trim(coalesce(p_data ->> 'desc', '')), 800),
+    'submitter', jsonb_build_object('name', left(trim(p_data ->> 'name'), 120), 'contact', left(trim(p_data ->> 'contact'), 160)),
+    'createdAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI')),
+    '{}', '{}', false);
+  perform set_config('portal.community_event', 'off', true);
+  return new_id;
+end $$;
+revoke all on function public.submit_community_event(jsonb) from public;
+grant execute on function public.submit_community_event(jsonb) to anon, authenticated;
 
 create or replace function public.submit_vendor_assessment(p_data jsonb)
 returns text language plpgsql security definer set search_path = public as $$

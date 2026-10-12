@@ -635,4 +635,31 @@ select t('a bot filling the hidden field is dropped quietly', public.submit_even
 reset role;
 select t('...and nothing is saved', (select count(*) from portal_records where collection='eventConnections' and data->>'name' = 'Bot') = 0);
 
+-- ===== Community partners and the public Thailand event calendar
+delete from public.portal_submit_log;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers,is_public) values
+  ('communityOrgs','org-x','{"id":"org-x","name":"Bangkok Founders","notes":"private"}','{}','{}',false),
+  ('communityEvents','ce-live','{"id":"ce-live","title":"Founder Night","status":"published"}','{EVERYONE}','{}',true);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;
+select t('a member cannot see CloudWAV''s community list', (select count(*) from portal_records where collection='communityOrgs') = 0);
+select t('...or add a community', fails($$insert into portal_records(collection,id,data,readers,writers) values ('communityOrgs','org-y','{"id":"org-y"}','{}','{}')$$));
+select t('...or list an event directly', fails($$insert into portal_records(collection,id,data,readers,writers,is_public) values ('communityEvents','ce-y','{"id":"ce-y","status":"published"}','{EVERYONE}','{}',true)$$));
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('anyone can read a listed event', (select count(*) from portal_records where collection='communityEvents') = 1);
+select t('an organizer sends an event in', public.submit_community_event(jsonb_build_object('orgName','Phuket Startups','title','Beach Drinks','start',to_char(now() + interval '10 days','YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+  'durationMin',120,'city','Atlantis','venue','Kata','link','https://meetup.com/x','name','Nok','contact','@noknok','status','published','orgId','org-x')) like 'ce-%');
+select t('a past date is refused', fails($$select public.submit_community_event('{"orgName":"A","title":"B","start":"2020-01-01T10:00:00Z","link":"https://a.co/x","name":"N","contact":"@n"}')$$));
+select t('a non-https link is refused', fails($$select public.submit_community_event(jsonb_build_object('orgName','A','title','B','start',to_char(now() + interval '3 days','YYYY-MM-DD"T"HH24:MI:SS"Z"'),'link','javascript:alert(1)','name','N','contact','@n'))$$));
+select t('the organizer''s contact is needed', fails($$select public.submit_community_event(jsonb_build_object('orgName','A','title','B','start',to_char(now() + interval '3 days','YYYY-MM-DD"T"HH24:MI:SS"Z"'),'link','https://a.co/x'))$$));
+select t('anon cannot see the waiting event', (select count(*) from portal_records where collection='communityEvents') = 1);
+reset role;
+select t('...it waits unlisted, with only the form''s fields (no status or org link from the visitor)', (select data->>'status' = 'pending' and not is_public and readers = '{}' and data->>'city' = 'Other'
+  and not (data ? 'orgId') and data->'submitter'->>'contact' = '@noknok' from portal_records where collection='communityEvents' and data->>'title' = 'Beach Drinks'));
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV sees it for review', (select count(*) from portal_records where collection='communityEvents' and data->>'status' = 'pending') = 1);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

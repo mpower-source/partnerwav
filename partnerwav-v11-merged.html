@@ -112,8 +112,8 @@
   // Sign-in required unless ?demo=1 (walk-through mode) or a public ?apply= referral link
   (function(){ var q = location.search;
     if (/[?&]demo=1(&|$)/.test(q)){ document.documentElement.classList.add("demo-mode");
-      if (/[?&]meet=/.test(q)) document.documentElement.classList.add("public-apply"); }   // an event page looks the same in a demo
-    else if (/[?&](apply|lp|invite|assess|pp|meet)=/.test(q)) document.documentElement.classList.add("public-apply");
+      if (/[?&](meet|events)=/.test(q)) document.documentElement.classList.add("public-apply"); }   // event pages look the same in a demo
+    else if (/[?&](apply|lp|invite|assess|pp|meet|events)=/.test(q)) document.documentElement.classList.add("public-apply");
     else document.documentElement.classList.add("auth-locked");
   })();
 </script>
@@ -666,6 +666,60 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     .meet-chip{ padding:7px 12px; }
   }
   .ev-qr .aff-qr{ flex-direction:column; text-align:center; }
+  /* Community Partners (CloudWAV) and the public Thailand event calendar */
+  .cp-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; }
+  .cp-org{ display:flex; flex-direction:column; gap:10px; }
+  .cp-link{ font-size:.88rem; word-break:break-all; }
+  .cp-next{ font-size:.88rem; background:var(--accent-soft); border-radius:8px; padding:8px 10px; }
+  .cp-notes{ white-space:pre-wrap; }
+  .cp-opps summary{ cursor:pointer; font-weight:600; font-size:.9rem; }
+  .cp-opps ul{ margin:8px 0; padding-left:18px; display:flex; flex-direction:column; gap:4px; font-size:.9rem; }
+  .cp-opp-add{ display:grid; grid-template-columns:1.2fr 1fr 1.2fr auto; gap:6px; margin-top:8px; }
+  .cp-opp-add input, .cp-opp-add select{ min-width:0; font-size:.85rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); }
+  .cp-share{ display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+  .cp-share .ev-qr .aff-qr img{ width:140px; height:140px; }
+  .cp-ev{ display:flex; gap:14px; align-items:flex-start; }
+  .tec-date{ flex:0 0 58px; align-self:flex-start; text-align:center; border-radius:12px; background:var(--accent-soft); color:var(--accent-strong); padding:8px 4px; display:flex; flex-direction:column; line-height:1.1; }
+  .tec-date b{ font-size:1.45rem; }
+  .tec-date span{ font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+  .tec-date i{ font-style:normal; font-size:.72rem; color:var(--ink-faint); margin-top:2px; }
+  .tec-wrap{ max-width:760px; margin:0 auto; padding:24px 16px 48px; display:flex; flex-direction:column; gap:18px; }
+  .tec-hero{ border-radius:20px; padding:26px 24px; background:linear-gradient(135deg, var(--accent-soft), var(--surface) 75%); border:1px solid var(--line); display:flex; flex-direction:column; gap:10px; }
+  .tec-hero h1{ margin:0; font-size:1.9rem; line-height:1.15; }
+  .tec-hero p{ margin:0; color:var(--ink-soft); line-height:1.5; max-width:560px; }
+  .tec-all{ font-size:.9rem; font-weight:600; }
+  .tec-month h2, .tec-hosts h2{ font-size:.85rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-faint); margin:6px 0 10px; }
+  .tec-month{ display:flex; flex-direction:column; gap:10px; }
+  .tec-ev{ display:flex; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:var(--shadow); }
+  .tec-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .tec-body h3{ margin:0; font-size:1.1rem; line-height:1.3; }
+  .tec-host{ font-size:.9rem; font-weight:600; }
+  .tec-meta{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:.88rem; color:var(--ink-soft); }
+  .tec-body p{ margin:0; font-size:.92rem; color:var(--ink-soft); line-height:1.5; }
+  .tec-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .tec-actions .btn{ text-decoration:none; }
+  .tec-empty{ text-align:center; padding:32px 16px; color:var(--ink-soft); border:1px dashed var(--line); border-radius:16px; }
+  .tec-hosts .meet-chip{ text-decoration:none; }
+  .tec-submit{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px; }
+  .tec-cta{ display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .tec-cta h3, .tec-form h3, .tec-done h3, .tec-about h3{ margin:0 0 4px; font-size:1.1rem; }
+  .tec-form{ display:flex; flex-direction:column; gap:12px; }
+  .tec-form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .tec-form select, .tec-form textarea{ width:100%; font-size:1rem; padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font-family:inherit; }
+  .tec-done{ display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
+  .tec-about{ padding:4px 4px 0; color:var(--ink-soft); }
+  .tec-about p{ margin:0 0 10px; line-height:1.5; }
+  @media (max-width:600px){
+    .tec-wrap{ padding:8px 0 32px; gap:14px; }
+    .tec-hero{ padding:20px 16px; border-radius:16px; }
+    .tec-hero h1{ font-size:1.5rem; }
+    .tec-ev{ padding:14px 12px; gap:12px; }
+    .tec-date{ flex-basis:50px; }
+    .tec-form-grid{ grid-template-columns:1fr; }
+    .tec-submit{ padding:16px 14px; }
+    .cp-grid{ grid-template-columns:1fr; }
+    .cp-opp-add{ grid-template-columns:1fr 1fr; }
+  }
   .ev-qr .aff-qr img{ width:180px; height:180px; }
   .modal.modal-res .res-preview iframe{ height:min(1040px, 78vh); }
   .modal.modal-res .res-preview video, .modal.modal-res .res-preview img{ max-height:min(1040px, 78vh); }
@@ -1147,6 +1201,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="operator-msp-prospects"><span class="ic">🔍</span>MSP Prospecting</button>
           <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
           <button class="navlink" data-screen="operator-events"><span class="ic">📇</span>Event Connect</button>
+          <button class="navlink" data-screen="operator-community"><span class="ic">🤝</span>Community Partners</button>
           <button class="navlink" data-own-partner><span class="ic">🤝</span>CloudWAV as Partner</button>
         </div>
       </div>
@@ -2444,6 +2499,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div id="operatorEventsContent"></div>
       </section>
 
+      <section id="scr-operator-community" hidden>
+        <div class="section-head"><h2>Community Partners</h2><span class="hint">The communities you work with, what each has agreed to, and the public Thailand event calendar</span></div>
+        <div style="height:14px"></div>
+        <div id="operatorCommunityContent"></div>
+      </section>
+
+      <!-- ===== PUBLIC: THAILAND EVENT CALENDAR (?events=thailand, optional &org=id, no sign-in) ===== -->
+      <section id="scr-public-events" hidden>
+        <div id="publicEventsContent"></div>
+      </section>
+
       <!-- ===== PUBLIC: EVENT CONNECT (?meet=id, no sign-in) ===== -->
       <section id="scr-public-meet" hidden>
         <div id="publicMeetContent"></div>
@@ -3692,6 +3758,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   if (urlParams.get('lp')) { state.screen = "public-landing"; state.publicLpId = urlParams.get('lp'); }
   if (urlParams.get('pp')) { state.screen = "public-partner-page"; state.publicPpId = urlParams.get('pp'); }
   if (urlParams.get('meet')) { state.screen = "public-meet"; state.publicMeetId = urlParams.get('meet'); }
+  if (urlParams.has('events')) { state.screen = "public-events"; state.publicEventsOrg = (urlParams.get('org') || "").slice(0, 80); }
   if (urlParams.has('assess')) { state.screen = "public-assess"; }
   if (urlParams.get('invite')) { state.screen = "public-invite"; state.publicInviteId = urlParams.get('invite'); state.publicInviteRef = (urlParams.get('ref') || "").slice(0, 60); }
   if (urlParams.has('apply') && urlParams.get('apply') === 'vendor') {
@@ -3767,6 +3834,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "public-partner-page":"",
     "public-meet":"",
     "operator-events":"Event Connect",
+    "public-events":"",
+    "operator-community":"Community Partners",
     "landing-page-editor":"Landing Page",
     "public-landing":"",
     "public-invite":"",
@@ -5030,6 +5099,30 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var EV_INTRO = "PartnerWAV connects software vendors with the partners, affiliates and investors who help them grow. Leave your details and we'll message you.";
   var eventPages = [{ id:"ev-demo", name:"Bangkok Tech Meetup (example)", intro:EV_INTRO, status:"published", createdAt:"2026-10-12 08:00", updatedAt:"2026-10-12 08:00" }];
   var eventConnections = [];
+  // Community partners and the public Thailand event calendar (see COMMUNITY PARTNERS). Declared before loadCommunity() runs.
+  var COMMUNITY_KEY = "partnerWAV_community";
+  // the communities CloudWAV works with -- real starter records, private to CloudWAV
+  var communityOrgs = [
+    { id:"org-bkk-entrepreneurs", name:"Bangkok Entrepreneurs", website:"https://www.bangkokentrepreneurs.com", kind:"Founders & startups", status:"prospect", city:"Bangkok", reach:"", contact:"",
+      nextStep:"Event on 13 Oct (evening): bring the Event Connect QR code, and ask the organizers about listing their events and a PartnerWAV mention", perks:{}, opps:[], notes:"", createdAt:"2026-10-12 09:00", _rev:1 },
+    { id:"org-bkk-entrepreneurs-online", name:"Bangkok Entrepreneurs (online community)", website:"https://www.bangkok-entrepreneurs.com/", kind:"Founders & startups", status:"prospect", city:"Bangkok",
+      reach:"22,000+ members (their figure)", contact:"Register on their site, or X @BKKEntrepreneur", nextStep:"Ask about becoming one of their ecosystem partners (they list coworking spaces, incubators and advisors)",
+      perks:{}, opps:[], notes:"Online community of foreign and local founders, running since 2015: courses, a business directory and member perks.", createdAt:"2026-10-12 09:00", _rev:1 },
+    { id:"org-claude-thailand", name:"Claude Thailand Community", website:"https://www.facebook.com/groups/1745892855948687", kind:"Tech & AI", status:"talking", city:"Bangkok", reach:"", contact:"Facebook group admins",
+      nextStep:"Log the SaaS builders found in the group under Opportunities; offer to list the group's meetups", perks:{}, opps:[], notes:"", createdAt:"2026-10-12 09:00", _rev:1 }
+  ];
+  // starter examples for the demo (cleared when CloudWAV signs in; the public page shows only what's really listed)
+  function ceSeedStart(days, hh, mm){ var d = new Date(Date.now() + days * 86400000 + 7 * 3600000); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), hh - 7, mm)).toISOString(); }
+  var communityEvents = [
+    { id:"ce-demo-1", orgId:"org-bkk-entrepreneurs", orgName:"Bangkok Entrepreneurs", orgUrl:"https://www.bangkokentrepreneurs.com", title:"Founder Night: AI for SMEs (example)", start:ceSeedStart(3, 18, 30), durationMin:150,
+      city:"Bangkok", venue:"Example venue, Sukhumvit", price:"Free", link:"https://www.bangkokentrepreneurs.com", desc:"Short talks from founders using AI in small businesses, then open networking.", status:"published", createdAt:"2026-10-12 09:00" },
+    { id:"ce-demo-2", orgId:"org-claude-thailand", orgName:"Claude Thailand Community", orgUrl:"https://www.facebook.com/groups/1745892855948687", title:"Claude Builders Meetup (example)", start:ceSeedStart(10, 18, 0), durationMin:120,
+      city:"Bangkok", venue:"Example coworking space, Silom", price:"Free", link:"https://www.facebook.com/groups/1745892855948687", desc:"Show what you've built with Claude: five-minute demos and Q&A.", status:"published", createdAt:"2026-10-12 09:00" },
+    { id:"ce-demo-3", orgName:"Chiang Mai SaaS Founders (example)", title:"SaaS Growth Workshop (example)", start:ceSeedStart(20, 14, 0), durationMin:180, city:"Chiang Mai", venue:"Example cafe, Nimman",
+      price:"300 THB", link:"https://example.com/register", desc:"Pricing, partner channels and first sales hires for small software companies.", status:"published", createdAt:"2026-10-12 09:00" },
+    { id:"ce-demo-4", orgName:"Phuket Startup Drinks (example)", title:"Startup Drinks by the Beach (example)", start:ceSeedStart(14, 19, 0), durationMin:120, city:"Phuket", venue:"Example bar, Kata",
+      price:"Free", link:"https://example.com/phuket", desc:"Monthly casual meetup.", status:"pending", submitter:{ name:"Example organizer", contact:"@example-line" }, createdAt:"2026-10-12 09:00" }
+  ];
   // brand kits (Branding screen). Declared here, before loadBrandKits() runs at start-up.
   var BRAND_KEY = "partnerWAV_brandKits";
   // Starter: Botnoi's colours, matched by PartnerWAV from botnoigroup.com (charcoal background, sky-blue buttons, IBM Plex Sans Thai)
@@ -5071,7 +5164,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function calLocalInput(iso){ var d = new Date(iso), z = function(n){ return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()) + "T" + z(d.getHours()) + ":" + z(d.getMinutes()); }
   // Each event type gets a line icon and a palette tone, used by the list cards, the month grid and the day pop-up.
-  var CAL_TYPE_LOOK = { "Vendor training":["cap","violet"], "PartnerWAV training":["award","orange"], "Webinar":["chat","teal"], "In-person event":["pin","pink"], "Meetup":["users","teal"], "Demo":["target","amber"], "Other":["calendar","violet"] };
+  var CAL_TYPE_LOOK = { "Community event":["users","pink"], "Vendor training":["cap","violet"], "PartnerWAV training":["award","orange"], "Webinar":["chat","teal"], "In-person event":["pin","pink"], "Meetup":["users","teal"], "Demo":["target","amber"], "Other":["calendar","violet"] };
   function calLook(ev){ return CAL_TYPE_LOOK[ev.type] || ["calendar","violet"]; }
   function calIc(name){ return (typeof PW_ICONS === "object" && PW_ICONS && PW_ICONS[name]) ? pwIcon(name) : ""; }
   function calMi(name){ return '<span class="collab-mi" aria-hidden="true">'+calIc(name)+'</span>'; }
@@ -5093,7 +5186,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function renderCalendar(force){
     var box = document.getElementById("calendarContent");
     if (!box || state.screen !== "calendar") return;
-    var me = chMe(), key = (state.calEditing || "list") + ":" + (state.calView || "calendar") + ":" + (state.calMonth || "") + ":" + (state.calV || 0) + ":" + calendarEvents.length + ":" + (state.calTab || "upcoming") + ":" + (state.calType || "") + ":" + (me || "") + ":" + state.role + ":" + (state.calHost || "");
+    var me = chMe(), key = (state.calEditing || "list") + ":" + (state.calView || "calendar") + ":" + (state.calMonth || "") + ":" + (state.calV || 0) + ":" + calendarEvents.length + ":" + communityEvents.length + ":" + (state.calTab || "upcoming") + ":" + (state.calType || "") + ":" + (me || "") + ":" + state.role + ":" + (state.calHost || "");
     if (!force && box.getAttribute("data-cal-key") === key) return;   // keep what's being typed in the form
     box.setAttribute("data-cal-key", key);
     if (state.calEditing){
@@ -5117,7 +5210,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return;
     }
     var tab = state.calTab || "upcoming", now = new Date(), tf = state.calType || "";
-    var isOpView = state.role === "operator", hf = isOpView ? (state.calHost || "") : "", visible = calendarEvents.filter(function(x){ return calCanSee(x, me); });
+    var isOpView = state.role === "operator", hf = isOpView ? (state.calHost || "") : "", visible = calAll().filter(function(x){ return calCanSee(x, me); });
     var hosts = visible.map(function(x){ return x.ownerKey; }).filter(function(v, i2, a2){ return a2.indexOf(v) === i2; });
     var usage = '';
     if (isOpView){
@@ -5135,7 +5228,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<button type="button" class="cal-view" data-cal-view="calendar" aria-pressed="'+(view === "calendar")+'">'+calIc("calendar")+'Calendar</button>'
         + '<button type="button" class="cal-view" data-cal-view="list" aria-pressed="'+(view === "list")+'">'+calIc("clipboard")+'List</button></div>'
       + (view === "list" ? '<button type="button" class="btn '+(tab === "upcoming" ? "primary" : "secondary")+' sm" data-cal-tab="upcoming">Upcoming</button><button type="button" class="btn '+(tab === "past" ? "primary" : "secondary")+' sm" data-cal-tab="past">Past</button>' : '')
-      + '<select id="calTypeFilter" class="filter app-select" aria-label="Type"><option value="">All types</option>'+CAL_TYPES.map(function(t){ return '<option'+(t === tf ? ' selected' : '')+'>'+esc(t)+'</option>'; }).join("")+'</select>'
+      + '<select id="calTypeFilter" class="filter app-select" aria-label="Type"><option value="">All types</option>'+CAL_TYPES.concat(["Community event"]).map(function(t){ return '<option'+(t === tf ? ' selected' : '')+'>'+esc(t)+'</option>'; }).join("")+'</select>'
       + (isOpView ? '<select id="calHostFilter" class="filter app-select" aria-label="Host"><option value="">All companies</option>'+hosts.map(function(h){ return '<option value="'+attr(h)+'"'+(h === hf ? ' selected' : '')+'>'+esc(keyName(h))+'</option>'; }).join("")+'</select>' : '')
       + (me ? '<button type="button" class="btn primary cta sm cal-add" data-cal-new>+ Add an event</button>' : '')+'</div>';
     if (view === "calendar"){
@@ -5180,7 +5273,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<p class="field-note cal-hint">Click a highlighted day to see its events and add them to your own calendar.</p></div>';
   }
   function calOpenDay(dayKey, onlyId){
-    var me = chMe(), list = calendarEvents.filter(function(x){ return calCanSee(x, me) && calDayKey(new Date(x.start)) === dayKey; })
+    var me = chMe(), list = calAll().filter(function(x){ return calCanSee(x, me) && calDayKey(new Date(x.start)) === dayKey; })
       .sort(function(a, b){ return (b.id === onlyId) - (a.id === onlyId) || new Date(a.start) - new Date(b.start); });
     if (!list.length) return;
     var p = dayKey.split("-"), day = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
@@ -5233,7 +5326,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-cal-edit]"))){ var e0 = calendarEvents.filter(function(x){ return x.id === b.getAttribute("data-cal-edit"); })[0]; if (!e0 || e0.ownerKey !== chMe()) return; if (b.closest("#calPop")) closeModal(); state.calEditing = e0.id; renderCalendar(true); return; }
     if ((b = t.closest("[data-cal-delete]"))){ var id = b.getAttribute("data-cal-delete"), e1 = calendarEvents.filter(function(x){ return x.id === id; })[0];
       if (e1 && e1.ownerKey === chMe() && confirm("Delete \"" + e1.title + "\"?")){ if (b.closest("#calPop")) closeModal(); calendarEvents.splice(calendarEvents.indexOf(e1), 1); saveCalendar(); state.calV = (state.calV || 0) + 1; toast("Event deleted"); renderCalendar(true); } return; }
-    if ((b = t.closest("[data-cal-ics]"))){ var e2 = calendarEvents.filter(function(x){ return x.id === b.getAttribute("data-cal-ics"); })[0]; if (!e2) return;
+    if ((b = t.closest("[data-cal-ics]"))){ var e2 = calAll().filter(function(x){ return x.id === b.getAttribute("data-cal-ics"); })[0]; if (!e2) return;
       var blob = new Blob([calIcs(e2)], { type:"text/calendar;charset=utf-8" }), link = document.createElement("a");
       link.href = URL.createObjectURL(blob); link.download = (e2.title || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) + ".ics";
       document.body.appendChild(link); link.click(); setTimeout(function(){ URL.revokeObjectURL(link.href); link.remove(); }, 500); return; }
@@ -5426,7 +5519,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     });
     document.getElementById("topEyebrow").textContent = roleLabel(state.role);
     document.getElementById("topTitle").textContent = titles[state.screen] || "";
-    var topbarEl = document.querySelector(".topbar"); if (topbarEl) topbarEl.hidden = state.screen === "public-landing" || state.screen === "public-invite" || state.screen === "public-assess" || state.screen === "public-partner-page" || state.screen === "public-meet";
+    var topbarEl = document.querySelector(".topbar"); if (topbarEl) topbarEl.hidden = state.screen === "public-landing" || state.screen === "public-invite" || state.screen === "public-assess" || state.screen === "public-partner-page" || state.screen === "public-meet" || state.screen === "public-events";
 
     // ---- partner overview ----
     var banner = document.getElementById("profileBanner");
@@ -5564,6 +5657,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderPublicPartnerPage();
     renderOperatorEvents();
     renderPublicMeet();
+    renderOperatorCommunity();
+    renderPublicEvents();
     renderAccounts();
     renderFunding();
     renderReferrals();
@@ -7224,6 +7319,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function keyName(k){
     var r = String(k || "").split(":")[0], id = String(k || "").slice(r.length + 1);
     if (r === "operator") return "PartnerWAV";
+    if (r === "community"){ var ce0 = communityEvents.filter(function(x){ return x.id === id; })[0]; return ce0 ? ceHost(ce0) : "Community event"; }
     var e = r === "partner" ? partnerById(id) : r === "vendor" ? programById(id) : r === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : null;
     return e ? e.name : (id || r);
   }
@@ -10169,6 +10265,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ var live = r.status === "published" && !r.deletedAt; return { readers: live ? EVERYONE : [], writers:[], pub: live }; } },
     { name:"eventConnections", mode:"replace", get:function(){ return eventConnections; }, set:function(a){ eventConnections = a; },
       access:function(){ return { readers:[], writers:[] }; } },
+    // Community partners: CloudWAV's private list (real starter records); events go public once listed
+    { name:"communityOrgs", mode:"merge", get:function(){ return communityOrgs; }, set:function(a){ communityOrgs = a; },
+      access:function(){ return { readers:[], writers:[] }; } },
+    { name:"communityEvents", mode:"replace", get:function(){ return communityEvents; }, set:function(a){ communityEvents = a; },
+      toData:function(r){ if (!r.submitter || r.status === "pending") return r; var c = JSON.parse(JSON.stringify(r)); delete c.submitter; return c; },
+      access:function(r){ var live = r.status === "published" && !r.deletedAt; return { readers: live ? EVERYONE : [], writers:[], pub: live }; } },
     { name:"partnerPages", mode:"replace", get:function(){ return partnerPages; }, set:function(a){ partnerPages = a; },
       // a partner's landing pages: public once published, edited only by that partner
       access:function(r){ var o = ["partner:" + r.partnerId], live = r.status === "published" && !r.deletedAt; return { readers: live ? EVERYONE : o, writers:o, pub: live }; } },
@@ -16994,6 +17096,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadLeads();
   loadPartnerPages();
   loadEvents();
+  loadCommunity();
   loadFunding();
   loadBrandKits();
   loadShop();
@@ -17006,10 +17109,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // can edit themselves.
   var AUTH_QS = new URLSearchParams(window.location.search);
   var DEMO_MODE = AUTH_QS.get("demo") === "1";
-  var PUBLIC_APPLY = !DEMO_MODE && (AUTH_QS.has("apply") || AUTH_QS.has("lp") || AUTH_QS.has("invite") || AUTH_QS.has("assess") || AUTH_QS.has("pp") || AUTH_QS.has("meet"));
+  var PUBLIC_APPLY = !DEMO_MODE && (AUTH_QS.has("apply") || AUTH_QS.has("lp") || AUTH_QS.has("invite") || AUTH_QS.has("assess") || AUTH_QS.has("pp") || AUTH_QS.has("meet") || AUTH_QS.has("events"));
   var AUTH_REQUIRED = !DEMO_MODE && !PUBLIC_APPLY;
   // public pages: read the company name and CAPTCHA site key (no sign-in needed), then redraw the form with the CAPTCHA
-  if (PUBLIC_APPLY) setTimeout(function(){ cloudLoadPublicSettings().then(function(ok){ if (ok && captchaOn()){ ["invite", "pp", "assess", "apply", "meet"].forEach(function(k){ var el = document.getElementById("hp_" + k);
+  if (PUBLIC_APPLY) setTimeout(function(){ cloudLoadPublicSettings().then(function(ok){ if (ok && captchaOn()){ ["invite", "pp", "assess", "apply", "meet", "tec"].forEach(function(k){ var el = document.getElementById("hp_" + k);
     if (el && !document.querySelector('[data-captcha="' + k + '"]')){ var box = document.createElement("div"); box.className = "captcha-box"; box.setAttribute("data-captcha", k); el.closest(".hp-field").after(box); } }); captchaMount(); } }); }, 0);
   var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", operator:"operator-overview" };
   var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", operator:"Program Operator" };
@@ -18050,6 +18153,333 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-ev-status]"))){ var pc = eventConnections.filter(function(c){ return c.id === b.getAttribute("data-ev-status"); })[0];
       if (pc){ pc.status = pc.status === "contacted" ? "new" : "contacted"; saveEvents(); state.evV = (state.evV || 0) + 1; renderOperatorEvents(true); } return; }
     if (t.closest("[data-ev-csv]")){ evDownloadCsv(); return; }
+  });
+
+  // ===== COMMUNITY PARTNERS & THAILAND EVENT CALENDAR =====
+  // CloudWAV keeps a private list of the communities it works with (Bangkok Entrepreneurs, the Claude Thailand
+  // Community...) and what each has agreed to. Their events go on a public Thailand calendar (?events=thailand),
+  // which organizers can share; anyone running a community can send an event in for review.
+  // Members also see the listed events in their own Events & Calendar.
+  var CO_STATUS = [["prospect","Not contacted yet"],["talking","Talking"],["partner","Community partner"],["paused","Paused"]];
+  var CO_KINDS = ["Founders & startups","Tech & AI","Business network","Industry association","Coworking / incubator","Other"];
+  var CO_PERKS = [["listEvents","We list their events"],["mention","They mention PartnerWAV"],["sponsor","PartnerWAV sponsors"],["speaking","Speaking slot"],["logoSwap","Logos on each other's sites"]];
+  var CO_OPP_TYPES = [["vendor","SaaS / software vendor"],["partner","Partner (MSP / reseller)"],["affiliate","Affiliate"],["investor","Investor"],["other","Other"]];
+  var CE_CITIES = ["Bangkok","Chiang Mai","Phuket","Pattaya","Khon Kaen","Hua Hin","Online","Other"];
+  var BKK_MS = 7 * 3600000;   // Thailand is UTC+7 all year (no daylight saving)
+  function loadCommunity(){ try { var d = JSON.parse(lsGet(COMMUNITY_KEY) || "null"); if (d){ if (Array.isArray(d.orgs)) communityOrgs = d.orgs; if (Array.isArray(d.events)) communityEvents = d.events; } } catch(e){} }
+  function saveCommunity(){ try { lsSet(COMMUNITY_KEY, JSON.stringify({ orgs:communityOrgs, events:communityEvents })); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function coById(id){ return communityOrgs.filter(function(o){ return o.id === id && !o.deletedAt; })[0] || null; }
+  function ceById(id){ return communityEvents.filter(function(e){ return e.id === id; })[0] || null; }
+  function ceLive(e){ return !!e && e.status === "published" && !e.deletedAt; }
+  function ceEnd(e){ return new Date(new Date(e.start).getTime() + (Number(e.durationMin) || 120) * 60000); }
+  function ceUpcoming(e){ return ceEnd(e) >= new Date(); }
+  function ceHost(e){ var o = e.orgId ? coById(e.orgId) : null; return o ? o.name : (e.orgName || "Community event"); }
+  function ceHostUrl(e){ var o = e.orgId ? coById(e.orgId) : null; return safeHref((o && o.website) || e.orgUrl || ""); }
+  function ceWhere(e){ return [e.venue, e.city].filter(Boolean).join(", ") || "Online"; }
+  function calendarUrl(orgId){ return appBaseUrl() + "?events=thailand" + (orgId ? "&org=" + encodeURIComponent(orgId) : ""); }
+  // date and time inputs are in Bangkok time, whatever timezone the browser is in
+  function bkkInput(iso){ if (!iso) return ""; var d = new Date(new Date(iso).getTime() + BKK_MS); return isNaN(d) ? "" : d.toISOString().slice(0, 16); }
+  function bkkParse(v){ if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v || "")) return null; var d = new Date(v + ":00+07:00"); return isNaN(d) ? null : d.toISOString(); }
+  function bkkFmt(iso, opts){ try { return new Date(iso).toLocaleString("en-GB", Object.assign({ timeZone:"Asia/Bangkok" }, opts)); } catch(e){ return ""; } }
+  function ceWhen(e){ return bkkFmt(e.start, { weekday:"short", day:"numeric", month:"short" }) + " · " + bkkFmt(e.start, { hour:"2-digit", minute:"2-digit" }) + "-" + bkkFmt(ceEnd(e).toISOString(), { hour:"2-digit", minute:"2-digit" }) + " (Bangkok time)"; }
+  // the same event in the shape the member calendar uses
+  function ceAsCal(e){ return { id:"cal-" + e.id, ceId:e.id, community:true, title:e.title, type:"Community event", start:e.start, durationMin:Number(e.durationMin) || 120,
+    location:ceWhere(e), link:e.link || "", desc:[e.desc, e.price ? "Entry: " + e.price : ""].filter(Boolean).join("\n"), ownerKey:"community:" + e.id }; }
+  function calAll(){ return calendarEvents.concat(communityEvents.filter(ceLive).map(ceAsCal)); }
+  function ceGoogleUrl(e){ return calGoogleUrl(ceAsCal(e)); }
+
+  // ----- CloudWAV: Community Partners screen -----
+  function coOrgForm(o){
+    o = o || { status:"prospect", kind:CO_KINDS[0], perks:{} };
+    var f = function(id, label, val, ph, type){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="'+(type || "text")+'" id="'+id+'" value="'+attr(val || "")+'" placeholder="'+attr(ph || "")+'" maxlength="200"></div>'; };
+    return '<div class="card card-pad" id="coOrgForm" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">'
+      + '<h3 style="margin:0;font-size:1.05rem;">'+(o.id ? 'Edit '+esc(o.name) : 'Add a community')+'</h3>'
+      + '<div class="form-grid">' + f("coName", "Name *", o.name, "e.g. Bangkok Entrepreneurs")
+        + f("coWebsite", "Website, Facebook group or Meetup page", o.website, "https://")
+        + '<div class="field-row"><label for="coKind">Kind of community</label><select id="coKind" class="filter app-select">'+CO_KINDS.map(function(k){ return '<option'+(k === o.kind ? ' selected' : '')+'>'+esc(k)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="coStatus">Where things stand</label><select id="coStatus" class="filter app-select">'+CO_STATUS.map(function(s){ return '<option value="'+s[0]+'"'+(s[0] === o.status ? ' selected' : '')+'>'+esc(s[1])+'</option>'; }).join("")+'</select></div>'
+        + f("coCity", "City", o.city, "e.g. Bangkok") + f("coReach", "Size or reach", o.reach, "e.g. 22,000+ members")
+        + f("coContact", "How to reach them (page, group, LINE OA or email)", o.contact, "e.g. message the page admins") + f("coNext", "Next step", o.nextStep, "e.g. Ask about listing their events") + '</div>'
+      + '<div class="field-row"><label>What we have agreed</label><div class="meet-chips">'+CO_PERKS.map(function(p){ return '<button type="button" class="meet-chip" data-co-perk="'+p[0]+'" aria-pressed="'+!!(o.perks && o.perks[p[0]])+'">'+esc(p[1])+'</button>'; }).join("")+'</div></div>'
+      + '<div class="field-row"><label for="coNotes">Notes (only CloudWAV sees these)</label><textarea id="coNotes" rows="3" maxlength="2000">'+esc(o.notes || "")+'</textarea></div>'
+      + '<div id="coErr" class="login-msg bad" role="alert" hidden></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-co-save="'+attr(o.id || "")+'">Save</button><button type="button" class="btn secondary sm" data-co-cancel>Cancel</button></div></div>';
+  }
+  function ceForm(e){
+    var now = Date.now() + 7 * 86400000;
+    e = e || { durationMin:120, city:"Bangkok", start:new Date(Math.ceil(now / 3600000) * 3600000 + 11 * 3600000).toISOString(), orgId:state.coEventOrg || "" };
+    var orgs = communityOrgs.filter(function(o){ return !o.deletedAt; });
+    var f = function(id, label, val, ph, type){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="'+(type || "text")+'" id="'+id+'" value="'+attr(val == null ? "" : val)+'" placeholder="'+attr(ph || "")+'" maxlength="300"></div>'; };
+    return '<div class="card card-pad" id="ceForm" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">'
+      + '<h3 style="margin:0;font-size:1.05rem;">'+(e.id ? 'Edit event' : 'Add an event to the Thailand calendar')+'</h3>'
+      + '<div class="form-grid"><div class="field-row"><label for="ceOrg">Community</label><select id="ceOrg" class="filter app-select"><option value="">Not in my list</option>'
+          + orgs.map(function(o){ return '<option value="'+attr(o.id)+'"'+(o.id === e.orgId ? ' selected' : '')+'>'+esc(o.name)+'</option>'; }).join("")+'</select></div>'
+        + f("ceOrgName", "...or the organizer's name", e.orgId ? "" : e.orgName, "e.g. The MarTech Collective")
+        + f("ceTitle", "Event name *", e.title, "e.g. Founder Night: AI for SMEs")
+        + f("ceStart", "Starts * (Bangkok time)", bkkInput(e.start), "", "datetime-local")
+        + f("ceDuration", "Length (minutes)", e.durationMin || 120, "", "number")
+        + '<div class="field-row"><label for="ceCity">City</label><select id="ceCity" class="filter app-select">'+CE_CITIES.map(function(c){ return '<option'+(c === e.city ? ' selected' : '')+'>'+esc(c)+'</option>'; }).join("")+'</select></div>'
+        + f("ceVenue", "Venue", e.venue, "e.g. True Digital Park, Sukhumvit 101")
+        + f("cePrice", "Entry", e.price, "e.g. Free, or 500 THB") + '</div>'
+      + f("ceLink", "Registration link (their Meetup, Luma, Facebook or website page)", e.link, "https://")
+      + '<div class="field-row"><label for="ceDesc">Short description</label><textarea id="ceDesc" rows="3" maxlength="800">'+esc(e.desc || "")+'</textarea></div>'
+      + '<div id="ceErr" class="login-msg bad" role="alert" hidden></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-ce-save="'+attr(e.id || "")+'">'+(e.id ? 'Save' : 'Add to the calendar')+'</button><button type="button" class="btn secondary sm" data-ce-cancel>Cancel</button></div></div>';
+  }
+  function ceCardOp(e){
+    var page = eventPages.filter(function(p){ return p.communityEventId === e.id && !p.deletedAt; })[0], pending = e.status === "pending";
+    return '<div class="card card-pad cp-ev" data-ce-row="'+attr(e.id)+'">'
+      + '<div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span></div>'
+      + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><b>'+esc(e.title)+'</b>'+(pending ? '<span class="pill pending">Waiting for review</span>' : e.status === "declined" ? '<span class="pill">Declined</span>' : ceUpcoming(e) ? '<span class="pill active">Listed</span>' : '<span class="pill">Past</span>')+'</div>'
+        + '<div class="field-note">'+esc(ceHost(e))+' · '+esc(ceWhen(e))+' · '+esc(ceWhere(e))+(e.price ? ' · '+esc(e.price) : '')+'</div>'
+        + (pending && e.submitter ? '<div class="field-note" data-ce-submitter>Sent in by '+esc(e.submitter.name || "")+(e.submitter.contact ? ' ('+esc(e.submitter.contact)+')' : '')+' -- approving adds '+esc(e.orgName || "them")+' to your communities</div>' : '')
+        + (e.desc ? '<div class="field-note">'+esc(e.desc)+'</div>' : '')
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">'
+          + (pending ? '<button type="button" class="btn primary xs" data-ce-approve="'+attr(e.id)+'">Approve and list</button><button type="button" class="btn secondary xs" data-ce-decline="'+attr(e.id)+'">Decline</button>' : '')
+          + (safeHref(e.link) ? '<a class="btn secondary xs" href="'+attr(safeHref(e.link))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Registration page</a>' : '')
+          + '<button type="button" class="btn ghost xs" data-ce-edit="'+attr(e.id)+'">Edit</button>'
+          + (!pending ? '<button type="button" class="btn ghost xs" data-ce-connect="'+attr(e.id)+'">'+(page ? 'Open its Event Connect page' : 'Make an Event Connect page')+'</button>' : '')
+          + '<button type="button" class="btn ghost xs" data-ce-delete="'+attr(e.id)+'">Remove</button></div></div></div>';
+  }
+  function renderOperatorCommunity(force){
+    var box = document.getElementById("operatorCommunityContent");
+    if (!box || state.screen !== "operator-community") return;
+    var key = JSON.stringify([communityOrgs.length, communityEvents.length, state.coTab, state.coEdit, state.ceEdit, state.coV || 0, eventPages.length]);
+    if (!force && box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    var tab = state.coTab || "orgs", orgs = communityOrgs.filter(function(o){ return !o.deletedAt; });
+    var evs = communityEvents.filter(function(e){ return !e.deletedAt; }), waiting = evs.filter(function(e){ return e.status === "pending"; });
+    var upcoming = evs.filter(function(e){ return ceLive(e) && ceUpcoming(e); });
+    var html = '<div class="stat-row" style="margin-bottom:14px;">'
+      + '<div class="stat-tile"><span class="stat-label">Communities</span><span class="stat-value">'+orgs.length+'</span><span class="stat-trend">'+orgs.filter(function(o){ return o.status === "partner"; }).length+' community partners</span></div>'
+      + '<div class="stat-tile"><span class="stat-label">Upcoming listed events</span><span class="stat-value">'+upcoming.length+'</span><span class="stat-trend">On the public Thailand calendar</span></div>'
+      + '<div class="stat-tile"><span class="stat-label">Waiting for review</span><span class="stat-value">'+waiting.length+'</span><span class="stat-trend">Sent in by organizers</span></div>'
+      + '<div class="stat-tile"><span class="stat-label">Opportunities found</span><span class="stat-value">'+orgs.reduce(function(n, o){ return n + (o.opps || []).length; }, 0)+'</span><span class="stat-trend">Vendors, partners and investors met through them</span></div></div>';
+    html += '<div class="card card-pad cp-share" style="margin-bottom:16px;"><div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:8px;"><b>Your public Thailand event calendar</b>'
+      + '<span class="field-note">Share it in LINE and WhatsApp groups and with organizers. Every community also has its own link that shows only their events.</span>'
+      + '<div class="aff-link-row"><input type="text" class="aff-link-input" readonly value="'+attr(calendarUrl())+'" aria-label="Public calendar link"><button type="button" class="btn secondary sm" data-co-copy="">Copy</button><a class="btn secondary sm" href="'+attr(calendarUrl())+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open</a></div></div>'
+      + '<div class="ev-qr">'+qrSlotHtml(calendarUrl(), "Thailand event calendar", "partnerwav-thailand-events-qr.png", 140)+'</div></div>';
+    html += '<div class="cal-bar" style="margin-bottom:14px;"><div class="cal-views" role="group" aria-label="Show">'
+      + '<button type="button" class="cal-view" data-co-tab="orgs" aria-pressed="'+(tab === "orgs")+'">Communities</button>'
+      + '<button type="button" class="cal-view" data-co-tab="events" aria-pressed="'+(tab === "events")+'">Events</button>'
+      + '<button type="button" class="cal-view" data-co-tab="review" aria-pressed="'+(tab === "review")+'">Waiting for review'+(waiting.length ? ' ('+waiting.length+')' : '')+'</button></div>'
+      + (tab === "orgs" ? '<button type="button" class="btn primary sm" data-co-new>+ Add a community</button>' : tab === "events" ? '<button type="button" class="btn primary sm" data-ce-new>+ Add an event</button>' : '')+'</div>';
+    if (tab === "orgs"){
+      if (state.coEdit) html += coOrgForm(state.coEdit === "new" ? null : coById(state.coEdit));
+      var order = { partner:0, talking:1, prospect:2, paused:3 };
+      html += orgs.length ? '<div class="cp-grid">' + orgs.slice().sort(function(a, b){ return (order[a.status] || 0) - (order[b.status] || 0) || String(a.name).localeCompare(b.name); }).map(function(o){
+        var st = CO_STATUS.filter(function(s){ return s[0] === o.status; })[0] || CO_STATUS[0], n = evs.filter(function(e){ return e.orgId === o.id && ceLive(e) && ceUpcoming(e); }).length;
+        var perks = CO_PERKS.filter(function(p){ return o.perks && o.perks[p[0]]; }), site = safeHref(o.website || "");
+        return '<div class="card card-pad cp-org" data-co-row="'+attr(o.id)+'">'
+          + '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><div><b>'+esc(o.name)+'</b><div class="field-note">'+esc([o.kind, o.city, o.reach].filter(Boolean).join(" · "))+'</div></div>'
+            + '<span class="pill '+(o.status === "partner" ? 'active' : o.status === "talking" ? 'pending' : '')+'" data-co-status>'+esc(st[1])+'</span></div>'
+          + (site ? '<a href="'+attr(site)+'" target="_blank" rel="noopener noreferrer" class="cp-link">'+esc(String(o.website).replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, ""))+'</a>' : '')
+          + (o.contact ? '<div class="field-note"><b>Reach them:</b> '+esc(o.contact)+'</div>' : '')
+          + (o.nextStep ? '<div class="cp-next"><b>Next step:</b> '+esc(o.nextStep)+'</div>' : '')
+          + '<div class="meet-chips">'+(perks.length ? perks.map(function(p){ return '<span class="badge accent">'+esc(p[1])+'</span>'; }).join("") : '<span class="field-note">Nothing agreed yet</span>')+'</div>'
+          + (o.notes ? '<div class="field-note cp-notes">'+esc(o.notes)+'</div>' : '')
+          + '<details class="cp-opps"'+(state.coOpen === o.id ? ' open' : '')+'><summary>Opportunities found here ('+(o.opps || []).length+')</summary>'
+            + ((o.opps || []).length ? '<ul>'+o.opps.map(function(x, i){ var t = CO_OPP_TYPES.filter(function(y){ return y[0] === x.type; })[0]; return '<li data-co-opp><b>'+esc(x.company)+'</b> <span class="badge neutral">'+esc(t ? t[1] : "Other")+'</span>'+(x.note ? ' -- '+esc(x.note) : '')+' <button type="button" class="btn ghost xs" data-co-opp-del="'+attr(o.id)+'|'+i+'" aria-label="Remove">×</button></li>'; }).join("")+'</ul>' : '<p class="field-note">Log the companies you meet through this community: SaaS builders who could list on PartnerWAV, MSPs, investors.</p>')
+            + '<div class="cp-opp-add"><input type="text" id="coOppCo-'+attr(o.id)+'" placeholder="Company name" maxlength="120" aria-label="Company name"><select id="coOppType-'+attr(o.id)+'" class="filter app-select" aria-label="Type">'+CO_OPP_TYPES.map(function(t){ return '<option value="'+t[0]+'">'+esc(t[1])+'</option>'; }).join("")+'</select>'
+              + '<input type="text" id="coOppNote-'+attr(o.id)+'" placeholder="Note (optional)" maxlength="200" aria-label="Note"><button type="button" class="btn secondary xs" data-co-opp-add="'+attr(o.id)+'">Add</button></div></details>'
+          + '<div style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="btn secondary xs" data-co-edit="'+attr(o.id)+'">Edit</button><button type="button" class="btn secondary xs" data-ce-new="'+attr(o.id)+'">+ Add their event</button>'
+            + '<button type="button" class="btn ghost xs" data-co-copy="'+attr(o.id)+'" title="A calendar of just their events, to send them">Copy their calendar link</button>'
+            + '<span class="field-note" style="align-self:center;">'+n+' upcoming event'+(n === 1 ? '' : 's')+'</span></div></div>';
+      }).join("") + '</div>' : '<div class="empty">No communities yet. Add the groups you meet at events.</div>';
+    } else {
+      if (tab === "events" && state.ceEdit) html += ceForm(state.ceEdit === "new" ? null : ceById(state.ceEdit));
+      var list = tab === "review" ? waiting : evs.filter(function(e){ return e.status !== "pending"; });
+      list = list.slice().sort(function(a, b){ var ua = ceUpcoming(a), ub = ceUpcoming(b); return ua !== ub ? (ua ? -1 : 1) : ua ? new Date(a.start) - new Date(b.start) : new Date(b.start) - new Date(a.start); });
+      html += list.length ? '<div style="display:flex;flex-direction:column;gap:10px;">' + list.map(ceCardOp).join("") + '</div>'
+        : '<div class="empty">'+(tab === "review" ? 'Nothing waiting. Organizers can send events in from the bottom of the public calendar.' : 'No events yet. Add the next meetup from one of your communities.')+'</div>';
+    }
+    box.innerHTML = html;
+    if (typeof fillQrCodes === "function") fillQrCodes();
+  }
+  function coSaveOrg(id){
+    var g = function(x){ var el = document.getElementById(x); return el ? el.value.trim() : ""; }, err = document.getElementById("coErr");
+    var name = g("coName"), site = g("coWebsite");
+    if (!name){ err.textContent = "Give the community a name."; err.hidden = false; return; }
+    if (site && !/^https?:\/\//i.test(site)) site = "https://" + site;
+    if (site && !safeHref(site)){ err.textContent = "The website doesn't look like a web address."; err.hidden = false; return; }
+    var perks = {}; document.querySelectorAll("#coOrgForm [data-co-perk]").forEach(function(b){ if (b.getAttribute("aria-pressed") === "true") perks[b.getAttribute("data-co-perk")] = true; });
+    var o = id ? coById(id) : null;
+    if (!o){ o = { id:"org-" + (name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "community") + "-" + Date.now().toString(36).slice(-4), createdAt:nowStamp(), opps:[] }; communityOrgs.push(o); }
+    Object.assign(o, { name:name, website:site, kind:g("coKind"), status:g("coStatus"), city:g("coCity"), reach:g("coReach"), contact:g("coContact"), nextStep:g("coNext"), notes:g("coNotes"), perks:perks, updatedAt:nowStamp() });
+    state.coEdit = null; saveCommunity(); renderOperatorCommunity(true); toast("Saved");
+  }
+  function ceSave(id){
+    var g = function(x){ var el = document.getElementById(x); return el ? el.value.trim() : ""; }, err = document.getElementById("ceErr"), probs = [];
+    var orgId = g("ceOrg"), title = g("ceTitle"), start = bkkParse(g("ceStart")), dur = Number(g("ceDuration")) || 120, link = g("ceLink");
+    if (!title) probs.push("Give the event a name.");
+    if (!start) probs.push("Choose the start date and time.");
+    if (!orgId && !g("ceOrgName")) probs.push("Pick the community, or type the organizer's name.");
+    if (dur < 15 || dur > 1440 * 7) probs.push("Length should be between 15 minutes and 7 days.");
+    if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
+    if (link && !/^https:\/\/\S+\.\S+/i.test(link)) probs.push("The registration link needs to be a secure web address (https://...).");
+    if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+    var e = id ? ceById(id) : null;
+    if (!e){ e = { id:"ce-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), status:"published", createdAt:nowStamp() }; communityEvents.push(e); }
+    var org = coById(orgId);
+    Object.assign(e, { orgId:org ? org.id : "", orgName:org ? org.name : g("ceOrgName"), orgUrl:org ? (org.website || "") : (e.orgId ? "" : e.orgUrl || ""), title:title, start:start, durationMin:dur,
+      city:g("ceCity"), venue:g("ceVenue"), price:g("cePrice"), link:link, desc:g("ceDesc"), updatedAt:nowStamp() });
+    if (org && org.perks && !org.perks.listEvents){ org.perks.listEvents = true; org.updatedAt = nowStamp(); }
+    state.ceEdit = null; state.coEventOrg = ""; state.coTab = "events"; saveCommunity(); renderOperatorCommunity(true); toast("On the Thailand calendar");
+  }
+  function ceApprove(e){
+    // the organizer's contact moves into the community's private record; the listed event carries only public details
+    var o = e.orgId ? coById(e.orgId) : communityOrgs.filter(function(x){ return !x.deletedAt && String(x.name).toLowerCase() === String(e.orgName || "").toLowerCase(); })[0];
+    var sub = e.submitter || {};
+    if (!o && e.orgName){ o = { id:"org-" + (String(e.orgName).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "community") + "-" + Date.now().toString(36).slice(-4),
+      name:e.orgName, website:e.orgUrl || "", kind:"Other", status:"talking", city:e.city === "Online" ? "" : e.city || "", contact:[sub.name, sub.contact].filter(Boolean).join(" -- "),
+      nextStep:"Thank them for listing; ask about a PartnerWAV mention at their next event", perks:{ listEvents:true }, opps:[], notes:"Sent an event in through the Thailand calendar.", createdAt:nowStamp() }; communityOrgs.push(o); }
+    else if (o && sub.contact && String(o.contact || "").indexOf(sub.contact) < 0){ o.contact = [o.contact, [sub.name, sub.contact].filter(Boolean).join(" -- ")].filter(Boolean).join("; "); o.updatedAt = nowStamp(); }
+    if (o){ e.orgId = o.id; e.orgName = o.name; e.orgUrl = o.website || e.orgUrl || ""; }
+    delete e.submitter; e.status = "published"; e.updatedAt = nowStamp();
+  }
+  function ceMakeConnectPage(e){
+    var p = eventPages.filter(function(x){ return x.communityEventId === e.id && !x.deletedAt; })[0];
+    if (!p){ p = { id:"ev-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name:e.title, intro:EV_INTRO, status:"published", communityEventId:e.id, createdAt:nowStamp(), updatedAt:nowStamp() };
+      eventPages.unshift(p); saveEvents(); toast("Event Connect page ready -- show its QR code at the event"); }
+    state.screen = "operator-events"; render();
+    setTimeout(function(){ var row = document.querySelector('[data-ev-row="' + p.id + '"]'); if (row && row.scrollIntoView) row.scrollIntoView({ block:"center" }); }, 50);
+  }
+
+  // ----- public Thailand event calendar (?events=thailand, optional &org=id) -----
+  async function cloudLoadPublicCalendar(){
+    if (!supabase) return false;
+    await cloudLoadPublicSettings(); cloudLoadOperatorContact();
+    try { var r = await supabase.from("portal_records").select("data").eq("collection", "communityEvents").eq("is_public", true).limit(500);
+      if (r.error || !r.data) return false;
+      communityEvents = r.data.map(function(row){ return row.data; }).filter(Boolean);   // only what's really listed (no starter examples)
+      return true;
+    } catch(e){ return false; }
+  }
+  function tecCardHtml(e){
+    var reg = safeHref(e.link || ""), host = ceHostUrl(e);
+    return '<article class="tec-ev" data-tec-event="'+attr(e.id)+'">'
+      + '<div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span><i>'+esc(bkkFmt(e.start, { weekday:"short" }))+'</i></div>'
+      + '<div class="tec-body"><h3>'+esc(e.title)+'</h3>'
+        + '<div class="tec-host">'+(host ? '<a href="'+attr(host)+'" target="_blank" rel="noopener noreferrer">'+esc(ceHost(e))+'</a>' : esc(ceHost(e)))+'</div>'
+        + '<div class="tec-meta"><span>'+esc(bkkFmt(e.start, { hour:"2-digit", minute:"2-digit" }))+' - '+esc(bkkFmt(ceEnd(e).toISOString(), { hour:"2-digit", minute:"2-digit" }))+'</span><span>'+esc(ceWhere(e))+'</span>'+(e.price ? '<span>'+esc(e.price)+'</span>' : '')+'</div>'
+        + (e.desc ? '<p>'+esc(e.desc)+'</p>' : '')
+        + '<div class="tec-actions">'+(reg ? '<a class="btn primary sm" href="'+attr(reg)+'" target="_blank" rel="noopener noreferrer" data-tec-register>Register</a>' : '')
+          + '<a class="btn secondary sm" href="'+attr(ceGoogleUrl(e))+'" target="_blank" rel="noopener noreferrer" data-tec-google>Add to Google Calendar</a>'
+          + '<button type="button" class="btn ghost sm" data-tec-ics="'+attr(e.id)+'">Apple / other (.ics)</button></div></div></article>';
+  }
+  function tecSubmitFormHtml(){
+    var f = function(id, label, ph, type, opt){ return '<div class="meet-field"><label for="'+id+'">'+label+(opt ? ' <span class="meet-opt">(optional)</span>' : '')+'</label><input type="'+(type || "text")+'" id="'+id+'" placeholder="'+attr(ph || "")+'" maxlength="300"></div>'; };
+    return '<form id="tecForm" class="tec-form" novalidate><h3>Add your community\'s event</h3>'
+      + '<p class="meet-intro">Listing is free. We check each event before it goes up, usually within a day.</p>'
+      + '<div class="tec-form-grid">' + f("tecOrg", "Community or organizer", "e.g. Bangkok Founders Club") + f("tecTitle", "Event name", "e.g. AI for SMEs night")
+        + f("tecStart", "Date and start time (Bangkok time)", "", "datetime-local") + f("tecDuration", "Length in minutes", "120", "number", true)
+        + '<div class="meet-field"><label for="tecCity">City</label><select id="tecCity">'+CE_CITIES.map(function(c){ return '<option>'+esc(c)+'</option>'; }).join("")+'</select></div>'
+        + f("tecVenue", "Venue", "e.g. Glowfish Sathorn", "text", true) + f("tecLink", "Registration link", "https://www.meetup.com/...", "url") + f("tecPrice", "Entry", "e.g. Free", "text", true)
+        + f("tecName", "Your name", "") + f("tecContact", "Your LINE, WhatsApp or email", "So we can say thanks and check details") + '</div>'
+      + '<div class="meet-field"><label for="tecDesc">Short description <span class="meet-opt">(optional)</span></label><textarea id="tecDesc" rows="3" maxlength="800"></textarea></div>'
+      + spamFieldsHtml("tec")
+      + '<div id="tecError" class="login-msg bad" role="alert" hidden></div>'
+      + '<button type="submit" class="btn primary" id="tecSubmit">Send for listing</button>'
+      + '<p class="meet-small">Your contact details are only seen by PartnerWAV, never shown on the calendar.</p></form>';
+  }
+  function renderPublicEvents(){
+    var box = document.getElementById("publicEventsContent");
+    if (!box || state.screen !== "public-events") return;
+    var key = JSON.stringify([communityEvents.length, state.tecCity || "", state.publicEventsOrg || "", state.tecSent ? 1 : 0, state.tecShowForm ? 1 : 0, state.tecV || 0]);
+    if (box.getAttribute("data-k") === key) return;
+    if (!state.tecTried && supabase && !DEMO_MODE){
+      state.tecTried = true; box.innerHTML = '<div class="empty" style="padding:40px;text-align:center;">Loading events…</div>';
+      cloudLoadPublicCalendar().then(function(){ state.tecV = (state.tecV || 0) + 1; renderPublicEvents(); }); return;
+    }
+    box.setAttribute("data-k", key);
+    var orgF = state.publicEventsOrg || "", cityF = state.tecCity || "";
+    var all = communityEvents.filter(function(e){ return ceLive(e) && ceUpcoming(e); }).sort(function(a, b){ return new Date(a.start) - new Date(b.start); });
+    var forOrg = orgF ? all.filter(function(e){ return e.orgId === orgF; }) : all;
+    var orgName = orgF ? (forOrg[0] ? ceHost(forOrg[0]) : (coById(orgF) || {}).name || "") : "";
+    var cities = CE_CITIES.filter(function(c){ return forOrg.some(function(e){ return e.city === c; }); });
+    var list = forOrg.filter(function(e){ return !cityF || e.city === cityF; });
+    var months = [], byMonth = {};
+    list.forEach(function(e){ var m = bkkFmt(e.start, { month:"long", year:"numeric" }); if (!byMonth[m]){ byMonth[m] = []; months.push(m); } byMonth[m].push(e); });
+    var hosts = []; all.forEach(function(e){ var n = ceHost(e); if (hosts.filter(function(h){ return h[0] === n; }).length === 0) hosts.push([n, ceHostUrl(e)]); });
+    var oc = vaOperatorContact(), hi = "Hi PartnerWAV, I found you through the Thailand event calendar.";
+    var html = '<div class="tec-wrap"><header class="tec-hero"><div class="meet-brand"><b>P</b>PartnerWAV</div>'
+      + '<h1>'+(orgName ? esc(orgName) + ' events' : 'Thailand Tech &amp; Startup Events')+'</h1>'
+      + '<p>'+(orgName ? 'Upcoming events from '+esc(orgName)+', on the PartnerWAV Thailand calendar.' : 'Meetups, workshops and founder nights from Thailand\'s tech and business communities, in one place. All times are Bangkok time.')+'</p>'
+      + (orgF ? '<a class="tec-all" href="'+attr(calendarUrl())+'">See every community\'s events</a>' : '')+'</header>';
+    if (cities.length > 1) html += '<div class="meet-chips tec-filter" role="group" aria-label="City"><button type="button" class="meet-chip" data-tec-city="" aria-pressed="'+!cityF+'">All cities</button>'
+      + cities.map(function(c){ return '<button type="button" class="meet-chip" data-tec-city="'+attr(c)+'" aria-pressed="'+(c === cityF)+'">'+esc(c)+'</button>'; }).join("") + '</div>';
+    html += months.length ? months.map(function(m){ return '<section class="tec-month"><h2>'+esc(m)+'</h2>'+byMonth[m].map(tecCardHtml).join("")+'</section>'; }).join("")
+      : '<div class="tec-empty">No upcoming events listed yet'+(cityF ? ' in '+esc(cityF) : '')+'. Check back soon, or add yours below.</div>';
+    if (hosts.length && !orgF) html += '<section class="tec-hosts"><h2>Communities on the calendar</h2><div class="meet-chips">'+hosts.map(function(h){ return h[1] ? '<a class="meet-chip" href="'+attr(h[1])+'" target="_blank" rel="noopener noreferrer">'+esc(h[0])+'</a>' : '<span class="meet-chip">'+esc(h[0])+'</span>'; }).join("")+'</div></section>';
+    html += '<section class="tec-submit">'+(state.tecSent ? '<div class="tec-done" data-tec-done><h3>Thanks! Your event is with us.</h3><p class="meet-intro">We\'ll check it and list it, usually within a day.</p><button type="button" class="btn secondary sm" data-tec-again>Send another event</button></div>'
+        : state.tecShowForm ? tecSubmitFormHtml() : '<div class="tec-cta"><div><h3>Run a community in Thailand?</h3><p class="meet-intro">List your events here for free and reach founders, software companies and IT partners.</p></div><button type="button" class="btn primary" data-tec-show>Add your event</button></div>')+'</section>';
+    html += '<footer class="tec-about"><h3>About PartnerWAV</h3><p>PartnerWAV connects software vendors with the IT partners, affiliates and investors who help them grow across Southeast Asia. We keep this calendar to support the communities that make Thailand\'s tech scene work.</p>'
+      + ((oc.whatsapp || oc.line) ? '<div class="tec-actions">'+(oc.whatsapp ? '<a class="btn meet-wa sm" href="'+attr(safeHref(waChatUrl(oc.whatsapp, hi)))+'" target="_blank" rel="noopener noreferrer">WhatsApp PartnerWAV</a>' : '')+(oc.line ? '<a class="btn meet-line sm" href="'+attr(safeHref(lineChatUrl(oc.line)))+'" target="_blank" rel="noopener noreferrer">Add PartnerWAV on LINE</a>' : '')+'</div>' : '')
+      + '</footer></div>';
+    box.innerHTML = html;
+    document.title = (orgName ? orgName + " events" : "Thailand Tech & Startup Events") + " · PartnerWAV";
+    if (state.tecShowForm) captchaMount();
+  }
+  async function submitTec(ev){
+    ev.preventDefault();
+    var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var d = { orgName:g("tecOrg"), title:g("tecTitle"), start:bkkParse(g("tecStart")), durationMin:Number(g("tecDuration")) || 120, city:g("tecCity"), venue:g("tecVenue"), link:g("tecLink"), price:g("tecPrice"), desc:g("tecDesc"), name:g("tecName"), contact:g("tecContact") };
+    if (d.link && !/^https?:\/\//i.test(d.link)) d.link = "https://" + d.link;
+    var probs = [];
+    if (!d.orgName) probs.push("Please add the community or organizer.");
+    if (!d.title) probs.push("Please add the event name.");
+    if (!d.start) probs.push("Please choose the date and start time.");
+    else if (new Date(d.start) < new Date()) probs.push("That date has already passed.");
+    if (!/^https:\/\/\S+\.\S+/i.test(d.link)) probs.push("Please add the registration link (https://...).");
+    if (!d.name || !d.contact) probs.push("Please add your name and a LINE, WhatsApp or email so we can check details.");
+    if (!probs.length && captchaMissing("tec")) probs.push("Please complete the security check.");
+    var err = document.getElementById("tecError");
+    if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+    err.hidden = true;
+    var btn = document.getElementById("tecSubmit"); btn.disabled = true; btn.textContent = "Sending…";
+    if (supabase && !DEMO_MODE){
+      try { var r = await supabase.rpc("submit_community_event", { p_data: Object.assign({}, d, spamPayload("tec")) }); if (r.error) throw r.error; }
+      catch(x){ btn.disabled = false; btn.textContent = "Send for listing"; captchaReset("tec"); err.textContent = spamErrorText(x, /check|please/i.test((x && x.message) || "") ? String(x.message) : "Sorry, that didn't go through. Please try again."); err.hidden = false; return; }
+    } else if (!spamTrap("tec")){
+      communityEvents.push({ id:"ce-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), status:"pending", orgName:d.orgName, title:d.title, start:d.start, durationMin:d.durationMin, city:d.city, venue:d.venue,
+        link:d.link, price:d.price, desc:d.desc, submitter:{ name:d.name, contact:d.contact }, createdAt:nowStamp() });
+      saveCommunity();
+    }
+    state.tecSent = true; state.tecShowForm = false; renderPublicEvents();
+  }
+  document.addEventListener("submit", function(ev){ if (ev.target && ev.target.id === "tecForm") submitTec(ev); });
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t) return; var b;
+    if (t.closest("#publicEventsContent")){
+      if ((b = t.closest("[data-tec-city]"))){ state.tecCity = b.getAttribute("data-tec-city"); renderPublicEvents(); return; }
+      if (t.closest("[data-tec-show]")){ state.tecShowForm = true; renderPublicEvents(); var o = document.getElementById("tecOrg"); if (o) o.focus(); return; }
+      if (t.closest("[data-tec-again]")){ state.tecSent = false; state.tecShowForm = true; renderPublicEvents(); return; }
+      if ((b = t.closest("[data-tec-ics]"))){ var ce = ceById(b.getAttribute("data-tec-ics")); if (!ce) return;
+        var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([calIcs(ceAsCal(ce))], { type:"text/calendar;charset=utf-8" }));
+        a.download = String(ce.title).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) + ".ics"; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); return; }
+      return;
+    }
+    if (!t.closest("#operatorCommunityContent")) return;
+    if ((b = t.closest("[data-co-tab]"))){ state.coTab = b.getAttribute("data-co-tab"); state.coEdit = null; state.ceEdit = null; renderOperatorCommunity(true); return; }
+    if (t.closest("[data-co-new]")){ state.coEdit = "new"; renderOperatorCommunity(true); var n = document.getElementById("coName"); if (n) n.focus(); return; }
+    if ((b = t.closest("[data-co-edit]"))){ state.coEdit = b.getAttribute("data-co-edit"); state.coTab = "orgs"; renderOperatorCommunity(true); var f = document.getElementById("coOrgForm"); if (f && f.scrollIntoView) f.scrollIntoView({ block:"start" }); return; }
+    if (t.closest("[data-co-cancel]")){ state.coEdit = null; renderOperatorCommunity(true); return; }
+    if ((b = t.closest("[data-co-perk]"))){ b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); return; }
+    if ((b = t.closest("[data-co-save]"))){ coSaveOrg(b.getAttribute("data-co-save")); return; }
+    if ((b = t.closest("[data-co-copy]"))){ copyText(calendarUrl(b.getAttribute("data-co-copy")), "Calendar link copied"); return; }
+    if ((b = t.closest("[data-co-opp-add]"))){ var oid = b.getAttribute("data-co-opp-add"), org = coById(oid), co = document.getElementById("coOppCo-" + oid); if (!org || !co || !co.value.trim()){ if (co) co.focus(); return; }
+      (org.opps = org.opps || []).push({ company:co.value.trim().slice(0, 120), type:document.getElementById("coOppType-" + oid).value, note:document.getElementById("coOppNote-" + oid).value.trim().slice(0, 200), addedAt:nowStamp() });
+      org.updatedAt = nowStamp(); state.coOpen = oid; state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); return; }
+    if ((b = t.closest("[data-co-opp-del]"))){ var pr = b.getAttribute("data-co-opp-del").split("|"), og = coById(pr[0]); if (og && og.opps){ og.opps.splice(Number(pr[1]), 1); og.updatedAt = nowStamp(); state.coOpen = og.id; state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
+    if ((b = t.closest("[data-ce-new]"))){ state.coTab = "events"; state.ceEdit = "new"; state.coEventOrg = b.getAttribute("data-ce-new") || ""; renderOperatorCommunity(true); var ti = document.getElementById("ceTitle"); if (ti) ti.focus(); return; }
+    if ((b = t.closest("[data-ce-edit]"))){ var ee = ceById(b.getAttribute("data-ce-edit")); if (!ee) return; state.coTab = "events"; state.ceEdit = ee.id; renderOperatorCommunity(true); return; }
+    if (t.closest("[data-ce-cancel]")){ state.ceEdit = null; renderOperatorCommunity(true); return; }
+    if ((b = t.closest("[data-ce-save]"))){ ceSave(b.getAttribute("data-ce-save")); return; }
+    if ((b = t.closest("[data-ce-approve]"))){ var ea = ceById(b.getAttribute("data-ce-approve")); if (ea){ ceApprove(ea); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); toast("Listed on the Thailand calendar"); } return; }
+    if ((b = t.closest("[data-ce-decline]"))){ var ed = ceById(b.getAttribute("data-ce-decline")); if (ed){ ed.status = "declined"; delete ed.submitter; ed.updatedAt = nowStamp(); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
+    if ((b = t.closest("[data-ce-delete]"))){ var ex = ceById(b.getAttribute("data-ce-delete")); if (ex && confirm("Remove \"" + ex.title + "\" from the calendar?")){ communityEvents.splice(communityEvents.indexOf(ex), 1); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
+    if ((b = t.closest("[data-ce-connect]"))){ var ec = ceById(b.getAttribute("data-ce-connect")); if (ec) ceMakeConnectPage(ec); return; }
   });
 
   // ===== INVESTMENT ROUND (vendors and partners; private to the company and PartnerWAV unless they share it) =====

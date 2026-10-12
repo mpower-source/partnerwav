@@ -3,6 +3,8 @@ import urllib.parse
 
 with sync_playwright() as p:
     b, pg = open_page(p)
+    # these checks count only members' own events: start without the Thailand calendar's example community events
+    pg.evaluate("localStorage.setItem('partnerWAV_community', JSON.stringify({events:[]}))"); pg.reload(); pg.wait_for_timeout(600)
     for r in ["partner", "vendor", "operator"]:
         role(pg, r); open_menu(pg, "calendar"); ok(pg.locator('[data-screen="calendar"]:visible').count() == 1, f"{r.title()} menu has Events & Calendar")
     ok(pg.locator('#navAffiliate [data-screen="calendar"]').count() == 1, "Affiliate menu has Events & Calendar")

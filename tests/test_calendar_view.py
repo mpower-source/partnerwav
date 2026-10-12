@@ -20,6 +20,7 @@ evs = [
 with sync_playwright() as p:
     b, pg = open_page(p)
     pg.evaluate("localStorage.setItem('partnerWAV_calendar', JSON.stringify({events:%s, bookings:[]}))" % json.dumps(evs))
+    pg.evaluate("localStorage.setItem('partnerWAV_community', JSON.stringify({events:[]}))")   # members' own events only
     pg.reload(); pg.wait_for_timeout(700)
 
     role(pg, "operator"); nav(pg, "calendar")
