@@ -23,7 +23,7 @@ def open_editor(pg):
 
 def fill_basics(pg, title):
     pg.fill("#resourceTitle", title); pg.select_option("#resourceType", "pdf")
-    pg.fill("#resourceProgram", "Intelsense AI"); pg.fill("#resourceVendor", "Intelsense")
+    pg.select_option("#resourceProgram", "intelsense::Intelsense AI")
     pg.fill("#resourceSummary", "Partner-facing overview for " + title)
 
 with sync_playwright() as p:

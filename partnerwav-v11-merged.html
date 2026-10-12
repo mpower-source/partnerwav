@@ -208,6 +208,9 @@
   a{ color:var(--accent); }
   button{ font-family:inherit; }
   :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  /* text boxes, dropdowns and text areas: the highlight sits on the box's own edge, never over the label above it */
+  input:focus-visible, select:focus-visible, textarea:focus-visible{ outline-offset:-2px; }
+  #resourceForm label{ display:block; margin-bottom:6px; }
   [hidden]{ display:none!important; }
 
   /* ---------- shell ---------- */
@@ -1951,8 +1954,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
               <option value="document">Document</option>
               <option value="guide">Guide/Handbook</option>
             </select></div>
-            <div><label>Program</label><input type="text" id="resourceProgram" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
-            <div><label>Vendor/Organization</label><input type="text" id="resourceVendor" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required /></div>
+            <div><label for="resourceProgram">Program</label><select id="resourceProgram" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" required></select></div>
+            <div><label for="resourceVendor">Vendor/Organization</label><input type="text" id="resourceVendor" readonly tabindex="-1" placeholder="Filled in from the program" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink-soft);" required /></div>
             <div><label>Summary/Description</label><textarea id="resourceSummary" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;min-height:80px;" required></textarea></div>
             <div><label>File Size (e.g., 2.4MB)</label><input type="text" id="resourceFileSize" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div><label>Webinar Duration (if applicable, e.g., 1h 23m)</label><input type="text" id="resourceDuration" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
@@ -14671,13 +14674,46 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
 
   // ===== TIER 3: RESOURCES/MATERIALS =====
+  // Program picker: each vendor's partner program and its products; the vendor fills itself in.
+  // Option values are "<vendorId>::<program name>"; a vendor sees only its own program.
+  function resProgramOptions(resource){
+    var sel = document.getElementById("resourceProgram"), vend = document.getElementById("resourceVendor");
+    var list = programs.filter(function(v){ return !v._deleted && v.name; });
+    if (state.role === "vendor" && state.myVendorId && list.some(function(v){ return v.id === state.myVendorId; })) list = list.filter(function(v){ return v.id === state.myVendorId; });
+    var html = '<option value="">-- Select a program --</option>', want = "";
+    list.forEach(function(v){
+      html += '<optgroup label="'+attr(v.name)+'"><option value="'+attr(v.id + "::" + v.name)+'">'+esc(v.name)+' (whole program)</option>'
+        + (v.products || []).filter(function(x){ return x && x.name; }).map(function(x){ return '<option value="'+attr(v.id + "::" + x.name)+'">'+esc(x.name)+'</option>'; }).join("")
+        + '</optgroup>';
+      if (resource && !want && (resource.programId ? resource.programId === v.id : resource.vendor === v.name)){
+        var names = [v.name].concat((v.products || []).map(function(x){ return x && x.name; }));
+        if (names.indexOf(resource.program) > -1) want = v.id + "::" + resource.program;
+      }
+    });
+    // an older resource whose program isn't in the list keeps its own values
+    if (resource && resource.program && !want){ want = "custom::" + resource.program; html += '<option value="'+attr(want)+'">'+esc(resource.program)+'</option>'; }
+    sel.innerHTML = html;
+    if (!resource && list.length === 1) want = list[0].id + "::" + list[0].name;   // a vendor's own program, picked for them
+    sel.value = want;
+    resProgramChanged(resource && want.indexOf("custom::") === 0 ? resource.vendor : "");
+  }
+  function resProgramChanged(keepVendor){
+    var v = (document.getElementById("resourceProgram").value || "").split("::"), prog = v[0] && v[0] !== "custom" ? programById(v[0]) : null;
+    document.getElementById("resourceVendor").value = prog ? prog.name : (keepVendor || "");
+  }
+  function resProgramPick(){
+    var raw = document.getElementById("resourceProgram").value || "", i = raw.indexOf("::");
+    if (i < 0) return { programId:"", program:"", vendor:"" };
+    var id = raw.slice(0, i), prog = id !== "custom" ? programById(id) : null;
+    return { programId: prog ? prog.id : "", program: raw.slice(i + 2), vendor: prog ? prog.name : document.getElementById("resourceVendor").value.trim() };
+  }
+  document.addEventListener("change", function(ev){ if (ev.target && ev.target.id === "resourceProgram") resProgramChanged(""); });
   function loadResourceForm(resourceId){
     var resource = resourceId ? (resources.concat(pendingResources)).find(function(r){ return r.id === resourceId; }) : null;
     document.getElementById("resourceEditorTitle").textContent = resource ? "Edit Resource" : "Submit Resource/Material";
     document.getElementById("resourceTitle").value = resource ? resource.title : "";
     document.getElementById("resourceType").value = resource ? resource.type : "";
-    document.getElementById("resourceProgram").value = resource ? resource.program : "";
-    document.getElementById("resourceVendor").value = resource ? resource.vendor : "";
+    resProgramOptions(resource);
     document.getElementById("resourceSummary").value = resource ? resource.summary : "";
     document.getElementById("resourceFileSize").value = resource ? resource.fileSize : "";
     document.getElementById("resourceDuration").value = resource ? (resource.duration || "") : "";
@@ -14695,8 +14731,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     e.preventDefault();
     var title = document.getElementById("resourceTitle").value.trim();
     var type = document.getElementById("resourceType").value;
-    var program = document.getElementById("resourceProgram").value.trim();
-    var vendor = document.getElementById("resourceVendor").value.trim();
+    var pick = resProgramPick(), program = pick.program, vendor = pick.vendor;
     var summary = document.getElementById("resourceSummary").value.trim();
     var fileSize = document.getElementById("resourceFileSize").value.trim();
     var duration = document.getElementById("resourceDuration").value.trim();
@@ -14720,14 +14755,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var idx = resources.findIndex(function(r){ return r.id === state.editingResourceId; });
       if (idx >= 0){
         resources[idx] = Object.assign(resources[idx], {
-          title: title, type: type, program: program, vendor: vendor, summary: summary, fileSize: fileSize, duration: duration
+          title: title, type: type, program: program, programId: pick.programId, vendor: vendor, summary: summary, fileSize: fileSize, duration: duration
         }, fileFields);
         toast("Resource updated");
       }
     } else {
       var newId = "res-" + Date.now();
       pendingResources.push({
-        id: newId, title: title, type: type, uploadedBy: vendor, program: program, vendor: vendor,
+        id: newId, title: title, type: type, uploadedBy: vendor, program: program, programId: pick.programId, vendor: vendor,
         status: "pending", fileSize: fileSize, submittedDate: "just now", summary: summary,
         transcription: "", previewText: summary.substring(0, 100), reason: "awaiting_review",
         duration: duration || "",

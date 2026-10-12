@@ -92,7 +92,7 @@ with sync_playwright() as p:
     ok("Attached: big.pdf" in pg.inner_text("#resourceFileStatus"), "Signed in: a 5 MB file is accepted (limit 50 MB, was 3 MB)")
     pg.set_input_files("#resourceFileInput", pdf_path); pg.wait_for_timeout(300)
     pg.fill("#resourceTitle", "Intelsense Partner Deck"); pg.select_option("#resourceType", "pdf")
-    pg.fill("#resourceProgram", "Intelsense AI"); pg.fill("#resourceVendor", "Intelsense AI"); pg.fill("#resourceSummary", "Partner-facing overview")
+    pg.select_option("#resourceProgram", "intelsense::Intelsense AI"); pg.fill("#resourceSummary", "Partner-facing overview")
     pg.click('#resourceForm button[type=submit]'); pg.wait_for_timeout(2500); settle(pg)
     pr = db("pendingResources")
     ok(len(pr) == 1 and pr[0]["data"].get("filePath", "").startswith("resources/") and not pr[0]["data"].get("fileData"), "Resource record points at the stored file (no file data in the database row)")
