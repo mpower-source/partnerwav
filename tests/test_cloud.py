@@ -58,8 +58,8 @@ with sync_playwright() as p:
     ok("portal_records" in pg.inner_text("#cloudDataContent"), "Cloud Data screen")
     pg.click("[data-cloud-seed]"); pg.wait_for_timeout(2500)
     cols = {r["collection"] for r in db()}
-    ok({"programs", "shopProducts", "levelRules", "affiliatePrograms", "landingPages"} <= cols, "Starter records saved to Supabase: " + ", ".join(sorted(cols)))
-    ok(len(db("mspProspects")) == 0 and len(db("programs")) == 7, "7 vendor programs stored; the page's demo prospects are never uploaded (real ones are loaded into Supabase once)")
+    ok({"programs", "shopProducts", "levelRules", "mspProspects", "affiliatePrograms", "landingPages"} <= cols, "Starter records saved to Supabase: " + ", ".join(sorted(cols)))
+    ok(len(db("mspProspects")) == 61 and len(db("programs")) == 7, "All 61 prospects and 7 vendor programs stored")
     ok(all(r["is_public"] for r in db("programs")) and all(r["writers"] == ["vendor:" + r["id"]] for r in db("programs")), "Programs: public, each editable by its vendor")
     paid = [r for r in db("shopProducts") if r["data"].get("price")]
     ok(all(r["data"].get("accessLink", "") == "" for r in paid), "Paid products' access links are not stored on the public product")
