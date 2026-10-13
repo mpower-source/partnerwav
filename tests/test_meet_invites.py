@@ -27,6 +27,21 @@ with sync_playwright() as p:
     ok("Introducing PartnerWAV to Acme Software" in pv and "Hi Ann," in pv and "10:00 AM" in pv and ("EDT" in pv or "EST" in pv) and "30 minutes" in pv, "The preview fills in the company, name, date and time")
     ok("google meet link" in pv.lower() and "{{" not in pv, "...and marks where the Meet link goes " + str([l for l in pv.splitlines() if "{{" in l]))
 
+    # their logo: white artwork on a see-through background gets a dark chip so it doesn't vanish
+    from PIL import Image, ImageDraw
+    import tempfile, os
+    im = Image.new("RGBA", (600, 200), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    d.ellipse((40, 60, 120, 140), fill=(110, 220, 200, 255)); d.rectangle((150, 70, 420, 130), fill=(245, 245, 245, 255)); d.rectangle((440, 70, 540, 130), fill=(110, 220, 200, 255))
+    logo_path = os.path.join(tempfile.mkdtemp(), "client-logo.png"); im.save(logo_path)
+    pg.set_input_files("#meetLogoFile", logo_path); pg.wait_for_timeout(600)
+    ok(pg.locator("[data-meet-logo]").count() == 1 and pg.get_attribute('[data-meet-logo-bg="#231f3a"]', "aria-pressed") == "true", "A light logo on a clear background is put on a dark chip")
+    size = pg.evaluate("(() => { const i = document.querySelector('[data-meet-logo] img'); return [i.naturalWidth, i.naturalHeight]; })()")
+    ok(size[0] <= 400 and size[1] <= 80 and abs(size[0] / size[1] - 501 / 81) < 0.2, "The logo is trimmed to its artwork and made small for email: " + str(size))
+    ok(pg.locator("[data-meet-preview-logo] img").count() == 1, "The preview shows it next to PartnerWAV")
+    pg.click('[data-meet-logo-bg="#ffffff"]'); pg.wait_for_timeout(150)
+    ok("255, 255, 255" in pg.evaluate("getComputedStyle(document.querySelector('[data-meet-preview-logo]')).backgroundColor"), "The logo background can be changed")
+    pg.click('[data-meet-logo-bg="#231f3a"]'); pg.wait_for_timeout(150)
+
     # customise this one invite
     pg.fill("#meetBody", pg.input_value("#meetBody").replace("Best regards", "Looking forward to it")); pg.wait_for_timeout(150)
     ok("Looking forward to it" in pg.inner_text("[data-meet-preview]"), "The message can be changed for this company")
@@ -46,6 +61,7 @@ with sync_playwright() as p:
     ok(len(s) == 1 and s[0]["status"] == "demo" and s[0]["email"] == "partnerwav@gmail.com", "A test goes only to partnerwav@gmail.com")
     pg.click("[data-meet-send]"); pg.wait_for_timeout(250)
     s = sent(pg)
+    ok(s[1].get("logo") and s[1]["logo"]["bg"] == "#231f3a" and s[1]["logo"]["dataUrl"].startswith("data:image/png;base64,"), "The logo is kept with the invite")
     ok(len(s) == 2 and s[1]["email"] == "ann@acme.example" and s[1]["company"] == "Acme Software" and s[1]["timeZone"] == "America/New_York" and s[1]["durationMin"] == 30, "The invite is logged")
     start = datetime.datetime.fromisoformat(s[1]["start"].replace("Z", "+00:00"))
     ok(start.hour in (14, 15) and start.minute == 0, "10:00 New York time is saved as the right moment (UTC " + s[1]["start"] + ")")
@@ -54,6 +70,9 @@ with sync_playwright() as p:
     ok(pg.locator("[data-meet-row]").count() == 2 and "Acme Software" in pg.inner_text("#meetContent"), "Sent tab lists the invites")
     pg.click(f'[data-meet-again="{s[1]["id"]}"]'); pg.wait_for_timeout(200)
     ok(pg.input_value("#meetCompany") == "Acme Software" and pg.input_value("#meetEmail") == "ann@acme.example", "Invite again fills the form")
+    ok(pg.locator("[data-meet-preview-logo] img").count() == 1, "...including their logo")
+    pg.click("[data-meet-logo-remove]"); pg.wait_for_timeout(150)
+    ok(pg.locator("[data-meet-preview-logo]").count() == 0, "The logo can be removed")
 
     # the same message on WhatsApp and LINE
     pg.click('[data-meet-tab="new"]'); pg.wait_for_timeout(200)
@@ -130,6 +149,7 @@ for fail in (False, True):
             pg.click("[data-meet-test]"); pg.wait_for_timeout(800)
             t0 = mock.meet_calls[-1]
             ok(t0["test"] is True and "Test sent" in pg.inner_text("#meetMsg"), "Signed in: the test goes through the meet-invite function")
+            pg.set_input_files("#meetLogoFile", logo_path); pg.wait_for_timeout(600)
             pg.fill("#meetWa", "+66812345678"); pg.check("#meetViaWa")
             pg.click("[data-meet-send]"); pg.wait_for_timeout(900)
             c = mock.meet_calls[-1]
@@ -139,6 +159,7 @@ for fail in (False, True):
             ok(c["test"] is False and c["to"] == [{"email": "ann@acme.example", "name": "Ann Lee"}] and c["guests"] == [{"email": "cto@acme.example"}] and c["timeZone"] == "Asia/Bangkok" and c["addGuests"] is True, "Signed in: the invite carries the people, time zone and calendar choice")
             ok("{{meet_link}}" in c["body"] and "Acme Software" in c["subject"] and "{{company}}" not in c["body"] and "9:30 AM" in c["body"], "...with everything filled in except the Meet link, which the server adds")
             ok(c["start"].startswith(day + "T02:30"), "9:30 Bangkok time is 02:30 UTC: " + c["start"])
+            ok(c.get("logo") and c["logo"]["type"] == "image/png" and c["logo"]["bg"] == "#231f3a" and c["logo"]["company"] == "Acme Software" and len(c["logo"]["data"]) > 100 and not c["logo"]["data"].startswith("data:"), "Signed in: the logo goes to the server as a small PNG")
             ok("[Google Meet link]" not in pg.inner_text("#meetContent"), "Signed in, nothing is left as a placeholder")
             pg.wait_for_timeout(300)
             ok(pg.locator("[data-meet-row]").count() == 2 and "https://meet.google.com/abc-defg-hij" in pg.content(), "Sent tab shows it with the Meet link")

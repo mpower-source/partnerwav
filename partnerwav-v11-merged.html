@@ -804,6 +804,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .meet-mail-logo{ width:24px; height:24px; border-radius:7px; background:#6c4cf1; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; }
   .meet-mail .meet-preview-body{ color:#231f3a; }
   .meet-mail .badge.accent{ background:#efebff; color:#5135d8; }
+  .meet-mail-x{ color:#8c88a3; font-weight:400; margin:0 4px; }
+  .meet-logo-chip{ display:inline-flex; align-items:center; border-radius:7px; padding:5px 9px; border:1px solid #eceaf4; }
+  .meet-logo-chip img{ display:block; height:26px; width:auto; max-width:180px; }
+  .meet-logo-chip.sm{ padding:3px 6px; vertical-align:middle; } .meet-logo-chip.sm img{ height:16px; max-width:90px; }
+  .meet-logo-area{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .meet-mail-btn{ display:inline-block; background:#6c4cf1; color:#fff; border-radius:9px; padding:9px 16px; font-weight:600; font-size:.88rem; }
   .meet-mail-foot{ border-top:1px solid #eceaf4; background:#f3f1fb; color:#5b5675; font-size:.78rem; padding:10px 18px 12px; }
   .meet-chan{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; } .meet-chan label{ display:flex; gap:6px; align-items:center; font-size:.9rem; }
@@ -19531,10 +19536,47 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       sender_name:meetSettings().senderName || "The PartnerWAV team", subject:g("meetSubject"), body:g("meetBody"), addGuests:!!(document.getElementById("meetAddGuests") || {}).checked,
       whatsapp:g("meetWa"), lineId:g("meetLine"), viaWa:!!(document.getElementById("meetViaWa") || {}).checked, viaLine:!!(document.getElementById("meetViaLine") || {}).checked };
   }
+  // the client's logo: trimmed, resized to a small PNG in the browser, sent inside the email as an inline image
+  var MEET_LOGO_BGS = [["#ffffff", "White"], ["#231f3a", "Dark"], ["#6c4cf1", "PartnerWAV purple"]];
+  function meetLogoAreaHtml(){
+    var L = state.meetLogo; if (!L) return "";
+    return '<div class="meet-logo-area" data-meet-logo><span class="meet-logo-chip" style="background:'+attr(L.bg)+';"><img src="'+attr(L.dataUrl)+'" alt="Their logo"></span>'
+      + '<span class="field-note">Background:</span>'+MEET_LOGO_BGS.map(function(x){ return '<button type="button" class="meet-chip" aria-pressed="'+(L.bg === x[0])+'" data-meet-logo-bg="'+x[0]+'">'+esc(x[1])+'</button>'; }).join("")
+      + '<button type="button" class="btn ghost xs" data-meet-logo-remove>Remove logo</button></div>';
+  }
+  function meetLogoRefresh(){ var a = document.getElementById("meetLogoArea"); if (a) a.innerHTML = meetLogoAreaHtml(); meetRefreshPreview(); }
+  function meetLoadLogo(file){
+    var err = document.getElementById("meetErr"), bad = function(t){ if (err){ err.textContent = t; err.hidden = false; } };
+    if (!file) return; if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type)) return bad("The logo should be a PNG, JPG, WebP or SVG image.");
+    if (file.size > 5 * 1024 * 1024) return bad("That logo file is over 5 MB. Please use a smaller one.");
+    var rd = new FileReader();
+    rd.onload = function(){ var img = new Image();
+      img.onload = function(){
+        var w0 = img.naturalWidth || 600, h0 = img.naturalHeight || 200, c = document.createElement("canvas"); c.width = w0; c.height = h0;
+        var x = c.getContext("2d"); x.drawImage(img, 0, 0, w0, h0);
+        var px = x.getImageData(0, 0, w0, h0).data, minX = w0, minY = h0, maxX = -1, maxY = -1, see = false, light = 0, solid = 0;
+        for (var y = 0; y < h0; y++) for (var i = 0; i < w0; i++){ var k = (y * w0 + i) * 4, a = px[k + 3]; if (a < 250) see = true;
+          if (a > 24){ if (i < minX) minX = i; if (i > maxX) maxX = i; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+          if (a > 128){ solid++; if ((0.2126 * px[k] + 0.7152 * px[k + 1] + 0.0722 * px[k + 2]) / 255 > 0.85) light++; } }
+        if (maxX < 0){ minX = 0; minY = 0; maxX = w0 - 1; maxY = h0 - 1; }
+        var cw = maxX - minX + 1, ch = maxY - minY + 1, sc = Math.min(1, 80 / ch, 400 / cw), o = document.createElement("canvas");
+        o.width = Math.max(1, Math.round(cw * sc)); o.height = Math.max(1, Math.round(ch * sc));
+        o.getContext("2d").drawImage(c, minX, minY, cw, ch, 0, 0, o.width, o.height);
+        var url = o.toDataURL("image/png");
+        if (url.length > 400000) return bad("That logo is too detailed to send. Please use a simpler or smaller image.");
+        // white or very light artwork on a see-through background would vanish on white, so it gets a dark chip
+        state.meetLogo = { dataUrl:url, bg: see && solid && light / solid > 0.2 ? "#231f3a" : "#ffffff", name:file.name };
+        if (err) err.hidden = true; meetLogoRefresh();
+      };
+      img.onerror = function(){ bad("That logo couldn't be read. Try a PNG or JPG."); };
+      img.src = rd.result; };
+    rd.readAsDataURL(file);
+  }
   function meetPreviewHtml(v){
     return '<div class="meet-preview" data-meet-preview><div class="field-note"><b>From:</b> '+esc(v.sender_name)+' &lt;partnerwav@gmail.com&gt;'+(v.email ? ' · <b>To:</b> '+esc(v.contact_name ? v.contact_name + " <" + v.email + ">" : v.email) : '')+'</div>'
       + '<div class="meet-preview-subject">'+esc(meetFill(v.subject, v))+'</div>'
-      + '<div class="meet-mail" data-meet-mail><div class="meet-mail-bar"></div><div class="meet-mail-head"><span class="meet-mail-logo">P</span>PartnerWAV</div>'
+      + '<div class="meet-mail" data-meet-mail><div class="meet-mail-bar"></div><div class="meet-mail-head"><span class="meet-mail-logo">P</span>PartnerWAV'
+        + (state.meetLogo ? '<span class="meet-mail-x">&times;</span><span class="meet-logo-chip" data-meet-preview-logo style="background:'+attr(state.meetLogo.bg)+';"><img src="'+attr(state.meetLogo.dataUrl)+'" alt="'+attr(v.company || "Their logo")+'"></span>' : '')+'</div>'
         + '<div class="meet-preview-body">'+esc(meetFill(v.body, v)).replace(/\[Google Meet link\]/g, '<span class="badge accent">Google Meet link</span>')+'</div>'
         + '<div><span class="meet-mail-btn">Join with Google Meet</span></div>'
         + '<div class="meet-mail-foot">Sent by '+esc(v.sender_name)+' from <b>PartnerWAV</b> by CloudWAV</div></div></div>';
@@ -19550,6 +19592,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + f("meetGuests", "Others to invite (optional)", d.guests, 'maxlength="600" placeholder="emails, separated by commas"')
         + f("meetWa", "WhatsApp number (optional)", d.whatsapp, 'maxlength="30" inputmode="tel" placeholder="with country code, e.g. +66 81 234 5678"')
         + f("meetLine", "LINE ID (optional)", d.lineId, 'maxlength="60" placeholder="e.g. annlee or @acme"') + '</div>'
+      + '<div class="field-row" style="margin:0;"><label for="meetLogoFile">Their logo (optional): shown next to PartnerWAV at the top of the email</label>'
+        + '<input type="file" id="meetLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml"></div><div id="meetLogoArea">'+meetLogoAreaHtml()+'</div>'
       + '<b style="margin-top:6px;">When</b><div class="meet-two">'
         + '<div class="field-row"><label for="meetDate">Date</label><input type="date" id="meetDate" value="'+attr(d.date || dd)+'"></div>'
         + '<div class="field-row"><label for="meetTime">Time</label><input type="time" id="meetTime" value="'+attr(d.time || "10:00")+'"></div>'
@@ -19595,7 +19639,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return (just ? '<div class="card card-pad meet-just" data-meet-just><b>'+(just.status === "demo" ? 'Demo: the email wasn\'t sent.' : 'The email is on its way.')+' Now send the same message on '+[just.viaWa ? 'WhatsApp' : '', just.viaLine ? 'LINE' : ''].filter(Boolean).join(' and ')+':</b>'
         + '<span class="field-note">Each button opens the app with the message written out (Google Meet link included); you press send there.</span>'+meetChatHtml(just, true)+'</div>' : '')
       + '<div style="display:flex;flex-direction:column;gap:10px;">'+list.map(function(m){ var st = lab[m.status] || lab.sent, w = meetWhen(m.start, m.timeZone || "UTC");
-      return '<div class="card card-pad" data-meet-row="'+attr(m.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div><b>'+esc(m.company || "(no company)")+'</b> <span class="pill '+st[1]+'">'+st[0]+'</span>'
+      return '<div class="card card-pad" data-meet-row="'+attr(m.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div>'
+        + (m.logo && /^data:image\/png;base64,/.test(m.logo.dataUrl || "") ? '<span class="meet-logo-chip sm" style="background:'+attr(m.logo.bg || "#ffffff")+';"><img src="'+attr(m.logo.dataUrl)+'" alt=""></span> ' : '')+'<b>'+esc(m.company || "(no company)")+'</b> <span class="pill '+st[1]+'">'+st[0]+'</span>'
         + '<div class="field-note">'+esc([m.contactName, m.email].filter(Boolean).join(" · "))+(m.guests && m.guests.length ? ' + '+m.guests.length+' more' : '')+'</div>'
         + '<div class="field-note">'+esc(w.date + " at " + w.time + " " + w.zone)+' · '+esc(String(m.durationMin))+' min · sent '+esc(m.sentAt || "")+'</div>'
         + (m.error ? '<div class="field-note evs-bad">'+esc(m.error)+'</div>' : '')
@@ -19655,19 +19700,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     err.hidden = true;
     var rec = { id:"mi-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), company:v.company, contactName:v.contact_name, email:test ? "partnerwav@gmail.com" : v.email, guests:test ? [] : guests,
       start:v.start, timeZone:v.timezone_id, durationMin:Number(v.duration), subject:meetFill(v.subject, v, true), template:state.meetTpl || "", sentAt:nowStamp(), status:test ? "test" : "sent",
-      body:meetFill(v.body, v, true).slice(0, 8000), whatsapp:test ? "" : v.whatsapp, lineId:test ? "" : v.lineId, viaWa:!test && v.viaWa, viaLine:!test && v.viaLine };
+      body:meetFill(v.body, v, true).slice(0, 8000), logo:state.meetLogo ? { dataUrl:state.meetLogo.dataUrl, bg:state.meetLogo.bg } : null, whatsapp:test ? "" : v.whatsapp, lineId:test ? "" : v.lineId, viaWa:!test && v.viaWa, viaLine:!test && v.viaLine };
     state.meetDraft = { company:v.company, contact_name:v.contact_name, email:v.email, guests:v.guests, date:(document.getElementById("meetDate") || {}).value, time:(document.getElementById("meetTime") || {}).value,
       timezone_id:v.timezone_id, duration:v.duration, subject:v.subject, body:v.body, addGuests:v.addGuests, whatsapp:v.whatsapp, lineId:v.lineId, viaWa:v.viaWa, viaLine:v.viaLine };
     if (!meetConnected()){
       rec.status = "demo"; meetInvites.push(rec); saveMeet();
       if (msg) msg.textContent = "Demo: nothing was sent. Once Google is connected (Google connection tab) this sends from partnerwav@gmail.com.";
-      if (rec.viaWa || rec.viaLine){ state.meetJust = rec.id; state.meetDraft = null; state.meetTab = "sent"; renderMeetInvites(true); }
+      if (!test && (rec.viaWa || rec.viaLine)){ state.meetJust = rec.id; state.meetDraft = null; state.meetLogo = null; state.meetTab = "sent"; renderMeetInvites(true); }
       return;
     }
     if (!test && !confirm("Send the invite to " + v.email + (guests.length ? " and " + guests.length + " more" : "") + " from partnerwav@gmail.com?")) return;
     var btns = document.querySelectorAll("[data-meet-send], [data-meet-test]"); btns.forEach(function(x){ x.disabled = true; }); if (msg) msg.textContent = "Sending...";
     var payload = { test:!!test, to:[{ email:v.email, name:v.contact_name }], guests:guests.map(function(g){ return { email:g }; }), subject:meetFill(v.subject, v, true), body:meetFill(v.body, v, true),
-      title:"PartnerWAV intro" + (v.company ? ": " + v.company : ""), start:v.start, timeZone:v.timezone_id, durationMin:Number(v.duration), addGuests:v.addGuests, senderName:v.sender_name };
+      title:"PartnerWAV intro" + (v.company ? ": " + v.company : ""), start:v.start,
+      logo:state.meetLogo ? { data:state.meetLogo.dataUrl.split(",")[1], type:"image/png", bg:state.meetLogo.bg, company:v.company } : null, timeZone:v.timezone_id, durationMin:Number(v.duration), addGuests:v.addGuests, senderName:v.sender_name };
     supabase.functions.invoke("meet-invite", { body:payload }).then(function(res){
       btns.forEach(function(x){ x.disabled = false; });
       var d = res && res.data; if (typeof d === "string"){ try { d = JSON.parse(d); } catch(e){ d = null; } }
@@ -19676,7 +19722,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         if (!d2 || !d2.ok){ rec.status = "failed"; rec.error = (d2 && d2.error) || "The meet-invite function isn't reachable. Is it deployed?"; meetInvites.push(rec); saveMeet(); if (msg) msg.textContent = rec.error; return; }
         rec.meetLink = d2.meetLink; rec.eventLink = d2.eventLink || ""; rec.eventId = d2.eventId || ""; meetInvites.push(rec); saveMeet();
         if (msg) msg.textContent = test ? "Test sent to partnerwav@gmail.com. Check that inbox." : "Invite sent to " + v.email + ".";
-        if (!test){ state.meetJust = rec.id; state.meetDraft = null; state.meetTab = "sent"; renderMeetInvites(true); }
+        if (!test){ state.meetJust = rec.id; state.meetDraft = null; state.meetLogo = null; state.meetTab = "sent"; renderMeetInvites(true); }
       };
       if (ctx && typeof ctx.json === "function" && !d) return ctx.json().then(done, function(){ done(null); });
       done(d);
@@ -19697,6 +19743,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   document.addEventListener("input", function(ev){ var t = ev.target; if (!t || !t.closest || !t.closest("#meetForm")) return; meetRefreshPreview(); });
   document.addEventListener("change", function(ev){ var t = ev.target; if (!t || !t.closest || !t.closest("#meetContent")) return;
+    if (t.id === "meetLogoFile"){ meetLoadLogo(t.files && t.files[0]); return; }
     if (t.id === "meetTplSel"){ var tp = meetSettings().templates.filter(function(x){ return x.id === t.value; })[0]; if (tp){ state.meetTpl = tp.id; document.getElementById("meetSubject").value = tp.subject; document.getElementById("meetBody").value = tp.body; } }
     if (t.closest("#meetForm")) meetRefreshPreview(); });
   document.addEventListener("click", function(ev){
@@ -19705,6 +19752,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         date:(document.getElementById("meetDate") || {}).value, time:(document.getElementById("meetTime") || {}).value, timezone_id:fv.timezone_id, duration:fv.duration, subject:fv.subject, body:fv.body, addGuests:fv.addGuests, whatsapp:fv.whatsapp, lineId:fv.lineId, viaWa:fv.viaWa, viaLine:fv.viaLine }; }
       state.meetTab = b.getAttribute("data-meet-tab"); state.meetTplEdit = null; renderMeetInvites(true); return; }
     if (t.closest("[data-meet-send]")){ meetSend(false); return; }
+    if ((b = t.closest("[data-meet-logo-bg]"))){ if (state.meetLogo){ state.meetLogo.bg = b.getAttribute("data-meet-logo-bg"); meetLogoRefresh(); } return; }
+    if (t.closest("[data-meet-logo-remove]")){ state.meetLogo = null; var lf = document.getElementById("meetLogoFile"); if (lf) lf.value = ""; meetLogoRefresh(); return; }
     if ((b = t.closest("[data-meet-wa], [data-meet-line]"))){ var wa = b.hasAttribute("data-meet-wa"), mm = meetInvites.filter(function(x){ return x.id === b.getAttribute(wa ? "data-meet-wa" : "data-meet-line"); })[0];
       if (mm){ mm[wa ? "waAt" : "lineAt"] = nowStamp(); setTimeout(function(){ saveMeet(); renderMeetInvites(true); }, 50); } return; }
     if (t.closest("[data-meet-test]")){ meetSend(true); return; }
@@ -19713,6 +19762,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-meet-again]"))){ var ma = meetInvites.filter(function(x){ return x.id === b.getAttribute("data-meet-again"); })[0]; if (!ma) return;
       state.meetDraft = { company:ma.company, contact_name:ma.contactName, email:ma.status === "test" ? "" : ma.email, guests:(ma.guests || []).join(", "), timezone_id:ma.timeZone, duration:String(ma.durationMin || 30),
         whatsapp:ma.whatsapp || "", lineId:ma.lineId || "", viaWa:!!ma.viaWa, viaLine:!!ma.viaLine };
+      state.meetLogo = ma.logo && /^data:image\/png;base64,/.test(ma.logo.dataUrl || "") ? { dataUrl:ma.logo.dataUrl, bg:ma.logo.bg || "#ffffff" } : null;
       state.meetTpl = ma.template || ""; state.meetTab = "new"; renderMeetInvites(true); return; }
     if (t.closest("[data-meet-sender]")){ var s0 = meetSettings(); s0.senderName = ((document.getElementById("meetSender") || {}).value || "").trim().slice(0, 80) || "The PartnerWAV team"; meetSaveSettings(s0); renderMeetInvites(true); toast("Saved"); return; }
     if (t.closest("[data-meet-tpl-new]")){ state.meetTplEdit = "new"; renderMeetInvites(true); var tn = document.getElementById("meetTplName"); if (tn) tn.focus(); return; }

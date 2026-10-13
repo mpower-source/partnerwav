@@ -69,7 +69,18 @@ const BRAND = { bg: "#f7f6fb", card: "#ffffff", soft: "#f3f1fb", line: "#eceaf4"
   accent: "#6c4cf1", accentStrong: "#5135d8", accentSoft: "#efebff" };
 const FONT = "Inter, 'Segoe UI', Helvetica, Arial, sans-serif", HEAD_FONT = "'Space Grotesk', Inter, 'Segoe UI', Helvetica, Arial, sans-serif";
 
-function htmlBody(text: string, meetLink: string, senderName: string) {
+// the client's logo (optional): sent inside the email as an inline image, shown next to PartnerWAV's
+type Logo = { data: string; type: string; bg: string; company: string };
+const LOGO_BGS = ["#ffffff", "#231f3a", "#6c4cf1"];
+const LOGO_CID = "client-logo@partnerwav";
+function cleanLogo(v: any): Logo | null {
+  if (!v || typeof v !== "object") return null;
+  const type = String(v.type || ""), data = String(v.data || "").replace(/\s+/g, "");
+  if (!["image/png", "image/jpeg"].includes(type) || !/^[A-Za-z0-9+/]+=*$/.test(data) || data.length > 400000) return null;
+  return { data, type, bg: LOGO_BGS.includes(v.bg) ? v.bg : "#ffffff", company: oneLine(v.company, 80) };
+}
+
+function htmlBody(text: string, meetLink: string, senderName: string, logo: Logo | null = null) {
   const B = BRAND;
   const parts = escHtml(text).split(/\n{2,}/).map((p) =>
     `<p style="margin:0 0 14px;">` + p.replace(/\n/g, "<br>").replace(/https:\/\/[^\s<&]+/g, (u) => `<a href="${u}" style="color:${B.accent};text-decoration:underline;">${u}</a>`) + "</p>").join("");
@@ -83,22 +94,33 @@ function htmlBody(text: string, meetLink: string, senderName: string) {
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${B.card};border:1px solid ${B.line};border-radius:14px;">`
     + `<tr><td style="height:6px;background:${B.accent};border-radius:14px 14px 0 0;font-size:0;line-height:0;">&nbsp;</td></tr>`
     + `<tr><td style="padding:22px 30px 6px;"><table role="presentation" cellpadding="0" cellspacing="0"><tr>`
-      + `<td style="width:30px;height:30px;background:${B.accent};border-radius:8px;color:#ffffff;font-family:${HEAD_FONT};font-weight:700;font-size:17px;text-align:center;vertical-align:middle;">P</td>`
-      + `<td style="padding-left:10px;font-family:${HEAD_FONT};font-weight:700;font-size:20px;color:${B.accent};">PartnerWAV</td></tr></table></td></tr>`
+      + `<td style="vertical-align:middle;"><div style="width:30px;height:30px;line-height:30px;background:${B.accent};border-radius:8px;color:#ffffff;font-family:${HEAD_FONT};font-weight:700;font-size:17px;text-align:center;">P</div></td>`
+      + `<td style="vertical-align:middle;padding-left:10px;font-family:${HEAD_FONT};font-weight:700;font-size:20px;color:${B.accent};">PartnerWAV</td>`
+      + (logo ? `<td style="vertical-align:middle;padding:0 14px;font-family:${FONT};font-size:18px;color:${B.inkFaint};">&times;</td>`
+        + `<td style="vertical-align:middle;background:${logo.bg};border-radius:8px;padding:6px 10px;${logo.bg === "#ffffff" ? `border:1px solid ${B.line};` : ""}">`
+        + `<img src="cid:${LOGO_CID}" alt="${escHtml(logo.company || "Logo")}" height="30" style="display:block;height:30px;width:auto;max-width:200px;border:0;"></td>` : "")
+      + `</tr></table></td></tr>`
     + `<tr><td style="padding:16px 30px 8px;font-family:${FONT};font-size:15px;line-height:1.6;color:${B.ink};">${parts}${button}</td></tr>`
     + `<tr><td style="padding:14px 30px 20px;border-top:1px solid ${B.line};background:${B.soft};border-radius:0 0 14px 14px;font-family:${FONT};font-size:12px;line-height:1.5;color:${B.inkSoft};">`
       + `Sent by ${escHtml(senderName)} from <a href="https://partnerwav.com" style="color:${B.accent};text-decoration:none;font-weight:600;">PartnerWAV</a> by CloudWAV</td></tr>`
     + `</table></td></tr></table></body></html>`;
 }
-function mime(from: Person, to: Person[], subject: string, text: string, html: string) {
-  const boundary = "pw-" + crypto.randomUUID();
-  return [
-    "From: " + addr(from), "To: " + to.map(addr).join(", "), "Reply-To: " + from.email,
-    "Subject: " + word(subject), "MIME-Version: 1.0", `Content-Type: multipart/alternative; boundary="${boundary}"`, "",
-    "--" + boundary, "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "", wrap76(b64(enc.encode(text))),
-    "--" + boundary, "Content-Type: text/html; charset=UTF-8", "Content-Transfer-Encoding: base64", "", wrap76(b64(enc.encode(html))),
-    "--" + boundary + "--", "",
-  ].join("\r\n");
+function mime(from: Person, to: Person[], subject: string, text: string, html: string, logo: Logo | null = null) {
+  const alt = "pw-" + crypto.randomUUID(), rel = "pw-" + crypto.randomUUID();
+  const head = ["From: " + addr(from), "To: " + to.map(addr).join(", "), "Reply-To: " + from.email, "Subject: " + word(subject), "MIME-Version: 1.0"];
+  const altPart = [
+    `Content-Type: multipart/alternative; boundary="${alt}"`, "",
+    "--" + alt, "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "", wrap76(b64(enc.encode(text))),
+    "--" + alt, "Content-Type: text/html; charset=UTF-8", "Content-Transfer-Encoding: base64", "", wrap76(b64(enc.encode(html))),
+    "--" + alt + "--", "",
+  ];
+  if (!logo) return [...head, ...altPart].join("\r\n");
+  const ext = logo.type === "image/png" ? "png" : "jpg";
+  return [...head, `Content-Type: multipart/related; boundary="${rel}"`, "",
+    "--" + rel, ...altPart,
+    "--" + rel, `Content-Type: ${logo.type}; name="logo.${ext}"`, "Content-Transfer-Encoding: base64", `Content-ID: <${LOGO_CID}>`,
+    `Content-Disposition: inline; filename="logo.${ext}"`, "", wrap76(logo.data),
+    "--" + rel + "--", ""].join("\r\n");
 }
 
 async function google(token: string, url: string, init: RequestInit = {}) {
@@ -154,6 +176,7 @@ Deno.serve(async (req) => {
   try { new Intl.DateTimeFormat("en-US", { timeZone: tz }); } catch { return json(400, { error: "Unknown time zone" }); }
   const senderName = oneLine(body.senderName, 80) || "The PartnerWAV team";
   const addGuests = !test && body.addGuests !== false;
+  const logo = cleanLogo(body.logo);
 
   try {
     // 1. the calendar event with a Meet link
@@ -181,7 +204,7 @@ Deno.serve(async (req) => {
     // 2. the email, from partnerwav@gmail.com
     const fill = (s: string) => s.replace(/\{\{\s*meet_link\s*\}\}/g, meetLink);
     const finalText = fill(text), finalSubject = (test ? "[Test] " : "") + fill(subject);
-    const raw = b64url(mime({ email: sender, name: senderName }, [...to, ...guests], finalSubject, finalText, htmlBody(finalText, meetLink, senderName)));
+    const raw = b64url(mime({ email: sender, name: senderName }, [...to, ...guests], finalSubject, finalText, htmlBody(finalText, meetLink, senderName, logo), logo));
     const sent = await google(token, "https://gmail.googleapis.com/gmail/v1/users/me/messages/send", { method: "POST", body: JSON.stringify({ raw }) });
 
     return json(200, { ok: true, test, meetLink, eventId: ev.id, eventLink: ev.htmlLink, messageId: sent.id, calendarInvite: addGuests });
