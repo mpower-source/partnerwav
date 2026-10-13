@@ -692,7 +692,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .idb-flags{ display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; } .idb-flags .badge{ font-size:.66rem; }
   .idb-cols{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; align-items:start; }
   .idb-cols.one{ grid-template-columns:minmax(0,1fr); max-width:720px; }
-  .idb-cols.one.side{ grid-template-columns:minmax(260px,400px) minmax(0,1fr); max-width:none; }
+  .idb-cols.one.side{ grid-template-columns:minmax(260px,400px) minmax(0,1fr); max-width:none; scroll-margin-top:80px; }
   .idb-side{ min-width:0; }
   .idb-sidepanel{ position:relative; border:1px solid var(--accent); border-radius:12px; background:var(--surface-2); }
   .idb-sidepanel::before{ content:""; position:absolute; left:-8px; top:30px; width:14px; height:14px; background:var(--surface-2); border-left:1px solid var(--accent); border-bottom:1px solid var(--accent); transform:rotate(45deg); }
@@ -19036,7 +19036,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var segs = IDB_SEGMENTS.filter(function(s){ return !seg || s[0] === seg; });
     // one kind chosen (wide screens): the tiles on the left, the chosen investor's details beside its tile
     if (segs.length === 1 && !(window.matchMedia && window.matchMedia("(max-width:760px)").matches)){
+      // the chosen investor moves to the top of the list, its details beside it, so nothing needs scrolling
       var its = list.filter(function(x){ return idbSegment(x) === segs[0][0]; }), open = its.filter(function(x){ return x.id === state.idbOpen; })[0];
+      if (open) its = [open].concat(its.filter(function(x){ return x !== open; }));
       return '<div class="idb-cols one side"><section class="idb-col" data-idb-col="'+segs[0][0]+'" aria-label="'+attr(segs[0][1])+'"><div class="idb-col-head"><h3>'+esc(segs[0][1])+'</h3><span>'+its.length+'</span></div>'
         + (its.length ? its.map(idbRowHtml).join("") : '<div class="idb-col-empty">None match these filters.</div>') + '</section>'
         + '<aside class="idb-side" data-idb-side aria-label="Investor details">'+(open ? '<div class="idb-sidepanel" id="idbPanel">'+idbDetailHtml(open)+'</div>'
@@ -19311,6 +19313,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-idb-open]"))){ ev.preventDefault(); var oid = b.getAttribute("data-idb-open"); state.idbOpen = state.idbOpen === oid && b.classList.contains("idb-row") ? null : oid;
       if (state.idbOpen && !investorDb.filter(idbMatches).some(function(x){ return x.id === oid; })){ state.idbQ = ""; state.idbSeg = ""; state.idbStage = ""; state.idbFocus = ""; state.idbAmount = ""; state.idbCheck = ""; state.idbLoc = ""; state.idbRoute = ""; }
       renderInvestorDb(true); var row = document.querySelector('[data-idb-row="' + oid + '"]'); if (row && row.scrollIntoView && b.tagName === "A") row.scrollIntoView({ block:"nearest" });
+      var sd = document.querySelector(".idb-cols.side");
+      if (sd && state.idbOpen && sd.scrollIntoView){ if (sd.getBoundingClientRect().top < 0 || sd.getBoundingClientRect().top > innerHeight * 0.4) sd.scrollIntoView({ block:"start" }); return; }
       var pn = document.getElementById("idbPanel"), rw = document.querySelector('.idb-row[data-idb-row="' + oid + '"]');
       if (pn && rw && rw.getBoundingClientRect().top < 70 && rw.scrollIntoView) rw.scrollIntoView({ block:"start" }); return; }
     if (t.closest("[data-idb-new]")){ state.idbEdit = "new"; state.idbImport = false; renderInvestorDb(true); var nm = document.getElementById("idbName"); if (nm) nm.focus(); return; }
