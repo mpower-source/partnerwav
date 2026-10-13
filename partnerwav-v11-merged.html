@@ -790,6 +790,30 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .cp-share .ev-qr .aff-qr img{ width:140px; height:140px; }
   .cp-ev{ display:flex; gap:14px; align-items:flex-start; }
   .evs-list{ display:flex; flex-direction:column; gap:8px; }
+  .meet-grid{ display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:14px; align-items:start; }
+  .meet-form{ display:flex; flex-direction:column; gap:8px; }
+  .meet-form input[type=text], .meet-form input[type=date], .meet-form input[type=time], .meet-form textarea{ width:100%; box-sizing:border-box; }
+  .meet-two{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 10px; }
+  .meet-preview{ margin-top:8px; border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:var(--surface-2); display:flex; flex-direction:column; gap:8px; }
+  .meet-preview-subject{ font-weight:600; }
+  /* the preview uses the same fixed brand colours as the email itself (supabase/functions/meet-invite: BRAND) */
+  .meet-mail{ background:#ffffff; color:#231f3a; border:1px solid #eceaf4; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; gap:12px; padding:0 0 0; }
+  .meet-mail > *:not(.meet-mail-bar):not(.meet-mail-foot){ padding:0 18px; }
+  .meet-mail-bar{ height:5px; background:#6c4cf1; }
+  .meet-mail-head{ display:flex; align-items:center; gap:8px; font-family:"Space Grotesk", ui-sans-serif, sans-serif; font-weight:700; font-size:1.05rem; color:#6c4cf1; }
+  .meet-mail-logo{ width:24px; height:24px; border-radius:7px; background:#6c4cf1; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; }
+  .meet-mail .meet-preview-body{ color:#231f3a; }
+  .meet-mail .badge.accent{ background:#efebff; color:#5135d8; }
+  .meet-mail-btn{ display:inline-block; background:#6c4cf1; color:#fff; border-radius:9px; padding:9px 16px; font-weight:600; font-size:.88rem; }
+  .meet-mail-foot{ border-top:1px solid #eceaf4; background:#f3f1fb; color:#5b5675; font-size:.78rem; padding:10px 18px 12px; }
+  .meet-chan{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; } .meet-chan label{ display:flex; gap:6px; align-items:center; font-size:.9rem; }
+  .meet-chat-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+  .meet-just{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; border-color:var(--accent); }
+  .meet-preview-body{ white-space:pre-wrap; overflow-wrap:anywhere; font-size:.9rem; line-height:1.5; }
+  .meet-fields{ margin:6px 0 0; padding-left:18px; } .meet-fields code{ overflow-wrap:anywhere; }
+  .meet-steps{ margin:8px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:10px; } .meet-steps code{ overflow-wrap:anywhere; }
+  @media (max-width:900px){ .meet-grid{ grid-template-columns:minmax(0,1fr); } }
+  @media (max-width:560px){ .meet-two{ grid-template-columns:minmax(0,1fr); } }
   .evs-row{ display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
   .evs-actions{ display:flex; gap:6px; align-items:center; flex-shrink:0; }
   .evs-bad{ color:var(--bad); }
@@ -1374,6 +1398,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="operator-msp-engagements"><span class="ic">📞</span>MSP Engagement Tracker</button>
           <button class="navlink" data-screen="operator-events"><span class="ic">📇</span>Event Connect</button>
           <button class="navlink" data-screen="operator-community"><span class="ic">🤝</span>Community Partners</button>
+          <button class="navlink" data-screen="operator-meet-invites"><span class="ic">📹</span>Intro Meetings</button>
           <button class="navlink" data-screen="operator-investors"><span class="ic">💼</span>Investors</button>
           <button class="navlink" data-screen="operator-investor-db"><span class="ic">🗃️</span>Investor Database</button>
           <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
@@ -2688,6 +2713,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-operator-investor-db" hidden>
         <div class="section-head"><h2>Investor Database</h2><span class="hint">Investors, incubators and programs -- only CloudWAV can see this</span></div>
         <div style="height:14px"></div><div id="investorDbContent"></div>
+      </section>
+      <section id="scr-operator-meet-invites" hidden>
+        <div class="section-head"><h2>Intro Meetings</h2><span class="hint">Invite companies to meet PartnerWAV: an email from partnerwav@gmail.com with a Google Meet link</span></div>
+        <div style="height:14px"></div><div id="meetContent"></div>
       </section>
       <section id="scr-startup-perks" hidden>
         <div class="section-head"><h2>Startup Perks</h2><span class="hint">Free credits and discounts from software companies for startups</span></div>
@@ -4044,6 +4073,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-community":"Community Partners",
     "operator-investors":"Investors",
     "operator-investor-db":"Investor Database",
+    "operator-meet-invites":"Intro Meetings",
     "startup-perks":"Startup Perks",
     "investor-overview":"Overview",
     "investor-readiness":"Investor Readiness",
@@ -5343,6 +5373,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // CloudWAV's investor & incubator database (see INVESTOR DATABASE). The demo shows a few organisations (public company
   // information only) and one made-up example; the real records are loaded into Supabase from a private seed.
   var PERKS_KEY = "partnerWAV_startupPerks";   // declared here, before loadPerks() runs at start-up
+  var MEET_KEY = "partnerWAV_meetInvites";   // intro meeting invites CloudWAV has sent (see INTRO MEETINGS); before loadMeet() runs
+  var meetInvites = [];
   // Startup perks: free credits and discounts from software companies. Public program information, checked on the date shown;
   // CloudWAV keeps the list current (add, edit, hide). Members see the visible ones.
   var startupPerks = [{"id": "perk-claude", "provider": "Anthropic", "program": "Claude Startups", "category": "ai", "value": "A free year of Claude Team (up to 5 Premium seats) + USD 1,000 in Claude API credits", "who": "Companies founded in the last 5 years, or funded in the last 2. Claude Team offer is for companies new to Team. API credits expire 6 months after they're granted and work only on Anthropic's own API (not Amazon Bedrock or Google Vertex AI).", "how": "Apply with a Claude Console account and a company email on your website's domain. Most reviews are automatic; manual reviews take 2-3 business days. Also includes up to USD 45K in partner offers (e.g. ElevenLabs, Hex, Granola, ClickHouse, Gamma), office hours with Anthropic's Applied AI team, and events.", "url": "https://claude.com/programs/startups", "partnerOnly": false, "partnerRoute": "Up to USD 100K more in API credits through your VC, where your VC is a partner.", "checkedOn": "2026-10-12", "sources": ["https://techradar.com/pro/anthropic-offers-a-free-year-of-claude-team-and-usd1-000-in-credits-to-startups", "https://tech-ish.com/2026/10/07/claude-startups-free-team-year-and-api-credits/"], "hidden": false}, {"id": "perk-notion", "provider": "Notion", "program": "Notion for Startups", "category": "productivity", "value": "Up to 6 months free on the Business plan, including Notion AI", "who": "New Notion customers not on a paid plan. 6 months with a partner code (company email, public website, under 100 employees); 3 months without a partner; 1 month for small service businesses and teams under 10.", "how": "Apply on Notion's startup form; replies in 3-5 business days. One offer per company; not for Enterprise plans.", "url": "https://www.notion.com/startups", "partnerOnly": false, "partnerRoute": "6 months needs a code from a Notion partner (VC, accelerator or community). CloudWAV can apply to become one.", "checkedOn": "2026-10-12", "sources": ["https://Notion.com/help/notion-for-startups"], "hidden": false}, {"id": "perk-aws", "provider": "Amazon Web Services", "program": "AWS Activate", "category": "cloud", "value": "USD 1,000 in AWS credits (Founders), or up to USD 200,000 through an Activate Provider (Portfolio)", "who": "Founded in the last 10 years with a working company website. Founders tier: self-funded, new to Activate. Portfolio tier: pre-Series B, linked to an Activate Provider (VC, accelerator or incubator), applying within 12 months of the latest round.", "how": "Join AWS Activate and apply on the credits page; replies in about 7-10 business days. Credits usually last 1-2 years.", "url": "https://aws.amazon.com/startups/credits", "partnerOnly": false, "partnerRoute": "Portfolio credits need an Organization ID from an Activate Provider.", "checkedOn": "2026-10-12", "sources": ["https://aws.amazon.com/aws-startups/learn/everything-you-need-to-know-about-aws-activate-credits/"], "hidden": false}, {"id": "perk-google-cloud", "provider": "Google", "program": "Google for Startups Cloud Program", "category": "cloud", "value": "Up to USD 200,000 in Google Cloud credits over 2 years; up to USD 350,000 for AI-first startups", "who": "Start tier for early tech startups planning to raise (smaller credit amount); Scale and AI tiers need VC or institutional equity funding. Not for agencies, consultancies, non-profits or companies that are public or acquired.", "how": "Apply at Google Cloud's startup page with your billing account ID and a business email on your website's domain. Most decisions take a few business days.", "url": "https://cloud.google.com/startup", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://cloud.google.com/startup/faq", "https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-microsoft", "provider": "Microsoft", "program": "Microsoft for Startups (Founders Hub)", "category": "cloud", "value": "Up to USD 150,000 in Azure credits, plus GitHub Enterprise, Microsoft 365 and LinkedIn Premium", "who": "Privately held B2B companies building software or AI, pre-seed to Series C. Credits unlock in steps as you use Azure; activate within 90 days, use within 2 years.", "how": "Sign up for Founders Hub; an investor-network referral can start you at a higher credit level.", "url": "https://www.microsoft.com/en-us/startups", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-cloudflare", "provider": "Cloudflare", "program": "Cloudflare for Startups", "category": "cloud", "value": "USD 10,000 in credits for bootstrapped startups; USD 100,000-350,000 through partners", "who": "Software companies incorporated within 10 years, funded up to Series B, first-time applicants. The USD 10K tier is for startups that have raised under USD 1M.", "how": "Apply on Cloudflare's startup page. Credits last one year or until used.", "url": "https://www.cloudflare.com/forstartups/", "partnerOnly": false, "partnerRoute": "The larger tiers need funding from a Cloudflare partner.", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-openai", "provider": "OpenAI", "program": "OpenAI for Startups", "category": "ai", "value": "Build hours, resources and events; API credits only through partner VCs", "who": "Open to all founders for the resources; API credits need a referral from a VC in OpenAI's partner network.", "how": "Ask your VC whether it is an OpenAI partner.", "url": "", "partnerOnly": true, "partnerRoute": "API credits come only through partner VCs.", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-nvidia", "provider": "NVIDIA", "program": "NVIDIA Inception", "category": "ai", "value": "Free program: cloud credits from NVIDIA and partners, hardware discounts, training and go-to-market help", "who": "AI startups; a pitch deck is required. Not for consultancies, resellers, crypto companies or public companies.", "how": "Apply on NVIDIA's Inception page.", "url": "https://www.nvidia.com/en-us/startups/", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}, {"id": "perk-hubspot", "provider": "HubSpot", "program": "HubSpot for Startups", "category": "sales", "value": "Partner offers for HubSpot startup customers, e.g. 20% off Stripe Atlas, USD 1,000 Notion credit, USD 1,200 Retool credits, Deel contractors free for 3 months", "who": "HubSpot for Startups customers; some partner offers have their own limits (for example Retool: founded within 2 years, under USD 5M raised, under 20 staff).", "how": "Join HubSpot for Startups, then claim offers from its offers page.", "url": "https://www.hubspot.com/startups", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://www.hubspot.com/startups/resources/offers?device=c"], "hidden": false}, {"id": "perk-mixpanel", "provider": "Mixpanel", "program": "Mixpanel for Startups", "category": "ops", "value": "First year free on the Startup plan (product analytics)", "who": "Incorporated less than 5 years ago, with under USD 8M raised.", "how": "Apply on Mixpanel's startup page.", "url": "https://mixpanel.com/startups", "partnerOnly": false, "partnerRoute": "", "checkedOn": "2026-10-12", "sources": ["https://fin.ai/learn/startup-credit-programs"], "hidden": false}];
@@ -5963,6 +5995,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderReadiness();
     renderInvestorDb();
     renderPerks();
+    renderMeetInvites();
     renderPublicEvents();
     renderAccounts();
     renderFunding();
@@ -10579,6 +10612,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { name:"investorListings", mode:"replace", get:function(){ return investorListings; }, set:function(a){ investorListings = a; },
       access:function(r){ return { readers:["investors", r.id], writers:[r.id] }; } },
     // startup perks: CloudWAV keeps the list; everyone signed in reads the visible ones
+    { name:"meetInvites", mode:"replace", get:function(){ return meetInvites; }, set:function(a){ meetInvites = a; },
+      access:function(){ return { readers:[], writers:[] }; } },   // CloudWAV only
     { name:"startupPerks", mode:"merge", get:function(){ return startupPerks; }, set:function(a){ startupPerks = a; },
       access:function(r){ return r.hidden ? { readers:[], writers:[] } : { readers:EVERYONE, writers:[] }; } },
     // the investor database is CloudWAV's alone (a paid service): nobody else can read or write it
@@ -13828,12 +13863,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
     arrowOut:'<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
     database:'<ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.55 3.36 2.8 7.5 2.8s7.5-1.25 7.5-2.8v-13"/><path d="M4.5 12c0 1.55 3.36 2.8 7.5 2.8s7.5-1.25 7.5-2.8"/>',
+    video:'<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3z"/>',
     qr:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 20h1M20 14v1"/>'
   };
   var PW_EMOJI_ICON = { "\ud83d\udcca":"home", "\ud83c\udfe2":"building", "\ud83d\udc68\u200d\ud83d\udcbc":"users", "\ud83d\udc65":"users", "\ud83d\udc64":"user", "\u2705":"check",
     "\ud83d\udcb0":"wallet", "\ud83d\udcac":"chat", "\u2699":"sliders", "\ud83c\udf93":"cap", "\ud83c\udfaf":"target", "\ud83d\udcdd":"file", "\ud83d\udccb":"clipboard",
     "\ud83d\ude80":"trend", "\ud83d\udcbc":"briefcase", "\ud83d\udecd":"bag", "\ud83d\uded2":"store", "\ud83d\udd0c":"plug", "\ud83d\udce3":"megaphone", "\ud83d\udce2":"megaphone",
-    "\ud83d\udcda":"book", "\ud83d\udcc5":"calendar", "\ud83e\udde9":"code", "\ud83e\udd1d":"link", "\ud83c\udf81":"gift", "\ud83e\udded":"compass", "\ud83d\uddfa":"map",
+    "\ud83d\udcda":"book", "\ud83d\udcc5":"calendar", "\ud83e\udde9":"code", "\ud83e\udd1d":"link", "\ud83c\udf81":"gift", "\ud83d\udcf9":"video", "\ud83e\udded":"compass", "\ud83d\uddfa":"map",
     "\ud83d\udd11":"key", "\ud83c\udfa8":"palette", "\ud83c\udf10":"globe", "\ud83d\udd0d":"search", "\ud83d\udce6":"box", "\ud83d\udcde":"phone", "\u2601":"cloud", "\ud83d\uddc3":"database", "\ud83d\udcc7":"qr" };
   function pwIcon(name){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + PW_ICONS[name] + '</svg>'; }
   function applyMenuIcons(root){
@@ -17459,6 +17495,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadReadiness();
   loadIdb();
   loadPerks();
+  loadMeet();
   loadFunding();
   loadBrandKits();
   loadShop();
@@ -19452,6 +19489,246 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-perk-save]"))){ perkSave(b.getAttribute("data-perk-save")); return; }
     if ((b = t.closest("[data-perk-hide]"))){ var hx = perkById(b.getAttribute("data-perk-hide")); if (hx){ hx.hidden = !hx.hidden; hx.updatedAt = todayIso(); state.perkV = (state.perkV || 0) + 1; savePerks(); renderPerks(true); } return; }
     if ((b = t.closest("[data-perk-delete]"))){ var dx = perkById(b.getAttribute("data-perk-delete")); if (dx && confirm("Remove " + (dx.program || dx.provider) + " from Startup Perks?")){ startupPerks.splice(startupPerks.indexOf(dx), 1); state.perkEdit = null; savePerks(); renderPerks(true); } return; }
+  });
+  // ===== INTRO MEETINGS: invites from partnerwav@gmail.com with a Google Meet link =====
+  // CloudWAV writes the invite from a template (filled in for each company), and the meet-invite server function
+  // (supabase/functions/meet-invite) makes the Google Calendar event with a Meet link and sends the email through
+  // Gmail. The Google keys live only in Supabase secrets. Templates sit in operatorSettings; sent invites in meetInvites.
+  var MEET_TZS = ["America/New_York", "America/Los_Angeles", "Europe/London", "Asia/Bangkok", "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney", "UTC"];
+  var MEET_FIELDS = [["first_name", "Their first name"], ["contact_name", "Their full name"], ["company", "Company"], ["meeting_date", "Date"], ["meeting_time", "Time"],
+    ["timezone", "Time zone"], ["duration", "Length in minutes"], ["meet_link", "Google Meet link (added when it's sent)"], ["sender_name", "Your name"]];
+  var MEET_DEFAULT = { id:"meetTemplates", senderName:"The PartnerWAV team", templates:[{ id:"tpl-intro", name:"Introduce PartnerWAV",
+    subject:"Introducing PartnerWAV to {{company}}",
+    body:"Hi {{first_name}},\n\nI'd like to introduce {{company}} to PartnerWAV, the partner platform from CloudWAV that connects software companies with MSPs, resellers and partners across Thailand and Southeast Asia.\n\n"
+      + "I've set up a short call so we can show you how it works and hear what {{company}} is looking for:\n\n{{meeting_date}} at {{meeting_time}} ({{timezone}}), {{duration}} minutes\nJoin with Google Meet: {{meet_link}}\n\n"
+      + "If the time doesn't suit you, just reply to this email and we'll find another.\n\nBest regards,\n{{sender_name}}\nPartnerWAV by CloudWAV\nhttps://partnerwav.com" }] };
+  function meetSettings(){ var r = operatorSettings.filter(function(x){ return x.id === "meetTemplates"; })[0]; return r || JSON.parse(JSON.stringify(MEET_DEFAULT)); }
+  function meetSaveSettings(r){ r.updatedAt = nowStamp(); operatorSettings = operatorSettings.filter(function(x){ return x.id !== "meetTemplates"; }).concat([r]);
+    if (typeof saveReferrals === "function") saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule(); state.meetV = (state.meetV || 0) + 1; }
+  function loadMeet(){ try { var d = JSON.parse(lsGet(MEET_KEY) || "null"); if (Array.isArray(d)) meetInvites = d; } catch(e){} }
+  function saveMeet(){ try { lsSet(MEET_KEY, JSON.stringify(meetInvites)); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); state.meetV = (state.meetV || 0) + 1; }
+  function meetMyTz(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch(e){ return "UTC"; } }
+  function meetTzList(){ var me = meetMyTz(); return MEET_TZS.indexOf(me) < 0 ? [me].concat(MEET_TZS) : MEET_TZS.slice(); }
+  // wall-clock date and time in a time zone -> the moment (UTC ISO)
+  function meetToUtc(date, time, tz){
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date || ""), h = /^(\d{1,2}):(\d{2})$/.exec(time || ""); if (!m || !h) return null;
+    var wall = Date.UTC(+m[1], +m[2] - 1, +m[3], +h[1], +h[2]), off = function(ms){
+      var p = {}; new Intl.DateTimeFormat("en-US", { timeZone:tz, hourCycle:"h23", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" }).formatToParts(new Date(ms)).forEach(function(x){ if (x.type !== "literal") p[x.type] = +x.value; });
+      return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - ms; };
+    try { var g = wall - off(wall); g = wall - off(g); return new Date(g).toISOString(); } catch(e){ return null; }
+  }
+  function meetWhen(iso, tz){ var d = new Date(iso); try {
+      return { date:d.toLocaleDateString("en-US", { timeZone:tz, weekday:"long", month:"long", day:"numeric", year:"numeric" }),
+        time:d.toLocaleTimeString("en-US", { timeZone:tz, hour:"numeric", minute:"2-digit" }),
+        zone:(new Intl.DateTimeFormat("en-US", { timeZone:tz, timeZoneName:"short" }).formatToParts(d).filter(function(x){ return x.type === "timeZoneName"; })[0] || {}).value || tz };
+    } catch(e){ return { date:iso.slice(0, 10), time:iso.slice(11, 16), zone:"UTC" }; } }
+  function meetFill(text, v, keepLink){ return String(text || "").replace(/\{\{\s*([a-z_]+)\s*\}\}/g, function(all, k){ if (k === "meet_link") return keepLink ? all : "[Google Meet link]"; return v[k] != null && v[k] !== "" ? v[k] : all; }); }
+  function meetFormVals(){
+    var g = function(x){ var el = document.getElementById(x); return el ? el.value.trim() : ""; };
+    var name = g("meetName"), tz = g("meetTz") || meetMyTz(), iso = meetToUtc(g("meetDate"), g("meetTime"), tz), w = iso ? meetWhen(iso, tz) : null;
+    return { company:g("meetCompany"), contact_name:name, first_name:name.split(/\s+/)[0] || "there", email:g("meetEmail").toLowerCase(), guests:g("meetGuests"),
+      start:iso, timezone_id:tz, meeting_date:w ? w.date : "", meeting_time:w ? w.time : "", timezone:w ? w.zone : tz, duration:g("meetDur") || "30",
+      sender_name:meetSettings().senderName || "The PartnerWAV team", subject:g("meetSubject"), body:g("meetBody"), addGuests:!!(document.getElementById("meetAddGuests") || {}).checked,
+      whatsapp:g("meetWa"), lineId:g("meetLine"), viaWa:!!(document.getElementById("meetViaWa") || {}).checked, viaLine:!!(document.getElementById("meetViaLine") || {}).checked };
+  }
+  function meetPreviewHtml(v){
+    return '<div class="meet-preview" data-meet-preview><div class="field-note"><b>From:</b> '+esc(v.sender_name)+' &lt;partnerwav@gmail.com&gt;'+(v.email ? ' · <b>To:</b> '+esc(v.contact_name ? v.contact_name + " <" + v.email + ">" : v.email) : '')+'</div>'
+      + '<div class="meet-preview-subject">'+esc(meetFill(v.subject, v))+'</div>'
+      + '<div class="meet-mail" data-meet-mail><div class="meet-mail-bar"></div><div class="meet-mail-head"><span class="meet-mail-logo">P</span>PartnerWAV</div>'
+        + '<div class="meet-preview-body">'+esc(meetFill(v.body, v)).replace(/\[Google Meet link\]/g, '<span class="badge accent">Google Meet link</span>')+'</div>'
+        + '<div><span class="meet-mail-btn">Join with Google Meet</span></div>'
+        + '<div class="meet-mail-foot">Sent by '+esc(v.sender_name)+' from <b>PartnerWAV</b> by CloudWAV</div></div></div>';
+  }
+  function meetNewHtml(){
+    var s = meetSettings(), tpl = s.templates.filter(function(t){ return t.id === state.meetTpl; })[0] || s.templates[0] || MEET_DEFAULT.templates[0], d = state.meetDraft || {};
+    var tomorrow = new Date(Date.now() + 86400000), dd = tomorrow.getFullYear() + "-" + String(tomorrow.getMonth() + 1).padStart(2, "0") + "-" + String(tomorrow.getDate()).padStart(2, "0");
+    var f = function(id, label, val, attrs){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" value="'+attr(val || "")+'" '+(attrs || "")+'></div>'; };
+    return '<div class="meet-grid"><div class="card card-pad meet-form" id="meetForm"><b>Who you\'re inviting</b><div class="meet-two">'
+        + f("meetCompany", "Company", d.company, 'maxlength="120" placeholder="e.g. Acme Software"')
+        + f("meetName", "Contact name", d.contact_name, 'maxlength="80" placeholder="e.g. Ann Lee"')
+        + f("meetEmail", "Their email", d.email, 'maxlength="200" inputmode="email" placeholder="ann@acme.com"')
+        + f("meetGuests", "Others to invite (optional)", d.guests, 'maxlength="600" placeholder="emails, separated by commas"')
+        + f("meetWa", "WhatsApp number (optional)", d.whatsapp, 'maxlength="30" inputmode="tel" placeholder="with country code, e.g. +66 81 234 5678"')
+        + f("meetLine", "LINE ID (optional)", d.lineId, 'maxlength="60" placeholder="e.g. annlee or @acme"') + '</div>'
+      + '<b style="margin-top:6px;">When</b><div class="meet-two">'
+        + '<div class="field-row"><label for="meetDate">Date</label><input type="date" id="meetDate" value="'+attr(d.date || dd)+'"></div>'
+        + '<div class="field-row"><label for="meetTime">Time</label><input type="time" id="meetTime" value="'+attr(d.time || "10:00")+'"></div>'
+        + '<div class="field-row"><label for="meetTz">Time zone (shown in the email)</label><select id="meetTz" class="filter app-select">'+meetTzList().map(function(z){ return '<option'+(z === (d.timezone_id || meetMyTz()) ? ' selected' : '')+'>'+esc(z)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="meetDur">Length</label><select id="meetDur" class="filter app-select">'+[15, 30, 45, 60].map(function(n){ return '<option value="'+n+'"'+(String(n) === String(d.duration || 30) ? ' selected' : '')+'>'+n+' minutes</option>'; }).join("")+'</select></div></div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px;"><b>The email</b><div class="field-row" style="margin:0;"><label for="meetTplSel" class="field-note">Template</label><select id="meetTplSel" class="filter app-select">'
+        + s.templates.map(function(t){ return '<option value="'+attr(t.id)+'"'+(t.id === tpl.id ? ' selected' : '')+'>'+esc(t.name)+'</option>'; }).join("")+'</select></div></div>'
+      + '<div class="field-row"><label for="meetSubject">Subject</label><input type="text" id="meetSubject" maxlength="200" value="'+attr(d.subject != null ? d.subject : tpl.subject)+'"></div>'
+      + '<div class="field-row"><label for="meetBody">Message (change anything for this company; the {{ }} fields fill in)</label><textarea id="meetBody" rows="12" maxlength="8000">'+esc(d.body != null ? d.body : tpl.body)+'</textarea></div>'
+      + '<label class="field-note" style="display:flex;gap:6px;align-items:flex-start;"><input type="checkbox" id="meetAddGuests"'+(d.addGuests === false ? '' : ' checked')+'> Also add them to the Google Calendar event (Google sends its own calendar invitation as well, so the meeting lands in their calendar)</label>'
+      + '<div class="meet-chan" role="group" aria-label="Also send this message on"><span class="field-note">Also send the same message on:</span>'
+        + '<label><input type="checkbox" id="meetViaWa"'+(d.viaWa ? ' checked' : '')+'> WhatsApp</label><label><input type="checkbox" id="meetViaLine"'+(d.viaLine ? ' checked' : '')+'> LINE</label></div>'
+      + '<div id="meetErr" class="login-msg bad" role="alert" hidden></div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><button type="button" class="btn primary sm" data-meet-send>Send invite</button><button type="button" class="btn secondary sm" data-meet-test>Send a test to partnerwav@gmail.com</button>'
+        + '<span class="field-note" id="meetMsg" role="status"></span></div></div>'
+      + '<div class="card card-pad"><b>Preview</b><div id="meetPreviewBox"></div>'
+        + '<details class="field-note" style="margin-top:10px;"><summary>Fields you can use</summary><ul class="meet-fields">'+MEET_FIELDS.map(function(x){ return '<li><code>{{'+x[0]+'}}</code> '+esc(x[1])+'</li>'; }).join("")+'</ul></details></div></div>';
+  }
+  function meetTemplatesHtml(){
+    var s = meetSettings(), ed = state.meetTplEdit;
+    return '<div class="card card-pad" style="margin-bottom:14px;"><div class="field-row"><label for="meetSender">Your name at the bottom of invites ({{sender_name}})</label><input type="text" id="meetSender" maxlength="80" value="'+attr(s.senderName || "")+'"></div>'
+        + '<button type="button" class="btn secondary sm" data-meet-sender>Save</button></div>'
+      + '<div style="display:flex;flex-direction:column;gap:10px;">'+s.templates.map(function(t){
+        if (ed === t.id) return meetTplFormHtml(t);
+        return '<div class="card card-pad" data-meet-tpl-row="'+attr(t.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div><b>'+esc(t.name)+'</b><div class="field-note">'+esc(t.subject)+'</div></div>'
+          + '<div style="display:flex;gap:6px;"><button type="button" class="btn secondary xs" data-meet-tpl-edit="'+attr(t.id)+'">Edit</button><button type="button" class="btn ghost xs" data-meet-tpl-copy="'+attr(t.id)+'">Copy</button>'
+          + (s.templates.length > 1 ? '<button type="button" class="btn ghost xs" data-meet-tpl-del="'+attr(t.id)+'">Remove</button>' : '')+'</div></div>'
+          + '<div class="meet-preview-body field-note" style="max-height:120px;overflow:hidden;">'+esc(t.body)+'</div></div>'; }).join("")
+      + (ed === "new" ? meetTplFormHtml(null) : '<div><button type="button" class="btn primary sm" data-meet-tpl-new>+ New template</button></div>') + '</div>';
+  }
+  function meetTplFormHtml(t){ t = t || { id:"", name:"", subject:"Introducing PartnerWAV to {{company}}", body:MEET_DEFAULT.templates[0].body };
+    return '<div class="card card-pad meet-form" id="meetTplForm"><div class="field-row"><label for="meetTplName">Template name</label><input type="text" id="meetTplName" maxlength="80" value="'+attr(t.name)+'"></div>'
+      + '<div class="field-row"><label for="meetTplSubject">Subject</label><input type="text" id="meetTplSubject" maxlength="200" value="'+attr(t.subject)+'"></div>'
+      + '<div class="field-row"><label for="meetTplBody">Message</label><textarea id="meetTplBody" rows="12" maxlength="8000">'+esc(t.body)+'</textarea></div>'
+      + '<div class="field-note">Keep <code>{{meet_link}}</code> in the message: it becomes the Google Meet link.</div><div id="meetTplErr" class="login-msg bad" role="alert" hidden></div>'
+      + '<div style="display:flex;gap:8px;"><button type="button" class="btn primary sm" data-meet-tpl-save="'+attr(t.id)+'">Save template</button><button type="button" class="btn secondary sm" data-meet-tpl-cancel>Cancel</button></div></div>';
+  }
+  function meetSentHtml(){
+    var list = meetInvites.slice().sort(function(a, b){ return String(b.sentAt).localeCompare(String(a.sentAt)); });
+    if (!list.length) return '<div class="empty">No invites yet. Send a test to partnerwav@gmail.com first to see how it looks.</div>';
+    var lab = { sent:["Sent", "active"], test:["Test", ""], demo:["Demo: not sent", "pending"], failed:["Didn't send", "pending"] };
+    var just = meetInvites.filter(function(x){ return x.id === state.meetJust && (x.viaWa || x.viaLine) && x.status !== "failed"; })[0];
+    return (just ? '<div class="card card-pad meet-just" data-meet-just><b>'+(just.status === "demo" ? 'Demo: the email wasn\'t sent.' : 'The email is on its way.')+' Now send the same message on '+[just.viaWa ? 'WhatsApp' : '', just.viaLine ? 'LINE' : ''].filter(Boolean).join(' and ')+':</b>'
+        + '<span class="field-note">Each button opens the app with the message written out (Google Meet link included); you press send there.</span>'+meetChatHtml(just, true)+'</div>' : '')
+      + '<div style="display:flex;flex-direction:column;gap:10px;">'+list.map(function(m){ var st = lab[m.status] || lab.sent, w = meetWhen(m.start, m.timeZone || "UTC");
+      return '<div class="card card-pad" data-meet-row="'+attr(m.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div><b>'+esc(m.company || "(no company)")+'</b> <span class="pill '+st[1]+'">'+st[0]+'</span>'
+        + '<div class="field-note">'+esc([m.contactName, m.email].filter(Boolean).join(" · "))+(m.guests && m.guests.length ? ' + '+m.guests.length+' more' : '')+'</div>'
+        + '<div class="field-note">'+esc(w.date + " at " + w.time + " " + w.zone)+' · '+esc(String(m.durationMin))+' min · sent '+esc(m.sentAt || "")+'</div>'
+        + (m.error ? '<div class="field-note evs-bad">'+esc(m.error)+'</div>' : '')
+        + meetChatHtml(m)+'</div>'
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;">'+(safeHref(m.meetLink || "") ? '<a class="btn secondary xs" href="'+attr(safeHref(m.meetLink))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open Meet</a><button type="button" class="btn ghost xs" data-meet-copy="'+attr(m.id)+'">Copy Meet link</button>' : '')
+        + (safeHref(m.eventLink || "") ? '<a class="btn ghost xs" href="'+attr(safeHref(m.eventLink))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Calendar event</a>' : '')
+        + '<button type="button" class="btn ghost xs" data-meet-again="'+attr(m.id)+'">Invite again</button></div></div></div>'; }).join("")+'</div>';
+  }
+  // the same message for WhatsApp and LINE: the subject as a first line, then the email text with the Meet link
+  function meetChatText(m){ var link = m.meetLink || "[Google Meet link]";
+    return String(m.subject || "").replace(/\{\{\s*meet_link\s*\}\}/g, link) + "\n\n" + String(m.body || "").replace(/\{\{\s*meet_link\s*\}\}/g, link); }
+  function meetChatHtml(m, big){
+    if (!m.viaWa && !m.viaLine) return "";
+    var txt = meetChatText(m), cls = big ? "btn primary sm" : "btn secondary xs", out = '<div class="meet-chat-row">';
+    if (m.viaWa) out += '<a class="'+cls+'" href="'+attr(waChatUrl(m.whatsapp, txt))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;" data-meet-wa="'+attr(m.id)+'">'+(m.waAt ? 'WhatsApp again' : 'Send on WhatsApp')+'</a>'
+      + (m.waAt ? '<span class="field-note" data-meet-wa-done>WhatsApp opened '+esc(m.waAt)+'</span>' : '');
+    if (m.viaLine) out += '<a class="'+cls+'" href="'+attr(lineShareUrl(txt))+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;" data-meet-line="'+attr(m.id)+'">'+(m.lineAt ? 'LINE again' : 'Send on LINE')+'</a>'
+      + '<span class="field-note">'+(m.lineAt ? 'LINE opened '+esc(m.lineAt)+'. ' : '')+'In LINE, choose '+esc(m.contactName || "their")+(m.contactName ? '\'s' : '')+' chat'+(m.lineId ? ' (LINE ID '+esc(m.lineId)+')' : '')+'.</span>';
+    return out + '</div>';
+  }
+  function meetGoogleHtml(){
+    var steps = [
+      ["Make a Google Cloud project", "Signed in as partnerwav@gmail.com, open console.cloud.google.com and create a project called PartnerWAV."],
+      ["Turn on two APIs", "APIs & Services > Library: enable the <b>Google Calendar API</b> and the <b>Gmail API</b>."],
+      ["Set up the consent screen", "Google Auth Platform (OAuth consent screen): External, app name PartnerWAV, support email partnerwav@gmail.com. Under Data access add the scopes <code>.../auth/calendar.events</code> and <code>.../auth/gmail.send</code>. Under Audience, choose <b>Publish app</b> (In production). In Testing mode Google ends the sign-in every 7 days. For your own account it's fine that the app isn't verified; you'll see a warning once when you sign in."],
+      ["Make an OAuth client", "Clients > Create client > Web application. Add <code>https://developers.google.com/oauthplayground</code> as an authorized redirect URI. Keep the client ID and secret."],
+      ["Get a refresh token", "Open developers.google.com/oauthplayground, click the settings gear, tick <b>Use your own OAuth credentials</b> and paste the client ID and secret. In step 1 type <code>https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/gmail.send</code>, click Authorize APIs, sign in as partnerwav@gmail.com and allow. In step 2 click <b>Exchange authorization code for tokens</b> and copy the refresh token."],
+      ["Save the keys in Supabase and deploy", "<code>supabase secrets set GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... GOOGLE_REFRESH_TOKEN=... GOOGLE_SENDER=partnerwav@gmail.com</code> then <code>supabase functions deploy meet-invite</code>. The keys never go in the portal."],
+      ["Check it here, then send a test", "Click <b>Check the connection</b> below, then send a test from the New invite tab. It goes only to partnerwav@gmail.com."]];
+    return '<div class="card card-pad" style="margin-bottom:14px;"><b>Google account: partnerwav@gmail.com</b><p class="field-note" style="margin:4px 0 10px;">Invites are sent from this Gmail account, and each meeting is put on its Google Calendar with a Google Meet link. Gmail lets a personal account send about 500 emails a day.</p>'
+        + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button type="button" class="btn primary sm" data-meet-check>Check the connection</button><span class="field-note" id="meetCheckMsg" role="status"></span></div></div>'
+      + '<div class="card card-pad"><b>Connect it (once, about 15 minutes)</b><ol class="meet-steps">'+steps.map(function(s){ return '<li><b>'+s[0]+'</b><div class="field-note">'+s[1]+'</div></li>'; }).join("")+'</ol></div>';
+  }
+  function renderMeetInvites(force){
+    var box = document.getElementById("meetContent");
+    if (!box || state.screen !== "operator-meet-invites") return;
+    var tab = state.meetTab || "new", key = JSON.stringify([tab, meetInvites.length, state.meetV || 0, state.meetTpl || "", state.meetTplEdit || ""]);
+    if (!force && box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    box.innerHTML = '<div class="cal-bar" style="margin-bottom:14px;"><div class="cal-views" role="group" aria-label="Show">'
+        + [["new", "New invite"], ["templates", "Templates"], ["sent", "Sent (" + meetInvites.length + ")"], ["google", "Google connection"]].map(function(x){ return '<button type="button" class="cal-view" data-meet-tab="'+x[0]+'" aria-pressed="'+(tab === x[0])+'">'+esc(x[1])+'</button>'; }).join("")+'</div></div>'
+      + (tab === "templates" ? meetTemplatesHtml() : tab === "sent" ? meetSentHtml() : tab === "google" ? meetGoogleHtml() : meetNewHtml());
+    if (tab === "new") meetRefreshPreview();
+  }
+  function meetRefreshPreview(){ var b = document.getElementById("meetPreviewBox"); if (b) b.innerHTML = meetPreviewHtml(meetFormVals()); }
+  function meetConnected(){ return !!(supabase && supabase.functions && state.account && CLOUD.loaded); }
+  function meetSend(test){
+    var v = meetFormVals(), err = document.getElementById("meetErr"), msg = document.getElementById("meetMsg"), probs = [], mailRe = /^[^\s@<>",;:]+@[^\s@<>",;:]+\.[a-z]{2,}$/i;
+    var guests = v.guests ? v.guests.split(/[,;\s]+/).filter(Boolean) : [];
+    if (!test){ if (!v.company) probs.push("Add the company."); if (!mailRe.test(v.email)) probs.push("Add their email address."); if (guests.some(function(g){ return !mailRe.test(g); })) probs.push("Check the other email addresses."); }
+    if (guests.length > 9) probs.push("Up to 10 people per invite.");
+    if (!v.start || new Date(v.start) < new Date()) probs.push("Choose a date and time in the future.");
+    if (!v.subject || !v.body) probs.push("The subject and message are needed.");
+    if (v.body && !/\{\{\s*meet_link\s*\}\}/.test(v.body)) probs.push("Keep {{meet_link}} in the message so it carries the Google Meet link.");
+    if (!test && v.viaWa && String(v.whatsapp).replace(/\D/g, "").length < 8) probs.push("Add their WhatsApp number with the country code to send it on WhatsApp.");
+    if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+    err.hidden = true;
+    var rec = { id:"mi-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), company:v.company, contactName:v.contact_name, email:test ? "partnerwav@gmail.com" : v.email, guests:test ? [] : guests,
+      start:v.start, timeZone:v.timezone_id, durationMin:Number(v.duration), subject:meetFill(v.subject, v, true), template:state.meetTpl || "", sentAt:nowStamp(), status:test ? "test" : "sent",
+      body:meetFill(v.body, v, true).slice(0, 8000), whatsapp:test ? "" : v.whatsapp, lineId:test ? "" : v.lineId, viaWa:!test && v.viaWa, viaLine:!test && v.viaLine };
+    state.meetDraft = { company:v.company, contact_name:v.contact_name, email:v.email, guests:v.guests, date:(document.getElementById("meetDate") || {}).value, time:(document.getElementById("meetTime") || {}).value,
+      timezone_id:v.timezone_id, duration:v.duration, subject:v.subject, body:v.body, addGuests:v.addGuests, whatsapp:v.whatsapp, lineId:v.lineId, viaWa:v.viaWa, viaLine:v.viaLine };
+    if (!meetConnected()){
+      rec.status = "demo"; meetInvites.push(rec); saveMeet();
+      if (msg) msg.textContent = "Demo: nothing was sent. Once Google is connected (Google connection tab) this sends from partnerwav@gmail.com.";
+      if (rec.viaWa || rec.viaLine){ state.meetJust = rec.id; state.meetDraft = null; state.meetTab = "sent"; renderMeetInvites(true); }
+      return;
+    }
+    if (!test && !confirm("Send the invite to " + v.email + (guests.length ? " and " + guests.length + " more" : "") + " from partnerwav@gmail.com?")) return;
+    var btns = document.querySelectorAll("[data-meet-send], [data-meet-test]"); btns.forEach(function(x){ x.disabled = true; }); if (msg) msg.textContent = "Sending...";
+    var payload = { test:!!test, to:[{ email:v.email, name:v.contact_name }], guests:guests.map(function(g){ return { email:g }; }), subject:meetFill(v.subject, v, true), body:meetFill(v.body, v, true),
+      title:"PartnerWAV intro" + (v.company ? ": " + v.company : ""), start:v.start, timeZone:v.timezone_id, durationMin:Number(v.duration), addGuests:v.addGuests, senderName:v.sender_name };
+    supabase.functions.invoke("meet-invite", { body:payload }).then(function(res){
+      btns.forEach(function(x){ x.disabled = false; });
+      var d = res && res.data; if (typeof d === "string"){ try { d = JSON.parse(d); } catch(e){ d = null; } }
+      var ctx = res && res.error && res.error.context;
+      var done = function(d2){
+        if (!d2 || !d2.ok){ rec.status = "failed"; rec.error = (d2 && d2.error) || "The meet-invite function isn't reachable. Is it deployed?"; meetInvites.push(rec); saveMeet(); if (msg) msg.textContent = rec.error; return; }
+        rec.meetLink = d2.meetLink; rec.eventLink = d2.eventLink || ""; rec.eventId = d2.eventId || ""; meetInvites.push(rec); saveMeet();
+        if (msg) msg.textContent = test ? "Test sent to partnerwav@gmail.com. Check that inbox." : "Invite sent to " + v.email + ".";
+        if (!test){ state.meetJust = rec.id; state.meetDraft = null; state.meetTab = "sent"; renderMeetInvites(true); }
+      };
+      if (ctx && typeof ctx.json === "function" && !d) return ctx.json().then(done, function(){ done(null); });
+      done(d);
+    }).catch(function(){ btns.forEach(function(x){ x.disabled = false; }); rec.status = "failed"; rec.error = "The meet-invite function isn't reachable."; meetInvites.push(rec); saveMeet(); if (msg) msg.textContent = rec.error; });
+  }
+  function meetCheck(){
+    var msg = document.getElementById("meetCheckMsg"), say = function(t){ if (msg) msg.textContent = t; };
+    if (!meetConnected()){ say("The portal isn't connected to Supabase here, so the Google connection can't be checked."); return; }
+    say("Checking...");
+    supabase.functions.invoke("meet-invite", { body:{ action:"status" } }).then(function(res){
+      var d = res && res.data; if (typeof d === "string"){ try { d = JSON.parse(d); } catch(e){ d = null; } }
+      var ctx = res && res.error && res.error.context, show = function(x){ if (x && x.ok) say("Connected: invites go out from " + x.sender + ".");
+        else if (x && x.missing && x.missing.length) say("Connected, but missing permission for: " + x.missing.join(", ") + ". Make a new refresh token with both scopes (step 5).");
+        else say((x && x.error) || "The meet-invite function isn't reachable. Is it deployed?"); };
+      if (ctx && typeof ctx.json === "function" && !d) return ctx.json().then(show, function(){ show(null); });
+      show(d);
+    }).catch(function(){ say("The meet-invite function isn't reachable. Is it deployed?"); });
+  }
+  document.addEventListener("input", function(ev){ var t = ev.target; if (!t || !t.closest || !t.closest("#meetForm")) return; meetRefreshPreview(); });
+  document.addEventListener("change", function(ev){ var t = ev.target; if (!t || !t.closest || !t.closest("#meetContent")) return;
+    if (t.id === "meetTplSel"){ var tp = meetSettings().templates.filter(function(x){ return x.id === t.value; })[0]; if (tp){ state.meetTpl = tp.id; document.getElementById("meetSubject").value = tp.subject; document.getElementById("meetBody").value = tp.body; } }
+    if (t.closest("#meetForm")) meetRefreshPreview(); });
+  document.addEventListener("click", function(ev){
+    var t = ev.target; if (!t || !t.closest || !t.closest("#meetContent")) return; var b;
+    if ((b = t.closest("[data-meet-tab]"))){ if (state.meetTab === "new" || !state.meetTab){ var fv = document.getElementById("meetForm") ? meetFormVals() : null; if (fv) state.meetDraft = { company:fv.company, contact_name:fv.contact_name, email:fv.email, guests:fv.guests,
+        date:(document.getElementById("meetDate") || {}).value, time:(document.getElementById("meetTime") || {}).value, timezone_id:fv.timezone_id, duration:fv.duration, subject:fv.subject, body:fv.body, addGuests:fv.addGuests, whatsapp:fv.whatsapp, lineId:fv.lineId, viaWa:fv.viaWa, viaLine:fv.viaLine }; }
+      state.meetTab = b.getAttribute("data-meet-tab"); state.meetTplEdit = null; renderMeetInvites(true); return; }
+    if (t.closest("[data-meet-send]")){ meetSend(false); return; }
+    if ((b = t.closest("[data-meet-wa], [data-meet-line]"))){ var wa = b.hasAttribute("data-meet-wa"), mm = meetInvites.filter(function(x){ return x.id === b.getAttribute(wa ? "data-meet-wa" : "data-meet-line"); })[0];
+      if (mm){ mm[wa ? "waAt" : "lineAt"] = nowStamp(); setTimeout(function(){ saveMeet(); renderMeetInvites(true); }, 50); } return; }
+    if (t.closest("[data-meet-test]")){ meetSend(true); return; }
+    if (t.closest("[data-meet-check]")){ meetCheck(); return; }
+    if ((b = t.closest("[data-meet-copy]"))){ var mc = meetInvites.filter(function(x){ return x.id === b.getAttribute("data-meet-copy"); })[0]; if (mc && mc.meetLink) copyText(mc.meetLink, "Meet link copied"); return; }
+    if ((b = t.closest("[data-meet-again]"))){ var ma = meetInvites.filter(function(x){ return x.id === b.getAttribute("data-meet-again"); })[0]; if (!ma) return;
+      state.meetDraft = { company:ma.company, contact_name:ma.contactName, email:ma.status === "test" ? "" : ma.email, guests:(ma.guests || []).join(", "), timezone_id:ma.timeZone, duration:String(ma.durationMin || 30),
+        whatsapp:ma.whatsapp || "", lineId:ma.lineId || "", viaWa:!!ma.viaWa, viaLine:!!ma.viaLine };
+      state.meetTpl = ma.template || ""; state.meetTab = "new"; renderMeetInvites(true); return; }
+    if (t.closest("[data-meet-sender]")){ var s0 = meetSettings(); s0.senderName = ((document.getElementById("meetSender") || {}).value || "").trim().slice(0, 80) || "The PartnerWAV team"; meetSaveSettings(s0); renderMeetInvites(true); toast("Saved"); return; }
+    if (t.closest("[data-meet-tpl-new]")){ state.meetTplEdit = "new"; renderMeetInvites(true); var tn = document.getElementById("meetTplName"); if (tn) tn.focus(); return; }
+    if ((b = t.closest("[data-meet-tpl-edit]"))){ state.meetTplEdit = b.getAttribute("data-meet-tpl-edit"); renderMeetInvites(true); return; }
+    if (t.closest("[data-meet-tpl-cancel]")){ state.meetTplEdit = null; renderMeetInvites(true); return; }
+    if ((b = t.closest("[data-meet-tpl-copy]"))){ var s1 = meetSettings(), src = s1.templates.filter(function(x){ return x.id === b.getAttribute("data-meet-tpl-copy"); })[0]; if (!src) return;
+      var cp = { id:"tpl-" + Date.now().toString(36), name:src.name + " (copy)", subject:src.subject, body:src.body }; s1.templates.push(cp); meetSaveSettings(s1); state.meetTplEdit = cp.id; renderMeetInvites(true); return; }
+    if ((b = t.closest("[data-meet-tpl-del]"))){ var s2 = meetSettings(), dl = s2.templates.filter(function(x){ return x.id === b.getAttribute("data-meet-tpl-del"); })[0];
+      if (dl && s2.templates.length > 1 && confirm("Remove the template \"" + dl.name + "\"?")){ s2.templates = s2.templates.filter(function(x){ return x !== dl; }); meetSaveSettings(s2); renderMeetInvites(true); } return; }
+    if ((b = t.closest("[data-meet-tpl-save]"))){ var g = function(x){ var el = document.getElementById(x); return el ? el.value.trim() : ""; }, te = document.getElementById("meetTplErr");
+      var nm = g("meetTplName"), sj = g("meetTplSubject"), bd = (document.getElementById("meetTplBody") || {}).value || "";
+      if (!nm || !sj || !bd.trim()){ te.textContent = "Give the template a name, a subject and a message."; te.hidden = false; return; }
+      if (!/\{\{\s*meet_link\s*\}\}/.test(bd)){ te.textContent = "Keep {{meet_link}} in the message so it carries the Google Meet link."; te.hidden = false; return; }
+      var s3 = meetSettings(), id = b.getAttribute("data-meet-tpl-save"), tt = s3.templates.filter(function(x){ return x.id === id; })[0];
+      if (!tt){ tt = { id:"tpl-" + Date.now().toString(36) }; s3.templates.push(tt); }
+      tt.name = nm.slice(0, 80); tt.subject = sj.slice(0, 200); tt.body = bd.slice(0, 8000); meetSaveSettings(s3); state.meetTplEdit = null; renderMeetInvites(true); toast("Template saved"); return; }
   });
   // ===== PHONE MENU: a bar across the top; "Menu" opens it over the page, choosing a screen closes it =====
   function mnavIsOpen(){ return document.documentElement.classList.contains("mnav-open"); }

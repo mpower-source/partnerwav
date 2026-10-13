@@ -796,4 +796,14 @@ select pg_temp.as_user(''); set role anon;
 select t('the public cannot read perks', (select count(*) from portal_records where collection='startupPerks') = 0);
 reset role;
 
+-- ===== Intro meeting invites: CloudWAV only
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('meetInvites','mi-x','{"id":"mi-x","email":"ann@acme.example"}','{}','{}');
+select t('CloudWAV logs a meeting invite', (select count(*) from portal_records where collection='meetInvites') = 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- a vendor
+select t('a member cannot read meeting invites', (select count(*) from portal_records where collection='meetInvites') = 0);
+select t('...or add one, even marked readable by everyone', fails($$insert into portal_records(collection,id,data,readers,writers) values ('meetInvites','mi-y','{"id":"mi-y"}','{*}','{vendor:intelsense}')$$));
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;
