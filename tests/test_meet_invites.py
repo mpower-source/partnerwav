@@ -93,10 +93,43 @@ with sync_playwright() as p:
     pg.click(f'[data-meet-just] [data-meet-wa="{rec["id"]}"]'); pg.wait_for_timeout(300)
     ok([m for m in sent(pg) if m["company"] == "Siam Cloud"][0].get("waAt"), "Opening WhatsApp is noted on the invite")
 
+    # WhatsApp only: no Google needed, a pasted Meet link and a short message
+    pg.click('[data-meet-tab="new"]'); pg.wait_for_timeout(200)
+    pg.click('[data-meet-mode="whatsapp"]'); pg.wait_for_timeout(200)
+    ok(pg.locator("#meetSubject").count() == 0 and pg.locator("#meetWaBody").count() == 1 and pg.locator("[data-meet-wa-note]").count() == 1, "WhatsApp only: a short message instead of the email")
+    pg.fill("#meetCompany", "CoolOn"); pg.fill("#meetName", "Alex Tan"); pg.fill("#meetDate", day); pg.fill("#meetTime", "14:00"); pg.select_option("#meetTz", "America/New_York")
+    pg.click("[data-meet-send]"); pg.wait_for_timeout(150)
+    e = pg.inner_text("#meetErr")
+    ok("WhatsApp number" in e and "Meet link" in e, "It needs their number and a Meet link")
+    ok(pg.get_attribute("[data-meet-new-link]", "href") == "https://meet.google.com/new", "A button makes a new Meet link")
+    pg.fill("#meetWa", "+1 (212) 555-0147"); pg.fill("#meetLink", "https://meet.google.com/xyz-abcd-efg"); pg.wait_for_timeout(150)
+    pv = pg.inner_text("[data-meet-wa-preview]")
+    ok("Hi Alex," in pv and "CoolOn" in pv and "2:00 PM" in pv and "https://meet.google.com/xyz-abcd-efg" in pv, "The WhatsApp preview fills in, with the pasted Meet link")
+    ok(len(pv) < 450, "The WhatsApp message is short (" + str(len(pv)) + " characters)")
+    pg.locator("[data-meet-gcal]").evaluate("a => a.addEventListener('click', e => e.preventDefault())")
+    pg.click("[data-meet-gcal]"); pg.wait_for_timeout(100)
+    gh = pg.get_attribute("[data-meet-gcal]", "href")
+    ok(gh.startswith("https://calendar.google.com/calendar/r/eventedit?text=PartnerWAV%20intro%3A%20CoolOn&dates=") and ("T180000Z" in gh or "T190000Z" in gh), "Google Calendar opens a filled-in event to add a Meet link to")
+    pg.evaluate("window.__opened = []; window.open = (u) => { window.__opened.push(u); return null; }")
+    pg.click("[data-meet-send]"); pg.wait_for_timeout(300)
+    opened = [u for u in pg.evaluate("window.__opened") if u]
+    from urllib.parse import unquote as uq
+    ok(len(opened) == 1 and opened[0].startswith("https://wa.me/12125550147?text=") and "https://meet.google.com/xyz-abcd-efg" in uq(opened[0]) and "Hi Alex," in uq(opened[0]), "WhatsApp opens their chat with the short message")
+    w = [m for m in sent(pg) if m.get("channel") == "whatsapp"]
+    ok(w and w[0]["status"] == "whatsapp" and w[0]["meetLink"] == "https://meet.google.com/xyz-abcd-efg" and w[0]["company"] == "CoolOn", "It's logged as a WhatsApp invite")
+    row = pg.locator(f'[data-meet-row="{w[0]["id"]}"]')
+    ok(row.count() == 1 and "whatsapp" in row.inner_text().lower() and uq(row.locator("[data-meet-wa]").get_attribute("href")).endswith("https://partnerwav.com"), "Sent tab: WhatsApp again uses the same short message")
+    pg.click(f'[data-meet-again="{w[0]["id"]}"]'); pg.wait_for_timeout(200)
+    ok(pg.get_attribute('[data-meet-mode="whatsapp"]', "aria-pressed") == "true" and pg.input_value("#meetWa") == "+1 (212) 555-0147", "Invite again stays on WhatsApp")
+    pg.click('[data-meet-mode="email"]'); pg.wait_for_timeout(200)
+    ok(pg.input_value("#meetCompany") == "CoolOn" and pg.locator("#meetSubject").count() == 1, "Switching back to email keeps what's typed")
+
     # templates
     pg.click('[data-meet-tab="templates"]'); pg.wait_for_timeout(200)
     pg.fill("#meetSender", "Peter at PartnerWAV"); pg.click("[data-meet-sender]"); pg.wait_for_timeout(200)
     ok(settings(pg)["meetTemplates"]["senderName"] == "Peter at PartnerWAV", "The sender name is saved")
+    pg.fill("#meetWaTpl", "Hi {{first_name}}, quick intro to PartnerWAV. Meet: {{meet_link}}"); pg.click("[data-meet-wa-save]"); pg.wait_for_timeout(200)
+    ok(settings(pg)["meetTemplates"]["waBody"] == "Hi {{first_name}}, quick intro to PartnerWAV. Meet: {{meet_link}}", "The short WhatsApp message can be edited")
     pg.click("[data-meet-tpl-new]"); pg.wait_for_timeout(200)
     pg.fill("#meetTplName", "Vendor intro"); pg.fill("#meetTplSubject", "{{company}} on PartnerWAV"); pg.fill("#meetTplBody", "Hi {{first_name}}, no link here")
     pg.click("[data-meet-tpl-save]"); pg.wait_for_timeout(150)
@@ -163,6 +196,11 @@ for fail in (False, True):
             ok("[Google Meet link]" not in pg.inner_text("#meetContent"), "Signed in, nothing is left as a placeholder")
             pg.wait_for_timeout(300)
             ok(pg.locator("[data-meet-row]").count() == 2 and "https://meet.google.com/abc-defg-hij" in pg.content(), "Sent tab shows it with the Meet link")
+            pg.click('[data-meet-tab="new"]'); pg.wait_for_timeout(200)
+            pg.fill("#meetCompany", "CoolOn"); pg.fill("#meetName", "Alex"); pg.fill("#meetEmail", "alex@coolon.example"); pg.fill("#meetDate", day); pg.fill("#meetTime", "11:00")
+            pg.fill("#meetLink", "https://meet.google.com/own-link-abc"); pg.click("[data-meet-send]"); pg.wait_for_timeout(900)
+            c2 = mock.meet_calls[-1]
+            ok(c2["meetLink"] == "https://meet.google.com/own-link-abc" and "https://meet.google.com/own-link-abc" in c2["body"], "Signed in: a pasted Meet link is sent in the email instead of making one")
             pg.click('[data-meet-tab="google"]'); pg.wait_for_timeout(200); pg.click("[data-meet-check]"); pg.wait_for_timeout(600)
             ok("Connected: invites go out from partnerwav@gmail.com" in pg.inner_text("#meetCheckMsg"), "Check the connection reports the Gmail account")
         else:

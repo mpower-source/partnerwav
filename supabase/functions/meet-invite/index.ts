@@ -1,7 +1,8 @@
 // PartnerWAV: intro meeting invites from partnerwav@gmail.com with a Google Meet link.
 //
 // For each invite it
-//   1. creates an event with a Google Meet link on the PartnerWAV Google Calendar (and, if asked, adds the
+//   1. creates an event with a Google Meet link on the PartnerWAV Google Calendar (unless CloudWAV pasted its own
+//      Meet link, then this step is skipped; and, if asked, adds the
 //      guests, so Google also sends them its calendar invitation), then
 //   2. sends the invite email (CloudWAV's template, filled in for the company) from partnerwav@gmail.com
 //      through Gmail, with the Meet link in it.
@@ -177,12 +178,17 @@ Deno.serve(async (req) => {
   const senderName = oneLine(body.senderName, 80) || "The PartnerWAV team";
   const addGuests = !test && body.addGuests !== false;
   const logo = cleanLogo(body.logo);
+  // CloudWAV's own Meet link (pasted in the portal): no calendar event is made, only the email is sent
+  const ownLink = oneLine(body.meetLink, 300);
+  if (ownLink && !/^https:\/\/[^\s"<>]+\.[^\s"<>]+$/.test(ownLink)) return json(400, { error: "The Meet link should start with https://" });
 
   try {
+    let meetLink = ownLink, ev: any = { id: "", htmlLink: "" };
+    if (!ownLink) {
     // 1. the calendar event with a Meet link
     const cal = encodeURIComponent(Deno.env.get("GOOGLE_CALENDAR_ID") || "primary");
     const end = new Date(start.getTime() + dur * 60000);
-    const ev = await google(token, `https://www.googleapis.com/calendar/v3/calendars/${cal}/events?conferenceDataVersion=1&sendUpdates=${addGuests ? "all" : "none"}`, {
+    ev = await google(token, `https://www.googleapis.com/calendar/v3/calendars/${cal}/events?conferenceDataVersion=1&sendUpdates=${addGuests ? "all" : "none"}`, {
       method: "POST",
       body: JSON.stringify({
         summary: (test ? "[Test] " : "") + title,
@@ -193,13 +199,14 @@ Deno.serve(async (req) => {
         guestsCanModify: false,
       }),
     });
-    let meetLink: string = ev.hangoutLink || "";
+    meetLink = ev.hangoutLink || "";
     for (let i = 0; !meetLink && i < 4; i++) {   // Google sometimes finishes making the Meet link a moment later
       await new Promise((r) => setTimeout(r, 900));
       const again = await google(token, `https://www.googleapis.com/calendar/v3/calendars/${cal}/events/${encodeURIComponent(ev.id)}`);
       meetLink = again.hangoutLink || "";
     }
     if (!meetLink) return json(502, { error: "The calendar event was made but Google didn't return a Meet link", eventId: ev.id, eventLink: ev.htmlLink });
+    }
 
     // 2. the email, from partnerwav@gmail.com
     const fill = (s: string) => s.replace(/\{\{\s*meet_link\s*\}\}/g, meetLink);
@@ -207,7 +214,7 @@ Deno.serve(async (req) => {
     const raw = b64url(mime({ email: sender, name: senderName }, [...to, ...guests], finalSubject, finalText, htmlBody(finalText, meetLink, senderName, logo), logo));
     const sent = await google(token, "https://gmail.googleapis.com/gmail/v1/users/me/messages/send", { method: "POST", body: JSON.stringify({ raw }) });
 
-    return json(200, { ok: true, test, meetLink, eventId: ev.id, eventLink: ev.htmlLink, messageId: sent.id, calendarInvite: addGuests });
+    return json(200, { ok: true, test, meetLink, eventId: ev.id, eventLink: ev.htmlLink, messageId: sent.id, calendarInvite: !ownLink && addGuests, ownLink: !!ownLink });
   } catch (e) {
     return json(502, { error: "Google: " + String((e as Error).message || e).slice(0, 300) });
   }

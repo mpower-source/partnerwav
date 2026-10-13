@@ -804,6 +804,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .meet-mail-logo{ width:24px; height:24px; border-radius:7px; background:#6c4cf1; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; }
   .meet-mail .meet-preview-body{ color:#231f3a; }
   .meet-mail .badge.accent{ background:#efebff; color:#5135d8; }
+  .meet-mode{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:4px; }
+  .meet-link-help{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .meet-wa-bubble{ align-self:flex-start; max-width:100%; background:#e5f8dc; color:#1f2a1c; border-radius:12px 12px 12px 4px; padding:10px 12px; white-space:pre-wrap; overflow-wrap:anywhere; font-size:.9rem; line-height:1.45; box-shadow:0 1px 1px rgba(0,0,0,.08); }
   .meet-mail-x{ color:#8c88a3; font-weight:400; margin:0 4px; }
   .meet-logo-chip{ display:inline-flex; align-items:center; border-radius:7px; padding:5px 9px; border:1px solid #eceaf4; }
   .meet-logo-chip img{ display:block; height:26px; width:auto; max-width:180px; }
@@ -19502,7 +19505,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var MEET_TZS = ["America/New_York", "America/Los_Angeles", "Europe/London", "Asia/Bangkok", "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney", "UTC"];
   var MEET_FIELDS = [["first_name", "Their first name"], ["contact_name", "Their full name"], ["company", "Company"], ["meeting_date", "Date"], ["meeting_time", "Time"],
     ["timezone", "Time zone"], ["duration", "Length in minutes"], ["meet_link", "Google Meet link (added when it's sent)"], ["sender_name", "Your name"]];
-  var MEET_DEFAULT = { id:"meetTemplates", senderName:"The PartnerWAV team", templates:[{ id:"tpl-intro", name:"Introduce PartnerWAV",
+  // the short message for invites sent by WhatsApp only
+  var MEET_WA_DEFAULT = "Hi {{first_name}}, greetings from PartnerWAV! We'd love to introduce {{company}} to PartnerWAV, our partner platform for software companies, MSPs and resellers.\n\n"
+    + "Could we meet on {{meeting_date}} at {{meeting_time}} ({{timezone}}) for {{duration}} minutes?\nGoogle Meet: {{meet_link}}\n\n{{sender_name}}\nhttps://partnerwav.com";
+  function meetLinkOk(u){ return /^https:\/\/[^\s"<>]+\.[^\s"<>]+$/i.test(String(u || "")) && String(u).length <= 300; }
+  var MEET_DEFAULT = { id:"meetTemplates", senderName:"The PartnerWAV team", waBody:MEET_WA_DEFAULT, templates:[{ id:"tpl-intro", name:"Introduce PartnerWAV",
     subject:"Introducing PartnerWAV to {{company}}",
     body:"Hi {{first_name}},\n\nI'd like to introduce {{company}} to PartnerWAV, the partner platform from CloudWAV that connects software companies with MSPs, resellers and partners across Thailand and Southeast Asia.\n\n"
       + "I've set up a short call so we can show you how it works and hear what {{company}} is looking for:\n\n{{meeting_date}} at {{meeting_time}} ({{timezone}}), {{duration}} minutes\nJoin with Google Meet: {{meet_link}}\n\n"
@@ -19527,14 +19534,24 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         time:d.toLocaleTimeString("en-US", { timeZone:tz, hour:"numeric", minute:"2-digit" }),
         zone:(new Intl.DateTimeFormat("en-US", { timeZone:tz, timeZoneName:"short" }).formatToParts(d).filter(function(x){ return x.type === "timeZoneName"; })[0] || {}).value || tz };
     } catch(e){ return { date:iso.slice(0, 10), time:iso.slice(11, 16), zone:"UTC" }; } }
-  function meetFill(text, v, keepLink){ return String(text || "").replace(/\{\{\s*([a-z_]+)\s*\}\}/g, function(all, k){ if (k === "meet_link") return keepLink ? all : "[Google Meet link]"; return v[k] != null && v[k] !== "" ? v[k] : all; }); }
+  function meetFill(text, v, keepLink){ return String(text || "").replace(/\{\{\s*([a-z_]+)\s*\}\}/g, function(all, k){ if (k === "meet_link") return meetLinkOk(v.meetLink) ? v.meetLink : keepLink ? all : "[Google Meet link]"; return v[k] != null && v[k] !== "" ? v[k] : all; }); }
   function meetFormVals(){
     var g = function(x){ var el = document.getElementById(x); return el ? el.value.trim() : ""; };
     var name = g("meetName"), tz = g("meetTz") || meetMyTz(), iso = meetToUtc(g("meetDate"), g("meetTime"), tz), w = iso ? meetWhen(iso, tz) : null;
     return { company:g("meetCompany"), contact_name:name, first_name:name.split(/\s+/)[0] || "there", email:g("meetEmail").toLowerCase(), guests:g("meetGuests"),
       start:iso, timezone_id:tz, meeting_date:w ? w.date : "", meeting_time:w ? w.time : "", timezone:w ? w.zone : tz, duration:g("meetDur") || "30",
       sender_name:meetSettings().senderName || "The PartnerWAV team", subject:g("meetSubject"), body:g("meetBody"), addGuests:!!(document.getElementById("meetAddGuests") || {}).checked,
-      whatsapp:g("meetWa"), lineId:g("meetLine"), viaWa:!!(document.getElementById("meetViaWa") || {}).checked, viaLine:!!(document.getElementById("meetViaLine") || {}).checked };
+      whatsapp:g("meetWa"), lineId:g("meetLine"), viaWa:!!(document.getElementById("meetViaWa") || {}).checked, viaLine:!!(document.getElementById("meetViaLine") || {}).checked,
+      mode:state.meetMode === "whatsapp" ? "whatsapp" : "email", meetLink:g("meetLink"), waBody:(document.getElementById("meetWaBody") || {}).value || "" };
+  }
+  // keep what's typed when switching tabs or between email and WhatsApp (fields not on screen keep their earlier value)
+  function meetCaptureDraft(){
+    if (!document.getElementById("meetForm")) return;
+    var d = state.meetDraft || {}, map = { company:"meetCompany", contact_name:"meetName", email:"meetEmail", guests:"meetGuests", whatsapp:"meetWa", lineId:"meetLine", date:"meetDate", time:"meetTime",
+      timezone_id:"meetTz", duration:"meetDur", subject:"meetSubject", body:"meetBody", meetLink:"meetLink", waBody:"meetWaBody" };
+    Object.keys(map).forEach(function(k){ var el = document.getElementById(map[k]); if (el) d[k] = el.value; });
+    [["addGuests", "meetAddGuests"], ["viaWa", "meetViaWa"], ["viaLine", "meetViaLine"]].forEach(function(x){ var el = document.getElementById(x[1]); if (el) d[x[0]] = el.checked; });
+    state.meetDraft = d;
   }
   // the client's logo: trimmed, resized to a small PNG in the browser, sent inside the email as an inline image
   var MEET_LOGO_BGS = [["#ffffff", "White"], ["#231f3a", "Dark"], ["#6c4cf1", "PartnerWAV purple"]];
@@ -19573,6 +19590,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     rd.readAsDataURL(file);
   }
   function meetPreviewHtml(v){
+    if (v.mode === "whatsapp") return '<div class="meet-preview" data-meet-preview><div class="field-note"><b>WhatsApp to:</b> '+esc(v.whatsapp || "their number")+(v.contact_name ? ' ('+esc(v.contact_name)+')' : '')+'</div>'
+      + '<div class="meet-wa-bubble" data-meet-wa-preview>'+esc(meetFill(v.waBody, v)).replace(/\[Google Meet link\]/g, '<span class="badge accent">Google Meet link</span>')+'</div></div>';
     return '<div class="meet-preview" data-meet-preview><div class="field-note"><b>From:</b> '+esc(v.sender_name)+' &lt;partnerwav@gmail.com&gt;'+(v.email ? ' · <b>To:</b> '+esc(v.contact_name ? v.contact_name + " <" + v.email + ">" : v.email) : '')+'</div>'
       + '<div class="meet-preview-subject">'+esc(meetFill(v.subject, v))+'</div>'
       + '<div class="meet-mail" data-meet-mail><div class="meet-mail-bar"></div><div class="meet-mail-head"><span class="meet-mail-logo">P</span>PartnerWAV'
@@ -19583,31 +19602,46 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function meetNewHtml(){
     var s = meetSettings(), tpl = s.templates.filter(function(t){ return t.id === state.meetTpl; })[0] || s.templates[0] || MEET_DEFAULT.templates[0], d = state.meetDraft || {};
+    var wa = state.meetMode === "whatsapp";
     var tomorrow = new Date(Date.now() + 86400000), dd = tomorrow.getFullYear() + "-" + String(tomorrow.getMonth() + 1).padStart(2, "0") + "-" + String(tomorrow.getDate()).padStart(2, "0");
     var f = function(id, label, val, attrs){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" value="'+attr(val || "")+'" '+(attrs || "")+'></div>'; };
-    return '<div class="meet-grid"><div class="card card-pad meet-form" id="meetForm"><b>Who you\'re inviting</b><div class="meet-two">'
+    return '<div class="meet-grid"><div class="card card-pad meet-form" id="meetForm">'
+      + '<div class="meet-mode"><span class="field-note">Send by</span><div class="cal-views" role="group" aria-label="Send by">'
+        + '<button type="button" class="cal-view" data-meet-mode="email" aria-pressed="'+(!wa)+'">Email from partnerwav@gmail.com</button>'
+        + '<button type="button" class="cal-view" data-meet-mode="whatsapp" aria-pressed="'+wa+'">WhatsApp only</button></div></div>'
+      + (wa ? '<p class="field-note" style="margin:0;" data-meet-wa-note>No Google connection needed: paste a Google Meet link, and the short message opens in WhatsApp ready to send.</p>' : '')
+      + '<b>Who you\'re inviting</b><div class="meet-two">'
         + f("meetCompany", "Company", d.company, 'maxlength="120" placeholder="e.g. Acme Software"')
         + f("meetName", "Contact name", d.contact_name, 'maxlength="80" placeholder="e.g. Ann Lee"')
-        + f("meetEmail", "Their email", d.email, 'maxlength="200" inputmode="email" placeholder="ann@acme.com"')
-        + f("meetGuests", "Others to invite (optional)", d.guests, 'maxlength="600" placeholder="emails, separated by commas"')
-        + f("meetWa", "WhatsApp number (optional)", d.whatsapp, 'maxlength="30" inputmode="tel" placeholder="with country code, e.g. +66 81 234 5678"')
-        + f("meetLine", "LINE ID (optional)", d.lineId, 'maxlength="60" placeholder="e.g. annlee or @acme"') + '</div>'
-      + '<div class="field-row" style="margin:0;"><label for="meetLogoFile">Their logo (optional): shown next to PartnerWAV at the top of the email</label>'
-        + '<input type="file" id="meetLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml"></div><div id="meetLogoArea">'+meetLogoAreaHtml()+'</div>'
+        + (wa ? f("meetWa", "WhatsApp number", d.whatsapp, 'maxlength="30" inputmode="tel" placeholder="with country code, e.g. +66 81 234 5678"')
+              + f("meetEmail", "Their email (optional, for your records)", d.email, 'maxlength="200" inputmode="email" placeholder="ann@acme.com"')
+          : f("meetEmail", "Their email", d.email, 'maxlength="200" inputmode="email" placeholder="ann@acme.com"')
+              + f("meetGuests", "Others to invite (optional)", d.guests, 'maxlength="600" placeholder="emails, separated by commas"')
+              + f("meetWa", "WhatsApp number (optional)", d.whatsapp, 'maxlength="30" inputmode="tel" placeholder="with country code, e.g. +66 81 234 5678"')
+              + f("meetLine", "LINE ID (optional)", d.lineId, 'maxlength="60" placeholder="e.g. annlee or @acme"')) + '</div>'
+      + (wa ? '' : '<div class="field-row" style="margin:0;"><label for="meetLogoFile">Their logo (optional): shown next to PartnerWAV at the top of the email</label>'
+        + '<input type="file" id="meetLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml"></div><div id="meetLogoArea">'+meetLogoAreaHtml()+'</div>')
       + '<b style="margin-top:6px;">When</b><div class="meet-two">'
         + '<div class="field-row"><label for="meetDate">Date</label><input type="date" id="meetDate" value="'+attr(d.date || dd)+'"></div>'
         + '<div class="field-row"><label for="meetTime">Time</label><input type="time" id="meetTime" value="'+attr(d.time || "10:00")+'"></div>'
-        + '<div class="field-row"><label for="meetTz">Time zone (shown in the email)</label><select id="meetTz" class="filter app-select">'+meetTzList().map(function(z){ return '<option'+(z === (d.timezone_id || meetMyTz()) ? ' selected' : '')+'>'+esc(z)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="meetTz">Time zone (shown in the message)</label><select id="meetTz" class="filter app-select">'+meetTzList().map(function(z){ return '<option'+(z === (d.timezone_id || meetMyTz()) ? ' selected' : '')+'>'+esc(z)+'</option>'; }).join("")+'</select></div>'
         + '<div class="field-row"><label for="meetDur">Length</label><select id="meetDur" class="filter app-select">'+[15, 30, 45, 60].map(function(n){ return '<option value="'+n+'"'+(String(n) === String(d.duration || 30) ? ' selected' : '')+'>'+n+' minutes</option>'; }).join("")+'</select></div></div>'
-      + '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px;"><b>The email</b><div class="field-row" style="margin:0;"><label for="meetTplSel" class="field-note">Template</label><select id="meetTplSel" class="filter app-select">'
-        + s.templates.map(function(t){ return '<option value="'+attr(t.id)+'"'+(t.id === tpl.id ? ' selected' : '')+'>'+esc(t.name)+'</option>'; }).join("")+'</select></div></div>'
-      + '<div class="field-row"><label for="meetSubject">Subject</label><input type="text" id="meetSubject" maxlength="200" value="'+attr(d.subject != null ? d.subject : tpl.subject)+'"></div>'
-      + '<div class="field-row"><label for="meetBody">Message (change anything for this company; the {{ }} fields fill in)</label><textarea id="meetBody" rows="12" maxlength="8000">'+esc(d.body != null ? d.body : tpl.body)+'</textarea></div>'
-      + '<label class="field-note" style="display:flex;gap:6px;align-items:flex-start;"><input type="checkbox" id="meetAddGuests"'+(d.addGuests === false ? '' : ' checked')+'> Also add them to the Google Calendar event (Google sends its own calendar invitation as well, so the meeting lands in their calendar)</label>'
-      + '<div class="meet-chan" role="group" aria-label="Also send this message on"><span class="field-note">Also send the same message on:</span>'
-        + '<label><input type="checkbox" id="meetViaWa"'+(d.viaWa ? ' checked' : '')+'> WhatsApp</label><label><input type="checkbox" id="meetViaLine"'+(d.viaLine ? ' checked' : '')+'> LINE</label></div>'
+      + '<div class="field-row" style="margin-bottom:0;"><label for="meetLink">'+(wa ? 'Google Meet link' : 'Google Meet link (optional: leave empty and one is made for you)')+'</label><input type="text" id="meetLink" maxlength="300" inputmode="url" value="'+attr(d.meetLink || "")+'" placeholder="https://meet.google.com/abc-defg-hij"></div>'
+      + '<div class="meet-link-help"><a class="btn ghost xs" href="https://meet.google.com/new" target="_blank" rel="noopener noreferrer" style="text-decoration:none;" data-meet-new-link>Make a new Meet link</a>'
+        + '<a class="btn ghost xs" href="https://calendar.google.com/calendar/r/eventedit" target="_blank" rel="noopener noreferrer" style="text-decoration:none;" data-meet-gcal>Put it in Google Calendar first</a>'
+        + '<span class="field-note">'+(wa ? 'Copy the link from Meet or from the calendar event (Add Google Meet video conferencing) and paste it here.' : 'Use your own link if the Google connection isn\'t working. With your own link, no calendar invitation is sent.')+'</span></div>'
+      + (wa ? '<div class="field-row"><label for="meetWaBody">WhatsApp message (short; the {{ }} fields fill in)</label><textarea id="meetWaBody" rows="7" maxlength="1500">'+esc(d.waBody != null ? d.waBody : (s.waBody || MEET_WA_DEFAULT))+'</textarea></div>'
+        : '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px;flex-wrap:wrap;margin-top:6px;"><b>The email</b><div class="field-row" style="margin:0;"><label for="meetTplSel" class="field-note">Template</label><select id="meetTplSel" class="filter app-select">'
+          + s.templates.map(function(t){ return '<option value="'+attr(t.id)+'"'+(t.id === tpl.id ? ' selected' : '')+'>'+esc(t.name)+'</option>'; }).join("")+'</select></div></div>'
+        + '<div class="field-row"><label for="meetSubject">Subject</label><input type="text" id="meetSubject" maxlength="200" value="'+attr(d.subject != null ? d.subject : tpl.subject)+'"></div>'
+        + '<div class="field-row"><label for="meetBody">Message (change anything for this company; the {{ }} fields fill in)</label><textarea id="meetBody" rows="12" maxlength="8000">'+esc(d.body != null ? d.body : tpl.body)+'</textarea></div>'
+        + '<label class="field-note" style="display:flex;gap:6px;align-items:flex-start;"><input type="checkbox" id="meetAddGuests"'+(d.addGuests === false ? '' : ' checked')+'> Also add them to the Google Calendar event (Google sends its own calendar invitation as well, so the meeting lands in their calendar)</label>'
+        + '<div class="meet-chan" role="group" aria-label="Also send this message on"><span class="field-note">Also send the same message on:</span>'
+          + '<label><input type="checkbox" id="meetViaWa"'+(d.viaWa ? ' checked' : '')+'> WhatsApp</label><label><input type="checkbox" id="meetViaLine"'+(d.viaLine ? ' checked' : '')+'> LINE</label></div>')
       + '<div id="meetErr" class="login-msg bad" role="alert" hidden></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><button type="button" class="btn primary sm" data-meet-send>Send invite</button><button type="button" class="btn secondary sm" data-meet-test>Send a test to partnerwav@gmail.com</button>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+        + (wa ? '<button type="button" class="btn primary sm" data-meet-send>Open WhatsApp with this message</button>'
+          : '<button type="button" class="btn primary sm" data-meet-send>Send invite</button><button type="button" class="btn secondary sm" data-meet-test>Send a test to partnerwav@gmail.com</button>')
         + '<span class="field-note" id="meetMsg" role="status"></span></div></div>'
       + '<div class="card card-pad"><b>Preview</b><div id="meetPreviewBox"></div>'
         + '<details class="field-note" style="margin-top:10px;"><summary>Fields you can use</summary><ul class="meet-fields">'+MEET_FIELDS.map(function(x){ return '<li><code>{{'+x[0]+'}}</code> '+esc(x[1])+'</li>'; }).join("")+'</ul></details></div></div>';
@@ -19616,6 +19650,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var s = meetSettings(), ed = state.meetTplEdit;
     return '<div class="card card-pad" style="margin-bottom:14px;"><div class="field-row"><label for="meetSender">Your name at the bottom of invites ({{sender_name}})</label><input type="text" id="meetSender" maxlength="80" value="'+attr(s.senderName || "")+'"></div>'
         + '<button type="button" class="btn secondary sm" data-meet-sender>Save</button></div>'
+      + '<div class="card card-pad meet-form" style="margin-bottom:14px;" data-meet-wa-tpl><b>Short WhatsApp message</b><span class="field-note">Used when you send by WhatsApp only. Keep {{meet_link}} in it.</span>'
+        + '<textarea id="meetWaTpl" rows="6" maxlength="1500" aria-label="Short WhatsApp message">'+esc(s.waBody || MEET_WA_DEFAULT)+'</textarea><div id="meetWaTplErr" class="login-msg bad" role="alert" hidden></div>'
+        + '<div><button type="button" class="btn secondary sm" data-meet-wa-save>Save WhatsApp message</button></div></div>'
       + '<div style="display:flex;flex-direction:column;gap:10px;">'+s.templates.map(function(t){
         if (ed === t.id) return meetTplFormHtml(t);
         return '<div class="card card-pad" data-meet-tpl-row="'+attr(t.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div><b>'+esc(t.name)+'</b><div class="field-note">'+esc(t.subject)+'</div></div>'
@@ -19634,7 +19671,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function meetSentHtml(){
     var list = meetInvites.slice().sort(function(a, b){ return String(b.sentAt).localeCompare(String(a.sentAt)); });
     if (!list.length) return '<div class="empty">No invites yet. Send a test to partnerwav@gmail.com first to see how it looks.</div>';
-    var lab = { sent:["Sent", "active"], test:["Test", ""], demo:["Demo: not sent", "pending"], failed:["Didn't send", "pending"] };
+    var lab = { whatsapp:["WhatsApp", "active"], sent:["Sent", "active"], test:["Test", ""], demo:["Demo: not sent", "pending"], failed:["Didn't send", "pending"] };
     var just = meetInvites.filter(function(x){ return x.id === state.meetJust && (x.viaWa || x.viaLine) && x.status !== "failed"; })[0];
     return (just ? '<div class="card card-pad meet-just" data-meet-just><b>'+(just.status === "demo" ? 'Demo: the email wasn\'t sent.' : 'The email is on its way.')+' Now send the same message on '+[just.viaWa ? 'WhatsApp' : '', just.viaLine ? 'LINE' : ''].filter(Boolean).join(' and ')+':</b>'
         + '<span class="field-note">Each button opens the app with the message written out (Google Meet link included); you press send there.</span>'+meetChatHtml(just, true)+'</div>' : '')
@@ -19650,7 +19687,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<button type="button" class="btn ghost xs" data-meet-again="'+attr(m.id)+'">Invite again</button></div></div></div>'; }).join("")+'</div>';
   }
   // the same message for WhatsApp and LINE: the subject as a first line, then the email text with the Meet link
-  function meetChatText(m){ var link = m.meetLink || "[Google Meet link]";
+  function meetChatText(m){ if (m.channel === "whatsapp") return String(m.body || ""); var link = m.meetLink || "[Google Meet link]";
     return String(m.subject || "").replace(/\{\{\s*meet_link\s*\}\}/g, link) + "\n\n" + String(m.body || "").replace(/\{\{\s*meet_link\s*\}\}/g, link); }
   function meetChatHtml(m, big){
     if (!m.viaWa && !m.viaLine) return "";
@@ -19677,7 +19714,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function renderMeetInvites(force){
     var box = document.getElementById("meetContent");
     if (!box || state.screen !== "operator-meet-invites") return;
-    var tab = state.meetTab || "new", key = JSON.stringify([tab, meetInvites.length, state.meetV || 0, state.meetTpl || "", state.meetTplEdit || ""]);
+    var tab = state.meetTab || "new", key = JSON.stringify([tab, meetInvites.length, state.meetV || 0, state.meetTpl || "", state.meetTplEdit || "", state.meetMode || ""]);
     if (!force && box.getAttribute("data-k") === key) return;
     box.setAttribute("data-k", key);
     box.innerHTML = '<div class="cal-bar" style="margin-bottom:14px;"><div class="cal-views" role="group" aria-label="Show">'
@@ -19689,7 +19726,24 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function meetConnected(){ return !!(supabase && supabase.functions && state.account && CLOUD.loaded); }
   function meetSend(test){
     var v = meetFormVals(), err = document.getElementById("meetErr"), msg = document.getElementById("meetMsg"), probs = [], mailRe = /^[^\s@<>",;:]+@[^\s@<>",;:]+\.[a-z]{2,}$/i;
+    if (v.mode === "whatsapp" && !test){
+      if (String(v.whatsapp).replace(/\D/g, "").length < 8) probs.push("Add their WhatsApp number with the country code.");
+      if (!meetLinkOk(v.meetLink)) probs.push("Paste the Google Meet link (https://meet.google.com/...).");
+      if (!v.start || new Date(v.start) < new Date()) probs.push("Choose a date and time in the future.");
+      if (!v.waBody.trim()) probs.push("Write the WhatsApp message.");
+      else if (!/\{\{\s*meet_link\s*\}\}/.test(v.waBody) && v.waBody.indexOf(v.meetLink) < 0) probs.push("Keep {{meet_link}} in the message so it carries the Meet link.");
+      if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+      err.hidden = true;
+      var txt = meetFill(v.waBody, v).slice(0, 1500);
+      meetInvites.push({ id:"mi-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), channel:"whatsapp", status:"whatsapp", company:v.company, contactName:v.contact_name, email:v.email, guests:[],
+        start:v.start, timeZone:v.timezone_id, durationMin:Number(v.duration), subject:"", body:txt, meetLink:v.meetLink, whatsapp:v.whatsapp, viaWa:true, waAt:nowStamp(), sentAt:nowStamp() });
+      saveMeet();
+      window.open(waChatUrl(v.whatsapp, txt), "_blank", "noopener");
+      state.meetDraft = null; state.meetTab = "sent"; renderMeetInvites(true); toast("WhatsApp is opening with the message. Press send there.");
+      return;
+    }
     var guests = v.guests ? v.guests.split(/[,;\s]+/).filter(Boolean) : [];
+    if (v.meetLink && !meetLinkOk(v.meetLink)) probs.push("The Meet link should be a secure web address (https://meet.google.com/...), or leave it empty.");
     if (!test){ if (!v.company) probs.push("Add the company."); if (!mailRe.test(v.email)) probs.push("Add their email address."); if (guests.some(function(g){ return !mailRe.test(g); })) probs.push("Check the other email addresses."); }
     if (guests.length > 9) probs.push("Up to 10 people per invite.");
     if (!v.start || new Date(v.start) < new Date()) probs.push("Choose a date and time in the future.");
@@ -19700,9 +19754,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     err.hidden = true;
     var rec = { id:"mi-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), company:v.company, contactName:v.contact_name, email:test ? "partnerwav@gmail.com" : v.email, guests:test ? [] : guests,
       start:v.start, timeZone:v.timezone_id, durationMin:Number(v.duration), subject:meetFill(v.subject, v, true), template:state.meetTpl || "", sentAt:nowStamp(), status:test ? "test" : "sent",
-      body:meetFill(v.body, v, true).slice(0, 8000), logo:state.meetLogo ? { dataUrl:state.meetLogo.dataUrl, bg:state.meetLogo.bg } : null, whatsapp:test ? "" : v.whatsapp, lineId:test ? "" : v.lineId, viaWa:!test && v.viaWa, viaLine:!test && v.viaLine };
-    state.meetDraft = { company:v.company, contact_name:v.contact_name, email:v.email, guests:v.guests, date:(document.getElementById("meetDate") || {}).value, time:(document.getElementById("meetTime") || {}).value,
-      timezone_id:v.timezone_id, duration:v.duration, subject:v.subject, body:v.body, addGuests:v.addGuests, whatsapp:v.whatsapp, lineId:v.lineId, viaWa:v.viaWa, viaLine:v.viaLine };
+      meetLink:meetLinkOk(v.meetLink) ? v.meetLink : "", body:meetFill(v.body, v, true).slice(0, 8000), logo:state.meetLogo ? { dataUrl:state.meetLogo.dataUrl, bg:state.meetLogo.bg } : null, whatsapp:test ? "" : v.whatsapp, lineId:test ? "" : v.lineId, viaWa:!test && v.viaWa, viaLine:!test && v.viaLine };
+    meetCaptureDraft();
     if (!meetConnected()){
       rec.status = "demo"; meetInvites.push(rec); saveMeet();
       if (msg) msg.textContent = "Demo: nothing was sent. Once Google is connected (Google connection tab) this sends from partnerwav@gmail.com.";
@@ -19712,21 +19765,22 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!test && !confirm("Send the invite to " + v.email + (guests.length ? " and " + guests.length + " more" : "") + " from partnerwav@gmail.com?")) return;
     var btns = document.querySelectorAll("[data-meet-send], [data-meet-test]"); btns.forEach(function(x){ x.disabled = true; }); if (msg) msg.textContent = "Sending...";
     var payload = { test:!!test, to:[{ email:v.email, name:v.contact_name }], guests:guests.map(function(g){ return { email:g }; }), subject:meetFill(v.subject, v, true), body:meetFill(v.body, v, true),
-      title:"PartnerWAV intro" + (v.company ? ": " + v.company : ""), start:v.start,
+      title:"PartnerWAV intro" + (v.company ? ": " + v.company : ""), start:v.start, meetLink:meetLinkOk(v.meetLink) ? v.meetLink : "",
       logo:state.meetLogo ? { data:state.meetLogo.dataUrl.split(",")[1], type:"image/png", bg:state.meetLogo.bg, company:v.company } : null, timeZone:v.timezone_id, durationMin:Number(v.duration), addGuests:v.addGuests, senderName:v.sender_name };
     supabase.functions.invoke("meet-invite", { body:payload }).then(function(res){
       btns.forEach(function(x){ x.disabled = false; });
       var d = res && res.data; if (typeof d === "string"){ try { d = JSON.parse(d); } catch(e){ d = null; } }
       var ctx = res && res.error && res.error.context;
       var done = function(d2){
-        if (!d2 || !d2.ok){ rec.status = "failed"; rec.error = (d2 && d2.error) || "The meet-invite function isn't reachable. Is it deployed?"; meetInvites.push(rec); saveMeet(); if (msg) msg.textContent = rec.error; return; }
+        if (!d2 || !d2.ok){ rec.status = "failed"; rec.error = (d2 && d2.error) || "The meet-invite function isn't reachable. Is it deployed?"; meetInvites.push(rec); saveMeet();
+          if (msg) msg.textContent = rec.error + " You can paste your own Meet link and try again, or switch to WhatsApp only."; return; }
         rec.meetLink = d2.meetLink; rec.eventLink = d2.eventLink || ""; rec.eventId = d2.eventId || ""; meetInvites.push(rec); saveMeet();
         if (msg) msg.textContent = test ? "Test sent to partnerwav@gmail.com. Check that inbox." : "Invite sent to " + v.email + ".";
         if (!test){ state.meetJust = rec.id; state.meetDraft = null; state.meetLogo = null; state.meetTab = "sent"; renderMeetInvites(true); }
       };
       if (ctx && typeof ctx.json === "function" && !d) return ctx.json().then(done, function(){ done(null); });
       done(d);
-    }).catch(function(){ btns.forEach(function(x){ x.disabled = false; }); rec.status = "failed"; rec.error = "The meet-invite function isn't reachable."; meetInvites.push(rec); saveMeet(); if (msg) msg.textContent = rec.error; });
+    }).catch(function(){ btns.forEach(function(x){ x.disabled = false; }); rec.status = "failed"; rec.error = "The meet-invite function isn't reachable."; meetInvites.push(rec); saveMeet(); if (msg) msg.textContent = rec.error + " You can switch to WhatsApp only."; });
   }
   function meetCheck(){
     var msg = document.getElementById("meetCheckMsg"), say = function(t){ if (msg) msg.textContent = t; };
@@ -19748,10 +19802,18 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("#meetForm")) meetRefreshPreview(); });
   document.addEventListener("click", function(ev){
     var t = ev.target; if (!t || !t.closest || !t.closest("#meetContent")) return; var b;
-    if ((b = t.closest("[data-meet-tab]"))){ if (state.meetTab === "new" || !state.meetTab){ var fv = document.getElementById("meetForm") ? meetFormVals() : null; if (fv) state.meetDraft = { company:fv.company, contact_name:fv.contact_name, email:fv.email, guests:fv.guests,
-        date:(document.getElementById("meetDate") || {}).value, time:(document.getElementById("meetTime") || {}).value, timezone_id:fv.timezone_id, duration:fv.duration, subject:fv.subject, body:fv.body, addGuests:fv.addGuests, whatsapp:fv.whatsapp, lineId:fv.lineId, viaWa:fv.viaWa, viaLine:fv.viaLine }; }
+    if ((b = t.closest("[data-meet-tab]"))){ meetCaptureDraft();
       state.meetTab = b.getAttribute("data-meet-tab"); state.meetTplEdit = null; renderMeetInvites(true); return; }
     if (t.closest("[data-meet-send]")){ meetSend(false); return; }
+    if ((b = t.closest("[data-meet-mode]"))){ meetCaptureDraft(); state.meetMode = b.getAttribute("data-meet-mode"); renderMeetInvites(true); return; }
+    if ((b = t.closest("[data-meet-gcal]"))){ var gv = meetFormVals();   // a Google Calendar event, filled in, to add a Meet link to
+      if (gv.start){ var z = function(iso){ return iso.replace(/[-:]/g, "").replace(/\.\d{3}/, ""); }, en = new Date(new Date(gv.start).getTime() + Number(gv.duration || 30) * 60000).toISOString();
+        b.href = "https://calendar.google.com/calendar/r/eventedit?text=" + encodeURIComponent("PartnerWAV intro" + (gv.company ? ": " + gv.company : "")) + "&dates=" + z(gv.start) + "/" + z(en)
+          + "&details=" + encodeURIComponent("Intro to PartnerWAV" + (gv.contact_name ? " with " + gv.contact_name : "")) + (gv.email ? "&add=" + encodeURIComponent(gv.email) : ""); }
+      return; }
+    if (t.closest("[data-meet-wa-save]")){ var sw = meetSettings(), wb = ((document.getElementById("meetWaTpl") || {}).value || "").trim(), we = document.getElementById("meetWaTplErr");
+      if (!/\{\{\s*meet_link\s*\}\}/.test(wb)){ if (we){ we.textContent = "Keep {{meet_link}} in the message so it carries the Meet link."; we.hidden = false; } return; }
+      sw.waBody = wb.slice(0, 1500); meetSaveSettings(sw); renderMeetInvites(true); toast("WhatsApp message saved"); return; }
     if ((b = t.closest("[data-meet-logo-bg]"))){ if (state.meetLogo){ state.meetLogo.bg = b.getAttribute("data-meet-logo-bg"); meetLogoRefresh(); } return; }
     if (t.closest("[data-meet-logo-remove]")){ state.meetLogo = null; var lf = document.getElementById("meetLogoFile"); if (lf) lf.value = ""; meetLogoRefresh(); return; }
     if ((b = t.closest("[data-meet-wa], [data-meet-line]"))){ var wa = b.hasAttribute("data-meet-wa"), mm = meetInvites.filter(function(x){ return x.id === b.getAttribute(wa ? "data-meet-wa" : "data-meet-line"); })[0];
@@ -19762,6 +19824,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-meet-again]"))){ var ma = meetInvites.filter(function(x){ return x.id === b.getAttribute("data-meet-again"); })[0]; if (!ma) return;
       state.meetDraft = { company:ma.company, contact_name:ma.contactName, email:ma.status === "test" ? "" : ma.email, guests:(ma.guests || []).join(", "), timezone_id:ma.timeZone, duration:String(ma.durationMin || 30),
         whatsapp:ma.whatsapp || "", lineId:ma.lineId || "", viaWa:!!ma.viaWa, viaLine:!!ma.viaLine };
+      state.meetMode = ma.channel === "whatsapp" ? "whatsapp" : "email";
       state.meetLogo = ma.logo && /^data:image\/png;base64,/.test(ma.logo.dataUrl || "") ? { dataUrl:ma.logo.dataUrl, bg:ma.logo.bg || "#ffffff" } : null;
       state.meetTpl = ma.template || ""; state.meetTab = "new"; renderMeetInvites(true); return; }
     if (t.closest("[data-meet-sender]")){ var s0 = meetSettings(); s0.senderName = ((document.getElementById("meetSender") || {}).value || "").trim().slice(0, 80) || "The PartnerWAV team"; meetSaveSettings(s0); renderMeetInvites(true); toast("Saved"); return; }
