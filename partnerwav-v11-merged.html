@@ -783,6 +783,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .cp-share{ display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
   .cp-share .ev-qr .aff-qr img{ width:140px; height:140px; }
   .cp-ev{ display:flex; gap:14px; align-items:flex-start; }
+  .evs-list{ display:flex; flex-direction:column; gap:8px; }
+  .evs-row{ display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+  .evs-actions{ display:flex; gap:6px; align-items:center; flex-shrink:0; }
+  .evs-bad{ color:var(--bad); }
+  .evs-grid{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; margin:8px 0; }
+  .evs-form textarea, #evsKeywords, #evsPaste{ width:100%; box-sizing:border-box; }
+  @media (max-width:760px){ .evs-grid{ grid-template-columns:1fr; } .evs-row{ flex-direction:column; } }
   .tec-date{ flex:0 0 58px; align-self:flex-start; text-align:center; border-radius:12px; background:var(--accent-soft); color:var(--accent-strong); padding:8px 4px; display:flex; flex-direction:column; line-height:1.1; }
   .tec-date b{ font-size:1.45rem; }
   .tec-date span{ font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
@@ -19515,7 +19522,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return '<div class="card card-pad cp-ev" data-ce-row="'+attr(e.id)+'">'
       + '<div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span></div>'
       + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><b>'+esc(e.title)+'</b>'+(cePitchy(e) ? '<span class="badge accent" data-ce-kind-badge>'+esc(ceKindName(e))+'</span>' : '')+(pending ? '<span class="pill pending">Waiting for review</span>' : e.status === "declined" ? '<span class="pill">Declined</span>' : ceUpcoming(e) ? '<span class="pill active">Listed</span>' : '<span class="pill">Past</span>')+'</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><b>'+esc(e.title)+'</b>'+(cePitchy(e) ? '<span class="badge accent" data-ce-kind-badge>'+esc(ceKindName(e))+'</span>' : '')+(e.source ? '<span class="badge neutral" data-ce-source>From '+esc(e.source === "manual" ? "the Saturday check" : e.source.charAt(0).toUpperCase() + e.source.slice(1))+'</span>' : '')+(pending ? '<span class="pill pending">Waiting for review</span>' : e.status === "declined" ? '<span class="pill">Declined</span>' : ceUpcoming(e) ? '<span class="pill active">Listed</span>' : '<span class="pill">Past</span>')+'</div>'
         + '<div class="field-note">'+esc(ceHost(e))+' · '+esc(ceWhen(e))+' · '+esc(ceWhere(e))+(e.price ? ' · '+esc(e.price) : '')+'</div>'
         + (pending && e.submitter ? '<div class="field-note" data-ce-submitter>Sent in by '+esc(e.submitter.name || "")+(e.submitter.contact ? ' ('+esc(e.submitter.contact)+')' : '')+' -- approving adds '+esc(e.orgName || "them")+' to your communities</div>' : '')
         + (e.desc ? '<div class="field-note">'+esc(e.desc)+'</div>' : '')
@@ -19547,9 +19554,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     html += '<div class="cal-bar" style="margin-bottom:14px;"><div class="cal-views" role="group" aria-label="Show">'
       + '<button type="button" class="cal-view" data-co-tab="orgs" aria-pressed="'+(tab === "orgs")+'">Communities</button>'
       + '<button type="button" class="cal-view" data-co-tab="events" aria-pressed="'+(tab === "events")+'">Events</button>'
-      + '<button type="button" class="cal-view" data-co-tab="review" aria-pressed="'+(tab === "review")+'">Waiting for review'+(waiting.length ? ' ('+waiting.length+')' : '')+'</button></div>'
+      + '<button type="button" class="cal-view" data-co-tab="review" aria-pressed="'+(tab === "review")+'">Waiting for review'+(waiting.length ? ' ('+waiting.length+')' : '')+'</button>'
+      + '<button type="button" class="cal-view" data-co-tab="sources" aria-pressed="'+(tab === "sources")+'">Event sources</button></div>'
       + (tab === "orgs" ? '<button type="button" class="btn primary sm" data-co-new>+ Add a community</button>' : tab === "events" ? '<button type="button" class="btn primary sm" data-ce-new>+ Add an event</button>' : '')+'</div>';
-    if (tab === "orgs"){
+    if (tab === "sources") html += evsHtml();
+    else if (tab === "orgs"){
       if (state.coEdit) html += coOrgForm(state.coEdit === "new" ? null : coById(state.coEdit));
       var order = { partner:0, talking:1, prospect:2, paused:3 };
       html += orgs.length ? '<div class="cp-grid">' + orgs.slice().sort(function(a, b){ return (order[a.status] || 0) - (order[b.status] || 0) || String(a.name).localeCompare(b.name); }).map(function(o){
@@ -19629,6 +19638,111 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       eventPages.unshift(p); saveEvents(); toast("Event Connect page ready -- show its QR code at the event"); }
     state.screen = "operator-events"; render();
     setTimeout(function(){ var row = document.querySelector('[data-ev-row="' + p.id + '"]'); if (row && row.scrollIntoView) row.scrollIntoView({ block:"center" }); }, 50);
+  }
+
+  // ----- Event sources: the feeds the events-sync function reads (supabase/functions/events-sync), and the
+  // sites without an open API that CloudWAV checks by hand every Saturday and pastes in. Everything found
+  // waits in "Waiting for review". Kept in operatorSettings (CloudWAV only); no keys or tokens live here.
+  var EVS_KINDS = [["ical", "iCal link (Luma, Meetup, Google)"], ["eventbrite", "Eventbrite organizer"], ["manual", "Check by hand on Saturday"]];
+  var EVS_SOURCE_TAGS = ["luma", "meetup", "eventbrite", "zipevent", "manual"];
+  var EVS_KEYWORDS = ["tech", "startup", "AI", "artificial intelligence", "machine learning", "data", "developer", "software", "SaaS", "cloud", "cyber", "security",
+    "blockchain", "web3", "fintech", "product", "hackathon", "pitch", "founder", "venture", "investor", "devops", "python", "javascript", "coding", "GDG", "AWS", "LLM"];
+  var EVS_STARTERS = [
+    { id:"src-luma-bkk", kind:"manual", label:"Luma: Bangkok", url:"https://luma.com/bangkok", city:"Bangkok", active:true,
+      note:"Luma's API only covers calendars you own, but any public Luma calendar or city page has a free iCal link: open it, choose Subscribe, copy the iCal link and add it here as an iCal source so it is read automatically." },
+    { id:"src-meetup", kind:"manual", label:"Meetup: tech in Bangkok", url:"https://www.meetup.com/find/?keywords=tech&location=th--Bangkok&source=EVENTS", city:"Bangkok", active:true,
+      note:"Meetup's API is only open to paid Meetup Pro accounts. Check by hand; groups you follow can be added one by one as iCal sources when they offer a calendar link." },
+    { id:"src-eventbrite", kind:"manual", label:"Eventbrite: science & tech in Bangkok", url:"https://www.eventbrite.com/d/thailand--bangkok/science-and-tech--events/", city:"Bangkok", active:true,
+      note:"Eventbrite closed its public event search in 2019. Check by hand; organizers who run regular events can be added as Eventbrite sources (needs the EVENTBRITE_TOKEN secret)." },
+    { id:"src-zipevent", kind:"manual", label:"Zipevent", url:"https://www.zipeventapp.com/", city:"Bangkok", active:true, note:"No public API. Check by hand." }];
+  function evsRec(){ var r = operatorSettings.filter(function(x){ return x.id === "eventSources"; })[0]; return r || { id:"eventSources", sources:JSON.parse(JSON.stringify(EVS_STARTERS)), keywords:EVS_KEYWORDS.slice() }; }
+  function evsSave(r){ r.updatedAt = nowStamp(); operatorSettings = operatorSettings.filter(function(x){ return x.id !== "eventSources"; }).concat([r]);
+    if (typeof saveReferrals === "function") saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule(); state.coV = (state.coV || 0) + 1; }
+  function evsRun(){ return operatorSettings.filter(function(x){ return x.id === "eventSourcesRun"; })[0] || null; }
+  function evsHash(s){ var a = 0x811c9dc5, b = 0x01000193 ^ 0x5bd1e995; s = String(s);
+    for (var i = 0; i < s.length; i++){ var c = s.charCodeAt(i); a = Math.imul(a ^ c, 16777619); b = Math.imul(b ^ c, 2246822519); }
+    return ("0000000" + (a >>> 0).toString(16)).slice(-8) + ("0000000" + (b >>> 0).toString(16)).slice(-8); }
+  function evsHtml(){
+    var r = evsRec(), run = evsRun(), byId = {}; ((run && run.sources) || []).forEach(function(s){ byId[s.id] = s; });
+    var auto = r.sources.filter(function(s){ return s.kind !== "manual"; }), manual = r.sources.filter(function(s){ return s.kind === "manual"; });
+    var row = function(s){ var last = byId[s.id], href = safeHref(s.url || "");
+      return '<div class="evs-row" data-evs-row="'+attr(s.id)+'"><div style="flex:1;min-width:0;"><b>'+esc(s.label || s.url || s.orgId)+'</b> <span class="badge neutral">'+esc((EVS_KINDS.filter(function(k){ return k[0] === s.kind; })[0] || EVS_KINDS[0])[1])+'</span>'
+        + (s.allTech ? ' <span class="badge accent">Every event is tech</span>' : '')
+        + '<div class="field-note">'+esc([s.kind === "eventbrite" ? "Organizer " + (s.orgId || "?") : (s.url || ""), s.city].filter(Boolean).join(" · "))+'</div>'
+        + (s.note ? '<div class="field-note">'+esc(s.note)+'</div>' : '')
+        + (last ? '<div class="field-note" data-evs-last>'+(last.error ? '<span class="evs-bad">Last check failed: '+esc(last.error)+'</span>' : 'Last check found '+esc(String(last.found))+' tech event'+(last.found === 1 ? '' : 's'))+'</div>' : '')+'</div>'
+        + '<div class="evs-actions">'+(href ? '<a class="btn secondary xs" href="'+attr(href)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open</a>' : '')
+        + '<button type="button" class="meet-chip" role="switch" aria-checked="'+(s.active !== false)+'" aria-pressed="'+(s.active !== false)+'" data-evs-toggle="'+attr(s.id)+'">'+(s.active !== false ? 'On' : 'Off')+'</button>'
+        + '<button type="button" class="btn ghost xs" data-evs-del="'+attr(s.id)+'" aria-label="Remove '+attr(s.label || "source")+'">Remove</button></div></div>'; };
+    return '<div class="card card-pad" style="margin-bottom:14px;" data-evs-intro><b>Where tech events come from</b>'
+        + '<p class="field-note" style="margin:6px 0 10px;">Luma calendars, Meetup group calendars and Eventbrite organizers can be read automatically. Meetup search (Pro accounts only), Eventbrite search and Zipevent have no open API, so they are checked by hand every Saturday and pasted in below. Everything found waits in <b>Waiting for review</b> until you approve it, and an event is never added twice.</p>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><button type="button" class="btn primary sm" data-evs-run'+(auto.filter(function(s){ return s.active !== false; }).length ? '' : ' disabled')+'>Check sources now</button>'
+        + '<span class="field-note" id="evsRunMsg" role="status">'+(run ? 'Last check '+esc(run.at || "")+': '+esc(String(run.added || 0))+' new for review out of '+esc(String(run.seen || 0))+' found' : 'Not checked yet')+'</span></div></div>'
+      + '<div class="section-head"><h2>Read automatically ('+auto.length+')</h2></div>'
+      + (auto.length ? '<div class="evs-list">'+auto.map(row).join("")+'</div>' : '<div class="empty">No feeds yet. Add a Luma calendar\'s iCal link or an Eventbrite organizer below.</div>')
+      + '<div class="section-head" style="margin-top:16px;"><h2>Checked by hand on Saturdays ('+manual.length+')</h2></div>'
+      + '<div class="evs-list">'+manual.map(row).join("")+'</div>'
+      + '<div class="card card-pad evs-form" id="evsForm" style="margin-top:14px;"><b>Add a source</b><div class="evs-grid">'
+        + '<div class="field-row"><label for="evsKind">Type</label><select id="evsKind" class="filter app-select">'+EVS_KINDS.map(function(k){ return '<option value="'+k[0]+'">'+esc(k[1])+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="evsLabel">Name</label><input type="text" id="evsLabel" maxlength="120" placeholder="e.g. AI Bangkok (Luma)"></div>'
+        + '<div class="field-row"><label for="evsUrl">iCal link, page address, or Eventbrite organizer id</label><input type="text" id="evsUrl" maxlength="400" placeholder="https://... or 1234567890"></div>'
+        + '<div class="field-row"><label for="evsCity">City when the feed doesn\'t say</label><select id="evsCity" class="filter app-select"><option value="">Not set (skip events outside Thailand)</option>'+CE_CITIES.map(function(c){ return '<option>'+esc(c)+'</option>'; }).join("")+'</select></div></div>'
+        + '<label class="field-note" style="display:flex;gap:6px;align-items:center;"><input type="checkbox" id="evsAllTech"> Every event in this feed is a tech event (skip the keyword check)</label>'
+        + '<div id="evsErr" class="login-msg bad" role="alert" hidden></div>'
+        + '<div><button type="button" class="btn secondary sm" data-evs-add>Add source</button></div></div>'
+      + '<div class="card card-pad" style="margin-top:14px;"><b>Tech keywords</b><p class="field-note" style="margin:4px 0 8px;">An event is kept when its name or description has one of these (except feeds marked "Every event is tech").</p>'
+        + '<textarea id="evsKeywords" rows="3" maxlength="3000" aria-label="Tech keywords, separated by commas">'+esc((r.keywords || []).join(", "))+'</textarea>'
+        + '<div style="margin-top:8px;"><button type="button" class="btn secondary sm" data-evs-kw>Save keywords</button></div></div>'
+      + '<div class="card card-pad" style="margin-top:14px;" data-evs-paste><b>Paste the Saturday list</b>'
+        + '<p class="field-note" style="margin:4px 0 8px;">One event per row, with a header row: <code style="word-break:break-all;">title,date,time,city,venue,link,organizer,price,source</code>. Date as 2026-10-24, time as 19:00 (Bangkok time), source as meetup, luma, eventbrite or zipevent. Copy it from a spreadsheet or from the weekly check.</p>'
+        + '<textarea id="evsPaste" rows="5" aria-label="Events to add, as CSV"></textarea>'
+        + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;"><button type="button" class="btn secondary sm" data-evs-import>Add to review</button><span class="field-note" id="evsPasteMsg" role="status"></span></div></div>';
+  }
+  function evsAddSource(){
+    var g = function(x){ var el = document.getElementById(x); return el ? el.value.trim() : ""; }, err = document.getElementById("evsErr");
+    var kind = g("evsKind"), label = g("evsLabel"), v = g("evsUrl"), s = { id:"src-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:kind, label:label, city:g("evsCity"), allTech:!!(document.getElementById("evsAllTech") || {}).checked, active:true };
+    var bad = "";
+    if (kind === "eventbrite"){ var m = /(\d{6,20})\/?$/.exec(v); if (!m) bad = "Add the organizer's id: the number at the end of their Eventbrite organizer page address."; else s.orgId = m[1]; }
+    else { v = v.replace(/^webcal:\/\//i, "https://"); if (v && !/^https?:\/\//i.test(v)) v = "https://" + v; if (!/^https:\/\/[^\s"<>]+\.[^\s"<>]+$/i.test(v)) bad = kind === "ical" ? "Add the feed's iCal link (https://...)." : "Add the page address (https://...)."; else s.url = v; }
+    if (!label) s.label = kind === "eventbrite" ? "Eventbrite organizer " + (s.orgId || "") : (s.url || "").replace(/^https:\/\/(www\.)?/, "").slice(0, 60);
+    if (bad){ err.textContent = bad; err.hidden = false; return; }
+    var r = evsRec(); r.sources = (r.sources || []).concat([s]); evsSave(r); renderOperatorCommunity(true); toast("Source added");
+  }
+  // rows from the Saturday paste (or a CSV export of the weekly check) go in as pending, deduped by link
+  function evsImport(text){
+    var rows = idbCsvParse(String(text || "").trim()), out = { added:0, skipped:0, dup:0 };
+    if (rows.length < 2) return out;
+    var head = rows[0].map(function(h){ return String(h).trim().toLowerCase(); }), col = function(r, k){ var i = head.indexOf(k); return i < 0 ? "" : String(r[i] || "").trim(); };
+    rows.slice(1).forEach(function(r){
+      var title = col(r, "title") || col(r, "name"), link = col(r, "link") || col(r, "url"), date = col(r, "date"), time = col(r, "time") || "19:00";
+      var start = col(r, "start") ? (isNaN(new Date(col(r, "start"))) ? null : new Date(col(r, "start")).toISOString()) : bkkParse(date + "T" + (/^\d:\d\d$/.test(time) ? "0" + time : time));
+      if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
+      if (!title || !start || new Date(start) < new Date() || !/^https:\/\/[^\s"<>]+\.[^\s"<>]+$/i.test(link)){ out.skipped++; return; }
+      var src = col(r, "source").toLowerCase(); if (EVS_SOURCE_TAGS.indexOf(src) < 0) src = /meetup\.com/.test(link) ? "meetup" : /lu\.ma|luma\.com/.test(link) ? "luma" : /eventbrite\./.test(link) ? "eventbrite" : /zipevent/.test(link) ? "zipevent" : "manual";
+      var id = "ce-ext-" + evsHash(src + "|" + link + "|" + start.slice(0, 10));
+      if (ceById(id)){ out.dup++; return; }
+      var city = col(r, "city"); if (CE_CITIES.indexOf(city) < 0) city = /online|zoom/i.test(city + " " + col(r, "venue")) ? "Online" : "Other";
+      var txt = (title + " " + col(r, "desc")).toLowerCase(), cat = /hackathon/.test(txt) ? "hackathon" : /pitch|demo day/.test(txt) ? "pitch" : /open call|applications open/.test(txt) ? "opencall" : "community";
+      communityEvents.push({ id:id, status:"pending", source:src, extUid:link, category:cat, orgName:col(r, "organizer").slice(0, 120), title:title.slice(0, 160), start:start,
+        durationMin:Math.min(10080, Math.max(15, Number(col(r, "durationmin") || col(r, "duration")) || 120)), city:city, venue:col(r, "venue").slice(0, 160), price:col(r, "price").slice(0, 60),
+        link:link, desc:col(r, "desc").slice(0, 800), createdAt:nowStamp() });
+      out.added++;
+    });
+    if (out.added){ state.coV = (state.coV || 0) + 1; saveCommunity(); }
+    return out;
+  }
+  function evsRunNow(){
+    var msg = document.getElementById("evsRunMsg"), btn = document.querySelector("[data-evs-run]");
+    var say = function(t){ if (msg) msg.textContent = t; };
+    if (!supabase || !supabase.functions || !state.account || !CLOUD.loaded){ say("Checking feeds needs the portal connected to Supabase with the events-sync function deployed. Until then, paste the Saturday list below."); return; }
+    if (btn) btn.disabled = true; say("Checking the feeds...");
+    supabase.functions.invoke("events-sync", { body:{} }).then(function(res){
+      if (btn) btn.disabled = false;
+      var d = res && res.data; if (typeof d === "string"){ try { d = JSON.parse(d); } catch(e){ d = null; } }
+      if (res.error || !d || d.error){ say("The check didn't run: " + ((d && d.error) || "the events-sync function isn't reachable. Is it deployed?")); return; }
+      say("Found " + (d.seen || 0) + " tech events; " + (d.added || 0) + " new ones are waiting for review.");
+      if (typeof cloudRefresh === "function") cloudRefresh();
+    }).catch(function(){ if (btn) btn.disabled = false; say("The check didn't run: the events-sync function isn't reachable."); });
   }
 
   // ----- public Thailand event calendar (?events=thailand, optional &org=id) -----
@@ -19770,8 +19884,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-ce-save]"))){ ceSave(b.getAttribute("data-ce-save")); return; }
     if ((b = t.closest("[data-ce-approve]"))){ var ea = ceById(b.getAttribute("data-ce-approve")); if (ea){ ceApprove(ea); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); toast("Listed on the Thailand calendar"); } return; }
     if ((b = t.closest("[data-ce-decline]"))){ var ed = ceById(b.getAttribute("data-ce-decline")); if (ed){ ed.status = "declined"; delete ed.submitter; ed.updatedAt = nowStamp(); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
-    if ((b = t.closest("[data-ce-delete]"))){ var ex = ceById(b.getAttribute("data-ce-delete")); if (ex && confirm("Remove \"" + ex.title + "\" from the calendar?")){ communityEvents.splice(communityEvents.indexOf(ex), 1); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
+    if ((b = t.closest("[data-ce-delete]"))){ var ex = ceById(b.getAttribute("data-ce-delete")); if (ex && confirm("Remove \"" + ex.title + "\" from the calendar?")){ if (ex.source){ ex.status = "declined"; ex.deletedAt = nowStamp(); ex.updatedAt = nowStamp(); } else communityEvents.splice(communityEvents.indexOf(ex), 1); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
     if ((b = t.closest("[data-ce-connect]"))){ var ec = ceById(b.getAttribute("data-ce-connect")); if (ec) ceMakeConnectPage(ec); return; }
+    if (t.closest("[data-evs-run]")){ evsRunNow(); return; }
+    if (t.closest("[data-evs-add]")){ evsAddSource(); return; }
+    if ((b = t.closest("[data-evs-toggle]"))){ var rt = evsRec(), st = rt.sources.filter(function(x){ return x.id === b.getAttribute("data-evs-toggle"); })[0]; if (st){ st.active = st.active === false; evsSave(rt); renderOperatorCommunity(true); } return; }
+    if ((b = t.closest("[data-evs-del]"))){ var rd = evsRec(), sd = rd.sources.filter(function(x){ return x.id === b.getAttribute("data-evs-del"); })[0]; if (sd && confirm("Remove \"" + (sd.label || "this source") + "\"?")){ rd.sources = rd.sources.filter(function(x){ return x !== sd; }); evsSave(rd); renderOperatorCommunity(true); } return; }
+    if (t.closest("[data-evs-kw]")){ var rk = evsRec(), kv = (document.getElementById("evsKeywords") || {}).value || ""; rk.keywords = kv.split(/[,\n]/).map(function(x){ return x.trim().slice(0, 60); }).filter(Boolean).slice(0, 200); evsSave(rk); renderOperatorCommunity(true); toast("Keywords saved"); return; }
+    if (t.closest("[data-evs-import]")){ var pa = document.getElementById("evsPaste"), res = evsImport(pa ? pa.value : ""), pm;
+      if (res.added) renderOperatorCommunity(true);
+      pm = document.getElementById("evsPasteMsg"); if (pm) pm.textContent = res.added || res.dup || res.skipped ? res.added + " added to Waiting for review" + (res.dup ? ", " + res.dup + " already there" : "") + (res.skipped ? ", " + res.skipped + " skipped (past date, missing name or an https link)" : "") : "Nothing to add: paste the header row and at least one event.";
+      if (!res.added && pa){ pa.focus(); } return; }
   });
 
   // ===== INVESTMENT ROUND (vendors and partners; private to the company and PartnerWAV unless they share it) =====

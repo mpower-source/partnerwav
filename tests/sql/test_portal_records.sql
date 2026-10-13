@@ -670,6 +670,37 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authent
 select t('CloudWAV sees it for review', (select count(*) from portal_records where collection='communityEvents' and data->>'status' = 'pending') = 1);
 reset role;
 
+-- ===== Events brought in from Luma / Meetup / Eventbrite feeds (events-sync function or the weekly paste)
+create or replace function pg_temp.ev(uid text, title text, days int, link text default 'https://lu.ma/x1') returns jsonb language sql as $$
+  select jsonb_build_object('source','luma','uid',uid,'title',title,'start',to_char(now() + make_interval(days => days),'YYYY-MM-DD"T"HH24:MI:SS"Z"'),'link',link,'city','Bangkok','orgName','AI Bangkok') $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- a vendor
+select t('a member cannot import events', fails($$select public.import_community_events(jsonb_build_array(pg_temp.ev('u1','AI Night',5)))$$));
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('the public cannot import events', fails($$select public.import_community_events('[]')$$));
+reset role;
+select pg_temp.as_user(''); select set_config('request.jwt.claims', '{"role":"service_role"}', false); set role authenticated;
+select t('the sync function imports events, skipping bad rows', (select public.import_community_events(jsonb_build_array(
+  pg_temp.ev('u1','AI Night',5), pg_temp.ev('u2','Old Meetup',-3), pg_temp.ev('u3','Bad link',5,'javascript:alert(1)'), pg_temp.ev('u4','',5), '"x"'::jsonb),
+  '{"sources":[{"id":"src-1","found":5}]}')) = '{"added":1,"skipped":4,"seen":5}'::jsonb);
+select t('...the same event is only added once', (select public.import_community_events(jsonb_build_array(pg_temp.ev('u1','AI Night again',5))) ->> 'added') = '0');
+reset role; select set_config('request.jwt.claims', '', false);
+select t('...it waits unlisted for review, marked with where it came from', (select data->>'status' = 'pending' and not is_public and readers = '{}' and data->>'source' = 'luma'
+  and data->>'extUid' = 'u1' and id like 'ce-ext-%' from portal_records where collection='communityEvents' and data->>'title' = 'AI Night'));
+select t('...and the run is logged for CloudWAV only', (select (data->>'added')::int = 1 and readers = '{}' and not is_public from portal_records where collection='operatorSettings' and id='eventSourcesRun'));
+select t('too many rows are refused', fails($$select public.import_community_events((select jsonb_agg(pg_temp.ev('m' || g, 'E', 5)) from generate_series(1, 501) g))$$));
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('CloudWAV can import a pasted list too', (select public.import_community_events(jsonb_build_array(pg_temp.ev('u9','Founder Drinks',8))) ->> 'added') = '1');
+update portal_records set data = data || '{"status":"declined","deletedAt":"2026-10-13"}' where collection='communityEvents' and data->>'extUid' = 'u9';
+select t('...one CloudWAV declined is not brought back', (select public.import_community_events(jsonb_build_array(pg_temp.ev('u9','Founder Drinks',8))) ->> 'added') = '0'
+  and (select data->>'status' from portal_records where collection='communityEvents' and data->>'extUid' = 'u9') = 'declined');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('a member cannot write the run log directly', fails($$insert into portal_records(collection,id,data,readers,writers) values ('operatorSettings','eventSourcesRun','{"id":"eventSourcesRun"}','{}','{}')$$));
+reset role;
+delete from portal_records where collection='communityEvents' and id like 'ce-ext-%';
+delete from portal_records where collection='operatorSettings' and id='eventSourcesRun';
+
 -- ===== Investors: their own workspace; companies opt in to showing their round; intros go through CloudWAV
 insert into auth.users(id, email) values ('00000000-0000-0000-0000-000000000021', 'vc@fund.test'), ('00000000-0000-0000-0000-000000000022', 'angel@other.test');
 insert into public.portal_users (id,email,role,entity_id,display_name) values

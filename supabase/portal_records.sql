@@ -208,6 +208,10 @@ begin
   -- an organizer sends an event in for the public Thailand calendar through submit_community_event() below
   if new.collection = 'communityEvents' and tg_op = 'INSERT'
      and current_setting('portal.community_event', true) = 'on' then return new; end if;
+  -- events found on Luma, Meetup and Eventbrite feeds come in for review through import_community_events() below
+  if current_setting('portal.event_import', true) = 'on'
+     and ((new.collection = 'communityEvents' and tg_op = 'INSERT')
+       or (new.collection = 'operatorSettings' and new.id = 'eventSourcesRun')) then return new; end if;
   -- a vendor's fit assessment sent from the public form arrives through submit_vendor_assessment() below
   if new.collection = 'vendorAssessments'
      and current_setting('portal.vendor_assessment', true) = 'on' then return new; end if;
@@ -611,6 +615,75 @@ begin
 end $$;
 revoke all on function public.submit_community_event(jsonb) from public;
 grant execute on function public.submit_community_event(jsonb) to anon, authenticated;
+
+-- Events found on public feeds (Luma and Meetup iCal links, Eventbrite organizers) or pasted in from the
+-- weekly Saturday check. Called by the events-sync Edge Function (service role) or by CloudWAV. Each event
+-- waits for review, unlisted. The id comes from the feed's own event id, so an event is only ever added once,
+-- and one CloudWAV removed stays removed (the portal keeps it as declined).
+create or replace function public.import_community_events(p_rows jsonb, p_run jsonb default null)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  r jsonb; added int := 0; skipped int := 0; seen int := 0; n int;
+  st timestamptz; dur int; link text; city text; uid text; src text; ttl text; cat text; new_id text;
+  claims jsonb;
+begin
+  begin claims := nullif(current_setting('request.jwt.claims', true), '')::jsonb; exception when others then claims := null; end;
+  if not public.is_portal_operator() and coalesce(claims ->> 'role', '') <> 'service_role' then
+    raise exception 'Only CloudWAV can bring events in';
+  end if;
+  if p_rows is null or jsonb_typeof(p_rows) <> 'array' or jsonb_array_length(p_rows) > 500 then
+    raise exception 'Send a list of up to 500 events';
+  end if;
+  perform set_config('portal.event_import', 'on', true);
+  for r in select value from jsonb_array_elements(p_rows) loop
+    seen := seen + 1;
+    if jsonb_typeof(r) <> 'object' or length(r::text) > 6000 then skipped := skipped + 1; continue; end if;
+    src := lower(coalesce(r ->> 'source', ''));
+    if src not in ('luma', 'meetup', 'eventbrite', 'zipevent', 'ical', 'manual') then src := 'other'; end if;
+    ttl := left(trim(coalesce(r ->> 'title', '')), 160);
+    link := trim(coalesce(r ->> 'link', ''));
+    uid := left(trim(coalesce(nullif(r ->> 'uid', ''), link)), 400);
+    begin st := (r ->> 'start')::timestamptz; exception when others then st := null; end;
+    if ttl = '' or uid = '' or st is null or st < now() or st > now() + interval '2 years'
+       or link !~ '^https://[^\s"<>]+\.[^\s"<>]+$' or length(link) > 400 then
+      skipped := skipped + 1; continue;
+    end if;
+    dur := case when coalesce(r ->> 'durationMin', '') ~ '^[0-9]{1,5}$' then (r ->> 'durationMin')::int else 120 end;
+    if dur < 15 or dur > 10080 then dur := 120; end if;
+    city := coalesce(r ->> 'city', '');
+    if city not in ('Bangkok', 'Chiang Mai', 'Phuket', 'Pattaya', 'Khon Kaen', 'Hua Hin', 'Online', 'Other') then city := 'Other'; end if;
+    cat := case when r ->> 'category' in ('pitch', 'hackathon', 'opencall') then r ->> 'category' else 'community' end;
+    new_id := 'ce-ext-' || left(md5(src || '|' || uid), 20);
+    insert into public.portal_records (collection, id, data, readers, writers, is_public)
+    values ('communityEvents', new_id, jsonb_build_object(
+      'id', new_id, 'status', 'pending', 'source', src, 'extUid', uid,
+      'orgName', left(trim(coalesce(r ->> 'orgName', '')), 120), 'title', ttl, 'category', cat,
+      'start', to_char(st at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS".000Z"'), 'durationMin', dur, 'city', city,
+      'venue', left(trim(coalesce(r ->> 'venue', '')), 160), 'price', left(trim(coalesce(r ->> 'price', '')), 60),
+      'link', link, 'desc', left(trim(coalesce(r ->> 'desc', '')), 800),
+      'createdAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI')),
+      '{}', '{}', false)
+    on conflict (collection, id) do nothing;
+    get diagnostics n = row_count;
+    if n > 0 then added := added + 1; end if;
+  end loop;
+  if p_run is not null and jsonb_typeof(p_run) = 'object' and length(p_run::text) < 20000 then
+    insert into public.portal_records (collection, id, data, readers, writers, is_public)
+    values ('operatorSettings', 'eventSourcesRun', jsonb_build_object('id', 'eventSourcesRun',
+      'at', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI'), 'added', added, 'skipped', skipped, 'seen', seen,
+      'sources', case when jsonb_typeof(p_run -> 'sources') = 'array' then p_run -> 'sources' else '[]'::jsonb end), '{}', '{}', false)
+    on conflict (collection, id) do update set data = excluded.data;
+  end if;
+  perform set_config('portal.event_import', 'off', true);
+  return jsonb_build_object('added', added, 'skipped', skipped, 'seen', seen);
+end $$;
+revoke all on function public.import_community_events(jsonb, jsonb) from public;
+grant execute on function public.import_community_events(jsonb, jsonb) to authenticated;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant execute on function public.import_community_events(jsonb, jsonb) to service_role;
+  end if;
+end $$;
 
 create or replace function public.submit_vendor_assessment(p_data jsonb)
 returns text language plpgsql security definer set search_path = public as $$
