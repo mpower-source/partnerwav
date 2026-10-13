@@ -692,6 +692,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .idb-flags{ display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; } .idb-flags .badge{ font-size:.66rem; }
   .idb-cols{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; align-items:start; }
   .idb-cols.one{ grid-template-columns:minmax(0,1fr); max-width:720px; }
+  .idb-cols.one.side{ grid-template-columns:minmax(260px,400px) minmax(0,1fr); max-width:none; }
+  .idb-side{ min-width:0; }
+  .idb-sidepanel{ position:relative; border:1px solid var(--accent); border-radius:12px; background:var(--surface-2); }
+  .idb-sidepanel::before{ content:""; position:absolute; left:-8px; top:30px; width:14px; height:14px; background:var(--surface-2); border-left:1px solid var(--accent); border-bottom:1px solid var(--accent); transform:rotate(45deg); }
+  .idb-sidepanel .idb-detail{ padding:14px 16px; }
+  .idb-side-empty{ display:flex; flex-direction:column; gap:4px; padding:18px; border:1px dashed var(--line); border-radius:12px; color:var(--ink-faint); }
   .idb-col{ display:flex; flex-direction:column; gap:6px; min-width:0; }
   .idb-col-head{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:2px 4px 6px; border-bottom:2px solid var(--accent-line, var(--line)); margin-bottom:4px; }
   .idb-col-head h3{ margin:0; font-size:.95rem; }
@@ -19028,6 +19034,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // right under it, and only one is open at a time across all columns
   function idbColumnsHtml(list, seg){
     var segs = IDB_SEGMENTS.filter(function(s){ return !seg || s[0] === seg; });
+    // one kind chosen (wide screens): the tiles on the left, the chosen investor's details beside its tile
+    if (segs.length === 1 && !(window.matchMedia && window.matchMedia("(max-width:760px)").matches)){
+      var its = list.filter(function(x){ return idbSegment(x) === segs[0][0]; }), open = its.filter(function(x){ return x.id === state.idbOpen; })[0];
+      return '<div class="idb-cols one side"><section class="idb-col" data-idb-col="'+segs[0][0]+'" aria-label="'+attr(segs[0][1])+'"><div class="idb-col-head"><h3>'+esc(segs[0][1])+'</h3><span>'+its.length+'</span></div>'
+        + (its.length ? its.map(idbRowHtml).join("") : '<div class="idb-col-empty">None match these filters.</div>') + '</section>'
+        + '<aside class="idb-side" data-idb-side aria-label="Investor details">'+(open ? '<div class="idb-sidepanel" id="idbPanel">'+idbDetailHtml(open)+'</div>'
+          : '<div class="idb-side-empty"><b>Choose an investor</b><span class="field-note">Their details show here, next to their tile.</span></div>')+'</aside></div>';
+    }
     return '<div class="idb-cols'+(segs.length === 1 ? ' one' : '')+'">'+segs.map(function(s){
       var items = list.filter(function(x){ return idbSegment(x) === s[0]; });
       return '<section class="idb-col" data-idb-col="'+s[0]+'" aria-label="'+attr(s[1])+'"><div class="idb-col-head"><h3>'+esc(s[1])+'</h3><span>'+items.length+'</span></div>'
@@ -19246,7 +19260,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + (list.length ? idbColumnsHtml(list, seg)
         : '<div class="empty">'+(investorDb.length ? 'Nothing matches. Try fewer filters.' : 'The database is empty. Import a CSV or add the first record.')+'</div>');
     box.innerHTML = html;
+    idbAlignSide();
   }
+  // line the side panel up with the tile that was clicked
+  function idbAlignSide(){
+    var side = document.querySelector("[data-idb-side]"), pn = side && side.querySelector(".idb-sidepanel, .idb-side-empty"); if (!pn) return;
+    var rw = state.idbOpen && document.querySelector('.idb-cols.side .idb-row[data-idb-row="' + state.idbOpen + '"]') || document.querySelector(".idb-cols.side .idb-row");
+    pn.style.marginTop = rw ? Math.max(0, Math.round(rw.getBoundingClientRect().top - side.getBoundingClientRect().top)) + "px" : "0";
+  }
+  var idbWideWas = null;
+  window.addEventListener("resize", function(){ var w = !(window.matchMedia && window.matchMedia("(max-width:760px)").matches);
+    if (idbWideWas !== null && w !== idbWideWas && state.screen === "operator-investor-db" && typeof renderInvestorDb === "function") renderInvestorDb(true); else idbAlignSide(); idbWideWas = w; });
   function idbSaveForm(id){
     var g = function(k){ var el = document.getElementById(k); return el ? el.value.trim() : ""; }, err = document.getElementById("idbErr"), name = g("idbName");
     if (!name){ err.textContent = "Add a name."; err.hidden = false; return; }

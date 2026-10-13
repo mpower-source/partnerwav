@@ -145,6 +145,18 @@ with sync_playwright() as p:
     ok(pg.locator("[data-idb-detail]").count() == 0, "Clicking the open tile again closes it")
     pg.click('[data-idb-seg="programs"]'); pg.wait_for_timeout(200)
     ok(pg.evaluate("[...document.querySelectorAll('[data-idb-col]')].map(c => c.dataset.idbCol)") == ["programs"], "A segment tab shows just that column")
+    ok(pg.locator("[data-idb-side] .idb-side-empty").count() == 1, "...with a details area beside it")
+    rows = pg.evaluate("[...document.querySelectorAll('.idb-cols.side .idb-row')].map(r => r.dataset.idbRow)")
+    pick = rows[-1]
+    pg.click(f'[data-idb-row="{pick}"]'); pg.wait_for_timeout(250)
+    geo = pg.evaluate(f"""(() => {{ const r = document.querySelector('[data-idb-row="{pick}"]').getBoundingClientRect(), p = document.querySelector('[data-idb-side] [data-idb-detail="{pick}"]');
+      if (!p) return null; const q = p.closest('.idb-sidepanel').getBoundingClientRect(); return [Math.round(q.left - r.right), Math.round(q.top - r.top)]; }})()""")
+    ok(geo is not None and 0 <= geo[0] <= 40 and abs(geo[1]) <= 2, "In one segment, the details open to the right of the clicked tile, level with it: " + str(geo))
+    ok(pg.locator(".idb-inline").count() == 0, "...not under it")
+    pg.click(f'[data-idb-row="{rows[0]}"]'); pg.wait_for_timeout(250)
+    ok(pg.locator("[data-idb-detail]").count() == 1 and pg.locator(f'[data-idb-side] [data-idb-detail="{rows[0]}"]').count() == 1, "Choosing another tile moves the details next to it")
+    pg.click(f'[data-idb-row="{rows[0]}"]'); pg.wait_for_timeout(200)
+    ok(pg.locator("[data-idb-detail]").count() == 0, "...and clicking it again closes them")
     pg.click('[data-idb-seg=""]'); pg.wait_for_timeout(200)
     pg.set_viewport_size({"width": 390, "height": 844}); pg.wait_for_timeout(200)
     pg.click('[data-idb-row="idb-depa"]'); pg.wait_for_timeout(200)
