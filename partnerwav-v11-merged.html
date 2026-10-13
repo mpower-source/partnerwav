@@ -690,39 +690,34 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .idb-contacts{ display:flex; flex-direction:column; gap:8px; }
   .idb-contact{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px; }
   .idb-flags{ display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; } .idb-flags .badge{ font-size:.66rem; }
-  .idb-split{ display:grid; grid-template-columns:minmax(0,1fr) minmax(340px,440px); gap:16px; align-items:start; }
-  .idb-list{ display:flex; flex-direction:column; gap:6px; min-width:0; }
-  .idb-row{ display:grid; grid-template-columns:minmax(0,1fr) auto 104px; align-items:center; gap:12px; height:64px; padding:0 14px; text-align:left; font:inherit; color:inherit; cursor:pointer;
+  .idb-cols{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; align-items:start; }
+  .idb-cols.one{ grid-template-columns:minmax(0,1fr); max-width:720px; }
+  .idb-col{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .idb-col-head{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:2px 4px 6px; border-bottom:2px solid var(--accent-line, var(--line)); margin-bottom:4px; }
+  .idb-col-head h3{ margin:0; font-size:.95rem; }
+  .idb-col-head span{ font-size:.75rem; color:var(--ink-faint); white-space:nowrap; }
+  .idb-col-empty{ padding:14px 6px; color:var(--ink-faint); font-size:.85rem; }
+  .idb-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:20px 18px 18px; align-items:center; column-gap:10px; row-gap:2px; height:78px; padding:8px 12px; text-align:left; font:inherit; color:inherit; cursor:pointer;
     background:var(--surface); border:1px solid var(--line); border-radius:12px; transition:border-color .12s, box-shadow .12s; }
   .idb-row:hover{ border-color:var(--accent-line, var(--accent)); }
-  .idb-row.sel{ border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft, rgba(124,58,237,.15)); }
-  .idb-row-main{ display:flex; flex-direction:column; min-width:0; }
-  .idb-row-main .idb-name, .idb-row-sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .idb-row-sub{ font-size:.8rem; color:var(--ink-faint); }
-  .idb-row-tags{ display:flex; gap:4px; flex-wrap:nowrap; overflow:hidden; max-width:320px; justify-content:flex-end; }
-  .idb-row-tags .badge{ font-size:.64rem; white-space:nowrap; }
-  .idb-row .idb-ticket.none{ color:var(--ink-faint); font-weight:500; font-size:.75rem; }
-  .idb-row .idb-ticket{ text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:.85rem; }
-  .idb-panel{ position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; background:var(--surface); border:1px solid var(--line); border-radius:14px; }
-  .idb-panel .idb-detail{ border-radius:14px; padding:16px; }
-  .idb-panel-empty{ display:flex; flex-direction:column; gap:4px; padding:28px 18px; text-align:center; color:var(--ink-faint); }
+  .idb-row.sel{ border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft, rgba(124,58,237,.15)); border-bottom-left-radius:4px; border-bottom-right-radius:4px; }
+  .idb-row-main{ display:contents; }
+  .idb-row-main .idb-name{ grid-column:1; grid-row:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:.92rem; }
+  .idb-row-sub{ grid-column:1 / -1; grid-row:2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:.76rem; color:var(--ink-faint); }
+  .idb-row-tags{ grid-column:1 / -1; grid-row:3; display:flex; gap:4px; flex-wrap:nowrap; overflow:hidden; }
+  .idb-row-tags .badge{ font-size:.6rem; white-space:nowrap; padding-top:1px; padding-bottom:1px; }
+  .idb-row .idb-ticket{ grid-column:2; grid-row:1; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:.78rem; max-width:120px; }
+  .idb-row .idb-ticket.none{ color:var(--ink-faint); font-weight:500; font-size:.7rem; }
+  .idb-inline{ margin:-2px 0 8px; border:1px solid var(--accent); border-top:0; border-radius:0 0 12px 12px; background:var(--surface-2); }
+  .idb-inline .idb-detail{ padding:14px 12px; border-radius:0 0 12px 12px; }
   .idb-dp-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-  .idb-dp-name{ margin:0; font-size:1.1rem; }
-  .idb-dp-close{ display:none; }
+  .idb-dp-name{ margin:0; font-size:1.05rem; }
   .idb-dp-key{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .idb-dp-key span{ display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-size:.85rem; }
   .idb-dp-key b{ font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); }
-  @media (max-width:1100px){ .idb-row-tags{ max-width:200px; } }
-  @media (max-width:900px){
-    .idb-split{ grid-template-columns:1fr; }
-    .idb-row{ grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto 20px; height:84px; padding:8px 12px; row-gap:4px; column-gap:10px; }
-    .idb-row .idb-ticket{ font-size:.78rem; max-width:120px; }
-    .idb-row-tags{ grid-column:1 / -1; grid-row:2; max-width:none; justify-content:flex-start; height:20px; }
-    .idb-panel{ display:none; }
-    .idb-split.has-sel .idb-panel{ display:block; position:fixed; inset:0; z-index:400; max-height:none; border-radius:0; border:0; overflow:auto; }
-    .idb-split.has-sel .idb-panel .idb-detail{ border-radius:0; min-height:100%; }
-    .idb-dp-close{ display:inline-flex; }
-  }
+  .idb-inline .idb-contact{ flex-direction:column; }
+  @media (max-width:1100px){ .idb-cols{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:760px){ .idb-cols{ grid-template-columns:minmax(0,1fr); } }
   .perk-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; align-items:stretch; margin-top:12px; }
   .perk-card{ display:flex; flex-direction:column; gap:10px; padding:16px; height:236px; overflow:hidden; }
   .perk-hidden{ opacity:.6; }
@@ -19022,11 +19017,21 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<span class="idb-row-tags">'+tags+'</span>'
       + '<span class="idb-ticket'+(idbTicket(x) ? '' : ' none')+'">'+esc(idbTicket(x) || "Cheque n/a")+'</span></button>';
   }
+  // Three columns (investment firms / accelerators, incubators & government / angels & individuals); a tile's details open
+  // right under it, and only one is open at a time across all columns
+  function idbColumnsHtml(list, seg){
+    var segs = IDB_SEGMENTS.filter(function(s){ return !seg || s[0] === seg; });
+    return '<div class="idb-cols'+(segs.length === 1 ? ' one' : '')+'">'+segs.map(function(s){
+      var items = list.filter(function(x){ return idbSegment(x) === s[0]; });
+      return '<section class="idb-col" data-idb-col="'+s[0]+'" aria-label="'+attr(s[1])+'"><div class="idb-col-head"><h3>'+esc(s[1])+'</h3><span>'+items.length+'</span></div>'
+        + (items.length ? items.map(function(x){ return idbRowHtml(x) + (state.idbOpen === x.id ? '<div class="idb-inline" id="idbPanel">'+idbDetailHtml(x)+'</div>' : ''); }).join("") : '<div class="idb-col-empty">None match these filters.</div>')
+        + '</section>'; }).join("")+'</div>';
+  }
   function idbDetailHtml(x){
     if (!x) return '<div class="idb-panel-empty"><b>Choose an investor</b><span class="field-note">Their details, contacts and sources show here.</span></div>';
     var site = safeHref(x.website || ""), li = safeHref(x.linkedin || ""), org = x.orgId ? idbById(x.orgId) : null;
     return '<div class="idb-detail" data-idb-detail="'+attr(x.id)+'">'
-      + '<div class="idb-dp-head"><div style="min-width:0;"><h3 class="idb-dp-name">'+esc(x.name)+'</h3><div class="field-note">'+esc([x.typeLabel || x.type, x.city].filter(Boolean).join(" · "))+(org ? ' · <a href="#" data-idb-open="'+attr(org.id)+'">'+esc(org.name)+'</a>' : '')+'</div></div>'
+      + '<div class="idb-dp-head"><div style="min-width:0;" class="field-note">'+(org ? 'Part of <a href="#" data-idb-open="'+attr(org.id)+'">'+esc(org.name)+'</a>' : esc(x.typeLabel || x.type))+'</div>'
         + '<button type="button" class="btn ghost xs idb-dp-close" data-idb-close aria-label="Close details">Close</button></div>'
       + '<div class="idb-dp-key"><span><b>Cheque</b>'+esc(idbTicket(x) || "Not known")+'</span><span><b>Stages</b>'+esc((x.stages || []).join(", ") || "Not known")+'</span></div>'
       + ((x.focus || []).length ? '<div class="meet-chips idb-chips">'+x.focus.slice(0, 8).map(function(f){ return '<span class="badge neutral">'+esc(f)+'</span>'; }).join("")+'</div>' : '')
@@ -19231,8 +19236,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div id="idbImportOut" class="field-note"></div><div style="display:flex;gap:8px;"><button type="button" class="btn secondary sm" data-idb-preview>Check the file</button><button type="button" class="btn primary sm" data-idb-commit hidden>Import</button><button type="button" class="btn ghost sm" data-idb-import-cancel>Cancel</button></div></div>';
     if (state.idbEdit) html += idbFormHtml(state.idbEdit === "new" ? null : idbById(state.idbEdit));
     html += '<div class="field-note" style="margin:4px 0 10px;" data-idb-shown>Showing '+list.length+' of '+investorDb.length+'</div>'
-      + (list.length ? '<div class="idb-split'+(state.idbOpen && idbById(state.idbOpen) ? ' has-sel' : '')+'"><div class="idb-list" role="list" aria-label="Investors">'+list.map(idbRowHtml).join("")+'</div>'
-          + '<aside class="idb-panel" id="idbPanel" aria-label="Investor details">'+idbDetailHtml(state.idbOpen ? idbById(state.idbOpen) : null)+'</aside></div>'
+      + (list.length ? idbColumnsHtml(list, seg)
         : '<div class="empty">'+(investorDb.length ? 'Nothing matches. Try fewer filters.' : 'The database is empty. Import a CSV or add the first record.')+'</div>');
     box.innerHTML = html;
   }
@@ -19276,7 +19280,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-idb-open]"))){ ev.preventDefault(); var oid = b.getAttribute("data-idb-open"); state.idbOpen = state.idbOpen === oid && b.classList.contains("idb-row") ? null : oid;
       if (state.idbOpen && !investorDb.filter(idbMatches).some(function(x){ return x.id === oid; })){ state.idbQ = ""; state.idbSeg = ""; state.idbStage = ""; state.idbFocus = ""; state.idbAmount = ""; state.idbCheck = ""; state.idbLoc = ""; state.idbRoute = ""; }
       renderInvestorDb(true); var row = document.querySelector('[data-idb-row="' + oid + '"]'); if (row && row.scrollIntoView && b.tagName === "A") row.scrollIntoView({ block:"nearest" });
-      var pn = document.getElementById("idbPanel"); if (pn) pn.scrollTop = 0; return; }
+      var pn = document.getElementById("idbPanel"), rw = document.querySelector('.idb-row[data-idb-row="' + oid + '"]');
+      if (pn && rw && rw.getBoundingClientRect().top < 70 && rw.scrollIntoView) rw.scrollIntoView({ block:"start" }); return; }
     if (t.closest("[data-idb-new]")){ state.idbEdit = "new"; state.idbImport = false; renderInvestorDb(true); var nm = document.getElementById("idbName"); if (nm) nm.focus(); return; }
     if ((b = t.closest("[data-idb-edit]"))){ state.idbEdit = b.getAttribute("data-idb-edit"); state.idbImport = false; renderInvestorDb(true); var fm = document.getElementById("idbForm"); if (fm && fm.scrollIntoView) fm.scrollIntoView({ block:"start" }); return; }
     if (t.closest("[data-idb-cancel]")){ state.idbEdit = null; renderInvestorDb(true); return; }
