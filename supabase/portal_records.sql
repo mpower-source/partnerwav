@@ -141,6 +141,8 @@ insert into public.portal_field_rules (collection, field, allowed) values
   ('projectReferrals', 'payouts',      '[[], null]'),
   ('projectReferrals', 'termsSnapshot','[null]'),
   ('projectReferrals', 'rejectReason', '[null, ""]'),
+  -- a software house's own dev leads: the guard above lets it move them forward; these fields are never set by anyone else
+  ('projectReferrals', 'source',       '["", null]'),
   -- an investor asks for an introduction (or withdraws); only CloudWAV marks it introduced or answers
   ('introRequests',    'status',       '["requested", "withdrawn"]'),
   ('introRequests',    'reply',        '["", null]'),
@@ -194,6 +196,7 @@ declare
   ov jsonb;
   prev public.portal_records%rowtype;
   is_new boolean;
+  house_lead boolean := false;   -- a software house working its own Dev Lead (see below)
   product_price numeric;
   st jsonb;
   fkey text;
@@ -238,6 +241,27 @@ begin
   else
     select * into prev from public.portal_records where collection = new.collection and id = new.id;
     is_new := not found;
+  end if;
+
+  -- A software house works its own Dev Leads: a project referral with source 'mvp' that CloudWAV sent to it from an MVP
+  -- Builder request. It accepts or declines, quotes, marks won or delivered, and logs progress. It can't change the lead's
+  -- client, dates, house or sender, and can only move a lead forward through the stages below.
+  if new.collection = 'projectReferrals' and not is_new and coalesce(prev.data ->> 'source', '') = 'mvp' then
+    select exists (select 1 from public.portal_records h where h.collection = 'softwareHouses' and h.id = prev.data ->> 'houseId'
+      and k in ('partner:' || coalesce(h.data ->> 'partnerId', '-'), 'vendor:' || coalesce(h.data ->> 'programId', '-'))) into house_lead;
+  end if;
+  if house_lead then
+    if exists (select 1 from jsonb_object_keys(prev.data || new.data) f
+        where f not in ('status', 'acceptedAt', 'quoteBy', 'quotedAt', 'quoteValue', 'wonAt', 'contractValue', 'rejectReason', 'deliveredAt', 'progress', 'thread', 'unreadPartner', 'unreadVendor', 'unreadOperator', 'unreadAffiliate')
+          and coalesce(new.data -> f, 'null'::jsonb) is distinct from coalesce(prev.data -> f, 'null'::jsonb)) then
+      raise exception 'A software house can only update the progress of its own dev leads';
+    end if;
+    if new.data ->> 'status' is distinct from prev.data ->> 'status' and not (
+         (prev.data ->> 'status' = 'registered' and new.data ->> 'status' in ('accepted', 'rejected'))
+      or (prev.data ->> 'status' = 'accepted' and new.data ->> 'status' in ('proposal', 'lost'))
+      or (prev.data ->> 'status' = 'proposal' and new.data ->> 'status' in ('won', 'lost'))) then
+      raise exception 'That change to the dev lead isn''t allowed';
+    end if;
   end if;
 
   -- affiliate offers (and their private terms) come only from CloudWAV or the vendor that owns them
@@ -371,7 +395,7 @@ begin
   -- them, the Media & Events partner it is for, and CloudWAV
   if new.collection = 'serviceRequests' then
     if coalesce(new.data ->> 'requesterKey', '') <> k then raise exception 'You can only send requests as yourself'; end if;
-    if coalesce(new.data ->> 'kind', '') not in ('mvp', 'media') then raise exception 'Unknown kind of request'; end if;
+    if coalesce(new.data ->> 'kind', '') not in ('mvp', 'media', 'fractional') then raise exception 'Unknown kind of request'; end if;
     if new.is_public or exists (select 1 from unnest(new.readers) x where x <> k and x <> 'media:' || coalesce(new.data ->> 'mediaId', '')) then
       raise exception 'A request is only seen by you, the partner it is for and PartnerWAV';
     end if;
@@ -414,6 +438,7 @@ begin
   end if;
 
   for r in select field, allowed from public.portal_field_rules where collection = new.collection loop
+    exit when house_lead;
     v := coalesce(new.data -> r.field, 'null'::jsonb);
     if not is_new then
       ov := coalesce(prev.data -> r.field, 'null'::jsonb);
@@ -436,7 +461,7 @@ begin
   if not is_new then
     select allowed into st from public.portal_field_rules where collection = new.collection and field = 'status'
        and collection in ('deals', 'incentives', 'flyers', 'pendingResources', 'shopOrders', 'affiliatePrograms', 'agreements', 'projectReferrals', 'investorReadiness');
-    if found and coalesce(prev.data -> 'status', 'null'::jsonb) <> 'null'::jsonb
+    if found and not house_lead and coalesce(prev.data -> 'status', 'null'::jsonb) <> 'null'::jsonb
        and not (st @> jsonb_build_array(prev.data -> 'status')) and prev.data ->> 'status' <> 'changes'
        and (new.data -> 'status') is not distinct from (prev.data -> 'status') then
       for fkey in select jsonb_object_keys(prev.data || new.data) loop

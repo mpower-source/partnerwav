@@ -57,9 +57,9 @@ with sync_playwright() as p:
     pg.check('[data-va-k="programStage"][value="No partner program yet"]'); pg.check('[data-va-k="partners"][value="0"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(150)
     pg.check('[data-va-k="support"][value="self"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(150)
     wiz = pg.inner_text("#publicAssessContent")
-    ok("MVP Builder" in wiz and "Media & Events promoters" in wiz, "The vendor wizard offers the MVP Builder and Media & Events as add-ons")
-    pg.check('[data-va-k="addons"][value="mvp"]'); pg.wait_for_timeout(250)
-    ok("What would help most from the MVP Builder?" in pg.inner_text("#publicAssessContent"), "Choosing the MVP Builder asks what would help most")
+    ok("Fractional leadership" in wiz and "MVP Builder" not in wiz and "Media & Events promoters" in wiz, "The vendor wizard offers Fractional leadership (in place of the MVP Builder) and Media & Events as add-ons")
+    pg.check('[data-va-k="addons"][value="fractional"]'); pg.wait_for_timeout(250)
+    ok("Which fractional roles would help most?" in pg.inner_text("#publicAssessContent"), "Choosing Fractional leadership asks which roles would help most")
 
     # ----- CloudWAV: requests, partners, sponsorships
     pg.goto(URL + "?demo=1"); pg.wait_for_timeout(600)

@@ -1305,6 +1305,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
           <button class="navlink" data-screen="media-directory"><span class="ic">📣</span>Media &amp; Events</button>
           <button class="navlink" data-screen="mvp-builder"><span class="ic">🧩</span>MVP Builder</button>
+          <button class="navlink" data-screen="fractional" hidden><span class="ic">🧠</span>Fractional Leadership</button>
         </div>
       </div>
       <div class="navsec" data-sec="programs">
@@ -1315,6 +1316,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="vendor-network"><span class="ic">🏢</span>Vendor Network</button>
           <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
           <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
+          <button class="navlink" data-screen="dev-leads" hidden><span class="ic">🛠️</span>Dev Leads</button>
         </div>
       </div>
       <div class="navsec" data-sec="collab">
@@ -1369,6 +1371,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
           <button class="navlink" data-screen="media-directory"><span class="ic">📣</span>Media &amp; Events</button>
           <button class="navlink" data-screen="mvp-builder"><span class="ic">🧩</span>MVP Builder</button>
+          <button class="navlink" data-screen="fractional" hidden><span class="ic">🧠</span>Fractional Leadership</button>
+          <button class="navlink" data-screen="dev-leads" hidden><span class="ic">🛠️</span>Dev Leads</button>
         </div>
       </div>
       <div class="navsec" data-sec="learn">
@@ -1399,6 +1403,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
           <button class="navlink" data-screen="affiliate-projects"><span class="ic">📋</span>Partner Projects</button>
           <button class="navlink" data-screen="referrals"><span class="ic">🧩</span>Software Referrals</button>
+          <button class="navlink" data-screen="mvp-builder"><span class="ic">🧩</span>MVP Builder</button>
+          <button class="navlink" data-screen="fractional" hidden><span class="ic">🧠</span>Fractional Leadership</button>
           <button class="navlink" data-screen="investor-readiness"><span class="ic">💼</span>Investor Readiness</button>
           <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
         </div>
@@ -1451,6 +1457,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
       <button class="navlink" data-screen="media-directory"><span class="ic">📣</span>Media &amp; Events</button>
       <button class="navlink" data-screen="mvp-builder"><span class="ic">🧩</span>MVP Builder</button>
+          <button class="navlink" data-screen="fractional" hidden><span class="ic">🧠</span>Fractional Leadership</button>
       <button class="navlink" data-screen="member-profile"><span class="ic">👤</span>My Profile</button>
     </nav>
 
@@ -2827,6 +2834,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div class="section-head"><h2>MVP Builder</h2><span class="hint">Quick MVPs, fixes, security reviews, extra developers and full apps, from CloudWAV</span></div>
         <div style="height:14px"></div><div id="mvpBuilderContent"></div>
       </section>
+      <section id="scr-fractional" hidden>
+        <div class="section-head"><h2>Fractional Leadership</h2><span class="hint">A part-time CTO, CAIO, CIO or CISO from CloudWAV Consulting, once your product is live</span></div>
+        <div style="height:14px"></div><div id="fractionalContent"></div>
+      </section>
+      <section id="scr-dev-leads" hidden>
+        <div class="section-head"><h2>Dev Leads</h2><span class="hint">Builds PartnerWAV sends your software house: accept, quote and track each one</span></div>
+        <div style="height:14px"></div><div id="devLeadsContent"></div>
+      </section>
       <section id="scr-media-overview" hidden><div id="mediaOverviewContent"></div></section>
       <section id="scr-media-profile" hidden>
         <div class="section-head"><h2>My Profile</h2><span class="hint">What companies and members see in Media &amp; Events</span></div>
@@ -2845,7 +2860,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div style="height:14px"></div><div id="mediaRequestsContent"></div>
       </section>
       <section id="scr-operator-services" hidden>
-        <div class="section-head"><h2>Services &amp; Sponsors</h2><span class="hint">MVP Builder and Media &amp; Events requests, promoters, sponsorships and packages</span></div>
+        <div class="section-head"><h2>Services &amp; Sponsors</h2><span class="hint">MVP Builder, Fractional and Media &amp; Events requests, dev leads, promoters, sponsorships and packages</span></div>
         <div style="height:14px"></div><div id="opServicesContent"></div>
       </section>
       <section id="scr-member-events" hidden>
@@ -4212,6 +4227,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "member-overview":"Overview",
     "media-directory":"Media & Events",
     "mvp-builder":"MVP Builder",
+    "fractional":"Fractional Leadership",
+    "dev-leads":"Dev Leads",
     "media-overview":"Overview",
     "media-profile":"My Profile",
     "media-events":"Events & Sponsoring",
@@ -4852,7 +4869,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       { id:"marketing", name:"Marketing services", price:1000, blurb:"Landing pages, incentive flyers, pitch decks, event and meetup promotion, and WhatsApp / LINE campaigns built for you." },
       { id:"projects", name:"Projects & partner collaboration", price:300, blurb:"Post projects, split scopes of work between partners, and find partners for joint projects, meetups and marketing." },
       { id:"referrals", name:"Software referrals", price:0, blurb:"Custom software requests from your customers are referred to trusted development firms, with a tracked referral fee. No monthly fee -- fee share only." },
-      { id:"mvp", name:"MVP Builder", price:0, blurb:"Help taking your product to the next level: a secure code review, extra developers, new features for your next funding round, or a quick MVP. Priced per package." },
+      { id:"fractional", name:"Fractional leadership", price:0, blurb:"Once your product is live: a part-time CTO, CAIO, CIO or CISO from CloudWAV Consulting, on the time you need. Priced per engagement." },
+      { id:"mvp", name:"MVP Builder", price:0, legacy:true, blurb:"Help taking your product to the next level: a secure code review, extra developers, new features for your next funding round, or a quick MVP. Priced per package." },
       { id:"media", name:"Media & Events promoters", price:0, blurb:"PR, media coverage, creators and event sponsorships through PartnerWAV's checked promoters, with PartnerWAV deals. Priced by each partner." }
     ] };
   var pricingModel = JSON.parse(JSON.stringify(PRICING_DEFAULT));
@@ -4899,8 +4917,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       { k:"addons", label:"Add-on services", type:"addons" },
       { k:"raising", label:"Are you raising investment?", type:"single", when:"investor", options:["Raising now","Planning to raise in the next 12 months","Not raising, just interested"] },
       { k:"raiseAmount", label:"Round and amount, if you know it", type:"text", when:"investor", ph:"e.g. Seed, USD 1.5M" },
-      { k:"mvpNeeds", label:"What would help most from the MVP Builder?", type:"multi", when:"mvp", options:["Secure code review and fixes","Extra developers for our team","New features for our next funding round","A quick MVP or prototype","A full app build"] },
-      { k:"mvpNote", label:"Tell us more (optional)", type:"text", when:"mvp", ph:"e.g. Our app is on Lovable and needs a security check before launch" } ] },
+      { k:"fractionalRoles", label:"Which fractional roles would help most?", type:"multi", when:"fractional", options:["CTO", "CAIO", "CIO", "CISO"] } ] },
     { id:"finish", title:"Timing and anything else", fields:[
       { k:"budget", label:"Monthly budget for a partner program today", type:"single", options:["None yet","Under $500","$500 - $2,000","Over $2,000","Not sure"] },
       { k:"timeline", label:"When would you like to start?", type:"single", options:["As soon as possible","In 1-3 months","In 3-6 months","Just exploring"] },
@@ -5023,7 +5040,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (f.type === "support")
       return '<fieldset class="va-set va-wide"><legend>'+esc(f.label)+star+'</legend><div class="va-opts col">'+pricingModel.support.map(function(s){ return vaChoice("radio", "support", s.id, s.name, v === s.id, s.blurb); }).join("")+'</div></fieldset>';
     if (f.type === "addons")
-      return '<div class="va-wide va-opts col" data-va-rerender>'+pricingModel.addons.map(function(x){ return vaChoice("checkbox", "addons", x.id, x.name, (d.addons || []).indexOf(x.id) > -1, x.blurb); }).join("")+'</div>';
+      return '<div class="va-wide va-opts col" data-va-rerender>'+pricingModel.addons.filter(function(x){ return !x.legacy; }).map(function(x){ return vaChoice("checkbox", "addons", x.id, x.name, (d.addons || []).indexOf(x.id) > -1, x.blurb); }).join("")+'</div>';
     if (f.type === "consent")
       return '<label class="cfg-check va-wide" style="align-items:flex-start;"><input type="checkbox" data-va-k="consent"'+(v ? ' checked' : '')+'> <span>'
         + (mode === "operator" ? 'They agreed on the call that PartnerWAV may contact them about PartnerWAV.' : 'I agree that PartnerWAV may contact me about PartnerWAV by email, phone, WhatsApp or LINE. I can ask them to stop at any time.')+'</span></label>';
@@ -5175,6 +5192,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + '<div class="aff-section-title" style="margin-top:14px;">Partner program</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">'
             + vaSummaryRow("Program today", a.programStage) + vaSummaryRow("Active partners", a.partners) + vaSummaryRow("Partners wanted", a.partnerTypes) + vaSummaryRow("Markets", a.markets) + vaSummaryRow("PartnerWAV's role", sup ? sup.name : "") + vaSummaryRow("Start", a.timeline) + '</div>'
             + (needNames.length ? '<div class="aff-section-title" style="margin-top:14px;">Wants from the platform</div><ul class="shop-list" style="margin:6px 0 0;">'+needNames.map(function(n){ return '<li>'+esc(n)+'</li>'; }).join("")+'</ul>' : '')
+            + ((a.fractionalRoles || []).length ? '<div class="aff-section-title" style="margin-top:14px;">Fractional leadership</div><div class="field-note">'+esc(a.fractionalRoles.join(", "))+'</div>' : '')
             + ((a.addons || []).indexOf("investor") > -1 && (a.raising || a.raiseAmount) ? '<div class="aff-section-title" style="margin-top:14px;">Investment</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">'+vaSummaryRow("Raising", a.raising)+vaSummaryRow("Round", a.raiseAmount)+'</div>' : '')
             + (a.notes ? '<div class="aff-section-title" style="margin-top:14px;">Their notes</div><p class="program-desc" style="margin:6px 0 0;">'+esc(a.notes)+'</p>' : '')
             + '<div class="field-row" style="margin-top:14px;"><label for="vaInternal">PartnerWAV notes (internal)</label><textarea id="vaInternal" rows="3">'+esc(a.notesInternal || "")+'</textarea></div>'
@@ -5183,7 +5201,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + '<div class="inv-offer" style="margin-top:6px;"><div style="font-weight:700;font-size:1.05rem;" data-va-rec="'+rec.plan+'">'+esc(pmItem("plans", rec.plan).name)+' plan</div><div class="field-note">'+esc(rec.why || "From their answers")+'</div></div>'
             + '<div class="aff-section-title" style="margin-top:14px;">Quote <span class="field-note" style="text-transform:none;letter-spacing:0;font-weight:400;">-- per month, from the pricing model; change anything</span></div>'
             + '<div class="form-grid" style="margin-top:6px;"><div class="field-row"><label for="vaPlan">Plan</label>'+sel("vaPlan", pricingModel.plans, q.planId)+'</div><div class="field-row"><label for="vaSupport">Support</label>'+sel("vaSupport", pricingModel.support, q.supportId)+'</div></div>'
-            + '<div class="va-opts col" style="margin-top:8px;">'+pricingModel.addons.map(function(x){ var on = q.addons.indexOf(x.id) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-va-qaddon="'+esc(x.id)+'"'+(on ? ' checked' : '')+'><span><b>'+esc(x.name)+'</b><small>'+(x.price ? vaMoney(x.price)+' / month' : 'No monthly fee')+((a.addons || []).indexOf(x.id) > -1 ? ' · they asked for this' : '')+'</small></span></label>'; }).join("")+'</div>'
+            + '<div class="va-opts col" style="margin-top:8px;">'+pricingModel.addons.filter(function(x){ return !x.legacy; }).map(function(x){ var on = q.addons.indexOf(x.id) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-va-qaddon="'+esc(x.id)+'"'+(on ? ' checked' : '')+'><span><b>'+esc(x.name)+'</b><small>'+(x.price ? vaMoney(x.price)+' / month' : 'No monthly fee')+((a.addons || []).indexOf(x.id) > -1 ? ' · they asked for this' : '')+'</small></span></label>'; }).join("")+'</div>'
             + '<table class="va-lines" style="width:100%;margin-top:10px;"><tbody>'+calc.lines.map(function(l){ return '<tr><td>'+esc(l.label)+(l.amount !== l.list ? ' <span class="field-note">(list '+vaMoney(l.list)+')</span>' : '')+'</td><td style="text-align:right;"><input type="number" min="0" step="50" class="va-amt" data-va-line="'+attr(l.key)+'" value="'+esc(l.amount)+'" aria-label="'+attr(l.label)+' price"></td></tr>'; }).join("")
               + '<tr><td>Discount %</td><td style="text-align:right;"><input type="number" min="0" max="100" step="5" class="va-amt" id="vaDiscount" value="'+esc(q.discountPct || 0)+'" aria-label="Discount percent"></td></tr>'
               + '</tbody></table>'
@@ -5607,6 +5625,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     codeHash:"3d62e8664c8db82c63ff992ce5861e4857016631d2033e59447b5164f8873736", active:true }];
   var mediaOfferCodes = [{ id:"mo-demo", mediaId:"zipevent", code:"FOUNDER15" }];
   var mediaSponsorships = [], serviceRequests = [];
+  var productStages = [];   // where each company's product is now: { id: its login key, stage, updatedAt }
   // CloudWAV's MVP Builder packages (CloudWAV edits them in Services & Sponsors; empty price = "Ask for a quote")
   var mvpPackages = [
     { id:"pkg-quick-mvp", name:"Quick MVP", tools:"Lovable or Bolt", desc:"A working first version of your idea, to test with users or show investors.", includes:["Working app with sign-in and the core screens", "Hosted and ready to share", "Ready to grow into a full app"], price:"", timeline:"" },
@@ -6068,6 +6087,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var noMvp = isSoftwareHouseNow();
     document.querySelectorAll('.navlink[data-screen="mvp-builder"]').forEach(function(b){ b.hidden = noMvp; });
     if (noMvp && state.screen === "mvp-builder") state.screen = state.role + "-overview";
+    var showFr = state.role !== "operator" && fractionalReady(myMsgKey());
+    document.querySelectorAll('.navlink[data-screen="fractional"]').forEach(function(b){ b.hidden = !showFr; });
+    if (!showFr && state.screen === "fractional") state.screen = state.role + "-overview";
+    var myHs = myHouse();
+    document.querySelectorAll('.navlink[data-screen="dev-leads"]').forEach(function(b){ b.hidden = !myHs; });
+    if (!myHs && state.screen === "dev-leads") state.screen = state.role + "-overview";
     // signed in (not previewing as CloudWAV): only your own account type can be picked
     var roleLock = state.account && !canPreview() ? state.account.role : null;
     document.querySelectorAll(".role-btn").forEach(function(b){
@@ -6247,6 +6272,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderInvestor();
     renderMember();
     renderMediaMvp();
+    renderFractionalDev();
     renderReadiness();
     renderInvestorDb();
     renderPerks();
@@ -10886,6 +10912,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ return { readers:[r.requesterKey].concat(r.mediaId ? ["media:" + r.mediaId] : []), writers:[r.requesterKey] }; } },
     { name:"mvpPackages", mode:"merge", get:function(){ return mvpPackages; }, set:function(a){ mvpPackages = a; },
       access:function(r){ return { readers: r.hidden ? [] : EVERYONE, writers:[] }; } },
+    // where each company's product is now (Fractional opens once it's live); each company sees only its own
+    { name:"productStages", mode:"replace", get:function(){ return productStages; }, set:function(a){ productStages = a; },
+      access:function(r){ return { readers:[r.id], writers:[r.id] }; } },
     { name:"memberProfiles", mode:"replace", get:function(){ return memberProfiles; }, set:function(a){ memberProfiles = a; },
       access:function(r){ return { readers: r.hidden ? [] : ["members"], writers:["member:" + r.id] }; } },
     { name:"memberContacts", mode:"replace", get:function(){ return memberContacts; }, set:function(a){ memberContacts = a; },
@@ -10937,7 +10966,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { name:"platformFees", mode:"replace", get:function(){ return platformFees; }, set:function(a){ platformFees = a; },
       access:function(r){ return { readers:["vendor:" + r.programId], writers:[] }; } },
     { name:"projectReferrals", mode:"replace", get:function(){ return projectReferrals; }, set:function(a){ projectReferrals = a; },
-      access:function(r){ return { readers:[r.referrerKey], writers:[r.referrerKey] }; } },
+      access:function(r){ var hk = houseLoginKeys(r.houseId); return { readers:[r.referrerKey].concat(r.source === "mvp" ? hk : []), writers:[r.referrerKey].concat(r.source === "mvp" ? hk : []) }; } },
     // Per-user settings that used to live in the browser: joined groups, collaboration interest, enrolled affiliate tools
     { name:"prefs", mode:"replace", get:function(){ var k = myKey(); return k ? [{ id:k, joinedGroups: state.joinedGroups || [], collabInterests: state.collabInterests || [], affiliateEnrolled: state.affiliateEnrolled || [], seenLevelNotices: state.seenLevelNotices || [], msgLastRead: state.msgLastRead || {}, samplesAdded: state.samplesAdded || [] }] : []; },
       set:function(a){ var k = myKey(), mine = a.filter(function(x){ return x.id === k; })[0]; if (mine){ state.joinedGroups = mine.joinedGroups || []; state.collabInterests = mine.collabInterests || []; state.affiliateEnrolled = mine.affiliateEnrolled || []; state.seenLevelNotices = mine.seenLevelNotices || []; state.msgLastRead = mine.msgLastRead || {}; state.samplesAdded = mine.samplesAdded || []; } else { state.joinedGroups = []; state.collabInterests = []; state.affiliateEnrolled = []; state.seenLevelNotices = []; state.msgLastRead = {}; } },
@@ -11686,7 +11715,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var REF_STATUS = {
     registered:{ label:"Awaiting software house", cls:"warn" }, accepted:{ label:"Accepted", cls:"accent" },
     proposal:{ label:"Proposal sent", cls:"accent" }, won:{ label:"Won", cls:"good" },
-    lost:{ label:"Lost", cls:"neutral" }, rejected:{ label:"Not accepted", cls:"bad" }
+    lost:{ label:"Lost", cls:"neutral" }, rejected:{ label:"Not accepted", cls:"bad" }, moved:{ label:"Moved to another house", cls:"neutral" }
   };
   var AGR_STATUS = {
     requested:{ label:"Requested", cls:"warn" }, draft:{ label:"Draft", cls:"neutral" }, sent:{ label:"Out for signature", cls:"accent" },
@@ -11872,7 +11901,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function agrById(id){ return agreementsList.filter(function(a){ return a.id === id; })[0] || null; }
   function termsOf(h){ var t = JSON.parse(JSON.stringify(DEFAULT_REFERRAL_TERMS)); if (h && h.terms) Object.keys(h.terms).forEach(function(k){ t[k] = h.terms[k]; }); return t; }
   function refTerms(r){ return r.termsSnapshot || termsOf(houseById(r.houseId)); }
-  function refStatus(r){ return r.status === "registered" && r.respondBy && todayIso() > r.respondBy ? "accepted" : r.status; } // deemed accepted after the deadline
+  function refStatus(r){ return r.status === "registered" && r.respondBy && r.source !== "mvp" && todayIso() > r.respondBy ? "accepted" : r.status; } // Dev Leads (source mvp) move on instead // deemed accepted after the deadline
   function refBadge(r){ var st = REF_STATUS[refStatus(r)] || REF_STATUS.registered; return '<span class="badge '+st.cls+'">'+esc(st.label)+(r.status === "registered" && refStatus(r) === "accepted" ? " (deemed)" : "")+'</span>'; }
 
   // ----- the fee engine -----
@@ -13720,6 +13749,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           var t = termsOf(h), ag = agreementsList.filter(function(a){ return a.kind === "referral" && a.houseId === h.id; })[0];
           return '<div class="deal-row" data-house-row="'+esc(h.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(h.name)
             + '<span class="field-note" style="display:block;font-weight:400;">Referral '+t.referralRate+'% / '+t.windowMonths+' mo (then '+t.stepDownRate+'%) · Co-sell '+t.cosellRate+'% / '+t.cosellMonths+' mo · Resell '+t.resellDiscount+'% discount · partners get '+t.partnerShare+'%</span></span>'
+            + (h.leadPartner ? '<span class="badge accent">Lead partner</span>' : '')
             + '<span class="badge '+(h.status === "active" ? "good" : "neutral")+'">'+(h.status === "active" ? "Active" : h.status === "paused" ? "Paused" : "Negotiating")+'</span>'
             + (ag ? agrBadge(ag) : '<span class="badge neutral">No agreement</span>')
             + '<button type="button" class="btn ghost sm" data-house-doc="'+esc(h.id)+'" title="Software Project Referral Agreement">Agreement</button>'
@@ -20018,13 +20048,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var MEDIA_CHANNELS = ["Website", "Facebook", "Instagram", "TikTok", "YouTube", "LinkedIn", "X", "LINE Official Account", "Newsletter", "Podcast"];
   var MEDIA_MARKETS = ["Thailand", "Southeast Asia", "Asia Pacific", "United States", "Global"];
   var MEDIA_SPONSOR_PACKAGES = [["logo", "Logo and mention"], ["booth", "Booth or table"], ["talk", "Talk or panel slot"], ["prize", "Prize or hackathon challenge"], ["hospitality", "Food and drinks"], ["other", "Something else"]];
-  var REQ_STATUS = [["new", "New"], ["talking", "In talks"], ["won", "Went ahead"], ["lost", "Didn't go ahead"], ["referred", "Sent to a software house"], ["withdrawn", "Withdrawn"]];
+  var REQ_STATUS = [["new", "New"], ["talking", "In talks"], ["won", "Went ahead"], ["lost", "Didn't go ahead"], ["referred", "Sent to a software house"], ["delivered", "Built and live"], ["withdrawn", "Withdrawn"]];
   var MVP_BUDGETS = ["Under USD 2,000", "USD 2,000 - 5,000", "USD 5,000 - 15,000", "USD 15,000 - 50,000", "Over USD 50,000", "Not sure yet"];
   // apps the MVP Builder is building now (shown as examples)
+  var MVP_BIG_BUDGETS = ["USD 5,000 - 15,000", "USD 15,000 - 50,000", "Over USD 50,000"];
+  // What the wizard asks for, and the CloudWAV package each build goes to (the biggest build need wins)
+  var MVP_NEEDS = [["first", "A first working version or prototype"], ["full", "A full app, planned, built and deployed"], ["fix", "A fix or a finished feature in an app we have"], ["security", "A security review before launch or due diligence"], ["investor", "Investor-ready features for our next round"], ["devs", "Extra developers for our team"], ["leadership", "Leadership: a fractional CTO, CAIO, CIO or CISO"]];
+  var MVP_NEED_PACKAGE = { full:"pkg-full", investor:"pkg-investor", security:"pkg-security", fix:"pkg-fix", devs:"pkg-team", first:"pkg-quick-mvp" };
+  // Where the product is now: Fractional opens for companies with users, or raising and scaling
+  var PRODUCT_STAGES = [["idea", "Idea or sketch"], ["building", "Building the first version"], ["live", "Live with first users"], ["scaling", "Raising or scaling"]];
+  // Fractional leadership: the four roles in the SaaS Growth Partner Agreement
+  var FRACTIONAL_ROLES = [["CTO", "Fractional CTO", "Technical direction, architecture, hiring and the plan for the build"], ["CAIO", "Fractional CAIO", "AI strategy: where AI fits the product, its data, tools and governance"], ["CIO", "Fractional CIO", "Systems, vendors and internal tools as the team grows"], ["CISO", "Fractional CISO", "Security program, customer and investor security reviews, and incident readiness"]];
+  // Dev Leads: business days for a software house to accept, and to send a quote; days until the lead is closed or moved on
+  var DEV_LEAD_DAYS = { respond:5, quote:10, close:30 };
   var MVP_EXAMPLES = ["Sports coaching apps", "Course builders", "Digital product stores", "Business dashboards", "Independent real estate apps", "NGO job placement and marketplace apps", "Fashion industry dashboards", "Loyalty programs"];
-  function loadMediaMvp(){ try { var d = JSON.parse(lsGet(MEDIA_KEY) || "null"); if (d){ ["profiles", "offers", "codes", "sponsorships", "requests", "packages"].forEach(function(k){ if (Array.isArray(d[k])){
-      if (k === "profiles") mediaProfiles = d[k]; if (k === "offers") mediaOffers = d[k]; if (k === "codes") mediaOfferCodes = d[k]; if (k === "sponsorships") mediaSponsorships = d[k]; if (k === "requests") serviceRequests = d[k]; if (k === "packages") mvpPackages = d[k]; } }); } } catch(e){} }
-  function saveMediaMvp(){ try { lsSet(MEDIA_KEY, JSON.stringify({ profiles:mediaProfiles, offers:mediaOffers, codes:mediaOfferCodes, sponsorships:mediaSponsorships, requests:serviceRequests, packages:mvpPackages })); } catch(e){}
+  function loadMediaMvp(){ try { var d = JSON.parse(lsGet(MEDIA_KEY) || "null"); if (d){ ["profiles", "offers", "codes", "sponsorships", "requests", "packages", "stages"].forEach(function(k){ if (Array.isArray(d[k])){
+      if (k === "profiles") mediaProfiles = d[k]; if (k === "offers") mediaOffers = d[k]; if (k === "codes") mediaOfferCodes = d[k]; if (k === "sponsorships") mediaSponsorships = d[k]; if (k === "requests") serviceRequests = d[k]; if (k === "packages") mvpPackages = d[k]; if (k === "stages") productStages = d[k]; } }); } } catch(e){} }
+  function saveMediaMvp(){ try { lsSet(MEDIA_KEY, JSON.stringify({ profiles:mediaProfiles, offers:mediaOffers, codes:mediaOfferCodes, sponsorships:mediaSponsorships, requests:serviceRequests, packages:mvpPackages, stages:productStages })); } catch(e){}
     if (typeof cloudSchedule === "function") cloudSchedule(); state.medV = (state.medV || 0) + 1; }
   function mediaById(id){ return mediaProfiles.filter(function(x){ return x.id === id && !x.archivedAt && !x._deleted; })[0] || null; }
   function myMediaId(){
@@ -20070,7 +20110,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return '<div style="display:flex;flex-direction:column;gap:8px;">'+list.slice().sort(function(a, b){ return String(b.createdAt).localeCompare(String(a.createdAt)); }).map(function(r){
       var m = r.mediaId ? mediaById(r.mediaId) : null, pk = r.packageId ? mvpPackages.filter(function(x){ return x.id === r.packageId; })[0] : null, house = r.houseId ? softwareHouses.filter(function(h){ return h.id === r.houseId; })[0] : null;
       return '<div class="card card-pad" data-svc-row="'+attr(r.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div style="min-width:0;flex:1;">'
-        + '<b>'+esc(r.kind === "mvp" ? "MVP Builder: " + (pk ? pk.name : r.serviceName || "") : (m ? m.name : "Media & Events") + ": " + (r.serviceName || ""))+'</b> <span class="pill '+(r.status === "won" ? 'active' : r.status === "new" ? 'pending' : '')+'">'+esc(reqStatusName(r.status))+'</span>'
+        + '<b>'+esc(r.kind === "mvp" ? "MVP Builder: " + (pk ? pk.name : r.serviceName || "") + (r.route === "devlead" ? " (bigger build)" : "") : r.kind === "fractional" ? "Fractional leadership" + ((r.roles || []).length ? ": " + r.roles.join(", ") : "") : (m ? m.name : "Media & Events") + ": " + (r.serviceName || ""))+'</b> <span class="pill '+(r.status === "won" ? 'active' : r.status === "new" ? 'pending' : '')+'">'+esc(reqStatusName(r.status))+'</span>'
         + '<div class="field-note">'+(view !== "mine" ? esc(r.requesterName || keyName(r.requesterKey))+' · ' : '')+'sent '+esc(r.createdAt || "")+(r.budget ? ' · budget '+esc(r.budget) : '')+(r.timeline ? ' · '+esc(r.timeline) : '')+'</div>'
         + (r.offerId ? '<div class="field-note">'+(r.codeOk ? '<span class="badge good">Event code accepted</span> '+esc(r.offerTitle || "") : '<span class="badge warn">Event code didn\'t match</span>')+'</div>' : '')
         + (r.details ? '<div class="field-note cp-notes">'+esc(r.details)+'</div>' : '')
@@ -20078,7 +20118,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + (view === "op" ? '<div class="svc-op"><select class="filter app-select" data-svc-status="'+attr(r.id)+'" aria-label="Status">'+REQ_STATUS.map(function(x){ return '<option value="'+x[0]+'"'+(r.status === x[0] ? ' selected' : '')+'>'+esc(x[1])+'</option>'; }).join("")+'</select>'
             + '<input type="text" inputmode="decimal" placeholder="Contract value" value="'+attr(r.value != null ? String(r.value) : "")+'" data-svc-value="'+attr(r.id)+'" aria-label="Contract value">'
             + '<input type="text" inputmode="decimal" placeholder="PartnerWAV fee" value="'+attr(r.fee != null ? String(r.fee) : "")+'" data-svc-fee="'+attr(r.id)+'" aria-label="PartnerWAV fee">'
-            + (r.kind === "mvp" ? '<select class="filter app-select" data-svc-house="'+attr(r.id)+'" aria-label="Software house"><option value="">Keep with the MVP Builder</option>'+softwareHouses.filter(function(h){ return h.status === "active"; }).map(function(h){ return '<option value="'+attr(h.id)+'"'+(r.houseId === h.id ? ' selected' : '')+'>Send to '+esc(h.name)+'</option>'; }).join("")+'</select>' : '')
+            + (r.kind === "mvp" ? '<select class="filter app-select" data-svc-house="'+attr(r.id)+'" aria-label="Software house">'+houseOptions(r.houseId, "", "Keep with the MVP Builder")+'</select>' : '')
             + '<button type="button" class="btn secondary xs" data-svc-save="'+attr(r.id)+'">Save</button></div>' : '')
         + '</div><div class="mem-acts" style="margin:0;align-items:flex-start;">'
           + (view === "op" || view === "media" ? '<button type="button" class="btn ghost xs" data-svc-msg="'+attr(r.requesterKey)+'">Message '+esc(r.requesterName || keyName(r.requesterKey))+'</button>' : '')
@@ -20115,6 +20155,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function mvpBuilderHtml(){
     var mine = serviceRequests.filter(function(r){ return r.kind === "mvp" && r.requesterKey === svcRequesterKey(); }), pk = mvpPackages.filter(function(p){ return !p.hidden; });
     return '<div class="card card-pad mvp-hero"><b>From idea to a working product, fast</b><span class="field-note">CloudWAV\'s MVP Builder takes on quick ideas, fixes and first versions for founders and SaaS companies: a working prototype on Lovable or Bolt, a security review, extra developers or the features you need for your next funding round, up to a full app built with Cursor and deployed on Vercel. Bigger builds go to PartnerWAV\'s specialty software houses.</span></div>'
+      + mvpHelpHtml()
       + '<div class="mvp-grid">'+pk.map(function(p){ return '<div class="card card-pad mvp-pkg" data-mvp-pkg="'+attr(p.id)+'"><b>'+esc(p.name)+'</b><span class="field-note">'+esc(p.desc || "")+'</span>'
           + ((p.includes || []).length ? '<ul class="shop-list" style="margin:0;">'+p.includes.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul>' : '')
           + '<div class="mvp-foot"><span class="field-note">'+esc([p.tools, p.timeline].filter(Boolean).join(" · "))+'</span><b>'+esc(p.price || "Ask for a quote")+'</b></div>'
@@ -20142,6 +20183,276 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       saveMediaMvp(); closeModal(); renderMediaMvp(true); toast("Sent -- the MVP Builder team will be in touch");
     });
   }
+
+  // ----- Fractional leadership, the MVP Builder wizard and Dev Leads -----
+  // The wizard decides where a request goes, so nobody is turned away: a build goes to a CloudWAV package, or to a
+  // specialty software house as a Dev Lead for a bigger build; leadership goes to Fractional. Fractional opens once the
+  // product is live. Dev Leads are project referrals (see AGREEMENTS + SOFTWARE PROJECT REFERRALS): the house accepts or
+  // declines within DEV_LEAD_DAYS.respond business days, quotes within DEV_LEAD_DAYS.quote business days of accepting,
+  // and the lead is closed or moved on within DEV_LEAD_DAYS.close days of being sent.
+  function productStageOf(key){ var s = productStages.filter(function(x){ return x.id === key; })[0]; return s ? s.stage : ""; }
+  function setProductStage(key, stage){
+    var s = productStages.filter(function(x){ return x.id === key; })[0];
+    if (s){ s.stage = stage; s.updatedAt = nowStamp(); } else productStages.push({ id:key, stage:stage, updatedAt:nowStamp() });
+  }
+  // Fractional opens once the product has users (or is being raised or scaled), or one of their MVP builds is delivered
+  function fractionalReady(key){
+    return ["live", "scaling"].indexOf(productStageOf(key)) > -1
+      || serviceRequests.some(function(r){ return r.kind === "mvp" && r.requesterKey === key && r.status === "delivered"; });
+  }
+  function usd(n){ return "USD " + Math.round(Number(n) || 0).toLocaleString("en-US"); }
+  function labelOf(list, id){ var x = list.filter(function(y){ return y[0] === id; })[0]; return x ? x[1] : id; }
+  // The wizard's decision. A build is sent to a software house only when it is a full app or an investor-ready build
+  // and the budget is bigger (MVP_BIG_BUDGETS); everything else is a CloudWAV package.
+  function mvpRoute(a){
+    var n = a.needs || [], has = function(x){ return n.indexOf(x) > -1; }, big = MVP_BIG_BUDGETS.indexOf(a.budget) > -1;
+    var builds = n.filter(function(x){ return x !== "leadership"; }), top = ["full", "investor", "security", "fix", "devs", "first"].filter(has)[0] || null;
+    var devLead = !!top && (top === "full" || top === "investor") && big;
+    return { leadership:has("leadership"), build:builds.length > 0, top:top, devLead:devLead,
+      route: !builds.length ? "fractional" : devLead ? "devlead" : "mvp", packageId: top ? MVP_NEED_PACKAGE[top] : null };
+  }
+  function mvpRouteCards(a){
+    var rt = mvpRoute(a), pk = rt.packageId ? mvpPackages.filter(function(p){ return p.id === rt.packageId; })[0] : null, cards = [];
+    if (rt.route === "devlead") cards.push({ title:"A bigger build: a specialty software house", text:"PartnerWAV sends this to a software house on the platform, with CloudWAV coordinating. The house accepts or declines within " + DEV_LEAD_DAYS.respond + " business days, sends a quote within " + DEV_LEAD_DAYS.quote + " business days of accepting, and the lead is closed or moved on within " + DEV_LEAD_DAYS.close + " days. You can follow its progress in PartnerWAV." });
+    else if (rt.route === "mvp") cards.push({ title:"CloudWAV's MVP Builder" + (pk ? ": " + pk.name : ""), text:"The MVP Builder team takes this on directly. PartnerWAV will be in touch to scope it and give you a quote." });
+    if (rt.leadership){ var roles = FRACTIONAL_ROLES.filter(function(r){ return a.roles.indexOf(r[0]) > -1; }).map(function(r){ return r[1]; }).join(", ");
+      cards.push({ title:"Fractional leadership: " + (roles || "a leader"), text:"A part-time leader from CloudWAV Consulting, sent with your request. Fractional leadership is most useful once the product is live." }); }
+    return cards;
+  }
+  function mvpHelpHtml(){
+    var me = svcRequesterKey(), st = productStageOf(me);
+    return '<div class="card card-pad meet-form" style="margin-bottom:14px;"><div class="meet-two"><div><b>Not sure what you need?</b><span class="field-note" style="display:block;">Answer a few questions. The wizard suggests the right package, a software house for a bigger build, or fractional leadership.</span></div>'
+        + '<div><button type="button" class="btn primary sm" data-mvp-wizard>Find the right help</button></div></div>'
+      + '<div class="field-row" style="margin-top:10px;"><label for="mvpStage">Where is your product today?</label><div class="svc-op"><select id="mvpStage" class="filter app-select"><option value="">Choose</option>'
+        + PRODUCT_STAGES.map(function(x){ return '<option value="'+x[0]+'"'+(st === x[0] ? ' selected' : '')+'>'+esc(x[1])+'</option>'; }).join("")+'</select><button type="button" class="btn secondary xs" data-mvp-stage-save>Save</button></div></div>'
+      + (fractionalReady(me) ? '<div class="field-note" style="margin-top:10px;"><span class="badge good">Live</span> Your product is live, so a fractional leader can help with the next step. <button type="button" class="btn ghost xs" data-goto-screen="fractional">Fractional leadership</button></div>' : '')
+      + '</div>';
+  }
+  var MVP_TEAMS = [["inhouse", "We have developers in-house"], ["outsourced", "We work with an agency or freelancers"], ["none", "We have no developers yet"]];
+  var MVP_WIZARD_STEPS = ["Where is the product today?", "Who builds it today?", "What do you need?", "Budget and details", "Our suggestion"];
+  function mvpWizardModal(){
+    var w = { step:0, stage:productStageOf(svcRequesterKey()), team:"", needs:[], roles:[], budget:"", timing:"", details:"", link:"" };
+    var back = openModal('<div class="modal-head"><h2>Find the right help</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="modal-body meet-form" id="mvpWizBody" style="display:flex;flex-direction:column;gap:10px;"></div>'
+      + '<div id="mvpWizErr" class="login-msg bad" role="alert" hidden></div>'
+      + '<div class="modal-actions"><button type="button" class="btn secondary" id="mvpWizBack">Back</button><button type="button" class="btn primary" id="mvpWizNext">Next</button></div>');
+    var radio = function(name, opts, val){ return opts.map(function(o){ return '<label class="va-opt'+(val === o[0] ? ' on' : '')+'"><input type="radio" name="'+name+'" value="'+o[0]+'"'+(val === o[0] ? ' checked' : '')+'><span>'+esc(o[1])+'</span></label>'; }).join(""); };
+    var checks = function(name, opts, vals){ return opts.map(function(o){ var on = vals.indexOf(o[0]) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" name="'+name+'" value="'+o[0]+'"'+(on ? ' checked' : '')+'><span>'+esc(o[1])+'</span></label>'; }).join(""); };
+    var b = function(){ return back.querySelector("#mvpWizBody"); };
+    var gather = function(){
+      var el = b();
+      if (w.step === 0){ var s = el.querySelector('input[name="mw-stage"]:checked'); w.stage = s ? s.value : ""; }
+      if (w.step === 1){ var t = el.querySelector('input[name="mw-team"]:checked'); w.team = t ? t.value : ""; }
+      if (w.step === 2){ w.needs = [].map.call(el.querySelectorAll('input[name="mw-need"]:checked'), function(x){ return x.value; });
+        w.roles = [].map.call(el.querySelectorAll('input[name="mw-role"]:checked'), function(x){ return x.value; }); }
+      if (w.step === 3){ w.budget = el.querySelector("#mwBudget").value; w.timing = el.querySelector("#mwTiming").value.trim(); w.details = el.querySelector("#mwDetails").value.trim(); w.link = el.querySelector("#mwLink").value.trim(); }
+    };
+    var check = function(){
+      var msg = "";
+      if (w.step === 0 && !w.stage) msg = "Choose where the product is today.";
+      if (w.step === 1 && !w.team) msg = "Choose who builds it today.";
+      if (w.step === 2 && !w.needs.length) msg = "Choose at least one thing you need.";
+      if (w.step === 2 && w.needs.indexOf("leadership") > -1 && !w.roles.length) msg = "Choose the fractional role or roles you want.";
+      if (w.step === 3 && !w.details) msg = "Tell us what is going on.";
+      var e = back.querySelector("#mvpWizErr"); e.textContent = msg; e.hidden = !msg; return !msg;
+    };
+    var paint = function(){
+      var s = w.step, h = '<div class="field-note">Step '+(s + 1)+' of '+MVP_WIZARD_STEPS.length+' -- '+esc(MVP_WIZARD_STEPS[s])+'</div>';
+      if (s === 0) h += '<div class="va-opts col">'+radio("mw-stage", PRODUCT_STAGES, w.stage)+'</div>';
+      if (s === 1) h += '<div class="va-opts col">'+radio("mw-team", MVP_TEAMS, w.team)+'</div>';
+      if (s === 2) h += '<div class="va-opts col">'+checks("mw-need", MVP_NEEDS, w.needs)+'</div>'
+        + '<div id="mwRoles" class="va-opts col"'+(w.needs.indexOf("leadership") > -1 ? '' : ' hidden')+'><b>Which fractional roles?</b>'+checks("mw-role", FRACTIONAL_ROLES.map(function(r){ return [r[0], r[1] + ": " + r[2]]; }), w.roles)+'</div>';
+      if (s === 3) h += '<div class="field-row"><label for="mwBudget">Budget</label><select id="mwBudget" class="filter app-select">'+MVP_BUDGETS.map(function(x){ return '<option'+(w.budget === x ? ' selected' : '')+'>'+esc(x)+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="mwTiming">When do you need it? (optional)</label><input type="text" id="mwTiming" maxlength="60" value="'+attr(w.timing)+'"></div>'
+        + '<div class="field-row"><label for="mwDetails">What is the idea, or what needs doing?</label><textarea id="mwDetails" rows="4" maxlength="1500">'+esc(w.details)+'</textarea></div>'
+        + '<div class="field-row"><label for="mwLink">Link to the app or code, if there is one (optional)</label><input type="text" id="mwLink" maxlength="300" placeholder="https://" value="'+attr(w.link)+'"></div>';
+      if (s === 4){ var cards = mvpRouteCards(w);
+        h += (cards.length ? cards.map(function(c){ return '<div class="card card-pad"><b>'+esc(c.title)+'</b><p class="field-note" style="margin:6px 0 0;">'+esc(c.text)+'</p></div>'; }).join("") : '<div class="empty">Choose what you need first.</div>');
+        h += '<span class="field-note">Sent together as one request, so nothing is lost. Each part goes to the right team, so nothing is lost.</span>'; }
+      b().innerHTML = h;
+      back.querySelector("#mvpWizBack").hidden = s === 0;
+      back.querySelector("#mvpWizNext").textContent = s === MVP_WIZARD_STEPS.length - 1 ? "Send" : "Next";
+    };
+    back.addEventListener("change", function(ev){ if (ev.target && ev.target.name === "mw-need"){ var on = [].some.call(b().querySelectorAll('input[name="mw-need"]:checked'), function(x){ return x.value === "leadership"; }); var rr = b().querySelector("#mwRoles"); if (rr) rr.hidden = !on; } });
+    back.querySelector("#mvpWizBack").addEventListener("click", function(){ gather(); w.step = Math.max(0, w.step - 1); paint(); });
+    back.querySelector("#mvpWizNext").addEventListener("click", function(){
+      gather();
+      if (w.step < MVP_WIZARD_STEPS.length - 1){ if (!check()) return; w.step++; paint(); return; }
+      var rt = mvpRoute(w), me = svcRequesterKey(), nm = svcRequesterName(), now = nowStamp(), teamName = labelOf(MVP_TEAMS, w.team), stageName = labelOf(PRODUCT_STAGES, w.stage);
+      var link = w.link ? (/^https?:\/\//i.test(w.link) ? w.link : "https://" + w.link) : "";
+      var base = "Stage: " + stageName + ". Team: " + teamName + ".\n" + w.details.slice(0, 1200) + (link && safeHref(link) ? "\nLink: " + link : "");
+      if (rt.build){ var pk = rt.packageId ? mvpPackages.filter(function(p){ return p.id === rt.packageId; })[0] : null;
+        serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"mvp", route:rt.route, requesterKey:me, requesterName:nm, packageId:rt.packageId || "", serviceName:pk ? pk.name : "MVP Builder",
+          needs:w.needs.filter(function(x){ return x !== "leadership"; }).map(function(x){ return labelOf(MVP_NEEDS, x); }), stage:w.stage, team:w.team,
+          details: base + (rt.route === "devlead" ? "\nBigger build: for a software house as a Dev Lead." : ""), budget:w.budget, timeline:w.timing, status:"new", createdAt:now }); }
+      if (rt.leadership){ serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"fractional", requesterKey:me, requesterName:nm, serviceName:"Fractional leadership",
+          roles:w.roles.slice(), stage:w.stage, details:base, timeline:w.timing, status:"new", createdAt:now }); }
+      setProductStage(me, w.stage); saveMediaMvp(); closeModal(); renderMediaMvp(true); renderFractionalDev(true);
+      toast(rt.route === "devlead" ? "Sent -- a software house will look at the build" : "Sent -- PartnerWAV will be in touch");
+    });
+    paint();
+  }
+  function fractionalHtml(){
+    var me = svcRequesterKey(), mine = serviceRequests.filter(function(r){ return r.kind === "fractional" && r.requesterKey === me; });
+    return '<div class="card card-pad mvp-hero"><b>A fractional leader for the next step</b><span class="field-note">Once your product is live, a part-time CTO, CAIO, CIO or CISO from CloudWAV Consulting helps you decide what to build next, how to use AI, how your systems and vendors fit together, and how to keep customer and investor data secure. You pay for the time you need.</span></div>'
+      + (fractionalReady(me) ? '' : '<div class="card card-pad inv-nudge"><b>Opens once your product is live</b><span class="field-note">Fractional leadership is for products with first users, or companies that are raising or scaling. Until then the MVP Builder is the right help. You can still ask below.</span><button type="button" class="btn ghost sm" data-goto-screen="mvp-builder">MVP Builder</button></div>')
+      + '<div class="mvp-grid" style="margin-top:14px;">'+FRACTIONAL_ROLES.map(function(r){ return '<div class="card card-pad mvp-pkg"><b>'+esc(r[1])+'</b><span class="field-note">'+esc(r[2])+'</span></div>'; }).join("")+'</div>'
+      + '<div class="card card-pad meet-form" style="margin-top:14px;"><b>Ask about fractional leadership</b>'
+        + '<div class="field-row"><span class="field-note">Which roles would help?</span><div class="meet-chips">'+FRACTIONAL_ROLES.map(function(r){ return '<label class="meet-chip"><input type="checkbox" data-fr-role="'+r[0]+'"> '+esc(r[1])+'</label>'; }).join("")+'</div></div>'
+        + '<div class="meet-two"><div class="field-row"><label for="frTiming">When would you like to start? (optional)</label><input type="text" id="frTiming" maxlength="60"></div>'
+        + '<div class="field-row"><label for="frHours">Time you need</label><select id="frHours" class="filter app-select"><option>1 day a week</option><option>2 to 3 days a week</option><option>A few hours a month</option><option>Not sure yet</option></select></div></div>'
+        + '<div class="field-row"><label for="frDetails">What is going on?</label><textarea id="frDetails" rows="4" maxlength="1200" placeholder="e.g. We have a few hundred users, a small dev team, and investors asking about AI and security"></textarea></div>'
+        + '<div id="frErr" class="login-msg bad" role="alert" hidden></div><div><button type="button" class="btn primary sm" data-fr-send>Send request</button></div></div>'
+      + (mine.length ? '<div class="section-head" style="margin-top:18px;"><h2 style="font-size:1rem;">Your requests</h2></div>'+svcRequestListHtml(mine, "mine") : '');
+  }
+  function frSend(){
+    var box = document.getElementById("fractionalContent"); if (!box) return;
+    var roles = [].map.call(box.querySelectorAll("[data-fr-role]:checked"), function(x){ return x.getAttribute("data-fr-role"); });
+    var det = document.getElementById("frDetails").value.trim(), timing = document.getElementById("frTiming").value.trim(), hours = document.getElementById("frHours").value, err = document.getElementById("frErr");
+    if (!roles.length){ err.textContent = "Choose at least one role."; err.hidden = false; return; }
+    if (!det){ err.textContent = "Tell us what is going on."; err.hidden = false; return; }
+    var me = svcRequesterKey();
+    serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"fractional", requesterKey:me, requesterName:svcRequesterName(), serviceName:"Fractional leadership",
+      roles:roles, stage:productStageOf(me), details:det.slice(0, 1200) + "\nTime: " + hours + (timing ? "\nStart: " + timing : ""), timeline:timing, status:"new", createdAt:nowStamp() });
+    saveMediaMvp(); renderFractionalDev(true); toast("Sent -- PartnerWAV will be in touch");
+  }
+  // the nav and pages: Fractional once ready; Dev Leads for the software house's own login
+  function myHouse(){
+    if (state.role === "partner") return softwareHouses.filter(function(h){ return h.partnerId && h.partnerId === state.myProfileId; })[0] || null;
+    if (state.role === "vendor") return softwareHouses.filter(function(h){ return h.programId && h.programId === state.myVendorId; })[0] || null;
+    return null;
+  }
+  function houseLoginKeys(hid){ var h = houseById(hid); return h ? [h.partnerId ? "partner:" + h.partnerId : "", h.programId ? "vendor:" + h.programId : ""].filter(Boolean) : []; }
+  function houseOptions(selected, skip, first){
+    var hs = softwareHouses.filter(function(h){ return h.status === "active" && h.id !== skip; }).sort(function(a, b){ return (b.leadPartner ? 1 : 0) - (a.leadPartner ? 1 : 0) || a.name.localeCompare(b.name); });
+    return (first ? '<option value="">'+esc(first)+'</option>' : '') + hs.map(function(h){ return '<option value="'+attr(h.id)+'"'+(selected === h.id ? ' selected' : '')+'>'+(first ? '' : 'Send to ')+esc(h.name)+(h.leadPartner ? ' (Lead partner)' : '')+'</option>'; }).join("");
+  }
+  // ----- Dev Leads: a bigger MVP build, sent to a software house as a project referral that PartnerWAV tracks -----
+  function devLeadOpen(r){ return r.source === "mvp" && ["registered", "accepted", "proposal", "rejected"].indexOf(r.status) > -1; }
+  function devLeadFlag(r){
+    if (r.source !== "mvp") return "";
+    var t = todayIso();
+    if (devLeadOpen(r) && r.closeBy && t > r.closeBy) return "Past " + DEV_LEAD_DAYS.close + " days -- close it or move it on";
+    if (r.status === "rejected") return "Declined -- move it on";
+    if (r.status === "registered") return t > r.respondBy ? "No answer in " + DEV_LEAD_DAYS.respond + " business days -- move it on" : "Accept or decline by " + r.respondBy;
+    if (r.status === "accepted") return t > r.quoteBy ? "Quote overdue -- move it on" : "Quote by " + r.quoteBy;
+    if (r.status === "proposal") return "Close by " + r.closeBy;
+    if (r.status === "won") return r.deliveredAt ? "Delivered " + r.deliveredAt : "Won -- build in progress";
+    if (r.status === "lost") return "Lost";
+    return r.status === "moved" ? "Moved to another house" : "";
+  }
+  function devLeadOverdue(r){ return devLeadOpen(r) && /overdue|move it on|Past /.test(devLeadFlag(r)); }
+  function newDevLead(req, h, opts){
+    var t = todayIso(), from = opts && opts.from ? opts.from : null, old = from ? houseById(from.houseId) : null;
+    return { id:"ref-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), source:"mvp", mvpRequestId:req ? req.id : "", movedFrom: from ? from.id : "",
+      houseId:h.id, referrerKey:"operator:", level:"referral", cosellLead:"cloudwav",
+      client:{ company: req ? req.requesterName || "" : "", contact:"", email:"", phone:"" }, need: req ? req.details || "" : "", budget:0, currency:"USD", timeline: req ? req.timeline || "" : "", disclosed:true,
+      status:"registered", registeredAt:t, respondBy:businessDaysFrom(t, DEV_LEAD_DAYS.respond), quoteBy:"", closeBy:daysFrom(t, DEV_LEAD_DAYS.close), acceptedAt:"", protectedUntil:"", contractValue:null, wonAt:"", quoteValue:null, rejectReason:"",
+      payments:[], payouts:[], thread:[], termsSnapshot: termsOf(h),
+      progress:[{ at:nowStamp(), stage: from ? "Moved on from " + (old ? old.name : "another house") : "Sent by PartnerWAV", note: opts && opts.note ? opts.note : "" }] };
+  }
+  // A request sent to a house becomes a dev lead; if it already has one with another house, the lead moves on
+  function assignDevLead(req, h){
+    var cur = projectReferrals.filter(function(x){ return x.source === "mvp" && x.mvpRequestId === req.id && devLeadOpen(x); })[0];
+    if (cur && cur.houseId === h.id) return;
+    if (cur){ devLeadMove(cur.id, h.id); return; }
+    projectReferrals.unshift(newDevLead(req, h, {})); saveReferrals();
+  }
+  function devLeadMove(id, toId){
+    var r = refById(id), h2 = houseById(toId); if (!r || !h2 || r.houseId === h2.id) return false;
+    var old = houseById(r.houseId), req = serviceRequests.filter(function(x){ return x.id === r.mvpRequestId; })[0];
+    r.status = "moved"; r.movedAt = todayIso(); r.progress = (r.progress || []).concat([{ at:nowStamp(), stage:"Moved on to " + h2.name, note:"from " + (old ? old.name : "a house") }]);
+    projectReferrals.unshift(newDevLead(req, h2, { from:r, note:"from " + (old ? old.name : "a house") }));
+    if (req){ req.houseId = h2.id; req.status = "referred"; req.updatedAt = nowStamp(); }
+    saveReferrals(); saveMediaMvp(); return true;
+  }
+  function markDelivered(req){
+    if (!req) return;
+    req.status = "delivered"; req.updatedAt = nowStamp();
+    if (["live", "scaling"].indexOf(productStageOf(req.requesterKey)) < 0) setProductStage(req.requesterKey, "live");
+  }
+  function devLeadAct(id, act, note, amount){
+    var r = refById(id); if (!r || r.source !== "mvp") return;
+    var t = todayIso(), req = serviceRequests.filter(function(x){ return x.id === r.mvpRequestId; })[0], amt = Number(String(amount || "").replace(/[^0-9.]/g, "")) || null;
+    var log = function(stage, text){ r.progress = (r.progress || []).concat([{ at:nowStamp(), stage:stage, note:text || "" }]); };
+    if (act === "accept"){ r.status = "accepted"; r.acceptedAt = t; r.quoteBy = businessDaysFrom(t, DEV_LEAD_DAYS.quote); log("Accepted", note); }
+    else if (act === "decline"){ r.status = "rejected"; r.rejectReason = note || ""; log("Declined", note); }
+    else if (act === "quote"){ r.status = "proposal"; r.quotedAt = t; if (amt) r.quoteValue = amt; log("Quote sent" + (amt ? ": " + usd(amt) : ""), note); }
+    else if (act === "won"){ r.status = "won"; r.wonAt = t; r.contractValue = amt || r.quoteValue || null; log("Won: contract signed", note); if (req){ req.status = "won"; req.value = r.contractValue; } }
+    else if (act === "lost"){ r.status = "lost"; log("Lost", note); }
+    else if (act === "delivered"){ r.deliveredAt = t; log("Delivered", note); markDelivered(req); }
+    else if (act === "note"){ log("Note", note); }
+    else return;
+    saveReferrals(); saveMediaMvp(); renderDevScreens(); toast(act === "note" ? "Note added" : "Saved");
+  }
+  function devLeadRowHtml(r, view){
+    var h = houseById(r.houseId) || { name:"" }, st = refStatus(r), open = devLeadOpen(r), flag = devLeadFlag(r), over = devLeadOverdue(r), rs = REF_STATUS[st] || REF_STATUS.registered;
+    var prog = (r.progress || []).slice(-4).map(function(p){ return '<li>'+esc(p.at)+' -- '+esc(p.stage)+(p.note ? ': '+esc(p.note) : '')+'</li>'; }).join("");
+    var acts = "", amt = '<input type="text" inputmode="decimal" placeholder="Amount (USD)" data-dl-amount="'+attr(r.id)+'" aria-label="Amount">', btn = function(a, label, cls){ return '<button type="button" class="btn '+(cls || "secondary")+' xs" data-dl-act="'+a+'" data-dl-id="'+attr(r.id)+'">'+label+'</button>'; };
+    if (view === "house" && open && st !== "rejected"){
+      if (st === "registered") acts = btn("accept", "Accept", "primary") + btn("decline", "Decline", "ghost");
+      else if (st === "accepted") acts = amt + btn("quote", "Quote sent", "primary");
+      else if (st === "proposal") acts = amt + btn("won", "Won: contract signed", "primary") + btn("lost", "Lost", "ghost");
+    }
+    if (view === "house" && r.status === "won" && !r.deliveredAt) acts = btn("delivered", "Delivered", "primary");
+    var note = view === "house" && open ? '<div class="svc-op"><input type="text" maxlength="300" placeholder="Progress note" data-dl-note="'+attr(r.id)+'" aria-label="Progress note">'+btn("note", "Add note", "ghost")+'</div>' : "";
+    var mv = view === "op" && open ? '<div class="svc-op"><select class="filter app-select" data-dl-to="'+attr(r.id)+'" aria-label="Move to">'+houseOptions("", h.id, "Choose a house")+'</select><button type="button" class="btn secondary xs" data-dl-move="'+attr(r.id)+'">Move on</button></div>' : "";
+    var req = serviceRequests.filter(function(x){ return x.id === r.mvpRequestId; })[0];
+    return '<div class="card card-pad" data-dl-row="'+attr(r.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div style="min-width:0;flex:1;">'
+      + '<b>'+esc(r.client.company || "Lead")+'</b>'+(view === "op" ? ' <span class="field-note">to '+esc(h.name)+'</span>' : '')+' <span class="badge '+rs.cls+'">'+esc(rs.label)+'</span>'
+      + '<div class="field-note">Sent '+esc(r.registeredAt)+(req && req.budget ? ' · budget '+esc(req.budget) : '')+(r.quoteValue ? ' · quote '+esc(usd(r.quoteValue)) : '')+(r.contractValue ? ' · contract '+esc(usd(r.contractValue)) : '')+'</div>'
+      + (r.need ? '<div class="field-note cp-notes">'+esc(r.need.slice(0, 240))+'</div>' : '')
+      + (flag ? '<div style="margin-top:6px;"><span class="badge '+(over ? 'bad' : 'neutral')+'">'+esc(flag)+'</span></div>' : '')
+      + (prog ? '<ul class="field-note" style="margin:6px 0 0;padding-left:16px;">'+prog+'</ul>' : '')
+      + '</div></div>'
+      + (acts ? '<div class="svc-op" style="margin-top:8px;">'+acts+'</div>' : '') + note + mv + '</div>';
+  }
+  function devLeadsOpHtml(){
+    var list = projectReferrals.filter(function(x){ return x.source === "mvp"; }), open = list.filter(devLeadOpen);
+    var stats = '<div class="map-stats" style="margin-bottom:12px;"><div class="map-stat"><b>'+open.length+'</b>open</div><div class="map-stat"><b>'+open.filter(devLeadOverdue).length+'</b>overdue</div><div class="map-stat"><b>'+list.filter(function(x){ return x.status === "won"; }).length+'</b>won</div><div class="map-stat"><b>'+list.filter(function(x){ return x.status === "moved"; }).length+'</b>moved on</div></div>';
+    return stats + '<p class="field-note" style="margin:0 0 10px;">Each dev lead: '+DEV_LEAD_DAYS.respond+' business days for the software house to accept or decline, '+DEV_LEAD_DAYS.quote+' business days to send a quote, and closed or moved on within '+DEV_LEAD_DAYS.close+' days. Move on an overdue lead to the next house; the old one is kept as a record.</p>'
+      + (list.length ? '<div style="display:flex;flex-direction:column;gap:8px;">'+list.slice().sort(function(a, b){ return String(b.registeredAt).localeCompare(String(a.registeredAt)); }).map(function(r){ return devLeadRowHtml(r, "op"); }).join("")+'</div>'
+        : '<div class="empty">No dev leads yet. Send a bigger MVP Builder request to a software house in the MVP Builder tab and it appears here.</div>');
+  }
+  function devLeadsHouseHtml(h){
+    var list = projectReferrals.filter(function(x){ return x.source === "mvp" && x.houseId === h.id; });
+    return '<div class="map-stats" style="margin-bottom:12px;"><div class="map-stat"><b>'+list.filter(devLeadOpen).length+'</b>open</div><div class="map-stat"><b>'+list.filter(function(x){ return x.status === "won"; }).length+'</b>won</div><div class="map-stat"><b>'+list.filter(function(x){ return x.status === "moved"; }).length+'</b>moved on</div></div>'
+      + '<p class="field-note" style="margin:0 0 10px;">Accept or decline each lead within '+DEV_LEAD_DAYS.respond+' business days, and send a quote within '+DEV_LEAD_DAYS.quote+' business days of accepting. Log each step so PartnerWAV can see where it stands. A lead that isn\'t answered in time is moved to another house.</p>'
+      + (list.length ? '<div style="display:flex;flex-direction:column;gap:8px;">'+list.slice().sort(function(a, b){ return String(b.registeredAt).localeCompare(String(a.registeredAt)); }).map(function(r){ return devLeadRowHtml(r, "house"); }).join("")+'</div>' : '<div class="empty">No dev leads yet. PartnerWAV sends them here when a client needs a bigger build.</div>');
+  }
+  function leadPartnersHtml(){
+    var hs = softwareHouses.filter(function(h){ return h.status === "active"; });
+    if (!hs.length) return '<div class="empty">No active software houses yet.</div>';
+    var lp = hs.filter(function(h){ return h.leadPartner; }), fees = lp.reduce(function(t, h){ return t + (Number(h.leadPartner.fee) || 0); }, 0);
+    return '<p class="field-note" style="margin:0 0 10px;">A Lead partner gets first look at the dev leads in its specialty: each new bigger build goes to lead partners first, and their listing shows the badge. Record the monthly fee the house pays PartnerWAV.</p>'
+      + '<div class="map-stats" style="margin-bottom:12px;"><div class="map-stat"><b>'+lp.length+'</b>lead partners</div><div class="map-stat"><b>'+usd(fees)+'</b>a month in fees</div></div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px;">'+hs.map(function(h){ var l = h.leadPartner || {};
+        return '<div class="card card-pad" data-lead-row="'+attr(h.id)+'"><div class="meet-two"><div><b>'+esc(h.name)+'</b> '+(h.leadPartner ? '<span class="badge accent">Lead partner</span>' : '')+'</div>'
+          + '<div class="svc-op"><input type="text" maxlength="120" placeholder="Specialty, e.g. LINE and voice AI" value="'+attr(l.specialty || "")+'" data-lead-specialty="'+attr(h.id)+'" aria-label="Specialty">'
+          + '<input type="text" inputmode="decimal" placeholder="Fee a month (USD)" value="'+attr(l.fee != null ? String(l.fee) : "")+'" data-lead-fee="'+attr(h.id)+'" aria-label="Lead partner fee">'
+          + '<button type="button" class="btn secondary xs" data-lead-save="'+attr(h.id)+'">Save</button>'+(h.leadPartner ? '<button type="button" class="btn ghost xs" data-lead-off="'+attr(h.id)+'">Remove</button>' : '')+'</div></div></div>'; }).join("")+'</div>';
+  }
+  function renderFractionalDev(force){
+    var fr = document.getElementById("fractionalContent"), dl = document.getElementById("devLeadsContent");
+    if (state.screen === "fractional" && fr){ var k1 = JSON.stringify(["fr", svcRequesterKey(), state.role, serviceRequests.length, productStages.length, serviceRequests.filter(function(r){ return r.status === "delivered"; }).length]);
+      if (force || fr.getAttribute("data-k") !== k1){ fr.setAttribute("data-k", k1); fr.innerHTML = fractionalHtml(); } }
+    if (state.screen === "dev-leads" && dl){ var h = myHouse(), k2 = JSON.stringify(["dl", state.role, h ? h.id : "", projectReferrals.map(function(r){ return r.id + r.status + (r.progress || []).length; }).join("|")]);
+      if (force || dl.getAttribute("data-k") !== k2){ dl.setAttribute("data-k", k2); dl.innerHTML = h ? devLeadsHouseHtml(h) : '<div class="empty">Dev leads are for software houses on PartnerWAV. This login isn\'t linked to one yet.</div>'; } }
+  }
+  function renderDevScreens(){ renderMediaMvp(true); renderFractionalDev(true); }
+  document.addEventListener("click", function(ev){
+    var t = ev.target; if (!t || !t.closest) return; var b;
+    if (t.closest("[data-mvp-wizard]")){ mvpWizardModal(); return; }
+    if (t.closest("[data-mvp-stage-save]")){ var sel = document.getElementById("mvpStage"); if (sel && sel.value){ setProductStage(svcRequesterKey(), sel.value); saveMediaMvp(); renderMediaMvp(true); renderFractionalDev(true); toast("Saved"); } return; }
+    if (t.closest("[data-fr-send]")){ frSend(); return; }
+    if ((b = t.closest("[data-dl-act]"))){ var id = b.getAttribute("data-dl-id"), nt = document.querySelector('[data-dl-note="' + id + '"]'), am = document.querySelector('[data-dl-amount="' + id + '"]');
+      devLeadAct(id, b.getAttribute("data-dl-act"), nt ? nt.value.trim().slice(0, 300) : "", am ? am.value : ""); return; }
+    if ((b = t.closest("[data-dl-move]"))){ var mid = b.getAttribute("data-dl-move"), to = document.querySelector('[data-dl-to="' + mid + '"]');
+      if (to && to.value && devLeadMove(mid, to.value)){ renderMediaMvp(true); toast("Moved on"); } else toast("Choose a house first"); return; }
+    if ((b = t.closest("[data-lead-save]"))){ var lh = houseById(b.getAttribute("data-lead-save")), sp = document.querySelector('[data-lead-specialty="' + (lh && lh.id) + '"]'), fe = document.querySelector('[data-lead-fee="' + (lh && lh.id) + '"]');
+      if (lh && sp && fe){ var fv = Number(fe.value.replace(/[^0-9.]/g, "")) || 0; lh.leadPartner = { specialty:sp.value.trim().slice(0, 120), fee:fv, since: lh.leadPartner ? lh.leadPartner.since : todayIso() }; saveReferrals(); renderMediaMvp(true); toast("Lead partner saved"); } return; }
+    if ((b = t.closest("[data-lead-off]"))){ var oh = houseById(b.getAttribute("data-lead-off")); if (oh){ delete oh.leadPartner; saveReferrals(); renderMediaMvp(true); toast("Removed as lead partner"); } return; }
+  });
 
   // ----- the Media & Events partner's own space
   function mediaProfileFormHtml(m){
@@ -20204,9 +20515,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var tab = state.svcTab || "mvp", pending = mediaProfiles.filter(function(m){ return !mediaApproved(m) && !m.archivedAt; });
     var applied = mediaSponsorships.filter(function(x){ return x.status === "applied"; });
     var h = '<div class="cal-views" role="group" aria-label="Show" style="margin-bottom:14px;">'+[["mvp", "MVP Builder requests (" + serviceRequests.filter(function(r){ return r.kind === "mvp"; }).length + ")"], ["media", "Media & Events requests (" + serviceRequests.filter(function(r){ return r.kind === "media"; }).length + ")"],
-      ["partners", "Promoters" + (pending.length ? " (" + pending.length + " to check)" : "")], ["sponsors", "Sponsorships" + (applied.length ? " (" + applied.length + ")" : "")], ["packages", "MVP packages"]].map(function(x){ return '<button type="button" class="cal-view" data-svc-tab="'+x[0]+'" aria-pressed="'+(tab === x[0])+'">'+esc(x[1])+'</button>'; }).join("")+'</div>';
-    if (tab === "mvp" || tab === "media"){ var list = serviceRequests.filter(function(r){ return r.kind === tab; });
+      ["partners", "Promoters" + (pending.length ? " (" + pending.length + " to check)" : "")], ["sponsors", "Sponsorships" + (applied.length ? " (" + applied.length + ")" : "")], ["packages", "MVP packages"], ["fractional", "Fractional (" + serviceRequests.filter(function(r){ return r.kind === "fractional"; }).length + ")"], ["devleads", "Dev leads (" + projectReferrals.filter(function(r){ return r.source === "mvp" && devLeadOpen(r); }).length + " open)"], ["leadpartners", "Lead partners"]].map(function(x){ return '<button type="button" class="cal-view" data-svc-tab="'+x[0]+'" aria-pressed="'+(tab === x[0])+'">'+esc(x[1])+'</button>'; }).join("")+'</div>';
+    if (tab === "mvp" || tab === "media" || tab === "fractional"){ var list = serviceRequests.filter(function(r){ return r.kind === tab; });
       return h + (list.length ? svcRequestListHtml(list, "op") : '<div class="empty">No requests yet.</div>'); }
+    if (tab === "devleads") return h + devLeadsOpHtml();
+    if (tab === "leadpartners") return h + leadPartnersHtml();
     if (tab === "partners") return h + '<p class="field-note" style="margin:0 0 10px;">Set up a promoter\'s login in Accounts &amp; Logins (type Promoter). Check each one before listing: PR, media, creators, events and venues only, not marketing automation.</p>'
       + (mediaProfiles.filter(function(m){ return !m.archivedAt; }).length ? '<div style="display:flex;flex-direction:column;gap:8px;">'+mediaProfiles.filter(function(m){ return !m.archivedAt; }).map(function(m){
         return '<div class="card card-pad" data-svc-partner="'+attr(m.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div><b>'+esc(m.name)+'</b> <span class="pill '+(mediaApproved(m) ? 'active' : 'pending')+'">'+(mediaApproved(m) ? 'Listed' : m.status === "paused" ? 'Paused' : 'To check')+'</span>'
@@ -20230,7 +20543,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var scr = state.screen, map = { "media-directory":"mediaDirectoryContent", "mvp-builder":"mvpBuilderContent", "media-overview":"mediaOverviewContent", "media-profile":"mediaProfileContent",
       "media-events":"mediaEventsContent", "media-offers":"mediaOffersContent", "media-requests":"mediaRequestsContent", "operator-services":"opServicesContent" };
     var box = document.getElementById(map[scr] || ""); if (!box) return;
-    var key = JSON.stringify([scr, state.role, myMsgKey(), mediaProfiles.length, mediaOffers.length, mediaSponsorships.length, serviceRequests.length, mvpPackages.length, communityEvents.length, state.medV || 0, state.medKind, state.svcTab]);
+    var key = JSON.stringify([scr, state.role, myMsgKey(), mediaProfiles.length, mediaOffers.length, mediaSponsorships.length, serviceRequests.length, mvpPackages.length, communityEvents.length, state.medV || 0, state.medKind, state.svcTab, projectReferrals.map(function(r){ return r.id + r.status + (r.progress || []).length; }).join("|")]);
     if (!force && box.getAttribute("data-k") === key) return;
     box.setAttribute("data-k", key);
     if (scr === "media-directory"){ box.innerHTML = mediaDirectoryHtml(); return; }
@@ -20288,7 +20601,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-svc-save]"))){ var r2 = serviceRequests.filter(function(r){ return r.id === b.getAttribute("data-svc-save"); })[0]; if (!r2) return;
       var num = function(sel){ var el = document.querySelector(sel); var v = el ? el.value.replace(/[^0-9.]/g, "") : ""; return v === "" ? null : Number(v); };
       r2.status = document.querySelector('[data-svc-status="' + r2.id + '"]').value; r2.value = num('[data-svc-value="' + r2.id + '"]'); r2.fee = num('[data-svc-fee="' + r2.id + '"]');
-      var hs = document.querySelector('[data-svc-house="' + r2.id + '"]'); if (hs){ r2.houseId = hs.value; if (hs.value && r2.status === "new") r2.status = "referred"; }
+      var hs = document.querySelector('[data-svc-house="' + r2.id + '"]'); if (hs){ r2.houseId = hs.value; if (hs.value && r2.status === "new") r2.status = "referred"; if (hs.value && r2.kind === "mvp" && houseById(hs.value)) assignDevLead(r2, houseById(hs.value)); }
+      if (r2.status === "delivered" && r2.kind === "mvp") markDelivered(r2);
       r2.updatedAt = nowStamp(); saveMediaMvp(); renderMediaMvp(true); toast("Saved"); return; }
     if ((b = t.closest("[data-svc-approve]"))){ var m2 = mediaById(b.getAttribute("data-svc-approve")); if (m2){ m2.status = "approved"; m2.approvedAt = todayIso(); saveMediaMvp(); renderMediaMvp(true); toast(m2.name + " is listed"); } return; }
     if ((b = t.closest("[data-svc-pause]"))){ var m3 = mediaById(b.getAttribute("data-svc-pause")); if (m3){ m3.status = "paused"; saveMediaMvp(); renderMediaMvp(true); } return; }

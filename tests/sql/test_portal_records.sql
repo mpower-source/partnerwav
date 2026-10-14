@@ -909,4 +909,37 @@ select t('a member cannot read meeting invites', (select count(*) from portal_re
 select t('...or add one, even marked readable by everyone', fails($$insert into portal_records(collection,id,data,readers,writers) values ('meetInvites','mi-y','{"id":"mi-y"}','{*}','{vendor:intelsense}')$$));
 reset role;
 
+-- ===== Fractional leadership, and a software house working its own Dev Leads (CloudWAV sends them from an MVP request)
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV
+insert into portal_records(collection,id,data,readers,writers) values
+ ('softwareHouses','sh-x','{"id":"sh-x","name":"Xray Software","partnerId":"siam-digital","status":"active"}','{}','{}'),
+ ('projectReferrals','dl-1','{"id":"dl-1","source":"mvp","houseId":"sh-x","referrerKey":"operator:","status":"registered","client":{"company":"Acme"},"progress":[]}','{operator:,partner:siam-digital}','{operator:,partner:siam-digital}');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;   -- Xray's own login (the partner account it is linked to)
+select t('a software house sees its own dev lead', (select count(*) from portal_records where collection='projectReferrals' and id='dl-1') = 1);
+update portal_records set data = data || '{"status":"accepted","acceptedAt":"2026-10-14","quoteBy":"2026-10-28","progress":[{"stage":"Accepted"}]}' where collection='projectReferrals' and id='dl-1';
+select t('...and accepts it, logging the step', (select data->>'status' from portal_records where collection='projectReferrals' and id='dl-1') = 'accepted');
+update portal_records set data = data || '{"progress":[{"stage":"Accepted"},{"stage":"Note","note":"Scoping on Monday"}]}' where collection='projectReferrals' and id='dl-1';
+select t('...and adds progress notes', (select jsonb_array_length(data->'progress') from portal_records where collection='projectReferrals' and id='dl-1') = 2);
+select t('...but cannot change the client', fails($$update portal_records set data = data || '{"client":{"company":"Someone else"}}' where collection='projectReferrals' and id='dl-1'$$));
+select t('...or move the lead to another house', fails($$update portal_records set data = data || '{"houseId":"sh-y"}' where collection='projectReferrals' and id='dl-1'$$));
+select t('...or skip a stage (accepted straight to won)', fails($$update portal_records set data = data || '{"status":"won"}' where collection='projectReferrals' and id='dl-1'$$));
+select t('...or set the date it was accepted on another lead', fails($$update portal_records set data = data || '{"respondBy":"2030-01-01"}' where collection='projectReferrals' and id='dl-1'$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;   -- another partner
+update portal_records set data = data || '{"status":"lost"}' where collection='projectReferrals' and id='dl-1';   -- matches nothing: the row is hidden from it
+select t('other partners cannot see or change it', (select count(*) from portal_records where collection='projectReferrals' and id='dl-1') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- Intelsense, a vendor that refers clients
+select t('a referrer cannot create a dev lead itself', fails($$insert into portal_records(collection,id,data,readers,writers) values ('projectReferrals','dl-fake','{"id":"dl-fake","source":"mvp","houseId":"sh-x","referrerKey":"vendor:intelsense","status":"registered"}','{vendor:intelsense}','{vendor:intelsense}')$$));
+select t('...or move its own referrals to won', fails($$insert into portal_records(collection,id,data,readers,writers) values ('projectReferrals','dl-own','{"id":"dl-own","houseId":"sh-x","referrerKey":"vendor:intelsense","status":"won"}','{vendor:intelsense}','{vendor:intelsense}')$$));
+insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-f','{"id":"sr-f","kind":"fractional","requesterKey":"vendor:intelsense","roles":["CTO"],"status":"new"}','{vendor:intelsense}','{vendor:intelsense}');
+select t('a company sends a Fractional leadership request', (select count(*) from portal_records where collection='serviceRequests' and data->>'kind'='fractional') = 1);
+insert into portal_records(collection,id,data,readers,writers) values ('productStages','vendor:intelsense','{"id":"vendor:intelsense","stage":"live"}','{vendor:intelsense}','{vendor:intelsense}');
+select t('a company records where its product is', (select data->>'stage' from portal_records where collection='productStages' and id='vendor:intelsense') = 'live');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authenticated;   -- another vendor
+select t('...which no one else can see', (select count(*) from portal_records where collection='productStages') = 0 and (select count(*) from portal_records where collection='serviceRequests' and data->>'kind'='fractional') = 0);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;
