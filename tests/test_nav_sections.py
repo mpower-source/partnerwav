@@ -2,7 +2,7 @@ from harness import *
 
 with sync_playwright() as p:
     b, pg = open_page(p)
-    for r, tops, secs in [("partner", 1, 5), ("vendor", 1, 4), ("affiliate", 2, 3), ("investor", 2, 2), ("member", 8, 0), ("media", 6, 0), ("operator", 1, 6)]:
+    for r, tops, secs in [("partner", 1, 5), ("vendor", 1, 4), ("affiliate", 2, 3), ("investor", 2, 2), ("member", 8, 0), ("media", 7, 0), ("operator", 1, 6)]:
         role(pg, r)
         nid = "#nav" + r.title()
         ok(pg.locator(nid + " > .navlink:visible").count() == tops and pg.locator(nid + " .navsec-head:visible").count() == secs, f"{r.title()} menu: {tops} top link(s) and {secs} sections")
@@ -23,7 +23,7 @@ with sync_playwright() as p:
     for r in ["partner", "vendor", "affiliate", "investor", "member", "media", "operator"]:
         role(pg, r)
         items = pg.evaluate("(id)=>[...document.querySelectorAll(id+' .navlink')].map(b=>b.getAttribute('data-screen')||'own')", "#nav" + r.title())
-        ok(len(items) == len(set(items)) and len(items) == {"partner": 26, "vendor": 20, "affiliate": 13, "investor": 6, "member": 8, "media": 6, "operator": 32}[r], f"{r.title()}: all {len(items)} menu items kept, none duplicated")
+        ok(len(items) == len(set(items)) and len(items) == {"partner": 26, "vendor": 20, "affiliate": 13, "investor": 6, "member": 8, "media": 7, "operator": 32}[r], f"{r.title()}: all {len(items)} menu items kept, none duplicated")
     # landing on a screen from elsewhere opens its section
     role(pg, "vendor"); nav(pg, "calendar")
     ok(pg.get_attribute('#navVendor [data-sec="connect"] .navsec-head', "aria-expanded") == "true" and visible_screen(pg) == ["scr-calendar"], "Vendor: Connect section open on Events & Calendar")
