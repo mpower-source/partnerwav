@@ -36,6 +36,20 @@ with sync_playwright() as p:
     m = [x for x in store(pg)["requests"] if x["kind"] == "mvp"]
     ok(m and m[0]["packageId"] == "pkg-security" and "Link: https://app.example.com" in m[0]["details"] and m[0]["budget"] == "USD 2,000 - 5,000", "The MVP request is saved")
 
+    # ----- software houses don't get the MVP Builder; other vendors and partners do
+    ok(pg.locator('#navVendor .navlink[data-screen="mvp-builder"]').get_attribute("hidden") is None, "A software vendor (Intelsense) sees the MVP Builder")
+    role(pg, "operator"); nav(pg, "referrals"); pg.wait_for_timeout(300)
+    pg.click('[data-ref-tab="houses"]'); pg.wait_for_timeout(200)
+    pg.click('[data-house-edit="sh-demo"]'); pg.wait_for_timeout(300)
+    pg.select_option("#hf_partnerId", "siam-digital"); pg.click("#hfSave"); pg.wait_for_timeout(300)
+    role(pg, "partner"); pg.wait_for_timeout(300)
+    ok(pg.locator('#navPartner .navlink[data-screen="mvp-builder"]').get_attribute("hidden") is not None, "A partner that is a software house doesn't see the MVP Builder")
+    ok(pg.locator('#navPartner .navlink[data-screen="media-directory"]').get_attribute("hidden") is None, "...but still sees Media & Events")
+    role(pg, "operator"); nav(pg, "referrals"); pg.wait_for_timeout(300); pg.click('[data-ref-tab="houses"]'); pg.wait_for_timeout(200)
+    pg.click('[data-house-edit="sh-demo"]'); pg.wait_for_timeout(300); pg.select_option("#hf_partnerId", ""); pg.click("#hfSave"); pg.wait_for_timeout(300)
+    role(pg, "partner"); pg.wait_for_timeout(300)
+    ok(pg.locator('#navPartner .navlink[data-screen="mvp-builder"]').get_attribute("hidden") is None, "Other partners see the MVP Builder")
+
     # ----- the vendor wizard offers both as add-ons
     role(pg, "operator"); pg.goto(URL + "?demo=1&assess=1"); pg.wait_for_timeout(600)
     pg.fill("#va_company", "Acme"); pg.fill("#va_contactName", "Ann Lee"); pg.fill("#va_email", "ann@acme.example"); pg.check('[data-va-k="companyStage"][value="Established"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(150)

@@ -6057,6 +6057,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("navInvestor").hidden = state.role !== "investor";
     document.getElementById("navMember").hidden = state.role !== "member";
     document.getElementById("navMedia").hidden = state.role !== "media";
+    var noMvp = isSoftwareHouseNow();
+    document.querySelectorAll('.navlink[data-screen="mvp-builder"]').forEach(function(b){ b.hidden = noMvp; });
+    if (noMvp && state.screen === "mvp-builder") state.screen = state.role + "-overview";
     // signed in (not previewing as CloudWAV): only your own account type can be picked
     var roleLock = state.account && !canPreview() ? state.account.role : null;
     document.querySelectorAll(".role-btn").forEach(function(b){
@@ -11765,6 +11768,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       net:Math.round(net), real: collected > 0 && fees > 0, roi: fees > 0 ? Math.round(net / fees * 100) : 0 };
   }
   function houseForProgram(pid){ return softwareHouses.filter(function(h){ return h.programId === pid; })[0] || null; }
+  // a software house -- as a vendor or as a partner -- doesn't get the MVP Builder (it builds software itself)
+  function isSoftwareHouseNow(){
+    if (state.role === "vendor"){ return isSoftwareHouseProgram(programById(state.myVendorId)); }
+    if (state.role === "partner"){ var pid = state.myProfileId, pp = partnerById(pid);
+      return softwareHouses.some(function(h){ return h.partnerId && h.partnerId === pid; })
+        || (!!pp && /software (development|house)/i.test([pp.tagline, (pp.specialties || []).join(" "), (pp.services || []).map(function(x){ return typeof x === "string" ? x : (x && x.name) || ""; }).join(" ")].join(" "))); }
+    return false;
+  }
   function isSoftwareHouseProgram(p){ return !!p && (!!houseForProgram(p.id) || /software (development|house)/i.test(String(p.vertical || ""))); }
   function houseSummaryList(){ return softwareHouses.filter(function(h){ return h.programId; }).map(function(h){ var r = houseRoi(h); r.id = h.programId; return r; }); }
   function houseSummaryFor(pid){
@@ -13838,6 +13849,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="field-row"><label for="hf_status">Status</label><select id="hf_status"><option value="negotiating">Negotiating</option><option value="active">Active -- partners can refer</option><option value="paused">Paused</option></select></div></div>'
       + tx("specialties", "What they build", d.specialties)
       + '<div class="field-row"><label for="hf_programId">Their vendor listing on PartnerWAV</label><select id="hf_programId"><option value="">None</option>'+programs.filter(function(pr){ return pr.id !== "cloudwav"; }).map(function(pr){ return '<option value="'+attr(pr.id)+'"'+(pr.id === d.programId ? " selected" : "")+'>'+esc(pr.name)+'</option>'; }).join("")+'</select><span class="field-note">Linking it shows this software house its own return on its Overview.</span></div>'
+      + '<div class="field-row"><label for="hf_partnerId">Their partner account on PartnerWAV</label><select id="hf_partnerId"><option value="">None</option>'+partnerProfiles.filter(function(pp){ return !pp.archivedAt; }).map(function(pp){ return '<option value="'+attr(pp.id)+'"'+(pp.id === d.partnerId ? " selected" : "")+'>'+esc(pp.name)+'</option>'; }).join("")+'</select><span class="field-note">A software house doesn\'t see the MVP Builder in its menu.</span></div>'
       + '<div class="aff-section-title" style="margin-top:6px;">Referral fees (Schedule A)</div>'
       + '<div class="vp-grid">'+n("referralRate", "Referral only, % of collected fees")+n("windowMonths", "…for months")+n("stepDownRate", "then %")+n("stepDownMonths", "…for months")
         + n("cosellRate", "Co-sell %")+n("cosellMonths", "…for months")+n("resellDiscount", "Resell discount %")+n("minFee", "Minimum fee per won project", "0 = none")+n("capPerYear", "Cap per client per year", "0 = none")+'</div>'
@@ -13856,6 +13868,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var o = JSON.parse(JSON.stringify(d)); ["name","website","city","contactName","contactEmail","specialties"].forEach(function(k){ o[k] = back.querySelector("#hf_"+k).value.trim(); });
       o.status = back.querySelector("#hf_status").value; o.terms = o.terms || {};
       var pl = back.querySelector("#hf_programId"); if (pl) o.programId = pl.value;
+      var pa = back.querySelector("#hf_partnerId"); if (pa) o.partnerId = pa.value;
       Object.keys(DEFAULT_REFERRAL_TERMS).forEach(function(k){ var el = back.querySelector("#ht_"+k); if (!el) return; o.terms[k] = el.type === "checkbox" ? el.checked : (k === "currency" ? el.value : Math.max(0, Number(el.value) || 0)); });
       return o;
     }
