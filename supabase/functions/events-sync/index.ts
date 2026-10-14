@@ -51,7 +51,9 @@ type Row = {
 
 const DEFAULT_KEYWORDS = ["tech", "startup", "ai", "artificial intelligence", "machine learning", "data", "developer",
   "dev", "software", "saas", "cloud", "cyber", "security", "blockchain", "web3", "fintech", "product", "hackathon",
-  "pitch", "founder", "venture", "investor", "devops", "python", "javascript", "coding", "gdg", "aws", "llm"];
+  "pitch", "founder", "venture", "investor", "devops", "python", "javascript", "coding", "gdg", "aws", "llm",
+  "entrepreneur", "business owner", "sme", "marketing", "growth", "e-commerce", "digital", "innovation", "incubator", "accelerator", "angel", "vc",
+  "summit", "conference", "expo", "trade show", "exhibition", "forum", "depa", "nia", "boi", "tceb", "microsoft", "google", "techsauce"];
 const CITIES = ["Bangkok", "Chiang Mai", "Phuket", "Pattaya", "Khon Kaen", "Hua Hin"];
 const DAYS_AHEAD = 90;
 const MAX_BYTES = 3_000_000;
@@ -161,6 +163,8 @@ function kindOf(text: string) {
   if (/hackathon|hack day|buildathon/.test(t)) return "hackathon";
   if (/pitch|demo day|investor night/.test(t)) return "pitch";
   if (/open call|call for (startups|applications)|applications open/.test(t)) return "opencall";
+  if (/\b(depa|nia|boi|tceb|ministry|government)\b/.test(t)) return "government";
+  if (/summit|conference|expo|exhibition|trade show|forum/.test(t)) return "conference";
   return "community";
 }
 

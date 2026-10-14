@@ -796,6 +796,60 @@ select pg_temp.as_user(''); set role anon;
 select t('the public cannot read perks', (select count(*) from portal_records where collection='startupPerks') = 0);
 reset role;
 
+-- ===== Members: people CloudWAV invites to the community
+insert into auth.users(id, email) values ('00000000-0000-0000-0000-000000000031', 'ploy@member.test'), ('00000000-0000-0000-0000-000000000032', 'arun@member.test'), ('00000000-0000-0000-0000-000000000033', 'nok@member.test');
+insert into public.portal_users (id,email,role,entity_id,display_name) values
+ ('00000000-0000-0000-0000-000000000031','ploy@member.test','member','mem-ploy','Ploy'),
+ ('00000000-0000-0000-0000-000000000032','arun@member.test','member','mem-arun','Arun'),
+ ('00000000-0000-0000-0000-000000000033','nok@member.test','member','mem-nok','Nok');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values
+ ('memberProfiles','mem-ploy','{"id":"mem-ploy","name":"Ploy"}','{members}','{member:mem-ploy}'),
+ ('memberProfiles','mem-arun','{"id":"mem-arun","name":"Arun"}','{members}','{member:mem-arun}'),
+ ('memberProfiles','mem-nok','{"id":"mem-nok","name":"Nok"}','{members}','{member:mem-nok}');
+select t('CloudWAV sets up member profiles', (select count(*) from portal_records where collection='memberProfiles') = 3);
+select t('CloudWAV can give a member a login', (select public.portal_setup_account('new.member@test.example','member','mem-ploy','Ploy','TempPass123') ->> 'id') is not null);
+delete from public.portal_users where email = 'new.member@test.example';
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000031'); set role authenticated;   -- Ploy
+select t('a member sees the other members', (select count(*) from portal_records where collection='memberProfiles') = 3);
+update portal_records set data = data || '{"headline":"Founder"}' where collection='memberProfiles' and id='mem-ploy';
+update portal_records set data = data || '{"headline":"Hacked"}' where collection='memberProfiles' and id='mem-arun';
+reset role;
+select t('a member edits her own profile, not someone else''s', (select data->>'headline' from portal_records where collection='memberProfiles' and id='mem-ploy') = 'Founder'
+  and (select data->>'headline' from portal_records where collection='memberProfiles' and id='mem-arun') is null);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000031'); set role authenticated;
+select t('a member profile cannot be made public', fails($$update portal_records set is_public = true where collection='memberProfiles' and id='mem-ploy'$$));
+select t('...or shown to everyone signed in', fails($$update portal_records set readers = '{*}' where collection='memberProfiles' and id='mem-ploy'$$));
+insert into portal_records(collection,id,data,readers,writers) values ('memberContacts','mem-ploy','{"id":"mem-ploy","whatsapp":"+66800000001"}','{member:mem-ploy}','{member:mem-ploy}');
+select t('a member cannot share contact details with a non-member', fails($$update portal_records set readers = '{member:mem-ploy,vendor:intelsense}' where collection='memberContacts' and id='mem-ploy'$$));
+insert into portal_records(collection,id,data,readers,writers) values ('memberConnections','mc-mem-arun--mem-ploy','{"id":"mc-mem-arun--mem-ploy","from":"member:mem-ploy","to":"member:mem-arun","status":"pending"}','{member:mem-ploy,member:mem-arun}','{member:mem-ploy,member:mem-arun}');
+select t('a member asks to connect', (select count(*) from portal_records where collection='memberConnections') = 1);
+select t('...but cannot accept her own request', fails($$update portal_records set data = data || '{"status":"accepted"}' where collection='memberConnections' and id='mc-mem-arun--mem-ploy'$$));
+select t('...or start one already accepted', fails($$insert into portal_records(collection,id,data,readers,writers) values ('memberConnections','mc-mem-nok--mem-ploy','{"id":"mc-mem-nok--mem-ploy","from":"member:mem-ploy","to":"member:mem-nok","status":"accepted"}','{member:mem-ploy,member:mem-nok}','{member:mem-ploy,member:mem-nok}')$$));
+select t('...or ask on someone else''s behalf', fails($$insert into portal_records(collection,id,data,readers,writers) values ('memberConnections','mc-mem-nok--mem-x','{"id":"mc-mem-nok--mem-x","from":"member:mem-nok","to":"member:mem-arun","status":"pending"}','{member:mem-nok,member:mem-arun}','{member:mem-nok,member:mem-arun}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000033'); set role authenticated;   -- Nok
+select t('others cannot see a connection request', (select count(*) from portal_records where collection='memberConnections') = 0);
+select t('...or a member''s WhatsApp before connecting', (select count(*) from portal_records where collection='memberContacts') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000032'); set role authenticated;   -- Arun
+update portal_records set data = data || '{"status":"accepted"}' where collection='memberConnections' and id='mc-mem-arun--mem-ploy';
+reset role;
+select t('the person asked accepts', (select data->>'status' from portal_records where collection='memberConnections' and id='mc-mem-arun--mem-ploy') = 'accepted');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000031'); set role authenticated;
+update portal_records set readers = '{member:mem-ploy,member:mem-arun}' where collection='memberContacts' and id='mem-ploy';
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000032'); set role authenticated;
+select t('once connected, the other member sees her WhatsApp', (select data->>'whatsapp' from portal_records where collection='memberContacts' and id='mem-ploy') = '+66800000001');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- a vendor
+select t('companies cannot see member profiles', (select count(*) from portal_records where collection in ('memberProfiles','memberContacts','memberConnections')) = 0);
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('the public cannot see member profiles', (select count(*) from portal_records where collection='memberProfiles') = 0);
+reset role;
+
 -- ===== Intro meeting invites: CloudWAV only
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
 insert into portal_records(collection,id,data,readers,writers) values ('meetInvites','mi-x','{"id":"mi-x","email":"ann@acme.example"}','{}','{}');

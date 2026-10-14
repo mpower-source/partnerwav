@@ -806,6 +806,24 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .cp-share .ev-qr .aff-qr img{ width:140px; height:140px; }
   .cp-ev{ display:flex; gap:14px; align-items:flex-start; }
   .evs-list{ display:flex; flex-direction:column; gap:8px; }
+  .mem-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:12px; }
+  .mem-card{ display:flex; flex-direction:column; gap:10px; min-height:196px; }
+  .mem-card-top{ display:flex; gap:12px; align-items:flex-start; }
+  .mem-name{ display:block; }
+  .mem-line{ overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .mem-topics{ min-height:22px; }
+  .mem-acts{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:auto; }
+  .mem-avatar{ border-radius:50%; object-fit:cover; flex:none; display:inline-flex; align-items:center; justify-content:center; }
+  .mem-initials{ background:var(--accent-soft); color:var(--accent-strong); font-weight:700; font-family:"Space Grotesk",sans-serif; }
+  .mem-hello{ display:flex; gap:14px; align-items:center; margin-bottom:14px; }
+  .mem-next{ display:flex; flex-direction:column; gap:8px; }
+  .mem-goals{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:12px; }
+  .mem-goal{ display:flex; flex-direction:column; gap:6px; min-height:130px; }
+  .mem-photo-row{ display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  .mem-ev-bar{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .mem-ev-bar input{ flex:1; min-width:220px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font:inherit; }
+  .tec-wrap.mem-tec{ max-width:900px; margin:0; padding:0; }
+  .mem-acts a, .mem-next a.btn{ text-decoration:none; }
   .meet-grid{ display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:14px; align-items:start; }
   .meet-form{ display:flex; flex-direction:column; gap:8px; }
   .meet-form input[type=text], .meet-form input[type=date], .meet-form input[type=time], .meet-form textarea{ width:100%; box-sizing:border-box; }
@@ -858,6 +876,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .tec-ev{ display:flex; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:var(--shadow); }
   .tec-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
   .tec-kind{ align-self:flex-start; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; padding:3px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent-strong); }
+  .tec-kind-conference{ background:#e6efff; color:#2453a6; } .tec-kind-government{ background:#eef4e4; color:#4b6b1f; }
   .tec-kind-hackathon{ background:#e2f6f1; color:#0b7a64; } .tec-kind-opencall{ background:#fff3dc; color:#9a6200; }
   .tec-body h3{ margin:0; font-size:1.1rem; line-height:1.3; }
   .tec-host{ font-size:.9rem; font-weight:600; }
@@ -1249,6 +1268,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="role-btn" data-role="vendor" aria-pressed="false">Vendor</button>
       <button class="role-btn" data-role="affiliate" aria-pressed="false">Affiliate</button>
       <button class="role-btn" data-role="investor" aria-pressed="false">Investor</button>
+      <button class="role-btn" data-role="member" aria-pressed="false">Member</button>
       <button class="role-btn role-op" data-role="operator" aria-pressed="false">Operator (CloudWAV)</button>
     </div>
 
@@ -1397,6 +1417,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
         </div>
       </div>
+    </nav>
+
+    <nav class="navgroup" id="navMember" hidden>
+      <div class="navgroup-label">Member</div>
+      <button class="navlink" data-screen="member-overview"><span class="ic">📊</span>Overview</button>
+      <button class="navlink" data-screen="member-events"><span class="ic">📅</span>Events</button>
+      <button class="navlink" data-screen="member-people"><span class="ic">👥</span>People</button>
+      <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+      <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
+      <button class="navlink" data-screen="member-profile"><span class="ic">👤</span>My Profile</button>
     </nav>
 
     <nav class="navgroup" id="navOperator" hidden>
@@ -2751,6 +2781,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div style="height:14px"></div><div id="investorReadinessContent"></div>
       </section>
       <section id="scr-investor-overview" hidden><div id="investorOverviewContent"></div></section>
+      <section id="scr-member-overview" hidden><div id="memberOverviewContent"></div></section>
+      <section id="scr-member-events" hidden>
+        <div class="section-head"><h2>Events</h2><span class="hint">Tech, AI, startup, investor and business events in Thailand, in one place</span></div>
+        <div style="height:14px"></div><div id="memberEventsContent"></div>
+      </section>
+      <section id="scr-member-people" hidden>
+        <div class="section-head"><h2>People</h2><span class="hint">Founders, builders, marketers and investors on PartnerWAV</span></div>
+        <div style="height:14px"></div><div id="memberPeopleContent"></div>
+      </section>
+      <section id="scr-member-profile" hidden>
+        <div class="section-head"><h2>My Profile</h2><span class="hint">What other members see, and how they can reach you</span></div>
+        <div style="height:14px"></div><div id="memberProfileContent"></div>
+      </section>
       <section id="scr-investor-profile" hidden>
         <div class="section-head"><h2>My Profile</h2><span class="hint">What you invest in, so PartnerWAV can bring you the right companies</span></div>
         <div style="height:14px"></div><div id="investorProfileContent"></div>
@@ -4034,7 +4077,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
 
   function roleLabel(role){
-    return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "investor" ? "Investor workspace" : (role === "operator" ? "Program Operator" : "Partner workspace")));
+    return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "investor" ? "Investor workspace" : role === "member" ? "Member" : (role === "operator" ? "Program Operator" : "Partner workspace")));
   }
 
   var titles = {
@@ -4100,6 +4143,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "operator-meet-invites":"Intro Meetings",
     "startup-perks":"Startup Perks",
     "investor-overview":"Overview",
+    "member-overview":"Overview",
+    "member-events":"Events",
+    "member-people":"People",
+    "member-profile":"My Profile",
     "investor-readiness":"Investor Readiness",
     "investor-profile":"My Profile",
     "investor-deals":"Companies Raising",
@@ -5436,7 +5483,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // link and a calendar file (.ics) that Apple Calendar and desktop Outlook open. No calendar account is connected.
   // Times are stored in UTC and shown in each viewer's own timezone.
   // account set-up and investment rounds (functions live next to the sign-in code)
-  var ACCT_ROLES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor" };
+  var ACCT_ROLES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member" };
   var acctList = null, acctListErr = "", acctListBusy = false;
   var FUNDING_KEY = "partnerWAV_funding";
   var fundingProfiles = [];
@@ -5463,6 +5510,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // CloudWAV's investor & incubator database (see INVESTOR DATABASE). The demo shows a few organisations (public company
   // information only) and one made-up example; the real records are loaded into Supabase from a private seed.
   var PERKS_KEY = "partnerWAV_startupPerks";   // declared here, before loadPerks() runs at start-up
+  var MEMBERS_KEY = "partnerWAV_members";   // community members (see MEMBERS); before loadMembers() runs
+  // demo members only (made-up people, shown in demo mode); in the live portal members come from Supabase
+  var memberProfiles = [
+    { id:"mem-ploy", name:"Ploy Srisuk", headline:"Founder, planning a booking app for spas and salons", company:"Spa Slot (idea stage)", city:"Bangkok", topics:["Startups", "Hospitality & travel tech", "AI"], goals:["events", "mvp"], about:"Ten years in hospitality, now turning a booking idea into a product.", linkedin:"", sample:true },
+    { id:"mem-arun", name:"Arun Mehta", headline:"CTO of a logistics SaaS", company:"FleetLoop", city:"Bangkok", topics:["SaaS & software", "Cloud & DevOps", "AI"], goals:["saas", "people"], linkedin:"https://www.linkedin.com/in/example-arun", sample:true },
+    { id:"mem-nok", name:"Nok Chaiyasit", headline:"Growth marketer for B2B startups", company:"Freelance", city:"Chiang Mai", topics:["Marketing & growth", "Startups", "E-commerce"], goals:["events", "people"], linkedin:"", sample:true },
+    { id:"mem-david", name:"David Lim", headline:"Angel investor and former founder", company:"", city:"Bangkok", topics:["Investors & funding", "Fintech", "Startups"], goals:["people"], linkedin:"https://www.linkedin.com/in/example-david", sample:true }];
+  var memberContacts = [{ id:"mem-ploy", whatsapp:"+66 80 000 0001", line:"", sharedWith:["member:mem-arun"] }, { id:"mem-arun", whatsapp:"+66 80 000 0002", line:"arun.fleet", sharedWith:["member:mem-ploy"] }];
+  var memberConnections = [{ id:"mc-mem-arun--mem-ploy", from:"member:mem-arun", to:"member:mem-ploy", status:"accepted", createdAt:"2026-10-01 10:00" },
+    { id:"mc-mem-nok--mem-ploy", from:"member:mem-nok", to:"member:mem-ploy", status:"pending", createdAt:"2026-10-12 09:30" }];
   var MEET_KEY = "partnerWAV_meetInvites";   // intro meeting invites CloudWAV has sent (see INTRO MEETINGS); before loadMeet() runs
   var meetInvites = [];
   // Startup perks: free credits and discounts from software companies. Public program information, checked on the date shown;
@@ -5905,6 +5962,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("navAffiliate").hidden = state.role !== "affiliate";
     document.getElementById("navOperator").hidden = state.role !== "operator";
     document.getElementById("navInvestor").hidden = state.role !== "investor";
+    document.getElementById("navMember").hidden = state.role !== "member";
     // signed in (not previewing as CloudWAV): only your own account type can be picked
     var roleLock = state.account && !canPreview() ? state.account.role : null;
     document.querySelectorAll(".role-btn").forEach(function(b){
@@ -6082,6 +6140,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderOperatorCommunity();
     renderOperatorInvestors();
     renderInvestor();
+    renderMember();
     renderReadiness();
     renderInvestorDb();
     renderPerks();
@@ -7741,14 +7800,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ----- direct messages -----
   function myMsgKey(){
     if (state.account && !isPreviewing()) return state.account.role + ":" + (state.account.entityId || "");
-    var id = state.role === "partner" ? state.myProfileId : state.role === "vendor" ? state.myVendorId : state.role === "affiliate" ? myAffiliateProfileId() : state.role === "investor" ? myInvestorId() : "";
+    var id = state.role === "partner" ? state.myProfileId : state.role === "vendor" ? state.myVendorId : state.role === "affiliate" ? myAffiliateProfileId() : state.role === "investor" ? myInvestorId() : state.role === "member" ? myMemberId() : "";
     return state.role + ":" + (id || "");
   }
   function keyName(k){
     var r = String(k || "").split(":")[0], id = String(k || "").slice(r.length + 1);
     if (r === "operator") return "PartnerWAV";
     if (r === "community"){ var ce0 = communityEvents.filter(function(x){ return x.id === id; })[0]; return ce0 ? ceHost(ce0) : "Community event"; }
-    var e = r === "partner" ? partnerById(id) : r === "vendor" ? programById(id) : r === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : r === "investor" ? investorById(id) : null;
+    var e = r === "partner" ? partnerById(id) : r === "vendor" ? programById(id) : r === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : r === "investor" ? investorById(id) : r === "member" ? memberById(id) : null;
     return e ? e.name : (id || r);
   }
   function keyRoleLabel(k){ var r = String(k).split(":")[0]; return r === "operator" ? "Program operator" : cap(r); }
@@ -7779,7 +7838,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return !seen || seen < last.at;
   }
   function openConversationWith(name, type, subject){
-    var me = myMsgKey(), other = /^(partner|vendor|affiliate|investor|operator):/.test(name || "") ? name : resolveMsgKey(name, type);
+    var me = myMsgKey(), other = /^(partner|vendor|affiliate|investor|member|operator):/.test(name || "") ? name : resolveMsgKey(name, type);
     if (!other){ toast(name + " isn't on PartnerWAV yet -- invite them first"); return; }
     if (other === me){ toast("That's you"); return; }
     var id = convoIdFor(me, other), c = convoById(id);
@@ -7793,6 +7852,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var out = [];
     if (me !== "operator:") out.push(["operator:", "PartnerWAV (program operator)"]);
     if (/^investor:/.test(me || "")) return out;   // investors reach companies through PartnerWAV introductions
+    if (/^member:/.test(me || "")){   // members message PartnerWAV and the members they're connected with
+      memberConnectedKeys(me).forEach(function(k){ var mm = memberById(k.slice(7)); if (mm) out.push([k, mm.name + " · Member"]); }); return out; }
     if (me === "operator:") investorProfiles.forEach(function(v){ if (!v.archivedAt) out.push(["investor:" + v.id, v.name + " · Investor"]); });
     partnerProfiles.forEach(function(p){ if (!p.archivedAt) out.push(["partner:" + p.id, p.name + " · Partner"]); });
     programs.forEach(function(v){ out.push(["vendor:" + v.id, v.name + " · Vendor"]); });
@@ -10702,6 +10763,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { name:"investorListings", mode:"replace", get:function(){ return investorListings; }, set:function(a){ investorListings = a; },
       access:function(r){ return { readers:["investors", r.id], writers:[r.id] }; } },
     // startup perks: CloudWAV keeps the list; everyone signed in reads the visible ones
+    // members: profiles are read by members (never public); WhatsApp / LINE only by their connections
+    { name:"memberProfiles", mode:"replace", get:function(){ return memberProfiles; }, set:function(a){ memberProfiles = a; },
+      access:function(r){ return { readers: r.hidden ? [] : ["members"], writers:["member:" + r.id] }; } },
+    { name:"memberContacts", mode:"replace", get:function(){ return memberContacts; }, set:function(a){ memberContacts = a; },
+      access:function(r){ return { readers:["member:" + r.id].concat((r.sharedWith || []).filter(function(k){ return /^member:./.test(k) && k !== "member:" + r.id; })), writers:["member:" + r.id] }; } },
+    { name:"memberConnections", mode:"replace", get:function(){ return memberConnections; }, set:function(a){ memberConnections = a; },
+      access:function(r){ return { readers:[r.from, r.to], writers:[r.from, r.to] }; } },
     { name:"meetInvites", mode:"replace", get:function(){ return meetInvites; }, set:function(a){ meetInvites = a; },
       access:function(){ return { readers:[], writers:[] }; } },   // CloudWAV only
     { name:"startupPerks", mode:"merge", get:function(){ return startupPerks; }, set:function(a){ startupPerks = a; },
@@ -17586,6 +17654,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadReadiness();
   loadIdb();
   loadPerks();
+  loadMembers();
   loadMeet();
   loadFunding();
   loadBrandKits();
@@ -17604,8 +17673,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // public pages: read the company name and CAPTCHA site key (no sign-in needed), then redraw the form with the CAPTCHA
   if (PUBLIC_APPLY) setTimeout(function(){ cloudLoadPublicSettings().then(function(ok){ if (ok && captchaOn()){ ["invite", "pp", "assess", "apply", "meet", "tec"].forEach(function(k){ var el = document.getElementById("hp_" + k);
     if (el && !document.querySelector('[data-captcha="' + k + '"]')){ var box = document.createElement("div"); box.className = "captcha-box"; box.setAttribute("data-captcha", k); el.closest(".hp-field").after(box); } }); captchaMount(); } }); }, 0);
-  var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", investor:"investor-overview", operator:"operator-overview" };
-  var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", operator:"Program Operator" };
+  var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", investor:"investor-overview", member:"member-overview", operator:"operator-overview" };
+  var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member", operator:"Program Operator" };
   state.account = null;
 
   function setAuthLocked(locked){ document.documentElement.classList.toggle("auth-locked", !!locked); }
@@ -17651,7 +17720,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function entityNameFor(role, id){
     var e = role === "vendor" ? programById(id) : role === "partner" ? partnerById(id)
-      : role === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : role === "investor" ? investorById(id) : null;
+      : role === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : role === "investor" ? investorById(id) : role === "member" ? memberById(id) : null;
     return e ? e.name : (role === "operator" ? "PartnerWAV" : "");
   }
 
@@ -17698,9 +17767,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       enrollments.forEach(function(e){ add(e.partnerId, e.partner); }); PREVIEW_KNOWN.partner.forEach(function(id){ add(id); }); }
     if (role === "affiliate"){ affiliateProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); }); PREVIEW_KNOWN.affiliate.forEach(function(id){ add(id); }); }
     if (role === "investor") investorProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
+    if (role === "member") memberProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
     return out;
   }
-  function previewCurrentId(role){ return role === "vendor" ? state.myVendorId : role === "partner" ? state.myProfileId : role === "affiliate" ? state.myAffiliateId : role === "investor" ? state.myInvestorId : null; }
+  function previewCurrentId(role){ return role === "vendor" ? state.myVendorId : role === "partner" ? state.myProfileId : role === "affiliate" ? state.myAffiliateId : role === "investor" ? state.myInvestorId : role === "member" ? state.myMemberId : null; }
   function previewPick(role){
     if (role === "operator"){ startPreview("operator"); return; }
     var list = previewChoices(role), cur = previewCurrentId(role) || (state.previewLast || {})[role] || (list[0] || {}).id;
@@ -17729,6 +17799,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (role === "partner") state.myProfileId = id;
     if (role === "affiliate") state.myAffiliateId = id;
     if (role === "investor") state.myInvestorId = id;
+    if (role === "member") state.myMemberId = id;
     if (id){ state.previewLast = state.previewLast || {}; state.previewLast[role] = id; }
     state.activeConversation = null;
     state.screen = HOME_SCREEN[role];
@@ -17759,13 +17830,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ===== ACCOUNT SETUP (PartnerWAV sets up a company + login from a name and an email) =====
   function acctEntities(role){
     return role === "vendor" ? programs : role === "partner" ? partnerProfiles.filter(function(x){ return !x.archivedAt; })
-      : role === "investor" ? investorProfiles.filter(function(x){ return !x.archivedAt; }) : affiliateProfiles.filter(function(x){ return !x.archivedAt; });
+      : role === "investor" ? investorProfiles.filter(function(x){ return !x.archivedAt; }) : role === "member" ? memberProfiles.filter(function(x){ return !x.archivedAt; })
+      : affiliateProfiles.filter(function(x){ return !x.archivedAt; });
   }
   function acctEntity(role, id){ return acctEntities(role).filter(function(x){ return x.id === id; })[0] || null; }
   function acctSlug(role, name){
     var base = String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || role;
     var id = base, n = 2;
-    while (programById(id) || partnerById(id) || affiliateProfiles.some(function(a){ return a.id === id; }) || investorProfiles.some(function(a){ return a.id === id; })) id = base + "-" + (n++);
+    while (programById(id) || partnerById(id) || affiliateProfiles.some(function(a){ return a.id === id; }) || investorProfiles.some(function(a){ return a.id === id; }) || memberProfiles.some(function(a){ return a.id === id; })) id = base + "-" + (n++);
     return id;
   }
   // 12 characters, no look-alikes (0/O, 1/l/I), always a letter, a digit and a capital
@@ -17783,6 +17855,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         tiers:[{ tier:"Reseller", rate:"To be agreed", base:"To be agreed" }], agreement:{ type:"Vendor Program Agreement", status:"draft" },
         status:"onboarding", logo:"", logoSetup:2, website:"", social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[], products:[] };
       programs.push(e); saveVendorEdits();
+    } else if (role === "member"){
+      e = { id:id, needsProfile:true, name:name, headline:"", company:"", city:"", topics:[], goals:[], linkedin:"", createdAt:nowStamp() };
+      memberProfiles.push(e); saveMembers();
     } else if (role === "investor"){
       e = { id:id, needsProfile:true, name:name, kind:INV_KINDS[0], ticket:"", stages:[], sectors:"", countries:"", website:"", thesis:"", createdAt:nowStamp() };
       investorProfiles.push(e); saveInvestors();
@@ -17806,7 +17881,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     else {
       body += '<div class="field-row"><label for="acctRole">Type</label><select id="acctRole" class="filter app-select">'
         + Object.keys(ACCT_ROLES).map(function(r){ return '<option value="' + r + '"' + (r === role ? " selected" : "") + '>' + ACCT_ROLES[r] + '</option>'; }).join("") + '</select></div>'
-        + '<div class="field-row"><label for="acctCompany">Company name</label><input type="text" id="acctCompany" value="' + a(vals.company) + '" placeholder="e.g. AgentID" autocomplete="off"></div>';
+        + '<div class="field-row"><label for="acctCompany">Company name (for a member, the person\'s name)</label><input type="text" id="acctCompany" value="' + a(vals.company) + '" placeholder="e.g. AgentID" autocomplete="off"></div>';
     }
     if (!fixed) body += '<div class="field-row" id="acctRefRow"' + (role === "vendor" ? "" : " hidden") + '><label for="acctRef">Introduced by <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label><select id="acctRef" class="filter app-select"><option value="">Nobody -- PartnerWAV found them</option>'
       + softwareHouses.map(function(h){ return '<option value="' + a(h.id) + '">' + esc(h.name) + ' · Software house</option>'; }).join("") + '</select></div>';
@@ -17940,6 +18015,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!ent || !ent.needsProfile) return;
     state.profilePrompted = true;
     if (role === "vendor"){ state.screen = "vendor-overview"; state.vendorEditId = null; state.vendorOverviewEdit = ent.id; }
+    else if (role === "member"){ state.screen = "member-profile"; }
     else if (role === "partner"){ state.screen = "partner-profile-editor"; state.editingProfileId = ent.id; setTimeout(function(){ loadPartnerProfileForm(ent.id); }, 0); }
     else { state.screen = "affiliate-profile-editor"; state.editingAffiliateId = ent.id; setTimeout(function(){ loadAffiliateProfileForm(ent.id); }, 0); }
     setTimeout(function(){ toast("Welcome to PartnerWAV -- please finish your company profile"); }, 50);
@@ -19581,6 +19657,217 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-perk-hide]"))){ var hx = perkById(b.getAttribute("data-perk-hide")); if (hx){ hx.hidden = !hx.hidden; hx.updatedAt = todayIso(); state.perkV = (state.perkV || 0) + 1; savePerks(); renderPerks(true); } return; }
     if ((b = t.closest("[data-perk-delete]"))){ var dx = perkById(b.getAttribute("data-perk-delete")); if (dx && confirm("Remove " + (dx.program || dx.provider) + " from Startup Perks?")){ startupPerks.splice(startupPerks.indexOf(dx), 1); state.perkEdit = null; savePerks(); renderPerks(true); } return; }
   });
+  // ===== MEMBERS: people CloudWAV invites to the PartnerWAV community =====
+  // A member has one place for Thailand's tech, AI, startup, investor, marketing and business events (the community
+  // calendar, once CloudWAV approves each event), a profile with a photo, and a way to meet other members: connect in
+  // the app, then message here or on WhatsApp, LINE and LinkedIn. Later a member can list a SaaS product on PartnerWAV,
+  // or have CloudWAV help build an MVP. Profiles are seen only by members and CloudWAV, never publicly; WhatsApp and
+  // LINE (memberContacts) are shown only to the member's connections.
+  var MEMBER_TOPICS = ["AI", "SaaS & software", "Startups", "Investors & funding", "Marketing & growth", "Business owners & SMEs", "E-commerce", "Fintech",
+    "Cloud & DevOps", "Cybersecurity", "Hospitality & travel tech", "Government programs", "Hackathons"];
+  var MEMBER_GOALS = [["events", "Find the right events", "Tech, AI, startup, investor and business events in Thailand, in one place"],
+    ["saas", "List my SaaS product on PartnerWAV", "Partners and resellers across Southeast Asia can sell it for you"],
+    ["mvp", "Build an MVP from my idea", "CloudWAV can help plan and build the first version"],
+    ["people", "Meet founders, builders and investors", "Connect with other members and keep in touch"]];
+  function loadMembers(){ try { var d = JSON.parse(lsGet(MEMBERS_KEY) || "null"); if (d){ if (Array.isArray(d.profiles)) memberProfiles = d.profiles; if (Array.isArray(d.contacts)) memberContacts = d.contacts; if (Array.isArray(d.connections)) memberConnections = d.connections; } } catch(e){} }
+  function saveMembers(){ try { lsSet(MEMBERS_KEY, JSON.stringify({ profiles:memberProfiles, contacts:memberContacts, connections:memberConnections })); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); state.memV = (state.memV || 0) + 1; }
+  function memberById(id){ return memberProfiles.filter(function(x){ return x.id === id && !x.archivedAt; })[0] || null; }
+  function myMemberId(){
+    if (state.role !== "member") return null;
+    if (state.myMemberId) return state.myMemberId;
+    return state.account ? null : ((memberProfiles.filter(function(x){ return !x.archivedAt; })[0] || {}).id || null);
+  }
+  function memberKeyOf(id){ return "member:" + id; }
+  function memberContactFor(id){ return memberContacts.filter(function(x){ return x.id === id; })[0] || null; }
+  function memberConnId(a, b){ return "mc-" + [a, b].sort().join("--").replace(/member:/g, ""); }
+  function memberConn(a, b){ var id = memberConnId(a, b); return memberConnections.filter(function(c){ return c.id === id; })[0] || null; }
+  // "none" | "sent" | "received" | "connected"
+  function memberLink(me, other){ var c = memberConn(me, other); if (!c) return "none";
+    if (c.status === "accepted") return "connected"; if (c.status === "pending") return c.from === me ? "sent" : "received"; return "none"; }
+  function memberConnectedKeys(me){ return memberConnections.filter(function(c){ return c.status === "accepted" && (c.from === me || c.to === me); }).map(function(c){ return c.from === me ? c.to : c.from; }); }
+  // my WhatsApp and LINE are shared with exactly the people I'm connected to
+  function memberSyncContacts(){
+    var id = myMemberId(); if (!id) return; var me = memberKeyOf(id), rec = memberContactFor(id); if (!rec) return;
+    var want = memberConnectedKeys(me).sort(), have = (rec.sharedWith || []).slice().sort();
+    if (JSON.stringify(want) !== JSON.stringify(have)){ rec.sharedWith = want; saveMembers(); }
+  }
+  function memberInitials(n){ return String(n || "?").split(/\s+/).filter(Boolean).slice(0, 2).map(function(w){ return w.charAt(0).toUpperCase(); }).join("") || "?"; }
+  function memberAvatar(m, size){ size = size || 48;
+    return /^data:image\/(png|jpeg|webp);base64,/.test(m && m.photo || "") ? '<img class="mem-avatar" src="'+attr(m.photo)+'" alt="" style="width:'+size+'px;height:'+size+'px;">'
+      : '<span class="mem-avatar mem-initials" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size * 0.36)+'px;">'+esc(memberInitials(m && m.name))+'</span>'; }
+  function memberLinkedin(m){ var u = safeHref((m && m.linkedin) || ""); return /^https:\/\/([a-z]{2,3}\.)?(www\.)?linkedin\.com\//i.test(u) ? u : ""; }
+
+  // ----- events: the approved community calendar, filtered the member's way
+  function memberEventsHtml(limit){
+    var all = communityEvents.filter(function(e){ return ceLive(e) && ceUpcoming(e); }).sort(function(a, b){ return new Date(a.start) - new Date(b.start); });
+    if (limit) return all.slice(0, limit);
+    var kindF = state.memKind || "", cityF = state.memCity || "", q = String(state.memQ || "").toLowerCase().trim();
+    var kinds = CE_KINDS.filter(function(k){ return all.some(function(e){ return ceKind(e) === k[0]; }); }), cities = CE_CITIES.filter(function(c){ return all.some(function(e){ return e.city === c; }); });
+    var list = all.filter(function(e){ return (!kindF || ceKind(e) === kindF) && (!cityF || e.city === cityF)
+      && (!q || [e.title, e.desc, ceHost(e), e.venue, e.city].join(" ").toLowerCase().indexOf(q) > -1); });
+    var months = [], byMonth = {};
+    list.forEach(function(e){ var m = bkkFmt(e.start, { month:"long", year:"numeric" }); if (!byMonth[m]){ byMonth[m] = []; months.push(m); } byMonth[m].push(e); });
+    return '<div class="mem-ev-bar"><input type="search" id="memEvQ" placeholder="Search events: AI, investors, marketing, hackathon..." value="'+attr(state.memQ || "")+'" aria-label="Search events">'
+        + '<a class="btn secondary sm" href="'+attr(calendarUrl())+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Suggest an event</a></div>'
+      + (kinds.length > 1 ? '<div class="meet-chips tec-filter" role="group" aria-label="Kind of event"><button type="button" class="meet-chip" data-mem-kind="" aria-pressed="'+!kindF+'">All events</button>'
+        + kinds.map(function(k){ return '<button type="button" class="meet-chip" data-mem-kind="'+k[0]+'" aria-pressed="'+(kindF === k[0])+'" title="'+attr(k[2])+'">'+esc(k[1] + "s")+'</button>'; }).join("")+'</div>' : '')
+      + (cities.length > 1 ? '<div class="meet-chips tec-filter" role="group" aria-label="City"><button type="button" class="meet-chip" data-mem-city="" aria-pressed="'+!cityF+'">All cities</button>'
+        + cities.map(function(c){ return '<button type="button" class="meet-chip" data-mem-city="'+attr(c)+'" aria-pressed="'+(c === cityF)+'">'+esc(c)+'</button>'; }).join("")+'</div>' : '')
+      + '<div class="tec-wrap mem-tec">'+(months.length ? months.map(function(m){ return '<section class="tec-month"><h2>'+esc(m)+'</h2>'+byMonth[m].map(tecCardHtml).join("")+'</section>'; }).join("")
+        : '<div class="tec-empty">'+(all.length ? 'No events match. Try another filter.' : 'Events are being added. Each one is checked by PartnerWAV before it shows here.')+'</div>')+'</div>'
+      + '<p class="field-note" style="margin-top:12px;">All times are Bangkok time. PartnerWAV checks every event before it\'s listed: tech, AI, startups, investors, marketing, business owners, hackathons, government programs and industry expos.</p>';
+  }
+  function memberCardHtml(m, me){
+    var k = memberKeyOf(m.id), link = memberLink(me, k), li = memberLinkedin(m), ct = memberContactFor(m.id) || {};
+    var acts = link === "connected" ? '<button type="button" class="btn primary xs" data-mem-msg="'+attr(m.id)+'">Message</button>'
+        + (ct.whatsapp ? '<a class="btn meet-wa xs" href="'+attr(safeHref(waChatUrl(ct.whatsapp, "Hi " + String(m.name).split(" ")[0] + ", we're connected on PartnerWAV.")))+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>' : '')
+        + (ct.line ? '<a class="btn meet-line xs" href="'+attr(safeHref(lineChatUrl(ct.line)))+'" target="_blank" rel="noopener noreferrer">LINE</a>' : '')
+        + '<button type="button" class="btn ghost xs" data-mem-remove="'+attr(m.id)+'">Remove</button>'
+      : link === "sent" ? '<span class="pill pending">Request sent</span><button type="button" class="btn ghost xs" data-mem-withdraw="'+attr(m.id)+'">Withdraw</button>'
+      : link === "received" ? '<button type="button" class="btn primary xs" data-mem-accept="'+attr(m.id)+'">Accept</button><button type="button" class="btn ghost xs" data-mem-decline="'+attr(m.id)+'">Decline</button>'
+      : '<button type="button" class="btn secondary xs" data-mem-connect="'+attr(m.id)+'">Connect</button>';
+    return '<div class="card card-pad mem-card" data-mem-card="'+attr(m.id)+'"><div class="mem-card-top">'+memberAvatar(m, 52)
+        + '<div style="min-width:0;"><b class="mem-name">'+esc(m.name)+'</b><div class="field-note mem-line">'+esc(m.headline || "")+'</div>'
+        + '<div class="field-note mem-line">'+esc([m.company, m.city].filter(Boolean).join(" · "))+'</div></div></div>'
+      + ((m.topics || []).length ? '<div class="meet-chips mem-topics">'+m.topics.slice(0, 4).map(function(t){ return '<span class="badge neutral">'+esc(t)+'</span>'; }).join("")+'</div>' : '<div class="mem-topics"></div>')
+      + '<div class="mem-acts">'+acts+(li ? '<a class="btn idb-li xs" href="'+attr(li)+'" target="_blank" rel="noopener noreferrer">LinkedIn</a>' : '')+'</div></div>';
+  }
+  function memberPeopleHtml(me){
+    var tab = state.memTab || "all", topic = state.memTopic || "";
+    var others = memberProfiles.filter(function(m){ return !m.archivedAt && !m.hidden && memberKeyOf(m.id) !== me; });
+    var received = others.filter(function(m){ return memberLink(me, memberKeyOf(m.id)) === "received"; }), conns = others.filter(function(m){ return memberLink(me, memberKeyOf(m.id)) === "connected"; });
+    var list = tab === "requests" ? received : tab === "connections" ? conns : others.filter(function(m){ return !topic || (m.topics || []).indexOf(topic) > -1; });
+    var used = MEMBER_TOPICS.filter(function(t){ return others.some(function(m){ return (m.topics || []).indexOf(t) > -1; }); });
+    return '<div class="cal-views" role="group" aria-label="Show" style="margin-bottom:12px;">'
+        + [["all", "Everyone (" + others.length + ")"], ["requests", "Requests (" + received.length + ")"], ["connections", "My connections (" + conns.length + ")"]].map(function(x){ return '<button type="button" class="cal-view" data-mem-tab="'+x[0]+'" aria-pressed="'+(tab === x[0])+'">'+esc(x[1])+'</button>'; }).join("")+'</div>'
+      + (tab === "all" && used.length ? '<div class="meet-chips tec-filter" role="group" aria-label="Interest"><button type="button" class="meet-chip" data-mem-topic="" aria-pressed="'+!topic+'">All interests</button>'
+        + used.map(function(t){ return '<button type="button" class="meet-chip" data-mem-topic="'+attr(t)+'" aria-pressed="'+(topic === t)+'">'+esc(t)+'</button>'; }).join("")+'</div>' : '')
+      + (list.length ? '<div class="mem-grid">'+list.map(function(m){ return memberCardHtml(m, me); }).join("")+'</div>'
+        : '<div class="empty">'+(tab === "requests" ? 'No requests waiting.' : tab === "connections" ? 'No connections yet. Find people under Everyone and press Connect.' : 'No members to show yet.')+'</div>')
+      + '<p class="field-note" style="margin-top:12px;">Your WhatsApp and LINE are only shown to people you\'re connected with. Your LinkedIn shows on your card.</p>';
+  }
+  function memberProfileHtml(m){
+    var ct = memberContactFor(m.id) || {}, f = function(id, label, val, attrs){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" value="'+attr(val || "")+'" '+(attrs || "")+'></div>'; };
+    var photo = state.memPhoto !== undefined ? state.memPhoto : (m.photo || "");
+    return '<div class="card card-pad meet-form mem-profile" id="memProfileForm">'
+      + '<div class="mem-photo-row">'+memberAvatar({ name:m.name, photo:photo }, 84)+'<div class="field-row" style="margin:0;"><label for="memPhotoFile">Profile picture</label><input type="file" id="memPhotoFile" accept="image/png,image/jpeg,image/webp">'
+        + (photo ? '<button type="button" class="btn ghost xs" data-mem-photo-remove style="align-self:flex-start;">Remove picture</button>' : '')+'</div></div>'
+      + '<div class="meet-two">'+f("memName", "Your name", m.name, 'maxlength="80"')+f("memHeadline", "Headline", m.headline, 'maxlength="120" placeholder="e.g. Founder building an AI booking app"')
+        + f("memCompany", "Company or project", m.company, 'maxlength="120" placeholder="optional"')+f("memCity", "City", m.city, 'maxlength="60" placeholder="e.g. Bangkok"')+'</div>'
+      + '<div class="field-row"><label for="memAbout">About you</label><textarea id="memAbout" rows="4" maxlength="800" placeholder="What you work on and who you\'d like to meet">'+esc(m.about || "")+'</textarea></div>'
+      + '<b>Interests</b><div class="meet-chips" role="group" aria-label="Interests">'+MEMBER_TOPICS.map(function(t){ return '<button type="button" class="meet-chip" data-mem-ptopic="'+attr(t)+'" aria-pressed="'+((m.topics || []).indexOf(t) > -1)+'">'+esc(t)+'</button>'; }).join("")+'</div>'
+      + '<b>What brings you to PartnerWAV</b><div class="va-opts col">'+MEMBER_GOALS.map(function(g){ var on = (m.goals || []).indexOf(g[0]) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-mem-goal="'+g[0]+'"'+(on ? ' checked' : '')+'><span><b>'+esc(g[1])+'</b><span class="field-note" style="display:block;">'+esc(g[2])+'</span></span></label>'; }).join("")+'</div>'
+      + '<b>How people can reach you</b><div class="meet-two">'+f("memLinkedin", "LinkedIn (shown on your card)", m.linkedin, 'maxlength="200" placeholder="https://www.linkedin.com/in/your-name"')
+        + f("memWa", "WhatsApp (only your connections see it)", ct.whatsapp, 'maxlength="30" inputmode="tel" placeholder="+66 81 234 5678"')
+        + f("memLine", "LINE ID (only your connections see it)", ct.line, 'maxlength="60" placeholder="e.g. ployline"')+'</div>'
+      + '<label class="field-note" style="display:flex;gap:6px;align-items:center;"><input type="checkbox" id="memShow"'+(m.hidden ? '' : ' checked')+'> Show me in the member directory, so other members can find and connect with me</label>'
+      + '<div id="memErr" class="login-msg bad" role="alert" hidden></div>'
+      + '<div><button type="button" class="btn primary sm" data-mem-save>Save profile</button></div></div>';
+  }
+  function memberOverviewHtml(m, me){
+    var next = memberEventsHtml(4), received = memberProfiles.filter(function(x){ return !x.archivedAt && memberLink(me, memberKeyOf(x.id)) === "received"; });
+    var mine = m.topics || [], suggest = memberProfiles.filter(function(x){ return !x.archivedAt && !x.hidden && x.id !== m.id && memberLink(me, memberKeyOf(x.id)) === "none"
+      && (!mine.length || (x.topics || []).some(function(t){ return mine.indexOf(t) > -1; })); }).slice(0, 3);
+    var goals = m.goals || [];
+    return '<div class="mem-hello">'+memberAvatar(m, 56)+'<div><h2 style="margin:0;">Welcome, '+esc(String(m.name || "").split(" ")[0] || "there")+'</h2><span class="field-note">Thailand\'s tech, startup and business events and people, in one place.</span></div></div>'
+      + (m.needsProfile || !m.headline ? '<div class="card card-pad inv-nudge" data-mem-nudge><b>Finish your profile</b><span class="field-note">Add a picture, a headline and your interests so other members know who you are.</span><button type="button" class="btn primary sm" data-goto-screen="member-profile">Edit my profile</button></div>' : '')
+      + (received.length ? '<div class="card card-pad inv-nudge" data-mem-requests><b>'+received.length+' connection request'+(received.length === 1 ? '' : 's')+'</b><span class="field-note">'+esc(received.map(function(x){ return x.name; }).join(", "))+'</span><button type="button" class="btn primary sm" data-mem-open-requests>See requests</button></div>' : '')
+      + '<div class="section-head" style="margin-top:6px;"><h2 style="font-size:1rem;">Coming up</h2><button type="button" class="btn ghost sm" data-goto-screen="member-events">All events</button></div>'
+      + (next.length ? '<div class="mem-next">'+next.map(function(e){ return '<div class="card card-pad cp-ev"><div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span></div><div style="min-width:0;"><b>'+esc(e.title)+'</b><div class="field-note">'+esc(ceHost(e))+' · '+esc(ceWhen(e))+' · '+esc(ceWhere(e))+'</div>'
+          + (safeHref(e.link || "") ? '<a class="field-note" href="'+attr(safeHref(e.link))+'" target="_blank" rel="noopener noreferrer">Register</a>' : '')+'</div></div>'; }).join("")+'</div>'
+        : '<div class="empty">Events are being added. Each one is checked by PartnerWAV before it shows here.</div>')
+      + (suggest.length ? '<div class="section-head" style="margin-top:18px;"><h2 style="font-size:1rem;">People you may like to meet</h2><button type="button" class="btn ghost sm" data-goto-screen="member-people">Everyone</button></div>'
+        + '<div class="mem-grid">'+suggest.map(function(x){ return memberCardHtml(x, me); }).join("")+'</div>' : '')
+      + '<div class="section-head" style="margin-top:18px;"><h2 style="font-size:1rem;">What PartnerWAV can do with you</h2></div><div class="mem-goals">'
+        + MEMBER_GOALS.filter(function(g){ return g[0] === "saas" || g[0] === "mvp"; }).map(function(g){ var on = goals.indexOf(g[0]) > -1;
+          return '<div class="card card-pad mem-goal" data-mem-goalcard="'+g[0]+'"><b>'+esc(g[1])+'</b><span class="field-note">'+esc(g[2])+'</span>'
+            + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;">'+(on ? '<span class="pill active">You\'re interested</span>' : '<button type="button" class="btn secondary xs" data-mem-interest="'+g[0]+'">I\'m interested</button>')
+            + '<button type="button" class="btn ghost xs" data-mem-talk="'+g[0]+'">Message PartnerWAV</button></div></div>'; }).join("")+'</div>';
+  }
+  function renderMember(force){
+    var scr = state.screen; if (state.role !== "member" || scr.indexOf("member-") !== 0) return;
+    var box = document.getElementById(scr === "member-overview" ? "memberOverviewContent" : scr === "member-events" ? "memberEventsContent" : scr === "member-people" ? "memberPeopleContent" : "memberProfileContent");
+    if (!box) return;
+    var id = myMemberId(), m = id ? memberById(id) : null;
+    var key = JSON.stringify([scr, id, memberProfiles.length, memberConnections.length, memberContacts.length, communityEvents.length, state.memV || 0, state.memTab, state.memTopic, state.memKind, state.memCity, state.memQ]);
+    if (!force && box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    if (!m){ box.innerHTML = '<div class="empty">This login isn\'t linked to a member profile yet. Ask PartnerWAV to set it up.</div>'; return; }
+    memberSyncContacts();
+    var me = memberKeyOf(m.id);
+    box.innerHTML = scr === "member-overview" ? memberOverviewHtml(m, me) : scr === "member-events" ? memberEventsHtml() : scr === "member-people" ? memberPeopleHtml(me) : memberProfileHtml(m);
+  }
+  function memberSetConn(otherId, status){
+    var me = memberKeyOf(myMemberId()), other = memberKeyOf(otherId), c = memberConn(me, other);
+    if (!c){ c = { id:memberConnId(me, other), from:me, to:other, status:"pending", createdAt:nowStamp() }; memberConnections.push(c); }
+    else if (status === "pending" && c.from !== me){ toast("They've already asked you -- accept their request instead"); return; }
+    c.status = status; c.updatedAt = nowStamp(); saveMembers(); renderMember(true);
+  }
+  function memberSaveProfile(){
+    var m = memberById(myMemberId()); if (!m) return;
+    var g = function(x){ var el = document.getElementById(x); return el ? el.value.trim() : ""; }, err = document.getElementById("memErr");
+    var name = g("memName"), li = g("memLinkedin"), wa = g("memWa"), ln = g("memLine").replace(/^@?/, function(x){ return x; });
+    if (li && !/^https?:\/\//i.test(li)) li = "https://" + li;
+    var probs = [];
+    if (!name) probs.push("Add your name.");
+    if (li && !/^https:\/\/([a-z]{2,3}\.)?(www\.)?linkedin\.com\/\S+/i.test(li)) probs.push("The LinkedIn link should be your linkedin.com profile address.");
+    if (wa && (!/^\+?[0-9 ().-]{7,20}$/.test(wa) || wa.replace(/\D/g, "").length < 7)) probs.push("Add your WhatsApp number with the country code.");
+    if (ln && !/^@?[A-Za-z0-9._-]{2,40}$/.test(ln)) probs.push("That doesn't look like a LINE ID.");
+    if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+    var topics = [].slice.call(document.querySelectorAll('[data-mem-ptopic][aria-pressed="true"]')).map(function(b){ return b.getAttribute("data-mem-ptopic"); });
+    var goals = [].slice.call(document.querySelectorAll("[data-mem-goal]")).filter(function(x){ return x.checked; }).map(function(x){ return x.getAttribute("data-mem-goal"); });
+    Object.assign(m, { name:name.slice(0, 80), headline:g("memHeadline").slice(0, 120), company:g("memCompany").slice(0, 120), city:g("memCity").slice(0, 60), about:g("memAbout").slice(0, 800),
+      topics:topics, goals:goals, linkedin:li, hidden:!document.getElementById("memShow").checked, updatedAt:nowStamp() });
+    if (state.memPhoto !== undefined){ m.photo = state.memPhoto; state.memPhoto = undefined; }
+    delete m.needsProfile;
+    var ct = memberContactFor(m.id); if (!ct){ ct = { id:m.id, sharedWith:[] }; memberContacts.push(ct); }
+    ct.whatsapp = wa; ct.line = ln; ct.updatedAt = nowStamp();
+    ct.sharedWith = memberConnectedKeys(memberKeyOf(m.id)).sort();
+    if (state.account && state.account.role === "member"){ state.account.entityName = m.name; updateAccountMenu(); }
+    saveMembers(); renderMember(true); toast("Profile saved");
+  }
+  // a square profile picture, made small in the browser (about 20 KB)
+  function memberLoadPhoto(file){
+    var err = document.getElementById("memErr"), bad = function(t){ if (err){ err.textContent = t; err.hidden = false; } };
+    if (!file) return; if (!/^image\/(png|jpeg|webp)$/.test(file.type)) return bad("The picture should be a PNG, JPG or WebP image.");
+    if (file.size > 8 * 1024 * 1024) return bad("That picture is over 8 MB. Please use a smaller one.");
+    var rd = new FileReader();
+    rd.onload = function(){ var img = new Image();
+      img.onload = function(){ var s = Math.min(img.naturalWidth, img.naturalHeight), c = document.createElement("canvas"); c.width = 240; c.height = 240;
+        var x = c.getContext("2d"); x.fillStyle = "#ffffff"; x.fillRect(0, 0, 240, 240);
+        x.drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, 240, 240);
+        state.memPhoto = c.toDataURL("image/jpeg", 0.85); if (err) err.hidden = true;
+        var row = document.querySelector(".mem-photo-row .mem-avatar"); if (row) row.outerHTML = memberAvatar({ name:"", photo:state.memPhoto }, 84); };
+      img.onerror = function(){ bad("That picture couldn't be read. Try a JPG or PNG."); };
+      img.src = rd.result; };
+    rd.readAsDataURL(file);
+  }
+  document.addEventListener("input", function(ev){ var t = ev.target; if (t && t.id === "memEvQ"){ state.memQ = t.value; clearTimeout(state.memQT); state.memQT = setTimeout(function(){ var pos = t.selectionStart; renderMember(true); var el = document.getElementById("memEvQ"); if (el){ el.focus(); try { el.setSelectionRange(pos, pos); } catch(e){} } }, 250); } });
+  document.addEventListener("change", function(ev){ var t = ev.target; if (t && t.id === "memPhotoFile") memberLoadPhoto(t.files && t.files[0]);
+    if (t && t.hasAttribute && t.hasAttribute("data-mem-goal")){ var lab = t.closest(".va-opt"); if (lab) lab.classList.toggle("on", t.checked); } });
+  document.addEventListener("click", function(ev){
+    var t = ev.target; if (!t || !t.closest) return; var b;
+    if (!t.closest("#memberOverviewContent, #memberEventsContent, #memberPeopleContent, #memberProfileContent")) return;
+    if ((b = t.closest("[data-mem-kind]"))){ state.memKind = b.getAttribute("data-mem-kind"); renderMember(true); return; }
+    if ((b = t.closest("[data-mem-city]"))){ state.memCity = b.getAttribute("data-mem-city"); renderMember(true); return; }
+    if ((b = t.closest("[data-tec-ics]"))){ var ce = ceById(b.getAttribute("data-tec-ics")); if (!ce) return;
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([calIcs(ceAsCal(ce))], { type:"text/calendar;charset=utf-8" }));
+      a.download = String(ce.title).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) + ".ics"; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); return; }
+    if ((b = t.closest("[data-mem-tab]"))){ state.memTab = b.getAttribute("data-mem-tab"); renderMember(true); return; }
+    if ((b = t.closest("[data-mem-topic]"))){ state.memTopic = b.getAttribute("data-mem-topic"); renderMember(true); return; }
+    if (t.closest("[data-mem-open-requests]")){ state.memTab = "requests"; state.screen = "member-people"; render(); return; }
+    if ((b = t.closest("[data-mem-connect]"))){ memberSetConn(b.getAttribute("data-mem-connect"), "pending"); toast("Request sent"); return; }
+    if ((b = t.closest("[data-mem-withdraw]"))){ memberSetConn(b.getAttribute("data-mem-withdraw"), "withdrawn"); return; }
+    if ((b = t.closest("[data-mem-accept]"))){ memberSetConn(b.getAttribute("data-mem-accept"), "accepted"); toast("Connected -- you can message each other now"); return; }
+    if ((b = t.closest("[data-mem-decline]"))){ memberSetConn(b.getAttribute("data-mem-decline"), "declined"); return; }
+    if ((b = t.closest("[data-mem-remove]"))){ var rm = memberById(b.getAttribute("data-mem-remove")); if (rm && confirm("Remove " + rm.name + " from your connections?")) memberSetConn(rm.id, "removed"); return; }
+    if ((b = t.closest("[data-mem-msg]"))){ openConversationWith(memberKeyOf(b.getAttribute("data-mem-msg"))); return; }
+    if ((b = t.closest("[data-mem-ptopic]"))){ b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); return; }
+    if (t.closest("[data-mem-photo-remove]")){ state.memPhoto = ""; renderMember(true); return; }
+    if (t.closest("[data-mem-save]")){ memberSaveProfile(); return; }
+    if ((b = t.closest("[data-mem-interest]"))){ var mi = memberById(myMemberId()); if (mi){ mi.goals = (mi.goals || []).concat([b.getAttribute("data-mem-interest")]).filter(function(x, i, a){ return a.indexOf(x) === i; }); mi.updatedAt = nowStamp(); saveMembers(); renderMember(true); toast("Noted -- PartnerWAV will be in touch"); } return; }
+    if ((b = t.closest("[data-mem-talk]"))){ var gt = MEMBER_GOALS.filter(function(g){ return g[0] === b.getAttribute("data-mem-talk"); })[0]; openConversationWith("operator:", null, gt ? gt[1] : ""); return; }
+  });
   // ===== INTRO MEETINGS: invites from partnerwav@gmail.com with a Google Meet link =====
   // CloudWAV writes the invite from a template (filled in for each company), and the meet-invite server function
   // (supabase/functions/meet-invite) makes the Google Calendar event with a Meet link and sends the email through
@@ -19951,10 +20238,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var CO_PERKS = [["listEvents","We list their events"],["mention","They mention PartnerWAV"],["sponsor","PartnerWAV sponsors"],["speaking","Speaking slot"],["logoSwap","Logos on each other's sites"]];
   var CO_OPP_TYPES = [["vendor","SaaS / software vendor"],["partner","Partner (MSP / reseller)"],["affiliate","Affiliate"],["investor","Investor"],["other","Other"]];
   // Kinds of event: pitch nights, hackathons and open calls form their own calendar -- the big chances to get a new company noticed
-  var CE_KINDS = [["community", "Community event", "Meetups, talks and networking"], ["pitch", "Pitch event", "Pitch nights, demo days and investor events"], ["hackathon", "Hackathon", "Build something in a weekend"], ["opencall", "Open call", "Accelerator, incubator or grant applications"]];
+  var CE_KINDS = [["community", "Community event", "Meetups, talks and networking"], ["pitch", "Pitch event", "Pitch nights, demo days and investor events"], ["hackathon", "Hackathon", "Build something in a weekend"], ["opencall", "Open call", "Accelerator, incubator or grant applications"],
+    ["conference", "Conference or expo", "Summits, conferences and trade shows, including industry expos"], ["government", "Government program", "Events and programs from depa, NIA, BOI and other public agencies"]];
   function ceKind(e){ return CE_KINDS.some(function(k){ return k[0] === e.category; }) ? e.category : "community"; }
   function ceKindName(e){ return CE_KINDS.filter(function(k){ return k[0] === ceKind(e); })[0][1]; }
-  function cePitchy(e){ return ceKind(e) !== "community"; }
+  function cePitchy(e){ return ["pitch", "hackathon", "opencall"].indexOf(ceKind(e)) > -1; }
   var CE_CITIES = ["Bangkok","Chiang Mai","Phuket","Pattaya","Khon Kaen","Hua Hin","Online","Other"];
   var BKK_MS = 7 * 3600000;   // Thailand is UTC+7 all year (no daylight saving)
   function loadCommunity(){ try { var d = JSON.parse(lsGet(COMMUNITY_KEY) || "null"); if (d){ if (Array.isArray(d.orgs)) communityOrgs = d.orgs; if (Array.isArray(d.events)) communityEvents = d.events; } } catch(e){} }
@@ -20147,7 +20435,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var EVS_KINDS = [["ical", "iCal link (Luma, Meetup, Google)"], ["eventbrite", "Eventbrite organizer"], ["manual", "Check by hand on Saturday"]];
   var EVS_SOURCE_TAGS = ["luma", "meetup", "eventbrite", "zipevent", "manual"];
   var EVS_KEYWORDS = ["tech", "startup", "AI", "artificial intelligence", "machine learning", "data", "developer", "software", "SaaS", "cloud", "cyber", "security",
-    "blockchain", "web3", "fintech", "product", "hackathon", "pitch", "founder", "venture", "investor", "devops", "python", "javascript", "coding", "GDG", "AWS", "LLM"];
+    "blockchain", "web3", "fintech", "product", "hackathon", "pitch", "founder", "venture", "investor", "devops", "python", "javascript", "coding", "GDG", "AWS", "LLM",
+    "entrepreneur", "business owner", "SME", "marketing", "growth", "e-commerce", "digital", "innovation", "incubator", "accelerator", "angel", "VC", "summit",
+    "conference", "expo", "trade show", "exhibition", "forum", "depa", "NIA", "BOI", "TCEB", "Microsoft", "Google", "Techsauce"];
   var EVS_STARTERS = [
     { id:"src-luma-bkk", kind:"manual", label:"Luma: Bangkok", url:"https://luma.com/bangkok", city:"Bangkok", active:true,
       note:"Luma's API only covers calendars you own, but any public Luma calendar or city page has a free iCal link: open it, choose Subscribe, copy the iCal link and add it here as an iCal source so it is read automatically." },
@@ -20155,8 +20445,26 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       note:"Meetup's API is only open to paid Meetup Pro accounts. Check by hand; groups you follow can be added one by one as iCal sources when they offer a calendar link." },
     { id:"src-eventbrite", kind:"manual", label:"Eventbrite: science & tech in Bangkok", url:"https://www.eventbrite.com/d/thailand--bangkok/science-and-tech--events/", city:"Bangkok", active:true,
       note:"Eventbrite closed its public event search in 2019. Check by hand; organizers who run regular events can be added as Eventbrite sources (needs the EVENTBRITE_TOKEN secret)." },
-    { id:"src-zipevent", kind:"manual", label:"Zipevent", url:"https://www.zipeventapp.com/", city:"Bangkok", active:true, note:"No public API. Check by hand." }];
-  function evsRec(){ var r = operatorSettings.filter(function(x){ return x.id === "eventSources"; })[0]; return r || { id:"eventSources", sources:JSON.parse(JSON.stringify(EVS_STARTERS)), keywords:EVS_KEYWORDS.slice() }; }
+    { id:"src-zipevent", kind:"manual", label:"Zipevent", url:"https://www.zipeventapp.com/", city:"Bangkok", active:true, note:"No public API. Check by hand." },
+    { id:"src-eventpop", kind:"manual", label:"Eventpop", url:"https://www.eventpop.me/", city:"Bangkok", active:true, note:"Thailand's big ticketing site: conferences, workshops and business seminars. Check by hand." },
+    { id:"src-qsncc", kind:"manual", label:"QSNCC event calendar", url:"https://www.qsncc.com/th/whats-on/event-calendar", city:"Bangkok", active:true, note:"Queen Sirikit National Convention Center: big conferences (Techsauce Global Summit) and industry expos, e.g. hospitality. No feed: check by hand." },
+    { id:"src-bitec", kind:"manual", label:"BITEC events", url:"https://www.bitec.co.th/", city:"Bangkok", active:true, note:"Bangkok International Trade & Exhibition Centre: trade shows and industry expos. Check by hand." },
+    { id:"src-impact", kind:"manual", label:"IMPACT Muang Thong Thani", url:"https://www.impact.co.th/", city:"Bangkok", active:true, note:"Large exhibition and convention venue. Check its event calendar by hand." },
+    { id:"src-tceb", kind:"manual", label:"Business Events Thailand (TCEB)", url:"https://www.businesseventsthailand.com/", city:"Bangkok", active:true, note:"The government's convention bureau previews big business events and trade shows in Thailand." },
+    { id:"src-techsauce", kind:"manual", label:"Techsauce", url:"https://www.summit.techsauce.co", city:"Bangkok", active:true, note:"Techsauce Global Summit and Techsauce's other events." },
+    { id:"src-aws", kind:"manual", label:"AWS: Summit Bangkok and events", url:"https://aws.amazon.com/events/summits/bangkok/", city:"Bangkok", active:true, note:"AWS Summit Bangkok, plus AWS community days and user groups." },
+    { id:"src-google", kind:"manual", label:"Google: GDG Bangkok and Cloud Bangkok", url:"https://gdg.community.dev/gdg-cloud-bangkok", city:"Bangkok", active:true, note:"Google Developer Groups (DevFest, I/O Extended, Cloud meetups) and Google for Startups events." },
+    { id:"src-microsoft", kind:"manual", label:"Microsoft: AI Tour and Reactor", url:"https://developer.microsoft.com/reactor/", city:"Bangkok", active:true, note:"Microsoft AI Tour Bangkok, Microsoft Reactor sessions and Microsoft Thailand events." },
+    { id:"src-sevenpeaks", kind:"manual", label:"Seven Peaks events", url:"https://sevenpeakssoftware.com/events/", city:"Bangkok", active:true, note:"Seven Peaks Speaks tech talks and co-hosted events (also announced on their Facebook page)." },
+    { id:"src-gov", kind:"manual", label:"Government: depa, NIA, Startup Thailand", url:"https://startupthailand.nia.or.th/", city:"Bangkok", active:true, note:"depa (depa.or.th), NIA and Startup Thailand programs, open calls and events; also thailand.go.th events." },
+    { id:"src-hackathons", kind:"manual", label:"Hackathons (Devpost and others)", url:"https://devpost.com/hackathons", city:"Online", active:true, note:"Online hackathons open to Thailand, and Thai hackathons announced on Facebook and Techsauce." }];
+  // starterV 2 (Oct 14): venues, big-company events, government and hackathon sources added to the hand-checked list
+  function evsRec(){ var r = operatorSettings.filter(function(x){ return x.id === "eventSources"; })[0];
+    if (!r) return { id:"eventSources", sources:JSON.parse(JSON.stringify(EVS_STARTERS)), keywords:EVS_KEYWORDS.slice(), starterV:2 };
+    if ((r.starterV || 1) < 2){ r.sources = r.sources || [];
+      EVS_STARTERS.forEach(function(x){ if (!r.sources.some(function(y){ return y.id === x.id; })) r.sources.push(JSON.parse(JSON.stringify(x))); });
+      r.keywords = (r.keywords || []).concat(EVS_KEYWORDS.filter(function(k){ return (r.keywords || []).indexOf(k) < 0; })); r.starterV = 2; }
+    return r; }
   function evsSave(r){ r.updatedAt = nowStamp(); operatorSettings = operatorSettings.filter(function(x){ return x.id !== "eventSources"; }).concat([r]);
     if (typeof saveReferrals === "function") saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule(); state.coV = (state.coV || 0) + 1; }
   function evsRun(){ return operatorSettings.filter(function(x){ return x.id === "eventSourcesRun"; })[0] || null; }
@@ -20223,7 +20531,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var id = "ce-ext-" + evsHash(src + "|" + link + "|" + start.slice(0, 10));
       if (ceById(id)){ out.dup++; return; }
       var city = col(r, "city"); if (CE_CITIES.indexOf(city) < 0) city = /online|zoom/i.test(city + " " + col(r, "venue")) ? "Online" : "Other";
-      var txt = (title + " " + col(r, "desc")).toLowerCase(), cat = /hackathon/.test(txt) ? "hackathon" : /pitch|demo day/.test(txt) ? "pitch" : /open call|applications open/.test(txt) ? "opencall" : "community";
+      var txt = (title + " " + col(r, "desc")).toLowerCase(), cat = /hackathon/.test(txt) ? "hackathon" : /pitch|demo day/.test(txt) ? "pitch" : /open call|applications open/.test(txt) ? "opencall"
+        : /\b(depa|nia|boi|tceb|ministry|government)\b/.test(txt) ? "government" : /summit|conference|expo|exhibition|trade show|forum/.test(txt) ? "conference" : "community";
       communityEvents.push({ id:id, status:"pending", source:src, extUid:link, category:cat, orgName:col(r, "organizer").slice(0, 120), title:title.slice(0, 160), start:start,
         durationMin:Math.min(10080, Math.max(15, Number(col(r, "durationmin") || col(r, "duration")) || 120)), city:city, venue:col(r, "venue").slice(0, 160), price:col(r, "price").slice(0, 60),
         link:link, desc:col(r, "desc").slice(0, 800), createdAt:nowStamp() });
@@ -20260,7 +20569,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var reg = safeHref(e.link || ""), host = ceHostUrl(e);
     return '<article class="tec-ev" data-tec-event="'+attr(e.id)+'">'
       + '<div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span><i>'+esc(bkkFmt(e.start, { weekday:"short" }))+'</i></div>'
-      + '<div class="tec-body">'+(cePitchy(e) ? '<span class="tec-kind tec-kind-'+ceKind(e)+'">'+esc(ceKindName(e))+'</span>' : '')+'<h3>'+esc(e.title)+'</h3>'
+      + '<div class="tec-body">'+(ceKind(e) !== "community" ? '<span class="tec-kind tec-kind-'+ceKind(e)+'">'+esc(ceKindName(e))+'</span>' : '')+'<h3>'+esc(e.title)+'</h3>'
         + '<div class="tec-host">'+(host ? '<a href="'+attr(host)+'" target="_blank" rel="noopener noreferrer">'+esc(ceHost(e))+'</a>' : esc(ceHost(e)))+'</div>'
         + '<div class="tec-meta"><span>'+esc(bkkFmt(e.start, { hour:"2-digit", minute:"2-digit" }))+' - '+esc(bkkFmt(ceEnd(e).toISOString(), { hour:"2-digit", minute:"2-digit" }))+'</span><span>'+esc(ceWhere(e))+'</span>'+(e.price ? '<span>'+esc(e.price)+'</span>' : '')+'</div>'
         + (e.desc ? '<p>'+esc(e.desc)+'</p>' : '')
@@ -20513,6 +20822,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (acct.role === "partner") state.myProfileId = acct.entity_id || null;
     if (acct.role === "affiliate") state.myAffiliateId = acct.entity_id || null;
     if (acct.role === "investor") state.myInvestorId = acct.entity_id || null;
+    if (acct.role === "member") state.myMemberId = acct.entity_id || null;
     state.screen = HOME_SCREEN[acct.role];
     document.documentElement.classList.toggle("op-preview", canPreview());
     document.documentElement.classList.add("has-account");

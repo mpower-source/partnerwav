@@ -23,11 +23,11 @@ create table if not exists public.portal_records (
 create index if not exists portal_records_readers_idx on public.portal_records using gin (readers);
 alter table public.portal_records enable row level security;
 
--- Logins can be partner, vendor, affiliate, investor or operator (CloudWAV)
+-- Logins can be partner, vendor, affiliate, investor, member (people CloudWAV invites to the community) or operator (CloudWAV)
 do $$ begin
   if to_regclass('public.portal_users') is not null then
     alter table public.portal_users drop constraint if exists portal_users_role_check;
-    alter table public.portal_users add constraint portal_users_role_check check (role in ('partner','vendor','affiliate','investor','operator'));
+    alter table public.portal_users add constraint portal_users_role_check check (role in ('partner','vendor','affiliate','investor','member','operator'));
   end if;
 end $$;
 
@@ -61,7 +61,8 @@ create policy "portal_records member read" on public.portal_records
           '*' = any(readers)
           or public.portal_key() = any(readers)
           or public.portal_key() = any(writers)
-          or ('investors' = any(readers) and public.portal_key() like 'investor:%')))
+          or ('investors' = any(readers) and public.portal_key() like 'investor:%')
+          or ('members' = any(readers) and public.portal_key() like 'member:%')))
   );
 
 create policy "portal_records insert" on public.portal_records
@@ -298,6 +299,42 @@ begin
   end if;
   if new.collection = 'investorListings' and exists (select 1 from unnest(new.readers) x where x not in ('investors', k)) then
     raise exception 'A company''s investor card is only for investors';
+  end if;
+  -- members (people CloudWAV invites to the community): each saves only its own profile, which members can read
+  -- (never public); WhatsApp and LINE sit in memberContacts, shared only with the member's connections
+  if new.collection in ('memberProfiles', 'memberContacts') and 'member:' || new.id <> k then
+    raise exception 'You can only save your own member profile';
+  end if;
+  if new.collection = 'memberProfiles' and (new.is_public or exists (select 1 from unnest(new.readers) x where x not in ('members', k))) then
+    raise exception 'A member profile is only for other members';
+  end if;
+  if new.collection = 'memberContacts' and (new.is_public or exists (select 1 from unnest(new.readers) x where x <> k and x !~ '^member:.')) then
+    raise exception 'Contact details are only shared with your connections';
+  end if;
+  -- connections between members: the person asking sends it; only the person asked accepts or declines
+  if new.collection = 'memberConnections' then
+    if k not in (new.data ->> 'from', new.data ->> 'to') or new.data ->> 'from' = new.data ->> 'to'
+       or coalesce(new.data ->> 'from', '') !~ '^member:.' or coalesce(new.data ->> 'to', '') !~ '^member:.' then
+      raise exception 'Connections are between two members, one of them you';
+    end if;
+    if new.readers is distinct from array[new.data ->> 'from', new.data ->> 'to'] or new.is_public then
+      raise exception 'A connection is only seen by the two members';
+    end if;
+    if tg_op = 'INSERT' and not exists (select 1 from public.portal_records x where x.collection = 'memberConnections' and x.id = new.id) then
+      if new.data ->> 'from' <> k or coalesce(new.data ->> 'status', '') <> 'pending' then raise exception 'A connection starts as a request from you'; end if;
+    else
+      select * into prev from public.portal_records where collection = new.collection and id = new.id;
+      if prev.data ->> 'from' is distinct from new.data ->> 'from' or prev.data ->> 'to' is distinct from new.data ->> 'to' then
+        raise exception 'A connection can''t be moved to other people';
+      end if;
+      if (new.data ->> 'status') is distinct from (prev.data ->> 'status') and not (
+           (k = new.data ->> 'to' and prev.data ->> 'status' = 'pending' and new.data ->> 'status' in ('accepted', 'declined'))
+        or (k = new.data ->> 'from' and prev.data ->> 'status' = 'pending' and new.data ->> 'status' = 'withdrawn')
+        or (k = new.data ->> 'from' and prev.data ->> 'status' in ('withdrawn', 'declined') and new.data ->> 'status' = 'pending')
+        or (prev.data ->> 'status' = 'accepted' and new.data ->> 'status' = 'removed')) then
+        raise exception 'Only the person asked can accept a connection';
+      end if;
+    end if;
   end if;
   -- calendar events belong to whoever created them; a booking is recorded by the person who booked
   if new.collection = 'calendarEvents' and (new.data ->> 'ownerKey') is distinct from k then
@@ -549,7 +586,7 @@ begin
   end if;
   select coalesce(jsonb_agg(distinct v), '[]'::jsonb) into interest
     from jsonb_array_elements_text(case when jsonb_typeof(p_data -> 'interest') = 'array' then p_data -> 'interest' else '[]'::jsonb end) v
-   where v in ('vendor', 'partner', 'affiliate', 'investor');
+   where v in ('vendor', 'partner', 'affiliate', 'investor', 'member');
   if not public.portal_spam_check('meet', p_event, ch || ':' || lower(contact), p_data) then return new_id; end if;
   perform set_config('portal.event_connect', 'on', true);
   insert into public.portal_records (collection, id, data, readers, writers, is_public)
@@ -603,7 +640,7 @@ begin
   insert into public.portal_records (collection, id, data, readers, writers, is_public)
   values ('communityEvents', new_id, jsonb_build_object(
     'id', new_id, 'status', 'pending', 'orgName', left(trim(p_data ->> 'orgName'), 120), 'title', left(trim(p_data ->> 'title'), 160),
-    'category', case when p_data ->> 'category' in ('pitch', 'hackathon', 'opencall') then p_data ->> 'category' else 'community' end,
+    'category', case when p_data ->> 'category' in ('pitch', 'hackathon', 'opencall', 'conference', 'government') then p_data ->> 'category' else 'community' end,
     'start', to_char(st at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS".000Z"'), 'durationMin', dur, 'city', city,
     'venue', left(trim(coalesce(p_data ->> 'venue', '')), 160), 'price', left(trim(coalesce(p_data ->> 'price', '')), 60),
     'link', link, 'desc', left(trim(coalesce(p_data ->> 'desc', '')), 800),
@@ -652,7 +689,7 @@ begin
     if dur < 15 or dur > 10080 then dur := 120; end if;
     city := coalesce(r ->> 'city', '');
     if city not in ('Bangkok', 'Chiang Mai', 'Phuket', 'Pattaya', 'Khon Kaen', 'Hua Hin', 'Online', 'Other') then city := 'Other'; end if;
-    cat := case when r ->> 'category' in ('pitch', 'hackathon', 'opencall') then r ->> 'category' else 'community' end;
+    cat := case when r ->> 'category' in ('pitch', 'hackathon', 'opencall', 'conference', 'government') then r ->> 'category' else 'community' end;
     new_id := 'ce-ext-' || left(md5(src || '|' || uid), 20);
     insert into public.portal_records (collection, id, data, readers, writers, is_public)
     values ('communityEvents', new_id, jsonb_build_object(
@@ -785,11 +822,11 @@ declare u uuid; used_at timestamptz; cur_role text; cur_entity text; mail text :
         hash text; coll text;
 begin
   if not public.is_portal_operator() then raise exception 'Only CloudWAV can set up accounts'; end if;
-  if p_role is null or p_role not in ('partner', 'vendor', 'affiliate', 'investor') then raise exception 'Choose partner, vendor, affiliate or investor'; end if;
+  if p_role is null or p_role not in ('partner', 'vendor', 'affiliate', 'investor', 'member') then raise exception 'Choose partner, vendor, affiliate, investor or member'; end if;
   if ent = '' then raise exception 'The account needs a company'; end if;
   if mail !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' then raise exception 'Enter a valid email address'; end if;
   if p_password is null or length(p_password) < 8 then raise exception 'The temporary password needs at least 8 characters'; end if;
-  coll := case p_role when 'vendor' then 'programs' when 'partner' then 'partnerProfiles' when 'investor' then 'investorProfiles' else 'affiliateProfiles' end;
+  coll := case p_role when 'vendor' then 'programs' when 'partner' then 'partnerProfiles' when 'investor' then 'investorProfiles' when 'member' then 'memberProfiles' else 'affiliateProfiles' end;
   if not exists (select 1 from public.portal_records where collection = coll and id = ent and coalesce(data->>'_deleted', '') <> 'true') then
     raise exception 'That company could not be found (%). It needs to be saved before it can have a login.', ent;
   end if;
