@@ -1,4 +1,9 @@
 from harness import *
+
+def open_int(pg, name):
+    # integrations are tiles: open one to see its settings (no-op if it's already open)
+    if pg.locator('[data-int="%s"] [data-int-body]' % name).count() == 0:
+        pg.click('[data-int-open="%s"]' % name); pg.wait_for_timeout(150)
 import os, sys, json
 if not os.path.exists("/usr/lib/postgresql/16/bin/initdb"):
     print("SKIP: PostgreSQL 16 not installed"); srv.shutdown(); sys.exit(0)
@@ -65,7 +70,7 @@ with sync_playwright() as p:
     ok(pt.evaluate("JSON.stringify(document.body.innerText).indexOf('Override 18%') < 0"), "The partner's portal never shows the note")
 
     # ----- a partner asks for HubSpot: the request is private, and no contact card appears
-    nav(pt, "integrations"); pt.wait_for_timeout(300)
+    nav(pt, "integrations"); pt.wait_for_timeout(300); open_int(pt, "hubspot")
     pt.locator("[data-int-hs]").first.check(); pt.click('[data-int-save="hubspot"]'); pt.wait_for_timeout(400); settle(pt)
     req = [r for r in db("integrationRequests") if r["id"] == "partner:siam-digital"]
     card = [r for r in db("contactChannels") if r["id"] == "partner:siam-digital"]

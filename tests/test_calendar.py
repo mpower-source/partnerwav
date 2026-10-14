@@ -1,4 +1,9 @@
 from harness import *
+
+def open_int(pg, name):
+    # integrations are tiles: open one to see its settings (no-op if it's already open)
+    if pg.locator('[data-int="%s"] [data-int-body]' % name).count() == 0:
+        pg.click('[data-int-open="%s"]' % name); pg.wait_for_timeout(150)
 import urllib.parse
 
 with sync_playwright() as p:
@@ -79,7 +84,7 @@ with sync_playwright() as p:
     ok(pg.locator("[data-cal-event]").count() == 3, "Host can delete its event")
 
     # ----- Calendly bookings made through PartnerWAV are saved
-    nav(pg, "integrations"); pg.fill("#intBooking", "https://calendly.com/intelsense/demo"); pg.click('[data-int-save="calendly"]'); pg.wait_for_timeout(300)
+    nav(pg, "integrations"); open_int(pg, "calendly"); pg.fill("#intBooking", "https://calendly.com/intelsense/demo"); pg.click('[data-int-save="calendly"]'); pg.wait_for_timeout(300)
     ok("is listed here" in pg.locator('[data-int="calendly"]').inner_text(), "Calendly card explains where bookings will show")
     role(pg, "partner"); nav(pg, "partner-messages") if False else None
     role(pg, "operator"); nav(pg, "vendor-network"); pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(300)
@@ -87,14 +92,14 @@ with sync_playwright() as p:
     fire = "window.dispatchEvent(new MessageEvent('message', { origin:'https://calendly.com', data:{ event:'calendly.event_scheduled', payload:{ event:{ uri:'https://api.calendly.com/scheduled_events/ABC' }, invitee:{ uri:'https://api.calendly.com/x' } } } }))"
     pg.evaluate(fire); pg.evaluate(fire); pg.wait_for_timeout(200)
     pg.click(".modal [data-modal-ok]"); pg.wait_for_timeout(150)
-    nav(pg, "integrations")
+    nav(pg, "integrations"); open_int(pg, "calendly")
     ok("You booked: Intelsense" in pg.locator('[data-int="calendly"]').inner_text(), "The person who booked sees it under their Calendly card")
-    role(pg, "vendor"); nav(pg, "integrations")
+    role(pg, "vendor"); nav(pg, "integrations"); open_int(pg, "calendly")
     bl = pg.locator("[data-int-bookings] li")
     ok(bl.count() == 1 and "booked a call" in bl.inner_text(), "The vendor sees one booking made through PartnerWAV (Calendly's repeat message isn't double-counted)")
 
     # ----- a vendor booking from the assessment thank-you page is noted on the assessment
-    role(pg, "operator"); nav(pg, "integrations"); pg.fill("#intBooking", "https://calendly.com/cloudwav/intro"); pg.click('[data-int-save="calendly"]'); pg.wait_for_timeout(300)
+    role(pg, "operator"); nav(pg, "integrations"); open_int(pg, "calendly"); pg.fill("#intBooking", "https://calendly.com/cloudwav/intro"); pg.click('[data-int-save="calendly"]'); pg.wait_for_timeout(300)
     pg.goto(URL + "?assess=1"); pg.wait_for_timeout(600)
     pg.fill("#va_company", "Acme"); pg.fill("#va_contactName", "Ann Lee"); pg.fill("#va_email", "ann@acme.example"); pg.check('[data-va-k="companyStage"][value="Established"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(150)
     pg.fill("#va_productSummary", "Sensors"); pg.click("[data-va-next]"); pg.wait_for_timeout(150)

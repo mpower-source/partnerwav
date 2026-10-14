@@ -1,5 +1,10 @@
 from harness import *
 
+def open_int(pg, name):
+    # integrations are tiles: open one to see its settings (no-op if it's already open)
+    if pg.locator('[data-int="%s"] [data-int-body]' % name).count() == 0:
+        pg.click('[data-int-open="%s"]' % name); pg.wait_for_timeout(150)
+
 with sync_playwright() as p:
     b, pg = open_page(p)
     for r in ["partner", "vendor", "operator"]:
@@ -12,6 +17,18 @@ with sync_playwright() as p:
     box = pg.locator("#integrationsContent")
     ok(all(x in box.inner_text() for x in ["Calendly", "HubSpot", "WhatsApp & LINE", "Planned"]), "Cards: Calendly, HubSpot, WhatsApp & LINE, Planned")
     ok("NOT SET UP" in pg.locator('[data-int="calendly"]').inner_text().upper(), "Calendly starts as not set up")
+    hts = pg.evaluate("[...document.querySelectorAll('[data-int-open]')].map(e => Math.round(e.getBoundingClientRect().height))")
+    ok(len(hts) >= 7 and len(set(hts)) == 1 and pg.locator("[data-int-body]").count() == 0, "Closed, every integration is the same size: tool, status and a short description " + str(hts))
+    types = pg.evaluate("[...document.querySelectorAll('[data-int-type]')].map(b => b.textContent.trim())")
+    ok(types[0].startswith("All") and any(t.startswith("CRM") for t in types) and any(t.startswith("Scheduling") for t in types), "Integrations can be filtered by type: " + " | ".join(types))
+    pg.click('[data-int-type="crm"]'); pg.wait_for_timeout(150)
+    shown = pg.evaluate("[...document.querySelectorAll('[data-int]')].map(e => e.dataset.int)")
+    ok(shown == ["hubspot", "zoho"], "CRM shows HubSpot and Zoho only: " + str(shown))
+    pg.click('[data-int-type=""]'); pg.wait_for_timeout(150)
+    order = pg.evaluate("[...document.querySelectorAll('[data-int]')].map(e => e.dataset.intKind)")
+    ok(order == sorted(order, key=lambda k: ["crm","scheduling","messaging","workspace","security","custom","planned"].index(k)) and "custom" in order, "All lists them sorted by type, including Your own tools: " + str(order))
+    open_int(pg, "calendly")
+    ok(pg.get_attribute('[data-int-open="calendly"]', "aria-expanded") == "true" and pg.locator("#intBooking").count() == 1, "Clicking a tile opens its settings")
     pg.fill("#intBooking", "notalink"); pg.click('[data-int-save="calendly"]'); pg.wait_for_timeout(150)
     ok("secure web address" in pg.inner_text("#intCalError"), "Needs a real link")
     pg.fill("#intBooking", "calendly.com/intelsense/demo")
@@ -35,7 +52,7 @@ with sync_playwright() as p:
     pg.click(".modal [data-modal-ok]"); pg.wait_for_timeout(150)
 
     # embed switched off, or a non-Calendly link -> new tab as before
-    role(pg, "vendor"); nav(pg, "integrations"); pg.uncheck("#intEmbed"); pg.click('[data-int-save="calendly"]'); pg.wait_for_timeout(300)
+    role(pg, "vendor"); nav(pg, "integrations"); open_int(pg, "calendly"); pg.uncheck("#intEmbed"); pg.click('[data-int-save="calendly"]'); pg.wait_for_timeout(300)
     role(pg, "operator"); nav(pg, "vendor-network"); pg.locator('[data-view-vendor="intelsense"]:visible').first.click(); pg.wait_for_timeout(300)
     with pg.context.expect_page() as newp:
         pg.click('#vendorProfileContent [data-contact-book="vendor:intelsense"]')
@@ -43,7 +60,8 @@ with sync_playwright() as p:
     newp.value.close()
 
     # ----- vendor: HubSpot request
-    role(pg, "vendor"); nav(pg, "integrations")
+    role(pg, "vendor"); nav(pg, "integrations"); open_int(pg, "hubspot")
+    ok(pg.locator("[data-int-body]").count() == 1 and pg.locator("#intBooking").count() == 0, "Opening another tile closes the first")
     pg.click('[data-int-save="hubspot"]'); pg.wait_for_timeout(150)
     ok("at least one" in pg.inner_text("#intHsError"), "HubSpot: choose what to sync")
     pg.check('[data-int-hs="contacts"]'); pg.check('[data-int-hs="deals"]'); pg.select_option("#intHsDir", "both"); pg.click('[data-int-save="hubspot"]'); pg.wait_for_timeout(300)
@@ -55,12 +73,13 @@ with sync_playwright() as p:
     req = pg.locator('[data-int-req="vendor:intelsense"]')
     ok(req.count() == 1 and "Contacts and companies" in req.inner_text() and "Registered deals" in req.inner_text(), "CloudWAV sees the request and what to sync")
     pg.reload(); pg.wait_for_timeout(600); role(pg, "vendor"); nav(pg, "integrations")
-    ok("SETUP REQUESTED" in pg.locator('[data-int="hubspot"]').inner_text().upper() and pg.input_value("#intBooking").endswith("/demo"), "Kept after reload")
-    pg.click('[data-int-cancel="hubspot"]'); pg.wait_for_timeout(300)
+    ok("SETUP REQUESTED" in pg.locator('[data-int="hubspot"]').inner_text().upper(), "Kept after reload")
+    open_int(pg, "calendly"); ok(pg.input_value("#intBooking").endswith("/demo"), "...and the Calendly link too")
+    open_int(pg, "hubspot"); pg.click('[data-int-cancel="hubspot"]'); pg.wait_for_timeout(300)
     ok("NOT CONNECTED" in pg.locator('[data-int="hubspot"]').inner_text().upper(), "Request can be cancelled")
 
     # ----- Notion: vendor requests, CloudWAV sees it; CloudWAV's own card is a plan
-    nt = pg.locator('[data-int="notion"]')
+    open_int(pg, "notion"); nt = pg.locator('[data-int="notion"]')
     ok(nt.count() == 1 and "NOT CONNECTED" in nt.inner_text().upper() and "Notion" not in pg.locator('[data-int="planned"]').inner_text(), "Notion has its own card and is off the Planned list")
     pg.click('[data-int-save="notion"]'); pg.wait_for_timeout(150)
     ok("at least one" in pg.inner_text("#intNtError"), "Notion: choose what to bring across")
@@ -69,17 +88,17 @@ with sync_playwright() as p:
     ok("SETUP REQUESTED" in nt.inner_text().upper() and pg.is_checked('[data-int-nt="pipeline"]') and pg.input_value("#intNtDir") == "from-notion", "Notion shows 'Setup requested', Notion to PartnerWAV by default")
     ok("never a full investor database" in nt.inner_text() and "never in a web page" in nt.inner_text() and "Not live yet" in nt.inner_text(), "Says what comes across, where the key lives, and that it is not live yet")
     ok("NOT CONNECTED" in pg.locator('[data-int="hubspot"]').inner_text().upper(), "HubSpot is unaffected")
-    role(pg, "operator"); nav(pg, "integrations")
+    role(pg, "operator"); nav(pg, "integrations"); open_int(pg, "notion")
     req = pg.locator('[data-int-req-notion="vendor:intelsense"]')
     ok(req.count() == 1 and "Investor shortlists" in req.inner_text() and "Fundraising pipeline" in req.inner_text() and pg.locator("[data-int-req]").count() == 0, "CloudWAV sees the Notion request, separate from HubSpot requests")
     pg.check('[data-int-nt="dataroom"]'); pg.click('[data-int-save="notion"]'); pg.wait_for_timeout(300)
     ok("SETUP PLANNED" in pg.locator('[data-int="notion"]').inner_text().upper() and "Update plan" in pg.locator('[data-int="notion"]').inner_text(), "CloudWAV's own card saves a plan")
-    pg.reload(); pg.wait_for_timeout(600); role(pg, "vendor"); nav(pg, "integrations")
+    pg.reload(); pg.wait_for_timeout(600); role(pg, "vendor"); nav(pg, "integrations"); open_int(pg, "notion")
     ok("SETUP REQUESTED" in pg.locator('[data-int="notion"]').inner_text().upper(), "Notion request kept after reload")
     pg.click('[data-int-cancel="notion"]'); pg.wait_for_timeout(300)
     ok("NOT CONNECTED" in pg.locator('[data-int="notion"]').inner_text().upper(), "Notion request can be cancelled")
     # ----- Zoho CRM: a partner in Australia on Bigin asks to connect
-    role(pg, "partner"); nav(pg, "integrations")
+    role(pg, "partner"); nav(pg, "integrations"); open_int(pg, "zoho")
     zo = pg.locator('[data-int="zoho"]')
     ok(zo.count() == 1 and "NOT CONNECTED" in zo.inner_text().upper() and "Zoho" not in pg.locator('[data-int="planned"]').inner_text(), "Zoho CRM has its own card and is off the Planned list")
     pg.click('[data-int-save="zoho"]'); pg.wait_for_timeout(150)
@@ -94,7 +113,7 @@ with sync_playwright() as p:
     role(pg, "operator"); nav(pg, "integrations")
     zr = pg.locator('#intZohoRequests [data-int-req-zoho]')
     ok(zr.count() == 1 and "Bigin by Zoho" in zr.inner_text() and "Australia" in zr.inner_text() and "Leads from invite pages" in zr.inner_text(), "CloudWAV sees the Zoho request with product and region")
-    pg.reload(); pg.wait_for_timeout(600); role(pg, "partner"); nav(pg, "integrations")
+    pg.reload(); pg.wait_for_timeout(600); role(pg, "partner"); nav(pg, "integrations"); open_int(pg, "zoho")
     ok("SETUP REQUESTED" in pg.locator('[data-int="zoho"]').inner_text().upper(), "Zoho request kept after reload")
     pg.click('[data-int-cancel="zoho"]'); pg.wait_for_timeout(300)
     ok("NOT CONNECTED" in pg.locator('[data-int="zoho"]').inner_text().upper(), "Zoho request can be cancelled")

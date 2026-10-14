@@ -633,7 +633,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   @media (max-width:520px){ .va-roi-big{ grid-template-columns:1fr; } }
   .va-total{ display:flex; justify-content:space-between; align-items:baseline; margin-top:12px; font-size:.95rem; } .va-total b{ font-family:"IBM Plex Mono",monospace; font-size:1.5rem; }
   @media (max-width:760px){ .va-fields, .va-two{ grid-template-columns:1fr; } .va-nav .btn{ flex:1; } }
-  .int-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:16px; align-items:start; }
+  .int-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); grid-auto-flow:row dense; gap:14px; align-items:start; }
+  .int-filter{ display:inline-flex; flex-wrap:wrap; margin-bottom:16px; }
+  .int-count{ font-size:.75em; color:var(--ink-faint); margin-left:2px; }
+  .int-group{ margin-bottom:20px; }
+  .int-group-title{ margin:0 0 8px; font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); }
+  .int-tile.card-pad{ padding:0; gap:0; }
+  .int-foot{ margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .int-type{ font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); }
+  .int-tile-top{ display:flex; flex-direction:column; gap:8px; height:164px; box-sizing:border-box; padding:16px; cursor:pointer; border-radius:inherit; }
+  .int-tile-top:hover .int-more{ text-decoration:underline; }
+  .int-tile-top:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .int-blurb{ margin:0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .int-more{ font-size:.8rem; font-weight:600; color:var(--accent); }
+  .int-tile.open{ grid-column:1/-1; border-color:var(--accent-line); }
+  .int-tile.open .int-tile-top{ height:auto; }
+  .int-tile.open .int-blurb{ display:block; -webkit-line-clamp:unset; }
+  .int-body{ display:flex; flex-direction:column; gap:10px; padding:0 16px 16px; max-width:760px; }
   .int-card{ display:flex; flex-direction:column; gap:10px; } .int-head{ display:flex; align-items:center; gap:10px; } .int-head h3{ margin:0; font-size:1.05rem; flex:1; }
   .int-logo{ width:40px; height:40px; border-radius:10px; display:grid; place-items:center; font-weight:800; color:#fff; flex:none; font-family:"Space Grotesk",sans-serif; }
   .modal.modal-wide{ width:min(760px, 96vw); max-width:none; }
@@ -5249,12 +5265,34 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var b = document.querySelector("[data-va-book]"); if (b){ b.textContent = "Call booked ✓"; }
   });
   function integrationsFor(me){ var c = contactFor(me) || {}; return c.integrations || {}; }
+  // Integrations are same-size tiles (tool, status and a short description), grouped by type; clicking one opens
+  // its settings across the full width. One is open at a time. The type filter keeps a growing list manageable.
+  var INT_TYPES = [["crm", "CRM"], ["scheduling", "Scheduling"], ["messaging", "Messaging"], ["workspace", "Workspace & docs"], ["security", "Security"], ["custom", "Your own tools"], ["planned", "Coming soon"]];
+  function intTile(id, type, head, blurb, body){ return { id:id, type:type, head:head, blurb:blurb, body:body, name:String((head.match(/<h3>(.*?)<\/h3>/) || [])[1] || id).replace(/&amp;/g, "&") }; }
+  function intTilesHtml(tiles){
+    var open = state.intOpen || "", f = state.intType || "";
+    var present = INT_TYPES.filter(function(t){ return tiles.some(function(x){ return x.type === t[0]; }); });
+    if (f && !present.some(function(t){ return t[0] === f; })) f = "";
+    var typeName = function(t){ return (INT_TYPES.filter(function(y){ return y[0] === t; })[0] || ["", t])[1]; };
+    var order = function(t){ for (var i = 0; i < INT_TYPES.length; i++) if (INT_TYPES[i][0] === t) return i; return 99; };
+    var count = function(t){ return tiles.filter(function(x){ return !t || x.type === t; }).length; };
+    var tileHtml = function(x){ var on = x.id === open;
+      return '<div class="card card-pad int-card int-tile'+(on ? ' open' : '')+'" data-int="'+attr(x.id)+'" data-int-kind="'+attr(x.type)+'">'
+        + '<div class="int-tile-top" role="button" tabindex="0" aria-expanded="'+on+'" data-int-open="'+attr(x.id)+'"><div class="int-head">'+x.head+'</div>'
+        + '<p class="field-note int-blurb">'+x.blurb+'</p><div class="int-foot"><span class="int-type">'+esc(typeName(x.type))+'</span><span class="int-more">'+(on ? 'Close' : 'Open')+'</span></div></div>'
+        + (on ? '<div class="int-body" data-int-body>'+x.body+'</div>' : '')+'</div>'; };
+    return '<div class="cal-views int-filter" role="group" aria-label="Show integrations by type">'
+        + '<button type="button" class="cal-view" data-int-type="" aria-pressed="'+(!f)+'">All <span class="int-count">'+count("")+'</span></button>'
+        + present.map(function(t){ return '<button type="button" class="cal-view" data-int-type="'+t[0]+'" aria-pressed="'+(f === t[0])+'">'+esc(t[1])+' <span class="int-count">'+count(t[0])+'</span></button>'; }).join("")+'</div>'
+      // sorted by type, then by name
+      + '<div class="int-grid">'+tiles.filter(function(x){ return !f || x.type === f; }).sort(function(a, b){ return order(a.type) - order(b.type) || a.name.localeCompare(b.name); }).map(tileHtml).join("")+'</div>';
+  }
   function renderIntegrations(force){
     var box = document.getElementById("integrationsContent");
     if (!box || state.screen !== "integrations") return;
     var me = chMe();
     if (!me){ box.innerHTML = '<div class="empty">Create your profile first -- then you can connect your tools.</div>'; return; }
-    var c = contactFor(me) || {}, ig = c.integrations || {}, hs = ig.hubspot || {}, nt = ig.notion || {}, zo = ig.zoho || {}, key = me + ":" + (state.intV || 0) + ":" + bookings.length;
+    var c = contactFor(me) || {}, ig = c.integrations || {}, hs = ig.hubspot || {}, nt = ig.notion || {}, zo = ig.zoho || {}, key = me + ":" + (state.intV || 0) + ":" + bookings.length + ":" + (state.intOpen || "") + ":" + (state.intType || "");
     if (!force && box.getAttribute("data-int-key") === key) return;   // keep what's being typed
     box.setAttribute("data-int-key", key);
     var badge = function(on, yes, no){ return '<span class="badge '+(on ? 'good' : 'neutral')+'">'+(on ? yes : no)+'</span>'; };
@@ -5262,18 +5300,18 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var requests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.hubspot && x.integrations.hubspot.requested; }) : [];
     var zohoRequests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.zoho && x.integrations.zoho.requested; }) : [];
     var notionRequests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.notion && x.integrations.notion.requested; }) : [];
-    box.innerHTML = '<div class="int-grid">'
-      // --- Spam protection (CloudWAV only)
-      + (isOperator ? '<div class="card card-pad int-card" data-int="captcha"><div class="int-head"><span class="int-logo" style="background:#f6821f;">T</span><h3>Spam protection</h3>'+badge(!!captchaSiteKey(), "CAPTCHA on", "Basic only")+'</div>'
-        + '<p class="field-note" style="margin:0;">Every public form -- invite pages, partners\' landing pages, the vendor assessment and partner applications -- already has a hidden bot trap, a too-fast check and sign-up limits. Add a Cloudflare Turnstile CAPTCHA for stronger protection. It\'s free, and most visitors never see a puzzle.</p>'
+    var tiles = [];
+    if (isOperator) tiles.push(intTile("captcha", "security", '<span class="int-logo" style="background:#f6821f;">T</span><h3>Spam protection</h3>'+badge(!!captchaSiteKey(), "CAPTCHA on", "Basic only")+'',
+        'Every public form -- invite pages, partners\' landing pages, the vendor assessment and partner applications -- already has a hidden bot trap, a too-fast check and sign-up limits. Add a Cloudflare Turnstile CAPTCHA for stronger protection. It\'s free, and most visitors never see a puzzle.',
+        ''
         + '<div class="field-row"><label for="intCaptchaKey">Turnstile site key</label><input type="text" id="intCaptchaKey" value="'+attr(captchaSiteKey())+'" placeholder="0x4AAAAAAA..." spellcheck="false" autocomplete="off"><span class="field-note">The site key is public -- it goes in the page. Never paste the secret key here.</span></div>'
         + '<div id="intCaptchaError" class="login-msg bad" hidden></div>'
         + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="captcha">Save</button>'+(captchaSiteKey() ? '<button type="button" class="btn ghost sm" data-int-captcha-off>Turn CAPTCHA off</button>' : '')+'</div>'
         + '<div class="aff-section-title" style="margin-top:4px;">Set up (once)</div><ol class="shop-list" style="margin:0;"><li>In Cloudflare: Turnstile &rarr; Add widget, with your portal\'s domain (e.g. mpower-source.github.io).</li><li>Paste the <b>site key</b> above and save.</li><li>Save the <b>secret key</b> in Supabase, in the SQL editor -- the steps are at the top of section 5b in portal_records.sql. The portal never sees it.</li></ol>'
-        + '<p class="field-note" style="margin:0;">Turn the CAPTCHA on in both places. With only the secret saved, forms are refused; with only the site key, the puzzle shows but isn\'t checked.</p></div>' : '')
-      // --- Calendly
-      + '<div class="card card-pad int-card" data-int="calendly"><div class="int-head"><span class="int-logo" style="background:#006bff;">C</span><h3>Calendly</h3>'+badge(!!safeLink(c.booking), "Connected", "Not set up")+'</div>'
-        + '<p class="field-note" style="margin:0;">Let people book time with you without emailing back and forth. Works with any Calendly plan -- paste your scheduling link.</p>'
+        + '<p class="field-note" style="margin:0;">Turn the CAPTCHA on in both places. With only the secret saved, forms are refused; with only the site key, the puzzle shows but isn\'t checked.</p>'));
+    tiles.push(intTile("calendly", "scheduling", '<span class="int-logo" style="background:#006bff;">C</span><h3>Calendly</h3>'+badge(!!safeLink(c.booking), "Connected", "Not set up")+'',
+        'Let people book time with you without emailing back and forth. Works with any Calendly plan -- paste your scheduling link.',
+        ''
         + '<div class="field-row"><label for="intBooking">Your scheduling link</label><input type="url" id="intBooking" value="'+attr(c.booking || "")+'" placeholder="https://calendly.com/your-name/30min"></div>'
         + '<label class="cfg-check"><input type="checkbox" id="intEmbed"'+(c.bookingEmbed !== false ? ' checked' : '')+'> Open the scheduler inside PartnerWAV (instead of a new tab)</label>'
         + '<div id="intCalError" class="login-msg bad" hidden></div>'
@@ -5286,18 +5324,18 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
               + (mine.length ? '<ul class="shop-list" style="margin:0;" data-int-bookings>'+mine.slice(0, 8).map(function(x){ return '<li><b>'+esc(x.bookedByName || keyName(x.bookedBy))+'</b> booked a call <span class="field-note">'+esc(x.at)+'</span></li>'; }).join("")+'</ul>'
                 : '<p class="field-note" style="margin:0;">When someone books with you from PartnerWAV it is listed here. The meeting time is in your Calendly confirmation.</p>')
               + (made.length ? '<p class="field-note" style="margin:0;" data-int-made>You booked: '+made.slice(0, 5).map(function(x){ return esc(keyName(x.ownerKey))+' ('+esc(x.at.slice(0, 10))+')'; }).join(", ")+'</p>' : ''); })()
-        + '<p class="field-note" style="margin:0;">Bookings made outside PartnerWAV (from your own Calendly page) are not listed -- that needs a paid Calendly plan and a server connection.</p></div>'
-      // --- HubSpot
-      + '<div class="card card-pad int-card" data-int="hubspot"><div class="int-head"><span class="int-logo" style="background:#ff7a59;">H</span><h3>HubSpot</h3>'+(hs.requested ? '<span class="badge warn">Setup requested</span>' : '<span class="badge neutral">Not connected</span>')+'</div>'
-        + '<p class="field-note" style="margin:0;">Keep your HubSpot CRM and marketing in step with PartnerWAV. Tick what you want synced and PartnerWAV will set up the connection with you.</p>'
+        + '<p class="field-note" style="margin:0;">Bookings made outside PartnerWAV (from your own Calendly page) are not listed -- that needs a paid Calendly plan and a server connection.</p>'));
+    tiles.push(intTile("hubspot", "crm", '<span class="int-logo" style="background:#ff7a59;">H</span><h3>HubSpot</h3>'+(hs.requested ? '<span class="badge warn">Setup requested</span>' : '<span class="badge neutral">Not connected</span>')+'',
+        'Keep your HubSpot CRM and marketing in step with PartnerWAV. Tick what you want synced and PartnerWAV will set up the connection with you.',
+        ''
         + '<div class="va-opts col">'+HUBSPOT_SYNC.map(function(o){ var on = (hs.sync || []).indexOf(o[0]) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-int-hs="'+o[0]+'"'+(on ? ' checked' : '')+'><span><b>'+esc(o[1])+'</b></span></label>'; }).join("")+'</div>'
         + '<div class="field-row"><label for="intHsDir">Direction</label><select id="intHsDir" class="filter app-select">'+[["to-hubspot","PartnerWAV → HubSpot"],["from-hubspot","HubSpot → PartnerWAV"],["both","Both ways"]].map(function(o){ return '<option value="'+o[0]+'"'+((hs.direction || "to-hubspot") === o[0] ? ' selected' : '')+'>'+o[1]+'</option>'; }).join("")+'</select></div>'
         + '<div id="intHsError" class="login-msg bad" hidden></div>'
         + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="hubspot">'+(hs.requested ? "Update request" : "Request connection")+'</button>'+(hs.requested ? '<button type="button" class="btn ghost sm" data-int-cancel="hubspot">Cancel request</button><span class="field-note">Requested '+esc(hs.requestedAt || "")+'</span>' : '')+'</div>'
-        + '<p class="field-note" style="margin:0;">Why a request, not a button: HubSpot needs a private access key, and that key must be kept on a server, never in a web page. PartnerWAV sets that up once per HubSpot account.</p></div>'
-      // --- Zoho
-      + '<div class="card card-pad int-card" data-int="zoho"><div class="int-head"><span class="int-logo" style="background:#e42527;">Z</span><h3>Zoho CRM</h3>'+(zo.requested ? '<span class="badge warn">Setup requested</span>' : '<span class="badge neutral">Not connected</span>')+'</div>'
-        + '<p class="field-note" style="margin:0;">Keep Zoho CRM (or Bigin) in step with PartnerWAV. Tick what you want synced and PartnerWAV will set up the connection with you.</p>'
+        + '<p class="field-note" style="margin:0;">Why a request, not a button: HubSpot needs a private access key, and that key must be kept on a server, never in a web page. PartnerWAV sets that up once per HubSpot account.</p>'));
+    tiles.push(intTile("zoho", "crm", '<span class="int-logo" style="background:#e42527;">Z</span><h3>Zoho CRM</h3>'+(zo.requested ? '<span class="badge warn">Setup requested</span>' : '<span class="badge neutral">Not connected</span>')+'',
+        'Keep Zoho CRM (or Bigin) in step with PartnerWAV. Tick what you want synced and PartnerWAV will set up the connection with you.',
+        ''
         + '<div class="va-opts col">'+ZOHO_SYNC.map(function(o){ var on = (zo.sync || []).indexOf(o[0]) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-int-zo="'+o[0]+'"'+(on ? ' checked' : '')+'><span><b>'+esc(o[1])+'</b></span></label>'; }).join("")+'</div>'
         + '<div class="field-row"><label for="intZoProduct">Zoho product</label><select id="intZoProduct" class="filter app-select">'+ZOHO_PRODUCTS.map(function(o){ return '<option value="'+o[0]+'"'+((zo.product || "crm") === o[0] ? ' selected' : '')+'>'+esc(o[1])+'</option>'; }).join("")+'</select></div>'
         + '<div class="field-row"><label for="intZoDc">Where your Zoho account is</label><select id="intZoDc" class="filter app-select">'+ZOHO_DCS.map(function(o){ return '<option value="'+o[0]+'"'+((zo.dc || "com") === o[0] ? ' selected' : '')+'>'+esc(o[1])+'</option>'; }).join("")+'</select>'
@@ -5305,24 +5343,31 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="field-row"><label for="intZoDir">Direction</label><select id="intZoDir" class="filter app-select">'+[["to-zoho","PartnerWAV \u2192 Zoho"],["from-zoho","Zoho \u2192 PartnerWAV"],["both","Both ways"]].map(function(o){ return '<option value="'+o[0]+'"'+((zo.direction || "to-zoho") === o[0] ? ' selected' : '')+'>'+o[1]+'</option>'; }).join("")+'</select></div>'
         + '<div id="intZoError" class="login-msg bad" hidden></div>'
         + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="zoho">'+(zo.requested ? "Update request" : "Request connection")+'</button>'+(zo.requested ? '<button type="button" class="btn ghost sm" data-int-cancel="zoho">Cancel request</button><span class="field-note">Requested '+esc(zo.requestedAt || "")+'</span>' : '')+'</div>'
-        + '<p class="field-note" style="margin:0;">Why a request, not a button: Zoho needs a private access key, kept on a server, never in a web page. PartnerWAV sets it up once per Zoho account, in your region.</p></div>'
-      // --- Notion
-      + '<div class="card card-pad int-card" data-int="notion"><div class="int-head"><span class="int-logo" style="background:#191919;">N</span><h3>Notion</h3>'+(nt.requested ? '<span class="badge warn">'+(isOperator ? "Setup planned" : "Setup requested")+'</span>' : '<span class="badge neutral">Not connected</span>')+'</div>'
-        + '<p class="field-note" style="margin:0;">'+(isOperator ? 'For the Funding service: the investor work stays in Notion, and PartnerWAV shows each vendor the result. Tick what should come across.' : 'If your fundraising or project work lives in Notion, PartnerWAV can show its progress here. Tick what you want brought across and PartnerWAV will set up the connection with you.')+'</p>'
+        + '<p class="field-note" style="margin:0;">Why a request, not a button: Zoho needs a private access key, kept on a server, never in a web page. PartnerWAV sets it up once per Zoho account, in your region.</p>'));
+    tiles.push(intTile("notion", "workspace", '<span class="int-logo" style="background:#191919;">N</span><h3>Notion</h3>'+(nt.requested ? '<span class="badge warn">'+(isOperator ? "Setup planned" : "Setup requested")+'</span>' : '<span class="badge neutral">Not connected</span>')+'',
+        ''+(isOperator ? 'For the Funding service: the investor work stays in Notion, and PartnerWAV shows each vendor the result. Tick what should come across.' : 'If your fundraising or project work lives in Notion, PartnerWAV can show its progress here. Tick what you want brought across and PartnerWAV will set up the connection with you.')+'',
+        ''
         + '<div class="va-opts col">'+NOTION_SYNC.map(function(o){ var on = (nt.sync || []).indexOf(o[0]) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-int-nt="'+o[0]+'"'+(on ? ' checked' : '')+'><span><b>'+esc(o[1])+'</b></span></label>'; }).join("")+'</div>'
         + '<div class="field-row"><label for="intNtDir">Direction</label><select id="intNtDir" class="filter app-select">'+NOTION_DIR.map(function(o){ return '<option value="'+o[0]+'"'+((nt.direction || "from-notion") === o[0] ? ' selected' : '')+'>'+o[1]+'</option>'; }).join("")+'</select></div>'
         + '<div id="intNtError" class="login-msg bad" hidden></div>'
         + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="notion">'+(isOperator ? (nt.requested ? "Update plan" : "Save plan") : (nt.requested ? "Update request" : "Request connection"))+'</button>'+(nt.requested ? '<button type="button" class="btn ghost sm" data-int-cancel="notion">'+(isOperator ? "Clear plan" : "Cancel request")+'</button><span class="field-note">'+(isOperator ? "Saved " : "Requested ")+esc(nt.requestedAt || "")+'</span>' : '')+'</div>'
         + '<ul class="shop-list" style="margin:0;"><li>Only the shortlist for a raise comes across, never a full investor database.</li><li>A vendor sees investors only after PartnerWAV releases them.</li><li>The Notion key is kept on a server, never in a web page.</li></ul>'
-        + '<p class="field-note" style="margin:0;">Not live yet: this records what to connect. Until the Funding section is built, shortlists come across as a CSV export from Notion.</p></div>'
-      // --- already connected / planned
-      + '<div class="card card-pad int-card" data-int="chat"><div class="int-head"><span class="int-logo" style="background:#25d366;">W</span><h3>WhatsApp &amp; LINE</h3>'+badge(!!(c.whatsapp || c.line), "Set up", "Not set up")+'</div>'
-        + '<p class="field-note" style="margin:0;">Your number, LINE ID and groups, with share buttons for announcements and event updates.</p>'
-        + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-goto-screen="channels">Open WhatsApp &amp; LINE</button></div></div>'
-      + '<div class="card card-pad int-card" data-int="planned"><div class="int-head"><span class="int-logo" style="background:#8a84a8;">+</span><h3>Planned</h3><span class="badge neutral">Not yet</span></div>'
+        + '<p class="field-note" style="margin:0;">Not live yet: this records what to connect. Until the Funding section is built, shortlists come across as a CSV export from Notion.</p>'));
+    tiles.push(intTile("chat", "messaging", '<span class="int-logo" style="background:#25d366;">W</span><h3>WhatsApp &amp; LINE</h3>'+badge(!!(c.whatsapp || c.line), "Set up", "Not set up")+'',
+        'Your number, LINE ID and groups, with share buttons for announcements and event updates.',
+        ''
+        + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-goto-screen="channels">Open WhatsApp &amp; LINE</button></div>'));
+    tiles.push(intTile("planned", "planned", '<span class="int-logo" style="background:#8a84a8;">+</span><h3>Planned</h3><span class="badge neutral">Not yet</span>',
+        'Coming to PartnerWAV: event listings (Luma, Eventbrite, ZipEvent), Salesforce, and Slack and Microsoft Teams announcements.',
+        ''
         + '<ul class="shop-list" style="margin:0;"><li>Luma, Eventbrite and ZipEvent -- event listings and registrations</li><li>Salesforce</li><li>Slack and Microsoft Teams announcements</li></ul>'
-        + '<p class="field-note" style="margin:0;">Need one of these sooner, or something else? Message PartnerWAV.</p></div>'
-      + '</div>'
+        + '<p class="field-note" style="margin:0;">Need one of these sooner, or something else? Message PartnerWAV.</p>'));
+    tiles.push(intTile("custom", "custom", '<span class="int-logo" style="background:#6c4cf1;font-size:.8rem;">&lt;/&gt;</span><h3>Your own tool</h3><span class="badge neutral">Ask us</span>',
+        'Built your own app or internal tool and want it to work with PartnerWAV? Tell us what it should share and we\'ll look at connecting it.',
+        '<ul class="shop-list" style="margin:0;"><li>What your tool does and who uses it</li><li>What it should send to or get from PartnerWAV: leads, deals, events or contacts</li><li>A link to its API documentation, if it has one</li></ul>'
+        + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-goto-screen="partner-messages">Message PartnerWAV</button></div>'
+        + '<p class="field-note" style="margin:0;">As companies build their own connections, they will be listed here under Your own tools.</p>'));
+    box.innerHTML = intTilesHtml(tiles)
       + (isOperator ? '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1rem;">HubSpot connection requests</h2><span class="hint">Accounts that asked to be connected</span></div>'
         + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;" id="intRequests">'+(requests.length ? requests.map(function(x){ var h = x.integrations.hubspot;
             return '<div class="deal-row" data-int-req="'+attr(x.id)+'"><span class="deal-row-name">'+esc(keyName(x.id))+'<span class="field-note" style="display:block;font-weight:400;">'+esc((h.sync || []).map(function(k){ var o = HUBSPOT_SYNC.filter(function(y){ return y[0] === k; })[0]; return o ? o[1].split(" (")[0] : k; }).join(" · "))+' · '+esc(h.direction || "")+' · requested '+esc(h.requestedAt || "")+'</span></span></div>'; }).join("")
@@ -5375,6 +5420,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   document.addEventListener("click", function(ev){
     var b = ev.target.closest && ev.target.closest("[data-int-save]"); if (b){ saveIntegration(b.getAttribute("data-int-save")); return; }
+    var io = ev.target.closest && ev.target.closest("[data-int-open]");
+    if (io){ var oid = io.getAttribute("data-int-open"); state.intOpen = state.intOpen === oid ? "" : oid; renderIntegrations(true);
+      var ot = document.querySelector('[data-int="' + oid + '"]'); if (state.intOpen && ot && ot.getBoundingClientRect().top < 60 && ot.scrollIntoView) ot.scrollIntoView({ block:"start" });
+      var fo = document.querySelector('[data-int-open="' + oid + '"]'); if (fo) fo.focus({ preventScroll:true }); return; }
+    var it = ev.target.closest && ev.target.closest("[data-int-type]");
+    if (it){ state.intType = it.getAttribute("data-int-type"); renderIntegrations(true); return; }
     if (ev.target.closest && ev.target.closest("[data-int-captcha-off]") && state.role === "operator"){ setPublicSetting("captchaSiteKey", ""); saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast("CAPTCHA turned off"); renderIntegrations(true); return; }
     var x = ev.target.closest && ev.target.closest("[data-int-cancel]");
     if (x){ var rec = contactFor(chMe()); if (rec && rec.integrations){ var cw = x.getAttribute("data-int-cancel"); delete rec.integrations[cw === "notion" || cw === "zoho" ? cw : "hubspot"]; saveChannels(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast(chMe() === "operator:" && x.getAttribute("data-int-cancel") === "notion" ? "Plan cleared" : "Request cancelled"); renderIntegrations(true); } }
@@ -11023,6 +11074,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   document.addEventListener("click", function(ev){ if (ev.target.closest && ev.target.closest("#cloudStatus")) showCloudDetails(); });
   document.addEventListener("keydown", function(ev){ if ((ev.key === "Enter" || ev.key === " ") && ev.target && ev.target.id === "cloudStatus"){ ev.preventDefault(); showCloudDetails(); } });
+  document.addEventListener("keydown", function(ev){ if ((ev.key === "Enter" || ev.key === " ") && ev.target && ev.target.hasAttribute && ev.target.hasAttribute("data-int-open")){ ev.preventDefault(); ev.target.click(); } });
   // For status checks (and automated tests): is anything still waiting to be saved?
   window.CLOUD_PENDING = function(){ if (!CLOUD.loaded) return false; if (CLOUD.busy) return true; var d = cloudDiff(); return d.ups.length + d.dels.length > 0; };
   async function cloudFlushNow(){ clearTimeout(CLOUD.timer); for (var i = 0; i < 40 && CLOUD.busy; i++) await new Promise(function(r){ setTimeout(r, 100); }); await cloudFlush(); }

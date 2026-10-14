@@ -1,4 +1,9 @@
 from harness import *
+
+def open_int(pg, name):
+    # integrations are tiles: open one to see its settings (no-op if it's already open)
+    if pg.locator('[data-int="%s"] [data-int-body]' % name).count() == 0:
+        pg.click('[data-int-open="%s"]' % name); pg.wait_for_timeout(150)
 import os, sys, json
 if not os.path.exists("/usr/lib/postgresql/16/bin/initdb"):
     print("SKIP: PostgreSQL 16 not installed"); srv.shutdown(); sys.exit(0)
@@ -34,7 +39,7 @@ with sync_playwright() as p:
     b, ctx, pg = open_page_supabase(p, mock)
     pg.fill("#loginEmail", "ops@cloudwav.test"); pg.fill("#loginPassword", "op-pass-123"); pg.click("#loginSubmit"); pg.wait_for_timeout(2500); settle(pg)
     nav(pg, "integrations"); pg.wait_for_timeout(300)
-    card = pg.locator('[data-int="captcha"]')
+    open_int(pg, "captcha"); card = pg.locator('[data-int="captcha"]')
     ok(card.count() == 1 and "BASIC ONLY" in card.inner_text().upper(), "Operator sees Spam protection, CAPTCHA not on yet")
     pg.fill("#intCaptchaKey", "not a key!"); pg.click('[data-int-save="captcha"]'); pg.wait_for_timeout(200)
     ok("doesn't look like" in pg.inner_text("#intCaptchaError"), "A malformed site key is refused")
