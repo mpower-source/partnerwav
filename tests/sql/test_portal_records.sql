@@ -987,4 +987,26 @@ insert into portal_records(collection,id,data,readers,writers) values ('serviceR
 select t('a request for a smaller build makes no Dev Lead', (select count(*) from portal_records where collection='projectReferrals' and id='dl-sr-small') = 0);
 reset role;
 
+-- ===== Marketing videos: a requester asks; only the Operator approves, and the link is only the Operator's to set
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- Intelsense asks for a video
+insert into portal_records(collection,id,data,readers,writers) values ('marketingVideos','mv-test','{"id":"mv-test","requesterKey":"vendor:intelsense","productName":"UniSense AI","status":"requested","reviewNotes":[]}','{vendor:intelsense}','{vendor:intelsense}');
+select t('a company asks for a marketing video', (select count(*) from portal_records where collection='marketingVideos' and id='mv-test') = 1);
+select t('...and can withdraw it', not fails($$update portal_records set data = data || '{"status":"withdrawn"}' where collection='marketingVideos' and id='mv-test'$$));
+update portal_records set data = data || '{"status":"requested"}' where collection='marketingVideos' and id='mv-test';
+select t('...but cannot approve its own video', fails($$update portal_records set data = data || '{"status":"approved"}' where collection='marketingVideos' and id='mv-test'$$));
+select t('...or add the video link itself', fails($$update portal_records set data = data || '{"videoUrl":"https://example.com/v.mp4"}' where collection='marketingVideos' and id='mv-test'$$));
+select t('...or write its own review notes', fails($$update portal_records set data = data || '{"reviewNotes":[{"text":"ok"}]}' where collection='marketingVideos' and id='mv-test'$$));
+select t('a company cannot make a video with the status approved from the start', fails($$insert into portal_records(collection,id,data,readers,writers) values ('marketingVideos','mv-bad','{"id":"mv-bad","requesterKey":"vendor:intelsense","status":"approved"}','{vendor:intelsense}','{vendor:intelsense}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV
+update portal_records set data = data || '{"status":"approved","videoUrl":"https://example.com/unisense.mp4"}' where collection='marketingVideos' and id='mv-test';
+select t('CloudWAV approves it and sets the link', (select data->>'status' from portal_records where collection='marketingVideos' and id='mv-test') = 'approved');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- the company, after approval
+select t('the company sees its approved video', (select count(*) from portal_records where collection='marketingVideos' and id='mv-test') = 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authenticated;   -- another company
+select t('another company does not see it', (select count(*) from portal_records where collection='marketingVideos') = 0);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

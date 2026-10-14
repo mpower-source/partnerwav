@@ -161,7 +161,12 @@ insert into public.portal_field_rules (collection, field, allowed) values
   ('serviceRequests',  'value',        '[null]'),
   ('serviceRequests',  'fee',          '[null]'),
   ('serviceRequests',  'houseId',      '["", null]'),
-  ('serviceRequests',  'opNote',       '["", null]')
+  ('serviceRequests',  'opNote',       '["", null]'),
+  -- marketing videos: a requester asks for one and can withdraw it; only the Operator makes it, sends it for approval, approves it or sends it back
+  ('marketingVideos',  'status',       '["requested", "withdrawn"]'),
+  ('marketingVideos',  'videoUrl',     '[null, ""]'),
+  ('marketingVideos',  'reviewNotes',  '[[], null]'),
+  ('marketingVideos',  'reviewedAt',   '["", null]')
 on conflict (collection, field) do update set allowed = excluded.allowed;
 
 -- Collections only CloudWAV can add records to (members may still edit where they're a writer)
@@ -860,7 +865,7 @@ declare
 begin
   if k is null then raise exception 'Sign in to send a notification'; end if;
   if p_to is null or cardinality(p_to) < 1 or cardinality(p_to) > 10 then raise exception 'Choose who to tell'; end if;
-  if p_kind not in ('assessment', 'mvp', 'fractional', 'media', 'referral', 'deal', 'devlead', 'request', 'sponsor') then
+  if p_kind not in ('assessment', 'mvp', 'fractional', 'media', 'referral', 'deal', 'devlead', 'request', 'sponsor', 'marketing') then
     raise exception 'Unknown kind of notification';
   end if;
   -- companies, members, partners and software houses only tell CloudWAV; CloudWAV can tell any login

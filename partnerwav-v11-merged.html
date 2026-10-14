@@ -1301,6 +1301,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     <nav class="navgroup" id="navPartner">
       <div class="navgroup-label">Partner</div>
+          <button class="navlink" data-screen="marketing-videos"><span class="ic">🎬</span>Marketing Videos</button>
       <button class="navlink" data-screen="partner-overview"><span class="ic">📊</span>Overview</button>
       <div class="navsec" data-sec="business">
         <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">💼</span><span class="navsec-name">My Business</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
@@ -1358,6 +1359,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     <nav class="navgroup" id="navVendor" hidden>
       <div class="navgroup-label">Vendor</div>
+          <button class="navlink" data-screen="marketing-videos"><span class="ic">🎬</span>Marketing Videos</button>
       <button class="navlink" data-screen="vendor-overview"><span class="ic">📊</span>Overview</button>
       <div class="navsec" data-sec="program">
         <button class="navsec-head" type="button" aria-expanded="false"><span class="ic">📝</span><span class="navsec-name">My Program</span><span class="navsec-caret" aria-hidden="true">&#9656;</span></button>
@@ -1404,6 +1406,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     <nav class="navgroup" id="navAffiliate" hidden>
       <div class="navgroup-label">Affiliate</div>
+          <button class="navlink" data-screen="marketing-videos"><span class="ic">🎬</span>Marketing Videos</button>
       <button class="navlink" data-screen="affiliate-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="affiliate-profile-editor"><span class="ic">👤</span>My Profile</button>
       <div class="navsec" data-sec="offers">
@@ -1438,6 +1441,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     <nav class="navgroup" id="navInvestor" hidden>
       <div class="navgroup-label">Investor</div>
+          <button class="navlink" data-screen="marketing-videos"><span class="ic">🎬</span>Marketing Videos</button>
       <button class="navlink" data-screen="investor-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="investor-profile"><span class="ic">👤</span>My Profile</button>
       <div class="navsec" data-sec="dealflow">
@@ -1472,6 +1476,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     <nav class="navgroup" id="navMedia" hidden>
       <div class="navgroup-label">Promoter</div>
+          <button class="navlink" data-screen="marketing-videos"><span class="ic">🎬</span>Marketing Videos</button>
       <button class="navlink" data-screen="media-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="media-events"><span class="ic">🎯</span>Events &amp; Sponsoring</button>
       <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
@@ -2850,6 +2855,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <section id="scr-fractional" hidden>
         <div class="section-head"><h2>Fractional Leadership</h2><span class="hint">A part-time CTO, CAIO, CIO or CISO from CloudWAV Consulting, once your product is live</span></div>
         <div style="height:14px"></div><div id="fractionalContent"></div>
+      </section>
+      <section id="scr-marketing-videos" hidden>
+        <div class="section-head"><h2>Marketing Videos</h2><span class="hint">A 60-second video about your product, made by PartnerWAV and approved before you share it</span></div>
+        <div style="height:14px"></div><div id="marketingContent"></div>
       </section>
       <section id="scr-dev-leads" hidden>
         <div class="section-head"><h2>Dev Leads</h2><span class="hint">Builds PartnerWAV sends your software house: accept, quote and track each one</span></div>
@@ -4242,6 +4251,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "mvp-builder":"MVP Builder",
     "fractional":"Fractional Leadership",
     "dev-leads":"Dev Leads",
+    "marketing-videos":"Marketing Videos",
     "media-overview":"Overview",
     "media-profile":"My Profile",
     "media-events":"Events & Sponsoring",
@@ -6286,6 +6296,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderMember();
     renderMediaMvp();
     renderFractionalDev();
+    renderMarketingVideos();
     renderBell();
     renderReadiness();
     renderInvestorDb();
@@ -10928,6 +10939,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { name:"mvpPackages", mode:"merge", get:function(){ return mvpPackages; }, set:function(a){ mvpPackages = a; },
       access:function(r){ return { readers: r.hidden ? [] : EVERYONE, writers:[] }; } },
     // where each company's product is now (Fractional opens once it's live); each company sees only its own
+    // marketing videos: the requester sees its own; the Operator (CloudWAV) sees and approves all of them
+    { name:"marketingVideos", mode:"replace", get:function(){ return marketingVideos; }, set:function(a){ marketingVideos = a; },
+      access:function(r){ return { readers:[r.requesterKey], writers:[r.requesterKey] }; } },
     { name:"productStages", mode:"replace", get:function(){ return productStages; }, set:function(a){ productStages = a; },
       access:function(r){ return { readers:[r.id], writers:[r.id] }; } },
     { name:"memberProfiles", mode:"replace", get:function(){ return memberProfiles; }, set:function(a){ memberProfiles = a; },
@@ -17833,7 +17847,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadIdb();
   loadPerks();
   loadMembers();
-  loadMediaMvp(); notifLoadLocal();
+  loadMediaMvp(); notifLoadLocal(); loadMarketing();
   loadMeet();
   loadFunding();
   loadBrandKits();
@@ -20591,6 +20605,123 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!t.closest(".notif-menu")) openBell(false);
   });
 
+  // ----- Marketing videos: any partner, vendor, affiliate, investor or promoter asks for a 60-second video about a product;
+  // PartnerWAV makes it, the Operator approves it, and only then does the requester see the link.
+  var MV_KEY = "partnerWAV_marketingVideos";
+  var marketingVideos = [];
+  var MV_STATUS = [["requested", "Requested"], ["in_production", "Being made"], ["ready", "Waiting for PartnerWAV's approval"], ["changes", "Changes being made"],
+    ["approved", "Approved"], ["withdrawn", "Withdrawn"], ["rejected", "Not going ahead"]];
+  function loadMarketing(){ try { var a = JSON.parse(lsGet(MV_KEY) || "[]"); marketingVideos = Array.isArray(a) ? a : []; } catch(e){ marketingVideos = []; } }
+  function saveMarketing(){ try { lsSet(MV_KEY, JSON.stringify(marketingVideos)); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
+  function mvLabel(st){ return (MV_STATUS.filter(function(x){ return x[0] === st; })[0] || [st, st])[1]; }
+  function mvBadge(st){
+    var cls = st === "approved" ? "good" : st === "ready" ? "accent" : st === "rejected" || st === "withdrawn" ? "neutral" : "warn";
+    return '<span class="badge ' + cls + '">' + esc(mvLabel(st)) + '</span>';
+  }
+  function mvByRecent(a, b){ return String(b.createdAt).localeCompare(String(a.createdAt)); }
+  // what a requester sees: the link only once PartnerWAV has approved it
+  function mvRequesterCard(v){
+    var link = v.status === "approved" && v.videoUrl && safeHref(v.videoUrl) ? '<a class="btn primary xs" href="' + attr(safeHref(v.videoUrl)) + '" target="_blank" rel="noopener noreferrer">Watch the video</a>' : '';
+    var note = v.status === "changes" ? '<div class="field-note">PartnerWAV is making changes and will send it back for approval.</div>'
+      : v.status === "ready" ? '<div class="field-note">Made. PartnerWAV is checking it before it comes to you.</div>'
+      : v.status === "requested" ? '<div class="field-note">Your brief is with PartnerWAV.</div>' : '';
+    return '<div class="card card-pad" data-mv-row="' + attr(v.id) + '"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div style="min-width:0;flex:1;"><b>' + esc(v.productName) + '</b> ' + mvBadge(v.status)
+      + '<div class="field-note">60 seconds, English, on-screen text · sent ' + esc(v.createdAt) + '</div>' + note + '</div>'
+      + '<div class="mem-acts" style="margin:0;align-items:flex-start;">' + link
+      + (v.status === "requested" ? '<button type="button" class="btn ghost xs" data-mv-withdraw="' + attr(v.id) + '">Withdraw</button>' : '') + '</div></div></div>';
+  }
+  function mvFormHtml(){
+    return '<div class="card card-pad meet-form"><b>Ask for a marketing video</b>'
+      + '<span class="field-note">PartnerWAV makes a 60-second English video with on-screen text about your product and sends it to you for approval before you can share it.</span>'
+      + '<div class="field-row"><label for="mvProduct">Product or solution</label><input type="text" id="mvProduct" maxlength="120" placeholder="e.g. UniSense AI"></div>'
+      + '<div class="field-row"><label for="mvBrief">What should the video say?</label><textarea id="mvBrief" rows="4" maxlength="1500" placeholder="What it does, the main features, and who it is for"></textarea></div>'
+      + '<div class="meet-two"><div class="field-row"><label for="mvAudience">Who is it for? (optional)</label><input type="text" id="mvAudience" maxlength="120" placeholder="e.g. sales leaders at SMEs in Thailand"></div>'
+      + '<div class="field-row"><label for="mvLink">Product website (optional)</label><input type="text" id="mvLink" maxlength="300" placeholder="https://"></div></div>'
+      + '<div class="field-row"><label for="mvNotes">Anything else? (optional)</label><textarea id="mvNotes" rows="2" maxlength="600" placeholder="Claims to avoid, a call to action, brand colours"></textarea></div>'
+      + '<div id="mvErr" class="login-msg bad" role="alert" hidden></div><div><button type="button" class="btn primary sm" data-mv-send>Send the brief</button></div></div>';
+  }
+  function renderMarketingVideos(force){
+    var box = document.getElementById("marketingContent"); if (!box || state.screen !== "marketing-videos") return;
+    var me = svcRequesterKey(), mine = marketingVideos.filter(function(v){ return v.requesterKey === me; }).sort(mvByRecent);
+    var key = JSON.stringify(["mv", state.role, me, mine.map(function(v){ return v.id + v.status + (v.reviewNotes || []).length; }).join("|")]);
+    if (!force && box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    box.innerHTML = mvFormHtml()
+      + '<div class="section-head" style="margin-top:18px;"><h2 style="font-size:1rem;">Your videos</h2></div>'
+      + (mine.length ? '<div style="display:flex;flex-direction:column;gap:8px;">' + mine.map(mvRequesterCard).join("") + '</div>' : '<div class="empty">No videos yet.</div>');
+  }
+  // the Operator's queue, in Services & Sponsors
+  function marketingOpHtml(){
+    var list = marketingVideos.filter(function(v){ return v.status !== "withdrawn"; }).sort(mvByRecent);
+    if (!list.length) return '<div class="empty">No marketing video briefs yet. Partners, vendors, affiliates, investors and promoters ask for them from Marketing Videos.</div>';
+    return '<p class="field-note" style="margin:0 0 10px;">Make each video, attach its link, then send it for approval. Approve it, or send it back with notes. The requester sees the link only once you approve it.</p>'
+      + '<div style="display:flex;flex-direction:column;gap:8px;">' + list.map(function(v){
+        var ops = "", notes = (v.reviewNotes || []).slice(-3).map(function(n){ return '<li>' + esc(n.at) + ' -- ' + esc(n.text) + '</li>'; }).join("");
+        var linkIn = '<input type="text" placeholder="Video link (https://...)" value="' + attr(v.videoUrl || "") + '" data-mv-link="' + attr(v.id) + '" aria-label="Video link">';
+        if (v.status === "requested") ops = '<button type="button" class="btn secondary xs" data-mv-start="' + attr(v.id) + '">Start making it</button>';
+        if (v.status === "in_production" || v.status === "changes" || v.status === "requested") ops += linkIn + '<button type="button" class="btn primary xs" data-mv-ready="' + attr(v.id) + '">Send for approval</button>';
+        if (v.status === "ready") ops = linkIn + '<button type="button" class="btn primary xs" data-mv-approve="' + attr(v.id) + '">Approve</button><button type="button" class="btn secondary xs" data-mv-ready="' + attr(v.id) + '">Save link</button>';
+        if (v.status === "ready" || v.status === "in_production" || v.status === "changes" || v.status === "requested")
+          ops += '<div class="svc-op" style="width:100%;"><input type="text" maxlength="400" placeholder="Notes to send back (required to send back)" data-mv-note="' + attr(v.id) + '" aria-label="Notes"><button type="button" class="btn ghost xs" data-mv-back="' + attr(v.id) + '">Send back with notes</button>'
+            + '<button type="button" class="btn ghost xs" data-mv-reject="' + attr(v.id) + '">Not going ahead</button></div>';
+        if (v.status === "approved") ops = (v.videoUrl && safeHref(v.videoUrl) ? '<a class="btn secondary xs" href="' + attr(safeHref(v.videoUrl)) + '" target="_blank" rel="noopener noreferrer">Open the video</a>' : '');
+        return '<div class="card card-pad" data-mv-op="' + attr(v.id) + '"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div style="min-width:0;flex:1;"><b>' + esc(v.productName) + '</b> ' + mvBadge(v.status)
+          + ' <span class="field-note">for ' + esc(v.requesterName || keyName(v.requesterKey)) + '</span>'
+          + '<div class="field-note cp-notes">' + esc(v.brief) + (v.audience ? ' · For: ' + esc(v.audience) : '') + (v.link ? ' · Website: ' + esc(v.link) : '') + (v.notes ? ' · Notes: ' + esc(v.notes) : '') + '</div>'
+          + (notes ? '<ul class="field-note" style="margin:6px 0 0;padding-left:16px;">' + notes + '</ul>' : '') + '</div></div>'
+          + '<div class="svc-op" style="margin-top:8px;">' + ops + '</div></div>';
+      }).join("") + '</div>';
+  }
+  function mvNotifyRequester(v, title, body){
+    if (!v.requesterKey || /^operator:/.test(v.requesterKey)) return;
+    notify([v.requesterKey], "marketing", title, body, "marketing-videos");
+  }
+  function mvSetStatus(id, st){ var v = marketingVideos.filter(function(x){ return x.id === id; })[0]; if (v){ v.status = st; v.updatedAt = nowStamp(); } return v; }
+  function mvSubmit(){
+    var box = document.getElementById("marketingContent"), err = document.getElementById("mvErr");
+    var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var product = g("mvProduct"), brief = g("mvBrief"), link = g("mvLink");
+    if (!product || !brief){ err.textContent = "Add the product and what the video should say."; err.hidden = false; return; }
+    if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
+    if (link && !safeHref(link)){ err.textContent = "Check the website address."; err.hidden = false; return; }
+    var me = svcRequesterKey(), nm = svcRequesterName();
+    marketingVideos.push({ id:"mv-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), requesterKey:me, requesterName:nm, productName:product.slice(0, 120),
+      brief:brief.slice(0, 1500), audience:g("mvAudience").slice(0, 120), link:link, notes:g("mvNotes").slice(0, 600), videoUrl:"", reviewNotes:[], status:"requested", createdAt:nowStamp(), updatedAt:nowStamp() });
+    saveMarketing();
+    notify(["operator"], "marketing", "Marketing video: " + product.slice(0, 80), nm + " -- " + brief.slice(0, 160), "operator-services");
+    renderMarketingVideos(true); toast("Sent -- PartnerWAV will make the video and send it to you for approval");
+  }
+  document.addEventListener("click", function(ev){
+    var t = ev.target; if (!t || !t.closest) return; var b, id, v, link;
+    if (t.closest("[data-mv-send]")){ mvSubmit(); return; }
+    if ((b = t.closest("[data-mv-withdraw]"))){ v = mvSetStatus(b.getAttribute("data-mv-withdraw"), "withdrawn"); if (v){ saveMarketing(); renderMarketingVideos(true); toast("Withdrawn"); } return; }
+    if (!(b = t.closest("[data-mv-start],[data-mv-ready],[data-mv-approve],[data-mv-back],[data-mv-reject]")) || state.role !== "operator") return;
+    id = b.getAttribute("data-mv-start") || b.getAttribute("data-mv-ready") || b.getAttribute("data-mv-approve") || b.getAttribute("data-mv-back") || b.getAttribute("data-mv-reject");
+    v = marketingVideos.filter(function(x){ return x.id === id; })[0]; if (!v) return;
+    var linkEl = document.querySelector('[data-mv-link="' + id + '"]'), noteEl = document.querySelector('[data-mv-note="' + id + '"]');
+    link = linkEl ? linkEl.value.trim() : (v.videoUrl || "");
+    if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
+    if (b.hasAttribute("data-mv-start")){ mvSetStatus(id, "in_production"); mvNotifyRequester(v, "Your video is being made", v.productName); }
+    else if (b.hasAttribute("data-mv-ready")){
+      if (link && !safeHref(link)){ toast("Check the video link"); return; }
+      if (b.textContent.trim() === "Save link"){ v.videoUrl = link; v.updatedAt = nowStamp(); }
+      else { if (!link || !safeHref(link)){ toast("Add the video link first"); return; } v.videoUrl = link; mvSetStatus(id, "ready"); }
+    }
+    else if (b.hasAttribute("data-mv-approve")){
+      if (!v.videoUrl || !safeHref(v.videoUrl)){ toast("Add the video link first"); return; }
+      mvSetStatus(id, "approved"); v.reviewedAt = nowStamp();
+      mvNotifyRequester(v, "Your video is approved: " + v.productName, "PartnerWAV has approved it. Open Marketing Videos to watch it.");
+    }
+    else if (b.hasAttribute("data-mv-back")){
+      var note = noteEl ? noteEl.value.trim() : "";
+      if (!note){ toast("Write the notes to send back"); return; }
+      (v.reviewNotes = v.reviewNotes || []).push({ at:nowStamp(), text:note.slice(0, 400) });
+      mvSetStatus(id, "changes"); mvNotifyRequester(v, "Changes to your video: " + v.productName, note.slice(0, 200));
+    }
+    else if (b.hasAttribute("data-mv-reject")){ mvSetStatus(id, "rejected"); mvNotifyRequester(v, "Your video is not going ahead: " + v.productName, ""); }
+    saveMarketing(); renderMediaMvp(true); renderMarketingVideos(true);
+  });
+
   // ----- the Media & Events partner's own space
   function mediaProfileFormHtml(m){
     var f = function(id, label, val, attrs){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" value="'+attr(val || "")+'" '+(attrs || "")+'></div>'; };
@@ -20652,9 +20783,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var tab = state.svcTab || "mvp", pending = mediaProfiles.filter(function(m){ return !mediaApproved(m) && !m.archivedAt; });
     var applied = mediaSponsorships.filter(function(x){ return x.status === "applied"; });
     var h = '<div class="cal-views" role="group" aria-label="Show" style="margin-bottom:14px;">'+[["mvp", "MVP Builder requests (" + serviceRequests.filter(function(r){ return r.kind === "mvp"; }).length + ")"], ["media", "Media & Events requests (" + serviceRequests.filter(function(r){ return r.kind === "media"; }).length + ")"],
-      ["partners", "Promoters" + (pending.length ? " (" + pending.length + " to check)" : "")], ["sponsors", "Sponsorships" + (applied.length ? " (" + applied.length + ")" : "")], ["packages", "MVP packages"], ["fractional", "Fractional (" + serviceRequests.filter(function(r){ return r.kind === "fractional"; }).length + ")"], ["devleads", "Dev leads (" + projectReferrals.filter(function(r){ return r.source === "mvp" && devLeadOpen(r); }).length + " open)"], ["leadpartners", "Lead partners"]].map(function(x){ return '<button type="button" class="cal-view" data-svc-tab="'+x[0]+'" aria-pressed="'+(tab === x[0])+'">'+esc(x[1])+'</button>'; }).join("")+'</div>';
+      ["partners", "Promoters" + (pending.length ? " (" + pending.length + " to check)" : "")], ["sponsors", "Sponsorships" + (applied.length ? " (" + applied.length + ")" : "")], ["packages", "MVP packages"], ["fractional", "Fractional (" + serviceRequests.filter(function(r){ return r.kind === "fractional"; }).length + ")"], ["devleads", "Dev leads (" + projectReferrals.filter(function(r){ return r.source === "mvp" && devLeadOpen(r); }).length + " open)"], ["leadpartners", "Lead partners"], ["videos", "Marketing videos" + (marketingVideos.filter(function(v){ return v.status !== "withdrawn" && v.status !== "approved" && v.status !== "rejected"; }).length ? " (" + marketingVideos.filter(function(v){ return v.status !== "withdrawn" && v.status !== "approved" && v.status !== "rejected"; }).length + " to do)" : "")]].map(function(x){ return '<button type="button" class="cal-view" data-svc-tab="'+x[0]+'" aria-pressed="'+(tab === x[0])+'">'+esc(x[1])+'</button>'; }).join("")+'</div>';
     if (tab === "mvp" || tab === "media" || tab === "fractional"){ var list = serviceRequests.filter(function(r){ return r.kind === tab; });
       return h + (list.length ? svcRequestListHtml(list, "op") : '<div class="empty">No requests yet.</div>'); }
+    if (tab === "videos") return h + marketingOpHtml();
     if (tab === "devleads") return h + devLeadsOpHtml();
     if (tab === "leadpartners") return h + leadPartnersHtml();
     if (tab === "partners") return h + '<p class="field-note" style="margin:0 0 10px;">Set up a promoter\'s login in Accounts &amp; Logins (type Promoter). Check each one before listing: PR, media, creators, events and venues only, not marketing automation.</p>'
