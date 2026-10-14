@@ -107,6 +107,15 @@
   .flyer-fine{ font-size:9.5px; color:#646473; margin-top:4px; }
   .flyer-foot{ text-align:center; font-size:9px; color:#8c8c96; padding:6px 0 10px; }
   .flyer-wm{ position:absolute; top:46%; left:50%; transform:translate(-50%,-50%) rotate(-24deg); font-size:84px; font-weight:900; color:rgba(200,40,40,.12); pointer-events:none; letter-spacing:.1em; }
+  .notif-menu{ position:relative; }
+  .bell{ position:relative; background:none; border:1px solid currentColor; border-radius:50%; width:36px; height:36px; cursor:pointer; font-size:1rem; color:inherit; display:inline-flex; align-items:center; justify-content:center; }
+  .bell-count{ position:absolute; top:-4px; right:-6px; background:#d92d20; color:#fff; border-radius:10px; font-size:.68rem; padding:0 5px; min-width:16px; line-height:16px; text-align:center; }
+  .notif-pop{ position:absolute; right:0; top:44px; width:min(360px,92vw); max-height:70vh; overflow:auto; background:#fff; color:#111; border:1px solid #d0d7de; border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,.18); padding:10px; z-index:60; display:flex; flex-direction:column; gap:6px; }
+  .notif-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .notif-item{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; background:none; border:0; border-radius:8px; padding:8px; cursor:pointer; color:inherit; font:inherit; }
+  .notif-item:hover{ background:rgba(127,127,127,.12); }
+  .notif-item.unread{ background:rgba(59,130,246,.12); }
+  .notif-item span{ font-size:.85rem; opacity:.85; } .notif-item small{ opacity:.6; }
 </style></head><body>
 <script>
   // Sign-in required unless ?demo=1 (walk-through mode) or a public ?apply= referral link
@@ -1556,6 +1565,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div class="topbar-right">
           <input class="search" placeholder="Search…" disabled>
           <span id="cloudStatus" class="cloud-status" hidden role="status" aria-live="polite"></span>
+          <div class="notif-menu">
+            <button type="button" class="bell" id="bellBtn" aria-haspopup="true" aria-expanded="false" aria-label="Notifications">&#128276;<span class="bell-count" id="bellCount" hidden></span></button>
+            <div class="notif-pop" id="notifPop" hidden></div>
+          </div>
           <div class="account-menu">
             <button type="button" class="avatar" id="accountBtn" aria-haspopup="true" aria-expanded="false" aria-label="Account">PP</button>
             <div class="account-pop" id="accountPop" hidden>
@@ -6273,6 +6286,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderMember();
     renderMediaMvp();
     renderFractionalDev();
+    renderBell();
     renderReadiness();
     renderInvestorDb();
     renderPerks();
@@ -9016,6 +9030,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         productId:"", product:"", deal:name, customer: (document.getElementById("dealCustomer").value || "").trim(), value:value,
         termMonths: parseInt(document.getElementById("dealTerm").value, 10) || "", notes: (document.getElementById("dealNotes").value || "").trim(),
         submitted: nowStamp(), status:"pending", pricingCheck:"", thread:[] }));
+      notify(["operator"], "deal", "New deal registered: " + name, currentPartnerName() + (value ? " -- " + value : ""), "operator-approvals");
       saveDeals();
       toast("Deal submitted -- \"" + name + "\" is now awaiting Program Operator review");
       closeModal();
@@ -11120,7 +11135,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   async function cloudRefresh(){
     if (!CLOUD.loaded || CLOUD.busy) return;
     if (userIsEditing() || document.querySelector(".modal-backdrop")){ clearTimeout(refreshTimer); refreshTimer = setTimeout(cloudRefresh, 1500); return; }
-    try { var rows = await cloudFetchAll(); cloudApply(rows, false); renderPreserving(); } catch(e){ console.warn("Cloud refresh failed:", e); }
+    try { var rows = await cloudFetchAll(); cloudApply(rows, false); renderPreserving(); cloudLoadNotifications(); } catch(e){ console.warn("Cloud refresh failed:", e); }
   }
 
   // Find what changed since the last sync and send it
@@ -11348,6 +11363,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   });
   window.addEventListener("focus", function(){ if (CLOUD.loaded) cloudRefreshSoon(); });
   setInterval(function(){ if (CLOUD.loaded) cloudFlush(); }, 4000);
+  setInterval(function(){ if (CLOUD.loaded) cloudLoadNotifications(); }, 30000);
   // live updates normally arrive over realtime; this is a fallback while a conversation is open
   setInterval(function(){ if (CLOUD.loaded && state.screen === "partner-messages") cloudRefresh(); }, 15000);
 
@@ -11713,7 +11729,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   };
   var REF_LEVELS = { referral:"Referral only", cosell:"Co-sell", resell:"Resell" };
   var REF_STATUS = {
-    registered:{ label:"Awaiting software house", cls:"warn" }, accepted:{ label:"Accepted", cls:"accent" },
+    new:{ label:"New -- send to a software house", cls:"warn" }, registered:{ label:"Awaiting software house", cls:"warn" }, accepted:{ label:"Accepted", cls:"accent" },
     proposal:{ label:"Proposal sent", cls:"accent" }, won:{ label:"Won", cls:"good" },
     lost:{ label:"Lost", cls:"neutral" }, rejected:{ label:"Not accepted", cls:"bad" }, moved:{ label:"Moved to another house", cls:"neutral" }
   };
@@ -13663,7 +13679,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           return '<div class="deal-row" data-ref-row="'+esc(r.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(r.client.company)
             + '<span class="field-note" style="display:block;font-weight:400;">'+esc(h.name)+' · '+esc(REF_LEVELS[r.level] || r.level)+(isOp ? ' · from '+esc(keyName(r.referrerKey)) : '')+' · registered '+esc(r.registeredAt)+'</span>'
             + '<span class="field-note" style="display:block;font-weight:400;">'+(f.resell ? 'Resell -- '+esc(f.t.resellDiscount)+'% partner discount' : (f.collected ? 'Collected '+fmtMoney(f.collected, r.currency)+' · '+(isOp ? 'fee '+fmtMoney(f.fee, r.currency) : 'your share '+fmtMoney(f.partnerFee, r.currency)) : 'Estimated fee '+fmtMoney(isOp ? f.estimate : f.estimate * f.partnerPct / 100, r.currency)+' on the stated budget'))+'</span></span>'
-            + refBadge(r) + '<button type="button" class="btn secondary sm" data-ref-view="'+esc(r.id)+'">Open</button></div>';
+            + refBadge(r) + (r.source === "mvp" && !r.houseId && isOp ? '<div class="svc-op" style="width:100%;"><select class="filter app-select" data-dl-assign-to="'+esc(r.id)+'" aria-label="Software house">'+houseOptions("", "", "Choose a software house")+'</select><button type="button" class="btn primary xs" data-dl-assign="'+esc(r.id)+'">Send to house</button></div>' : '') + '<button type="button" class="btn secondary sm" data-ref-view="'+esc(r.id)+'">Open</button></div>';
         }).join("") + '</div>' : '<div class="empty">No referrals yet.</div>');
   }
   function vendorReferralsHtml(){
@@ -13800,7 +13816,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         budget: Number(g("#rfBudget")) || 0, currency:g("#rfCurrency"), timeline:g("#rfTimeline"), disclosed:true,
         status:"registered", registeredAt:now, respondBy:businessDaysFrom(now, t.acceptDays), acceptedAt:"", protectedUntil:"", contractValue:null, wonAt:"",
         payments:[], payouts:[], thread:[], termsSnapshot:null });
-      saveReferrals(); closeModal(); toast("Referral registered -- " + h.name + " has " + t.acceptDays + " business days to respond"); render();
+      notify(["operator"], "referral", "New software referral: " + g("#rfCompany"), h.name + " -- " + g("#rfNeed").slice(0, 160), "referrals"); saveReferrals(); closeModal(); toast("Referral registered -- " + h.name + " has " + t.acceptDays + " business days to respond"); render();
     });
   }
 
@@ -17817,7 +17833,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadIdb();
   loadPerks();
   loadMembers();
-  loadMediaMvp();
+  loadMediaMvp(); notifLoadLocal();
   loadMeet();
   loadFunding();
   loadBrandKits();
@@ -20147,6 +20163,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"media", requesterKey:me, requesterName:svcRequesterName(), mediaId:m.id, mediaName:m.name,
         serviceName:g("medReqSvc"), details:g("medReqDetails").slice(0, 1200), budget:g("medReqBudget"), timeline:g("medReqTiming"), offerId:hit ? hit.id : "", offerTitle:hit ? hit.title : "", codeOk:!!hit,
         status:"new", createdAt:nowStamp() });
+      notify(["operator"], "media", "Media & Events request: " + m.name, svcRequesterName() + " -- " + g("medReqSvc"), "operator-services");
       saveMediaMvp(); closeModal(); renderMediaMvp(true); toast(hit ? "Request sent, with the event discount" : "Request sent -- " + m.name + " and PartnerWAV will be in touch");
     });
   }
@@ -20180,6 +20197,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var link = g("mvpReqLink"); if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
       serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"mvp", requesterKey:svcRequesterKey(), requesterName:svcRequesterName(), packageId:p.id, serviceName:p.name,
         details:g("mvpReqDetails").slice(0, 1500) + (link && safeHref(link) ? "\nLink: " + link : ""), budget:g("mvpReqBudget"), timeline:g("mvpReqTiming"), status:"new", createdAt:nowStamp() });
+      notify(["operator"], "mvp", "MVP Builder request: " + p.name, svcRequesterName() + " -- " + g("mvpReqDetails").slice(0, 160), "operator-services");
       saveMediaMvp(); closeModal(); renderMediaMvp(true); toast("Sent -- the MVP Builder team will be in touch");
     });
   }
@@ -20284,9 +20302,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (rt.build){ var pk = rt.packageId ? mvpPackages.filter(function(p){ return p.id === rt.packageId; })[0] : null;
         serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"mvp", route:rt.route, requesterKey:me, requesterName:nm, packageId:rt.packageId || "", serviceName:pk ? pk.name : "MVP Builder",
           needs:w.needs.filter(function(x){ return x !== "leadership"; }).map(function(x){ return labelOf(MVP_NEEDS, x); }), stage:w.stage, team:w.team,
-          details: base + (rt.route === "devlead" ? "\nBigger build: for a software house as a Dev Lead." : ""), budget:w.budget, timeline:w.timing, status:"new", createdAt:now }); }
+          details: base + (rt.route === "devlead" ? "\nBigger build: for a software house as a Dev Lead." : ""), budget:w.budget, timeline:w.timing, status:"new", createdAt:now }); if (rt.route === "devlead") addUnassignedDevLead(serviceRequests[serviceRequests.length - 1]); notify(["operator"], "mvp", (rt.route === "devlead" ? "Bigger build: " : "MVP Builder: ") + nm, base.slice(0, 200), "operator-services"); }
       if (rt.leadership){ serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"fractional", requesterKey:me, requesterName:nm, serviceName:"Fractional leadership",
-          roles:w.roles.slice(), stage:w.stage, details:base, timeline:w.timing, status:"new", createdAt:now }); }
+          roles:w.roles.slice(), stage:w.stage, details:base, timeline:w.timing, status:"new", createdAt:now }); notify(["operator"], "fractional", "Fractional leadership request: " + nm, w.roles.join(", "), "operator-services"); }
       setProductStage(me, w.stage); saveMediaMvp(); closeModal(); renderMediaMvp(true); renderFractionalDev(true);
       toast(rt.route === "devlead" ? "Sent -- a software house will look at the build" : "Sent -- PartnerWAV will be in touch");
     });
@@ -20314,6 +20332,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var me = svcRequesterKey();
     serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"fractional", requesterKey:me, requesterName:svcRequesterName(), serviceName:"Fractional leadership",
       roles:roles, stage:productStageOf(me), details:det.slice(0, 1200) + "\nTime: " + hours + (timing ? "\nStart: " + timing : ""), timeline:timing, status:"new", createdAt:nowStamp() });
+    notify(["operator"], "fractional", "Fractional leadership request: " + svcRequesterName(), roles.join(", "), "operator-services");
     saveMediaMvp(); renderFractionalDev(true); toast("Sent -- PartnerWAV will be in touch");
   }
   // the nav and pages: Fractional once ready; Dev Leads for the software house's own login
@@ -20328,11 +20347,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return (first ? '<option value="">'+esc(first)+'</option>' : '') + hs.map(function(h){ return '<option value="'+attr(h.id)+'"'+(selected === h.id ? ' selected' : '')+'>'+(first ? '' : 'Send to ')+esc(h.name)+(h.leadPartner ? ' (Lead partner)' : '')+'</option>'; }).join("");
   }
   // ----- Dev Leads: a bigger MVP build, sent to a software house as a project referral that PartnerWAV tracks -----
-  function devLeadOpen(r){ return r.source === "mvp" && ["registered", "accepted", "proposal", "rejected"].indexOf(r.status) > -1; }
+  function devLeadOpen(r){ return r.source === "mvp" && ["new", "registered", "accepted", "proposal", "rejected"].indexOf(r.status) > -1; }
   function devLeadFlag(r){
     if (r.source !== "mvp") return "";
     var t = todayIso();
     if (devLeadOpen(r) && r.closeBy && t > r.closeBy) return "Past " + DEV_LEAD_DAYS.close + " days -- close it or move it on";
+    if (r.status === "new") return "Needs a software house -- send it to one";
     if (r.status === "rejected") return "Declined -- move it on";
     if (r.status === "registered") return t > r.respondBy ? "No answer in " + DEV_LEAD_DAYS.respond + " business days -- move it on" : "Accept or decline by " + r.respondBy;
     if (r.status === "accepted") return t > r.quoteBy ? "Quote overdue -- move it on" : "Quote by " + r.quoteBy;
@@ -20341,28 +20361,31 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (r.status === "lost") return "Lost";
     return r.status === "moved" ? "Moved to another house" : "";
   }
-  function devLeadOverdue(r){ return devLeadOpen(r) && /overdue|move it on|Past /.test(devLeadFlag(r)); }
+  function devLeadOverdue(r){ return devLeadOpen(r) && /overdue|move it on|Past |Needs a software house/.test(devLeadFlag(r)); }
   function newDevLead(req, h, opts){
     var t = todayIso(), from = opts && opts.from ? opts.from : null, old = from ? houseById(from.houseId) : null;
     return { id:"ref-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), source:"mvp", mvpRequestId:req ? req.id : "", movedFrom: from ? from.id : "",
-      houseId:h.id, referrerKey:"operator:", level:"referral", cosellLead:"cloudwav",
+      houseId: h ? h.id : "", referrerKey:"operator:", level:"referral", cosellLead:"cloudwav",
       client:{ company: req ? req.requesterName || "" : "", contact:"", email:"", phone:"" }, need: req ? req.details || "" : "", budget:0, currency:"USD", timeline: req ? req.timeline || "" : "", disclosed:true,
-      status:"registered", registeredAt:t, respondBy:businessDaysFrom(t, DEV_LEAD_DAYS.respond), quoteBy:"", closeBy:daysFrom(t, DEV_LEAD_DAYS.close), acceptedAt:"", protectedUntil:"", contractValue:null, wonAt:"", quoteValue:null, rejectReason:"",
+      status: h ? "registered" : "new", registeredAt:t, respondBy: h ? businessDaysFrom(t, DEV_LEAD_DAYS.respond) : "", quoteBy:"", closeBy:daysFrom(t, DEV_LEAD_DAYS.close), acceptedAt:"", protectedUntil:"", contractValue:null, wonAt:"", quoteValue:null, rejectReason:"",
       payments:[], payouts:[], thread:[], termsSnapshot: termsOf(h),
-      progress:[{ at:nowStamp(), stage: from ? "Moved on from " + (old ? old.name : "another house") : "Sent by PartnerWAV", note: opts && opts.note ? opts.note : "" }] };
+      progress:[{ at:nowStamp(), stage: from ? "Moved on from " + (old ? old.name : "another house") : (h ? "Sent by PartnerWAV" : "Waiting for a software house"), note: opts && opts.note ? opts.note : "" }] };
   }
   // A request sent to a house becomes a dev lead; if it already has one with another house, the lead moves on
   function assignDevLead(req, h){
     var cur = projectReferrals.filter(function(x){ return x.source === "mvp" && x.mvpRequestId === req.id && devLeadOpen(x); })[0];
     if (cur && cur.houseId === h.id) return;
+    if (cur && !cur.houseId){ devLeadAssignHouse(cur.id, h.id); return; }
     if (cur){ devLeadMove(cur.id, h.id); return; }
     projectReferrals.unshift(newDevLead(req, h, {})); saveReferrals();
+    notify(houseLoginKeys(h.id), "devlead", "New dev lead: " + (req.requesterName || "client"), (req.details || "").slice(0, 200), "dev-leads");
   }
   function devLeadMove(id, toId){
     var r = refById(id), h2 = houseById(toId); if (!r || !h2 || r.houseId === h2.id) return false;
     var old = houseById(r.houseId), req = serviceRequests.filter(function(x){ return x.id === r.mvpRequestId; })[0];
     r.status = "moved"; r.movedAt = todayIso(); r.progress = (r.progress || []).concat([{ at:nowStamp(), stage:"Moved on to " + h2.name, note:"from " + (old ? old.name : "a house") }]);
     projectReferrals.unshift(newDevLead(req, h2, { from:r, note:"from " + (old ? old.name : "a house") }));
+    notify(houseLoginKeys(h2.id), "devlead", "Dev lead moved to you: " + (req ? req.requesterName || "client" : "client"), "", "dev-leads");
     if (req){ req.houseId = h2.id; req.status = "referred"; req.updatedAt = nowStamp(); }
     saveReferrals(); saveMediaMvp(); return true;
   }
@@ -20383,6 +20406,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     else if (act === "delivered"){ r.deliveredAt = t; log("Delivered", note); markDelivered(req); }
     else if (act === "note"){ log("Note", note); }
     else return;
+    if (act !== "note"){ var lbl = { accept:"accepted", decline:"declined", quote:"quote sent", won:"won", lost:"lost", delivered:"delivered" }[act] || act;
+      notify(["operator"], "devlead", "Dev lead " + lbl + ": " + (r.client.company || "client"), (houseById(r.houseId) || {}).name || "", "operator-services"); }
     saveReferrals(); saveMediaMvp(); renderDevScreens(); toast(act === "note" ? "Note added" : "Saved");
   }
   function devLeadRowHtml(r, view){
@@ -20452,6 +20477,118 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-lead-save]"))){ var lh = houseById(b.getAttribute("data-lead-save")), sp = document.querySelector('[data-lead-specialty="' + (lh && lh.id) + '"]'), fe = document.querySelector('[data-lead-fee="' + (lh && lh.id) + '"]');
       if (lh && sp && fe){ var fv = Number(fe.value.replace(/[^0-9.]/g, "")) || 0; lh.leadPartner = { specialty:sp.value.trim().slice(0, 120), fee:fv, since: lh.leadPartner ? lh.leadPartner.since : todayIso() }; saveReferrals(); renderMediaMvp(true); toast("Lead partner saved"); } return; }
     if ((b = t.closest("[data-lead-off]"))){ var oh = houseById(b.getAttribute("data-lead-off")); if (oh){ delete oh.leadPartner; saveReferrals(); renderMediaMvp(true); toast("Removed as lead partner"); } return; }
+  });
+
+  // ----- Notifications: the bell at the top, and browser alerts. Each login sees only what concerns it.
+  // Signed in, a notification is sent through PartnerWAV's database (post_notification), so every open browser hears about
+  // it live (realtime). In the demo it is kept on this device.
+  var NOTIF_KEY = "partnerWAV_notifications", NOTIF_READ_KEY = "partnerWAV_notifRead";
+  var notifications = [], notifSeenByViewer = {};
+  function notifLoadLocal(){ try { var a = JSON.parse(lsGet(NOTIF_KEY) || "[]"); notifications = Array.isArray(a) ? a : []; } catch(e){ notifications = []; } }
+  function notifSaveLocal(){ try { lsSet(NOTIF_KEY, JSON.stringify(notifications.slice(-200))); } catch(e){} }
+  function notifReadMap(){ try { return JSON.parse(lsGet(NOTIF_READ_KEY) || "{}") || {}; } catch(e){ return {}; } }
+  function notifLive(){ return !!supabase && !(typeof DEMO_MODE !== "undefined" && DEMO_MODE) && !!state.account; }
+  // Who this login is: CloudWAV, and its own login key
+  function notifAudience(){ var a = []; if (state.role === "operator") a.push("operator"); var k = myMsgKey(); if (k && k !== state.role + ":") a.push(k); return a; }
+  function notifMine(){
+    var aud = notifAudience();
+    return notifications.filter(function(n){ return (n.to || []).some(function(t){ return aud.indexOf(t) > -1; }); })
+      .sort(function(a, b){ return String(b.at).localeCompare(String(a.at)); });
+  }
+  function notifIsRead(n){ return (notifReadMap()[myMsgKey()] || []).indexOf(n.id) > -1; }
+  function notifUnread(){ return notifMine().filter(function(n){ return !notifIsRead(n); }); }
+  function notifMarkRead(ids){
+    var rm = notifReadMap(), k = myMsgKey(), have = rm[k] || [];
+    rm[k] = have.concat(ids.filter(function(i){ return have.indexOf(i) < 0; })).slice(-500);
+    try { lsSet(NOTIF_READ_KEY, JSON.stringify(rm)); } catch(e){}
+  }
+  // Tell logins about something. to: "operator" (CloudWAV) and/or login keys such as "partner:siam-digital"
+  function notify(to, kind, title, body, screen){
+    to = (to || []).filter(Boolean); if (!to.length) return;
+    if (notifLive()){
+      supabase.rpc("post_notification", { p_to:to, p_kind:kind, p_title:String(title).slice(0, 160), p_body:String(body || "").slice(0, 400), p_screen:screen || "" })
+        .then(function(r){ if (r.error) console.warn("Notification not sent:", r.error.message); }, function(){});
+      return;
+    }
+    notifications.push({ id:"n-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind:kind, title:String(title).slice(0, 160), body:String(body || "").slice(0, 400),
+      screen:screen || "", to:to, from:myMsgKey(), at:new Date().toISOString() });
+    notifSaveLocal(); notifRefresh();
+  }
+  // Signed in: fetch what this login is allowed to see (the database filters it)
+  async function cloudLoadNotifications(){
+    if (!notifLive()) return;
+    try {
+      var r = await supabase.from("portal_records").select("id,data").eq("collection", "notifications").order("updated_at", { ascending:false }).limit(200);
+      if (r.error || !r.data) return;
+      var have = {}, added = false; notifications.forEach(function(n){ have[n.id] = true; });
+      r.data.forEach(function(x){ var d = x.data; if (d && d.id && !have[d.id]){ notifications.push(d); added = true; } });
+      if (added) notifSaveLocal();
+      notifRefresh();
+    } catch(e){}
+  }
+  // New for this login: a browser alert and a toast. Whatever was already there when this login first looks is not news.
+  function notifRefresh(){
+    var k = myMsgKey(), seen = notifSeenByViewer[k], mine = notifMine();
+    if (!seen){ seen = notifSeenByViewer[k] = {}; mine.forEach(function(n){ seen[n.id] = true; }); }
+    else mine.forEach(function(n){ if (!seen[n.id]){ seen[n.id] = true; notifPopup(n); } });
+    renderBell();
+  }
+  function notifPopup(n){
+    toast(n.title);
+    if (typeof Notification !== "undefined" && Notification.permission === "granted"){
+      try { var no = new Notification("PartnerWAV: " + n.title, { body:n.body, tag:n.id }); no.onclick = function(){ window.focus(); no.close(); notifOpen(n.id); }; } catch(e){}
+    }
+  }
+  function notifOpen(id){
+    var n = notifications.filter(function(x){ return x.id === id; })[0]; if (!n) return;
+    notifMarkRead([id]); openBell(false);
+    if (n.screen){ state.screen = n.screen; render(); window.scrollTo(0, 0); }
+    renderBell();
+  }
+  function notifWhen(at){ var d = new Date(at); return isNaN(d) ? "" : d.toLocaleString("en-GB", { timeZone:"Asia/Bangkok", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" }); }
+  function notifListHtml(){
+    var list = notifMine().slice(0, 40), perm = typeof Notification !== "undefined" ? Notification.permission : "unsupported";
+    return '<div class="notif-head"><b>Notifications</b>' + (list.some(function(n){ return !notifIsRead(n); }) ? '<button type="button" class="btn ghost xs" data-notif-readall>Mark all read</button>' : '') + '</div>'
+      + (perm === "default" ? '<button type="button" class="btn secondary xs" data-notif-alerts>Turn on browser alerts</button>' : '')
+      + (list.length ? list.map(function(n){ return '<button type="button" class="notif-item'+(notifIsRead(n) ? '' : ' unread')+'" data-notif-open="'+attr(n.id)+'"><b>'+esc(n.title)+'</b>'+(n.body ? '<span>'+esc(n.body)+'</span>' : '')+'<small>'+esc(notifWhen(n.at))+'</small></button>'; }).join("")
+        : '<div class="empty">Nothing yet. New things for your login show up here.</div>');
+  }
+  function renderBell(){
+    var cnt = document.getElementById("bellCount"), pop = document.getElementById("notifPop"); if (!cnt || !pop) return;
+    var n = notifUnread().length; cnt.hidden = !n; cnt.textContent = n > 9 ? "9+" : String(n);
+    if (!pop.hidden) pop.innerHTML = notifListHtml();
+  }
+  function openBell(open){
+    var pop = document.getElementById("notifPop"), b = document.getElementById("bellBtn"); if (!pop || !b) return;
+    pop.hidden = !open; b.setAttribute("aria-expanded", String(open)); if (open) pop.innerHTML = notifListHtml();
+  }
+  // Browser alerts need the person's go-ahead; the bell asks the first time it is opened
+  function notifAsk(){ if (typeof Notification !== "undefined" && Notification.permission === "default"){ try { Notification.requestPermission().then(function(){ renderBell(); }); } catch(e){} } }
+
+  // ----- Dev Leads that come from the MVP Builder wizard: sent to CloudWAV at once, then to a software house
+  function addUnassignedDevLead(req){ projectReferrals.unshift(newDevLead(req, null, {})); saveReferrals(); }
+  // CloudWAV sends an unassigned lead (or one moved on) to a software house: the house gets its 5-day clock
+  function devLeadAssignHouse(id, houseId){
+    var r = refById(id), h = houseById(houseId); if (!r || !h) return false;
+    var t = todayIso(), req = serviceRequests.filter(function(x){ return x.id === r.mvpRequestId; })[0];
+    r.houseId = h.id; r.status = "registered"; r.respondBy = businessDaysFrom(t, DEV_LEAD_DAYS.respond); r.closeBy = daysFrom(t, DEV_LEAD_DAYS.close); r.termsSnapshot = termsOf(h);
+    r.progress = (r.progress || []).concat([{ at:nowStamp(), stage:"Sent to " + h.name, note:"" }]);
+    if (req){ req.houseId = h.id; if (req.status === "new") req.status = "referred"; req.updatedAt = nowStamp(); }
+    saveReferrals(); saveMediaMvp();
+    notify(houseLoginKeys(h.id), "devlead", "New dev lead: " + (r.client.company || "client"), (r.need || "").slice(0, 200), "dev-leads");
+    render();
+    return true;
+  }
+
+  document.addEventListener("click", function(ev){
+    var t = ev.target; if (!t || !t.closest) return; var b;
+    if (t.closest("#bellBtn")){ var pop = document.getElementById("notifPop"); if (pop && pop.hidden){ notifAsk(); openBell(true); } else openBell(false); return; }
+    if ((b = t.closest("[data-notif-open]"))){ notifOpen(b.getAttribute("data-notif-open")); return; }
+    if (t.closest("[data-notif-readall]")){ notifMarkRead(notifMine().map(function(n){ return n.id; })); renderBell(); return; }
+    if (t.closest("[data-notif-alerts]")){ notifAsk(); renderBell(); return; }
+    if ((b = t.closest("[data-dl-assign]"))){ var aid = b.getAttribute("data-dl-assign"), sel = document.querySelector('[data-dl-assign-to="' + aid + '"]');
+      if (sel && sel.value && devLeadAssignHouse(aid, sel.value)) toast("Sent to the software house"); else toast("Choose a software house first"); return; }
+    if (!t.closest(".notif-menu")) openBell(false);
   });
 
   // ----- the Media & Events partner's own space
@@ -20587,6 +20724,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-med-sponsor]"))){ var m0 = mediaById(myMediaId()), e0 = ceById(b.getAttribute("data-med-sponsor")); if (!m0 || !e0) return;
       var pk = document.querySelector('[data-med-pkg="' + e0.id + '"]'), nt = document.querySelector('[data-med-note="' + e0.id + '"]');
       mediaSponsorships.push({ id:"ms-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), mediaId:m0.id, eventId:e0.id, eventTitle:e0.title, pkg:pk ? pk.value : "other", note:nt ? nt.value.trim().slice(0, 200) : "", status:"applied", createdAt:nowStamp() });
+      notify(["operator"], "sponsor", "Sponsorship applied: " + e0.title, m0.name + " wants to sponsor this event", "operator-services");
       saveMediaMvp(); renderMediaMvp(true); toast("Sent to PartnerWAV"); return; }
     if ((b = t.closest("[data-med-offer-toggle]"))){ var o1 = mediaOffers.filter(function(o){ return o.id === b.getAttribute("data-med-offer-toggle"); })[0]; if (o1){ o1.active = o1.active === false; o1.updatedAt = nowStamp(); saveMediaMvp(); renderMediaMvp(true); } return; }
     if (t.closest("[data-med-offer-save]")){ var m1 = mediaById(myMediaId()); if (!m1) return;
@@ -20600,9 +20738,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-svc-tab]"))){ state.svcTab = b.getAttribute("data-svc-tab"); renderMediaMvp(true); return; }
     if ((b = t.closest("[data-svc-save]"))){ var r2 = serviceRequests.filter(function(r){ return r.id === b.getAttribute("data-svc-save"); })[0]; if (!r2) return;
       var num = function(sel){ var el = document.querySelector(sel); var v = el ? el.value.replace(/[^0-9.]/g, "") : ""; return v === "" ? null : Number(v); };
-      r2.status = document.querySelector('[data-svc-status="' + r2.id + '"]').value; r2.value = num('[data-svc-value="' + r2.id + '"]'); r2.fee = num('[data-svc-fee="' + r2.id + '"]');
+      var oldSt = r2.status; r2.status = document.querySelector('[data-svc-status="' + r2.id + '"]').value; r2.value = num('[data-svc-value="' + r2.id + '"]'); r2.fee = num('[data-svc-fee="' + r2.id + '"]');
       var hs = document.querySelector('[data-svc-house="' + r2.id + '"]'); if (hs){ r2.houseId = hs.value; if (hs.value && r2.status === "new") r2.status = "referred"; if (hs.value && r2.kind === "mvp" && houseById(hs.value)) assignDevLead(r2, houseById(hs.value)); }
       if (r2.status === "delivered" && r2.kind === "mvp") markDelivered(r2);
+      if (r2.status !== oldSt && r2.requesterKey) notify([r2.requesterKey], "request", "Your request: " + reqStatusName(r2.status), (r2.serviceName || "") + " is now: " + reqStatusName(r2.status), r2.kind === "fractional" ? "fractional" : r2.kind === "media" ? "media-directory" : "mvp-builder");
       r2.updatedAt = nowStamp(); saveMediaMvp(); renderMediaMvp(true); toast("Saved"); return; }
     if ((b = t.closest("[data-svc-approve]"))){ var m2 = mediaById(b.getAttribute("data-svc-approve")); if (m2){ m2.status = "approved"; m2.approvedAt = todayIso(); saveMediaMvp(); renderMediaMvp(true); toast(m2.name + " is listed"); } return; }
     if ((b = t.closest("[data-svc-pause]"))){ var m3 = mediaById(b.getAttribute("data-svc-pause")); if (m3){ m3.status = "paused"; saveMediaMvp(); renderMediaMvp(true); } return; }
@@ -20610,6 +20749,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (m4 && fp){ var pv = fp.value.replace(/[^0-9.]/g, ""); m4.feePct = pv === "" ? null : Math.min(100, Number(pv)); saveMediaMvp(); renderMediaMvp(true); toast("Fee saved"); } return; }
     if ((b = t.closest("[data-svc-sp-confirm], [data-svc-sp-decline]"))){ var ok1 = b.hasAttribute("data-svc-sp-confirm"), sp = mediaSponsorships.filter(function(x){ return x.id === b.getAttribute(ok1 ? "data-svc-sp-confirm" : "data-svc-sp-decline"); })[0]; if (!sp) return;
       sp.status = ok1 ? "confirmed" : "declined"; sp.updatedAt = nowStamp();
+      if (sp.mediaId) notify(["media:" + sp.mediaId], "sponsor", (ok1 ? "Sponsorship confirmed: " : "Sponsorship update: ") + (sp.eventTitle || ""), ok1 ? "PartnerWAV has confirmed your sponsorship." : "PartnerWAV can't take this one this time.", "media-events");
       if (ok1){ var ev2 = ceById(sp.eventId), mm = mediaById(sp.mediaId); if (ev2 && mm){ ev2.sponsors = (ev2.sponsors || []).filter(function(x){ return x.mediaId !== mm.id; }).concat([{ mediaId:mm.id, name:mm.name }]); ev2.updatedAt = nowStamp(); saveCommunity(); } }
       saveMediaMvp(); renderMediaMvp(true); return; }
     if ((b = t.closest("[data-svc-pk-save]"))){ var p2 = mvpPackages.filter(function(x){ return x.id === b.getAttribute("data-svc-pk-save"); })[0], card = b.closest("[data-svc-pkg]"); if (!p2 || !card) return;

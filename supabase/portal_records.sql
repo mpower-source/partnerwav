@@ -232,6 +232,8 @@ begin
   -- a vendor's fit assessment sent from the public form arrives through submit_vendor_assessment() below
   if new.collection = 'vendorAssessments'
      and current_setting('portal.vendor_assessment', true) = 'on' then return new; end if;
+  -- a notification is written only by post_notification() or submit_vendor_assessment() (below), which set this flag
+  if new.collection = 'notifications' and current_setting('portal.notification', true) = 'on' then return new; end if;
   if k is null then raise exception 'This account has no PartnerWAV role'; end if;
 
   -- The portal saves with upsert (INSERT ... ON CONFLICT DO UPDATE). The insert trigger sees
@@ -835,8 +837,49 @@ begin
   insert into public.portal_records (collection, id, data, readers, writers, is_public)
   values ('vendorAssessments', new_id, clean, array[]::text[], array[]::text[], false);
   perform set_config('portal.vendor_assessment', 'off', true);
+  perform set_config('portal.notification', 'on', true);
+  insert into public.portal_records (collection, id, data, readers, writers, is_public)
+  values ('notifications', 'n-' || replace(gen_random_uuid()::text, '-', ''),
+    jsonb_build_object('kind', 'assessment', 'title', 'New vendor assessment: ' || left(trim(p_data ->> 'company'), 120),
+      'body', 'Contact: ' || left(trim(p_data ->> 'contactName'), 80) || ' -- ' || left(lower(trim(p_data ->> 'email')), 120),
+      'screen', 'operator-assessments', 'to', jsonb_build_array('operator'), 'from', 'vendor-link',
+      'at', to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), 'id', 'n-' || replace(gen_random_uuid()::text, '-', '')),
+    array[]::text[], array[]::text[], false);
+  perform set_config('portal.notification', 'off', true);
   return new_id;
 end $$;
+create or replace function public.post_notification(p_to text[], p_kind text, p_title text, p_body text, p_screen text)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  k text := public.portal_key();
+  op boolean := public.is_portal_operator();
+  new_id text := 'n-' || replace(gen_random_uuid()::text, '-', '');
+  to_keys text[];
+begin
+  if k is null then raise exception 'Sign in to send a notification'; end if;
+  if p_to is null or cardinality(p_to) < 1 or cardinality(p_to) > 10 then raise exception 'Choose who to tell'; end if;
+  if p_kind not in ('assessment', 'mvp', 'fractional', 'media', 'referral', 'deal', 'devlead', 'request', 'sponsor') then
+    raise exception 'Unknown kind of notification';
+  end if;
+  -- companies, members, partners and software houses only tell CloudWAV; CloudWAV can tell any login
+  if not op and p_to <> array['operator'] then raise exception 'You can only send a notification to PartnerWAV'; end if;
+  to_keys := array(select t from unnest(p_to) t where t <> 'operator');
+  if exists (select 1 from unnest(to_keys) t where t !~ '^(partner|vendor|affiliate|investor|member|media):[^\s]{1,120}$') then
+    raise exception 'Unknown recipient';
+  end if;
+  perform set_config('portal.notification', 'on', true);
+  insert into public.portal_records (collection, id, data, readers, writers, is_public)
+  values ('notifications', new_id,
+    jsonb_build_object('id', new_id, 'kind', p_kind, 'title', left(coalesce(p_title, ''), 160), 'body', left(coalesce(p_body, ''), 400),
+      'screen', left(coalesce(p_screen, ''), 60), 'to', to_jsonb(p_to), 'from', k,
+      'at', to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')),
+    to_keys, array[k], false);
+  perform set_config('portal.notification', 'off', true);
+  return new_id;
+end $$;
+revoke all on function public.post_notification(text[], text, text, text, text) from public;
+grant execute on function public.post_notification(text[], text, text, text, text) to authenticated;
+
 revoke all on function public.submit_vendor_assessment(jsonb) from public;
 grant execute on function public.submit_vendor_assessment(jsonb) to anon, authenticated;
 

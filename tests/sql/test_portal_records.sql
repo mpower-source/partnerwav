@@ -942,4 +942,36 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authent
 select t('...which no one else can see', (select count(*) from portal_records where collection='productStages') = 0 and (select count(*) from portal_records where collection='serviceRequests' and data->>'kind'='fractional') = 0);
 reset role;
 
+-- ===== Notifications: the bell. Each login sees what concerns it; the public assessment form tells CloudWAV
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- Intelsense
+select t('a company tells PartnerWAV something', (select public.post_notification(array['operator'], 'mvp', 'MVP Builder request: Quick MVP', 'Intelsense', 'operator-services')) is not null);
+select t('...but cannot tell another login', fails($$select public.post_notification(array['partner:siam-digital'], 'mvp', 'x', 'y', 'mvp-builder')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV
+select t('CloudWAV tells a partner, which only that partner can see', (select public.post_notification(array['partner:siam-digital'], 'devlead', 'New dev lead: Acme', 'x', 'dev-leads')) is not null);
+select t('...and a bad recipient is refused', fails($$select public.post_notification(array['nobody'], 'mvp', 'x', 'y', 'mvp-builder')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;   -- Siam Digital
+select t('a partner sees its own notification', (select count(*) from portal_records where collection='notifications' and data->>'kind'='devlead') = 1);
+select t('...and the operator-only notifications are not its own', (select count(*) from portal_records where collection='notifications' and data->>'kind'='mvp') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;   -- another partner
+select t('another partner does not see it', (select count(*) from portal_records where collection='notifications' and data->>'kind'='devlead') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authenticated;   -- Botnoi, another company
+select t('another company does not see notifications for CloudWAV', (select count(*) from portal_records where collection='notifications' and data->>'kind'='mvp') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV
+select t('CloudWAV sees the company request', (select count(*) from portal_records where collection='notifications' and data->>'kind'='mvp') = 1);
+reset role;
+select pg_temp.as_user(''); set role anon;   -- the public vendor assessment form
+select t('the public assessment form tells CloudWAV', (select submit_vendor_assessment('{"company":"Notify Co","contactName":"Nia","email":"nia@notify.test","consent":true,"partners":"0"}'::jsonb)) is not null);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+select t('...and CloudWAV sees it', (select count(*) from portal_records where collection='notifications' and data->>'title'='New vendor assessment: Notify Co') = 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+select t('...but no company does', (select count(*) from portal_records where collection='notifications' and data->>'title'='New vendor assessment: Notify Co') = 0);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;
