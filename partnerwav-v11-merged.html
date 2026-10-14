@@ -5194,6 +5194,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Notion is where the fundraising work happens (investor database, tracker, data room). Like HubSpot, its key has
   // to stay on a server, so an account records what it wants brought across and PartnerWAV sets up the connection.
   var NOTION_SYNC = [["shortlist","Investor shortlists for a raise"],["pipeline","Fundraising pipeline: stage, last touch and next step for each investor"],["dataroom","Pitch materials and data room checklist"],["tasks","Next steps and meeting notes"]];
+  // Zoho CRM (and Bigin, Zoho's small-business CRM) is widely used across Asia Pacific and the US. Like HubSpot its
+  // key has to stay on a server, so an account records what it wants synced, which Zoho product and which Zoho data
+  // center its account lives in (Zoho keeps each region's data separately), and PartnerWAV sets up the connection.
+  var ZOHO_SYNC = [["contacts","Contacts and accounts (partners, vendors, prospects)"],["deals","Registered deals and their stage"],["leads","Leads from invite pages, landing pages and assessments"],["activities","Intro meetings and calls, as activities"]];
+  var ZOHO_PRODUCTS = [["crm","Zoho CRM"],["bigin","Bigin by Zoho"]];
+  var ZOHO_DCS = [["com","United States (zoho.com)"],["eu","Europe (zoho.eu)"],["uk","United Kingdom (zoho.uk)"],["in","India (zoho.in)"],["com.au","Australia (zoho.com.au)"],["jp","Japan (zoho.jp)"],
+    ["ca","Canada (zohocloud.ca)"],["sa","Saudi Arabia (zoho.sa)"],["com.cn","China (zoho.com.cn)"],["unsure","Not sure"]];
   var NOTION_DIR = [["from-notion","Notion \u2192 PartnerWAV"],["both","Both ways"]];
   function isCalendly(u){ return /^https:\/\/(www\.)?calendly\.com\//i.test(String(u || "")); }
   function bookingEmbedUrl(u){ return u + (u.indexOf("?") > -1 ? "&" : "?") + "embed_domain=" + encodeURIComponent(window.location.hostname || "localhost") + "&embed_type=Inline&hide_gdpr_banner=1"; }
@@ -5247,12 +5254,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!box || state.screen !== "integrations") return;
     var me = chMe();
     if (!me){ box.innerHTML = '<div class="empty">Create your profile first -- then you can connect your tools.</div>'; return; }
-    var c = contactFor(me) || {}, ig = c.integrations || {}, hs = ig.hubspot || {}, nt = ig.notion || {}, key = me + ":" + (state.intV || 0) + ":" + bookings.length;
+    var c = contactFor(me) || {}, ig = c.integrations || {}, hs = ig.hubspot || {}, nt = ig.notion || {}, zo = ig.zoho || {}, key = me + ":" + (state.intV || 0) + ":" + bookings.length;
     if (!force && box.getAttribute("data-int-key") === key) return;   // keep what's being typed
     box.setAttribute("data-int-key", key);
     var badge = function(on, yes, no){ return '<span class="badge '+(on ? 'good' : 'neutral')+'">'+(on ? yes : no)+'</span>'; };
     var isOperator = me === "operator:";
     var requests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.hubspot && x.integrations.hubspot.requested; }) : [];
+    var zohoRequests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.zoho && x.integrations.zoho.requested; }) : [];
     var notionRequests = isOperator ? contactChannels.filter(function(x){ return x.id !== me && x.integrations && x.integrations.notion && x.integrations.notion.requested; }) : [];
     box.innerHTML = '<div class="int-grid">'
       // --- Spam protection (CloudWAV only)
@@ -5287,6 +5295,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div id="intHsError" class="login-msg bad" hidden></div>'
         + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="hubspot">'+(hs.requested ? "Update request" : "Request connection")+'</button>'+(hs.requested ? '<button type="button" class="btn ghost sm" data-int-cancel="hubspot">Cancel request</button><span class="field-note">Requested '+esc(hs.requestedAt || "")+'</span>' : '')+'</div>'
         + '<p class="field-note" style="margin:0;">Why a request, not a button: HubSpot needs a private access key, and that key must be kept on a server, never in a web page. PartnerWAV sets that up once per HubSpot account.</p></div>'
+      // --- Zoho
+      + '<div class="card card-pad int-card" data-int="zoho"><div class="int-head"><span class="int-logo" style="background:#e42527;">Z</span><h3>Zoho CRM</h3>'+(zo.requested ? '<span class="badge warn">Setup requested</span>' : '<span class="badge neutral">Not connected</span>')+'</div>'
+        + '<p class="field-note" style="margin:0;">Keep Zoho CRM (or Bigin) in step with PartnerWAV. Tick what you want synced and PartnerWAV will set up the connection with you.</p>'
+        + '<div class="va-opts col">'+ZOHO_SYNC.map(function(o){ var on = (zo.sync || []).indexOf(o[0]) > -1; return '<label class="va-opt'+(on ? ' on' : '')+'"><input type="checkbox" data-int-zo="'+o[0]+'"'+(on ? ' checked' : '')+'><span><b>'+esc(o[1])+'</b></span></label>'; }).join("")+'</div>'
+        + '<div class="field-row"><label for="intZoProduct">Zoho product</label><select id="intZoProduct" class="filter app-select">'+ZOHO_PRODUCTS.map(function(o){ return '<option value="'+o[0]+'"'+((zo.product || "crm") === o[0] ? ' selected' : '')+'>'+esc(o[1])+'</option>'; }).join("")+'</select></div>'
+        + '<div class="field-row"><label for="intZoDc">Where your Zoho account is</label><select id="intZoDc" class="filter app-select">'+ZOHO_DCS.map(function(o){ return '<option value="'+o[0]+'"'+((zo.dc || "com") === o[0] ? ' selected' : '')+'>'+esc(o[1])+'</option>'; }).join("")+'</select>'
+          + '<span class="field-note">It\'s in your Zoho web address: crm.zoho.com is the US, crm.zoho.com.au Australia, crm.zoho.in India, and so on.</span></div>'
+        + '<div class="field-row"><label for="intZoDir">Direction</label><select id="intZoDir" class="filter app-select">'+[["to-zoho","PartnerWAV \u2192 Zoho"],["from-zoho","Zoho \u2192 PartnerWAV"],["both","Both ways"]].map(function(o){ return '<option value="'+o[0]+'"'+((zo.direction || "to-zoho") === o[0] ? ' selected' : '')+'>'+o[1]+'</option>'; }).join("")+'</select></div>'
+        + '<div id="intZoError" class="login-msg bad" hidden></div>'
+        + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-int-save="zoho">'+(zo.requested ? "Update request" : "Request connection")+'</button>'+(zo.requested ? '<button type="button" class="btn ghost sm" data-int-cancel="zoho">Cancel request</button><span class="field-note">Requested '+esc(zo.requestedAt || "")+'</span>' : '')+'</div>'
+        + '<p class="field-note" style="margin:0;">Why a request, not a button: Zoho needs a private access key, kept on a server, never in a web page. PartnerWAV sets it up once per Zoho account, in your region.</p></div>'
       // --- Notion
       + '<div class="card card-pad int-card" data-int="notion"><div class="int-head"><span class="int-logo" style="background:#191919;">N</span><h3>Notion</h3>'+(nt.requested ? '<span class="badge warn">'+(isOperator ? "Setup planned" : "Setup requested")+'</span>' : '<span class="badge neutral">Not connected</span>')+'</div>'
         + '<p class="field-note" style="margin:0;">'+(isOperator ? 'For the Funding service: the investor work stays in Notion, and PartnerWAV shows each vendor the result. Tick what should come across.' : 'If your fundraising or project work lives in Notion, PartnerWAV can show its progress here. Tick what you want brought across and PartnerWAV will set up the connection with you.')+'</p>'
@@ -5301,12 +5320,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<p class="field-note" style="margin:0;">Your number, LINE ID and groups, with share buttons for announcements and event updates.</p>'
         + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-goto-screen="channels">Open WhatsApp &amp; LINE</button></div></div>'
       + '<div class="card card-pad int-card" data-int="planned"><div class="int-head"><span class="int-logo" style="background:#8a84a8;">+</span><h3>Planned</h3><span class="badge neutral">Not yet</span></div>'
-        + '<ul class="shop-list" style="margin:0;"><li>Luma, Eventbrite and ZipEvent -- event listings and registrations</li><li>Salesforce and Zoho CRM</li><li>Slack and Microsoft Teams announcements</li></ul>'
+        + '<ul class="shop-list" style="margin:0;"><li>Luma, Eventbrite and ZipEvent -- event listings and registrations</li><li>Salesforce</li><li>Slack and Microsoft Teams announcements</li></ul>'
         + '<p class="field-note" style="margin:0;">Need one of these sooner, or something else? Message PartnerWAV.</p></div>'
       + '</div>'
       + (isOperator ? '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1rem;">HubSpot connection requests</h2><span class="hint">Accounts that asked to be connected</span></div>'
         + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;" id="intRequests">'+(requests.length ? requests.map(function(x){ var h = x.integrations.hubspot;
             return '<div class="deal-row" data-int-req="'+attr(x.id)+'"><span class="deal-row-name">'+esc(keyName(x.id))+'<span class="field-note" style="display:block;font-weight:400;">'+esc((h.sync || []).map(function(k){ var o = HUBSPOT_SYNC.filter(function(y){ return y[0] === k; })[0]; return o ? o[1].split(" (")[0] : k; }).join(" · "))+' · '+esc(h.direction || "")+' · requested '+esc(h.requestedAt || "")+'</span></span></div>'; }).join("")
+          : '<div class="empty" style="padding:12px;">No requests yet.</div>')+'</div>'
+        + '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1rem;">Zoho connection requests</h2><span class="hint">Accounts that asked to be connected</span></div>'
+        + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;" id="intZohoRequests">'+(zohoRequests.length ? zohoRequests.map(function(x){ var h = x.integrations.zoho, pr = ZOHO_PRODUCTS.filter(function(y){ return y[0] === h.product; })[0], dc = ZOHO_DCS.filter(function(y){ return y[0] === h.dc; })[0];
+            return '<div class="deal-row" data-int-req-zoho="'+attr(x.id)+'"><span class="deal-row-name">'+esc(keyName(x.id))+'<span class="field-note" style="display:block;font-weight:400;">'+esc([pr ? pr[1] : "Zoho CRM", dc ? dc[1] : ""].filter(Boolean).join(", "))+' · '
+              + esc((h.sync || []).map(function(k){ var o = ZOHO_SYNC.filter(function(y){ return y[0] === k; })[0]; return o ? o[1].split(" (")[0] : k; }).join(" · "))+' · '+esc(h.direction || "")+' · requested '+esc(h.requestedAt || "")+'</span></span></div>'; }).join("")
           : '<div class="empty" style="padding:12px;">No requests yet.</div>')+'</div>'
         + '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1rem;">Notion connection requests</h2><span class="hint">Accounts that asked to be connected</span></div>'
         + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;" id="intNotionRequests">'+(notionRequests.length ? notionRequests.map(function(x){ var h = x.integrations.notion;
@@ -5329,6 +5353,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (u && !/^https:\/\/\S+\.\S+/i.test(u)){ err.textContent = "The link needs to be a secure web address, like https://calendly.com/your-name/30min."; err.hidden = false; return; }
       rec.booking = u; rec.bookingEmbed = document.getElementById("intEmbed").checked; rec.updatedAt = nowStamp();
       toast(u ? "Calendly link saved" : "Booking link removed");
+    } else if (which === "zoho"){
+      var zsync = [].slice.call(document.querySelectorAll("[data-int-zo]")).filter(function(x){ return x.checked; }).map(function(x){ return x.getAttribute("data-int-zo"); }), e4 = document.getElementById("intZoError");
+      if (!zsync.length){ e4.textContent = "Tick at least one thing to sync."; e4.hidden = false; return; }
+      var zdc = document.getElementById("intZoDc").value, zpr = document.getElementById("intZoProduct").value;
+      rec.integrations = rec.integrations || {}; rec.integrations.zoho = { requested:true, sync:zsync, product:ZOHO_PRODUCTS.some(function(o){ return o[0] === zpr; }) ? zpr : "crm",
+        dc:ZOHO_DCS.some(function(o){ return o[0] === zdc; }) ? zdc : "unsure", direction:document.getElementById("intZoDir").value, requestedAt:(rec.integrations.zoho && rec.integrations.zoho.requestedAt) || nowStamp().slice(0, 10) };
+      rec.updatedAt = nowStamp(); toast("Request sent -- PartnerWAV will contact you to connect Zoho");
     } else if (which === "notion"){
       var nsync = [].slice.call(document.querySelectorAll("[data-int-nt]")).filter(function(x){ return x.checked; }).map(function(x){ return x.getAttribute("data-int-nt"); }), e3 = document.getElementById("intNtError");
       if (!nsync.length){ e3.textContent = "Tick at least one thing to bring across."; e3.hidden = false; return; }
@@ -5346,7 +5377,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var b = ev.target.closest && ev.target.closest("[data-int-save]"); if (b){ saveIntegration(b.getAttribute("data-int-save")); return; }
     if (ev.target.closest && ev.target.closest("[data-int-captcha-off]") && state.role === "operator"){ setPublicSetting("captchaSiteKey", ""); saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast("CAPTCHA turned off"); renderIntegrations(true); return; }
     var x = ev.target.closest && ev.target.closest("[data-int-cancel]");
-    if (x){ var rec = contactFor(chMe()); if (rec && rec.integrations){ delete rec.integrations[x.getAttribute("data-int-cancel") === "notion" ? "notion" : "hubspot"]; saveChannels(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast(chMe() === "operator:" && x.getAttribute("data-int-cancel") === "notion" ? "Plan cleared" : "Request cancelled"); renderIntegrations(true); } }
+    if (x){ var rec = contactFor(chMe()); if (rec && rec.integrations){ var cw = x.getAttribute("data-int-cancel"); delete rec.integrations[cw === "notion" || cw === "zoho" ? cw : "hubspot"]; saveChannels(); if (typeof cloudSchedule === "function") cloudSchedule(); state.intV = (state.intV || 0) + 1; toast(chMe() === "operator:" && x.getAttribute("data-int-cancel") === "notion" ? "Plan cleared" : "Request cancelled"); renderIntegrations(true); } }
   });
 
   // ===== EVENTS & CALENDAR (all roles) =====
@@ -10593,7 +10624,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { name:"softwareHouses", mode:"replace", get:function(){ return softwareHouses; }, set:function(a){ softwareHouses = a; },
       access:function(r){ return { readers: r.status === "active" ? EVERYONE : [], writers:[] }; } },
     { name:"contactChannels", mode:"replace", get:function(){ return contactChannels; }, set:function(a){ contactChannels = a; },
-      // integration requests (HubSpot, Notion) are private: kept in integrationRequests, never on the shared contact card
+      // integration requests (HubSpot, Zoho, Notion) are private: kept in integrationRequests, never on the shared contact card
       cleanUp:true, toData:function(r){ if (!("integrations" in r)) return r; var c = JSON.parse(JSON.stringify(r)); delete c.integrations; return c; },
       access:function(r){ return { readers: r.show ? EVERYONE : [r.id], writers:[r.id], pub: r.id === "operator:" && r.show !== false }; } },
     { name:"integrationRequests", mode:"replace", get:function(){ return contactChannels.filter(function(c){ return c.integrations && Object.keys(c.integrations).length; }).map(function(c){ return { id:c.id, integrations:c.integrations }; }); },
