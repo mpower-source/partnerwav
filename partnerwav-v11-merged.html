@@ -1445,6 +1445,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <div class="navgroup-label">Member</div>
       <button class="navlink" data-screen="member-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="member-events"><span class="ic">📅</span>Events</button>
+      <button class="navlink" data-screen="calendar"><span class="ic">📅</span>Events &amp; Calendar</button>
       <button class="navlink" data-screen="member-people"><span class="ic">👥</span>People</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
@@ -5687,7 +5688,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Separate calendars, picked next to the type filter: trainings & events, demos, and community events
   var CAL_SETS = [["", "All calendars"], ["training", "Trainings & events"], ["demos", "Demos"], ["community", "Community events"], ["pitch", "Pitch events & hackathons"]];
   function calSetOf(ev){ return ev.pitch ? "pitch" : ev.community ? "community" : ev.type === "Demo" ? "demos" : "training"; }
-  function calSetTypes(cs){ return cs === "community" ? ["Community event"] : cs === "pitch" ? ["Pitch event", "Hackathon", "Open call"] : cs === "demos" ? ["Demo"] : cs === "training" ? CAL_TYPES.filter(function(t){ return t !== "Demo"; }) : CAL_TYPES.concat(["Community event", "Pitch event", "Hackathon", "Open call"]); }
+  // Members, promoters and investors are outside the program: they see the community calendar (community events,
+  // pitch events and hackathons) but none of the trainings, webinars or demos vendors, partners and affiliates run.
+  function calOutside(){ return ["member", "media", "investor"].indexOf(state.role) > -1; }
+  function calSetsFor(){ return calOutside() ? CAL_SETS.filter(function(c){ return c[0] === "" || c[0] === "community" || c[0] === "pitch"; }) : CAL_SETS; }
+  function calSetTypes(cs){ if (!cs && calOutside()) return ["Community event", "Pitch event", "Hackathon", "Open call"]; return cs === "community" ? ["Community event"] : cs === "pitch" ? ["Pitch event", "Hackathon", "Open call"] : cs === "demos" ? ["Demo"] : cs === "training" ? CAL_TYPES.filter(function(t){ return t !== "Demo"; }) : CAL_TYPES.concat(["Community event", "Pitch event", "Hackathon", "Open call"]); }
   function calFilterMatch(x){ var cs = state.calSet || "", tf = state.calType || "", hf = state.role === "operator" ? (state.calHost || "") : "";
     return (!cs || calSetOf(x) === cs) && (!tf || x.type === tf) && (!hf || x.ownerKey === hf); }
   function saveCalendar(){ try { lsSet(CAL_KEY, JSON.stringify({ events:calendarEvents, bookings:bookings })); } catch(e){} if (typeof cloudSchedule === "function") cloudSchedule(); }
@@ -5696,7 +5701,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // Demos are always private to the company that scheduled them. Other events are shared unless marked private.
   // PartnerWAV sees every event, read-only, to understand how the calendar is used and where it can help promote.
   function calPrivate(ev){ return ev.type === "Demo" || ev.visibility === "private"; }
-  function calCanSee(ev, me){ return !calPrivate(ev) || ev.ownerKey === me || state.role === "operator"; }
+  function calCanSee(ev, me){ if (calOutside()) return !!ev.community && !calPrivate(ev); return !calPrivate(ev) || ev.ownerKey === me || state.role === "operator"; }
   function calEnd(ev){ return new Date(new Date(ev.start).getTime() + (Number(ev.durationMin) || 60) * 60000); }
   function calStamp(d){ return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); }   // 20261006T090000Z
   function calDetails(ev){ return [ev.desc, ev.link ? "Join: " + ev.link : "", "Hosted by " + keyName(ev.ownerKey) + " on PartnerWAV"].filter(Boolean).join("\n\n"); }
@@ -5764,6 +5769,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       calSyncVisibility();
       return;
     }
+    if (calOutside() && state.calSet && !calSetsFor().some(function(c){ return c[0] === state.calSet; })) state.calSet = "";
+    if (calOutside()) state.calEditing = null;
     var cs = state.calSet || "", setTypes = calSetTypes(cs);
     if (state.calType && setTypes.indexOf(state.calType) < 0) state.calType = "";
     var tab = state.calTab || "upcoming", now = new Date(), tf = state.calType || "";
@@ -5785,11 +5792,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<button type="button" class="cal-view" data-cal-view="calendar" aria-pressed="'+(view === "calendar")+'">'+calIc("calendar")+'Calendar</button>'
         + '<button type="button" class="cal-view" data-cal-view="list" aria-pressed="'+(view === "list")+'">'+calIc("clipboard")+'List</button></div>'
       + (view === "list" ? '<button type="button" class="btn '+(tab === "upcoming" ? "primary" : "secondary")+' sm" data-cal-tab="upcoming">Upcoming</button><button type="button" class="btn '+(tab === "past" ? "primary" : "secondary")+' sm" data-cal-tab="past">Past</button>' : '')
-      + '<select id="calSetFilter" class="filter app-select" aria-label="Calendar">'+CAL_SETS.map(function(c){ return '<option value="'+c[0]+'"'+(c[0] === cs ? ' selected' : '')+'>'+esc(c[1])+'</option>'; }).join("")+'</select>'
+      + '<select id="calSetFilter" class="filter app-select" aria-label="Calendar">'+calSetsFor().map(function(c){ return '<option value="'+c[0]+'"'+(c[0] === cs ? ' selected' : '')+'>'+esc(c[1])+'</option>'; }).join("")+'</select>'
       + (setTypes.length > 1 ? '<select id="calTypeFilter" class="filter app-select" aria-label="Type"><option value="">All types</option>'+setTypes.map(function(t){ return '<option'+(t === tf ? ' selected' : '')+'>'+esc(t)+'</option>'; }).join("")+'</select>' : '')
       + (isOpView ? '<select id="calHostFilter" class="filter app-select" aria-label="Host"><option value="">All companies</option>'+hosts.map(function(h){ return '<option value="'+attr(h)+'"'+(h === hf ? ' selected' : '')+'>'+esc(keyName(h))+'</option>'; }).join("")+'</select>' : '')
       + (cs === "community" || cs === "pitch" ? (isOpView ? '<button type="button" class="btn primary cta sm cal-add" data-goto-screen="operator-community">+ Add '+(cs === "pitch" ? 'a pitch event or hackathon' : 'a community event')+'</button>' : '')
-          : me ? '<button type="button" class="btn primary cta sm cal-add" data-cal-new>'+(cs === "demos" ? '+ Schedule a demo' : '+ Add an event')+'</button>' : '')+'</div>'
+          : me && !calOutside() ? '<button type="button" class="btn primary cta sm cal-add" data-cal-new>'+(cs === "demos" ? '+ Schedule a demo' : '+ Add an event')+'</button>' : '')+'</div>'
       + (cs === "community" ? '<p class="field-note cal-set-note" data-cal-set-note>Meetups and founder nights from Thailand\'s tech and business communities, listed by PartnerWAV. <a href="'+attr(calendarUrl())+'" target="_blank" rel="noopener noreferrer">Open the public Thailand calendar</a> to share it.</p>'
         : cs === "pitch" ? '<p class="field-note cal-set-note" data-cal-set-note>Pitch nights, demo days, hackathons and accelerator open calls in Thailand -- the big chances to get a new company in front of investors. <a href="'+attr(calendarUrl() + "&kind=pitch")+'" target="_blank" rel="noopener noreferrer">Open them on the public calendar</a>.</p>'
         : cs === "demos" ? '<p class="field-note cal-set-note" data-cal-set-note>Demos are private: only your company'+(isOpView ? ' and PartnerWAV' : '')+' can see them.</p>' : '');
@@ -5800,7 +5807,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     box.innerHTML = usage + bar
       + '<div style="display:flex;flex-direction:column;gap:10px;" id="calList">'+(list.length ? list.map(function(x){ return calCardHtml(x, me); }).join("")
-        : '<div class="empty">'+(tab !== "upcoming" ? "No past events." : cs === "demos" ? "No demos scheduled." : cs === "community" ? "No community events listed yet." : cs === "pitch" ? "No pitch events or hackathons listed yet." : "No upcoming events yet. Add a training, webinar or in-person event and everyone can put it on their calendar.")+'</div>')+'</div>';
+        : '<div class="empty">'+(tab !== "upcoming" ? "No past events." : cs === "demos" ? "No demos scheduled." : cs === "community" ? "No community events listed yet." : cs === "pitch" ? "No pitch events or hackathons listed yet." : calOutside() ? "No community events, pitch events or hackathons coming up yet." : "No upcoming events yet. Add a training, webinar or in-person event and everyone can put it on their calendar.")+'</div>')+'</div>';
     if (typeof applyStatIcons === "function") applyStatIcons();
   }
   function calDayKey(d){ var z = function(n){ return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); }
