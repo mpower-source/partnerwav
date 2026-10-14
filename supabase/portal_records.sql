@@ -234,6 +234,8 @@ begin
      and current_setting('portal.vendor_assessment', true) = 'on' then return new; end if;
   -- a notification is written only by post_notification() or submit_vendor_assessment() (below), which set this flag
   if new.collection = 'notifications' and current_setting('portal.notification', true) = 'on' then return new; end if;
+  -- a Dev Lead made from a bigger MVP Builder request, by portal_make_devlead() below
+  if new.collection = 'projectReferrals' and current_setting('portal.system', true) = 'on' then return new; end if;
   if k is null then raise exception 'This account has no PartnerWAV role'; end if;
 
   -- The portal saves with upsert (INSERT ... ON CONFLICT DO UPDATE). The insert trigger sees
@@ -1267,6 +1269,57 @@ create policy "portal-files delete" on storage.objects
 --    Cloud Data -> "Save all starter records to Supabase", this should list the collections.
 -- ---------------------------------------------------------------------------
 -- select collection, count(*) from public.portal_records group by 1 order by 1;
+
+-- ---------------------------------------------------------------------------
+-- 8b. A bigger MVP Builder request (route 'devlead') becomes a Dev Lead in the database as soon as it is sent, from
+--     any login: a Dev Lead is a project referral for CloudWAV to route, so it never waits for a browser to save it.
+--     It is unassigned (status 'new') until CloudWAV sends it to a software house. Re-running this file adds any that
+--     were sent before this rule existed.
+-- ---------------------------------------------------------------------------
+create or replace function public.portal_make_devlead(p_req_id text, p_req jsonb)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_req ->> 'route' is distinct from 'devlead' or p_req ->> 'kind' is distinct from 'mvp' then return; end if;
+  perform set_config('portal.system', 'on', true);
+  insert into public.portal_records (collection, id, data, readers, writers, is_public)
+  values ('projectReferrals', 'dl-' || p_req_id, jsonb_build_object(
+      'id', 'dl-' || p_req_id, 'source', 'mvp', 'mvpRequestId', p_req_id, 'movedFrom', '', 'houseId', '',
+      'referrerKey', 'operator:', 'level', 'referral', 'cosellLead', 'cloudwav',
+      'client', jsonb_build_object('company', left(coalesce(p_req ->> 'requesterName', ''), 160), 'contact', '', 'email', '', 'phone', ''),
+      'need', left(coalesce(p_req ->> 'details', ''), 1500), 'budget', 0, 'currency', 'USD',
+      'timeline', left(coalesce(p_req ->> 'timeline', ''), 60), 'disclosed', true,
+      'status', 'new', 'registeredAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD'),
+      'respondBy', '', 'quoteBy', '', 'closeBy', to_char((now() at time zone 'Asia/Bangkok') + interval '30 days', 'YYYY-MM-DD'),
+      'acceptedAt', '', 'protectedUntil', '', 'contractValue', null, 'wonAt', '', 'quoteValue', null, 'rejectReason', '',
+      'payments', '[]'::jsonb, 'payouts', '[]'::jsonb, 'thread', '[]'::jsonb, 'termsSnapshot', null,
+      'progress', jsonb_build_array(jsonb_build_object('at', to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+          'stage', 'Waiting for a software house', 'note', ''))),
+    array['operator:'], array['operator:'], false)
+  on conflict (collection, id) do nothing;
+  perform set_config('portal.system', 'off', true);
+end $$;
+revoke all on function public.portal_make_devlead(text, jsonb) from public, anon, authenticated;
+
+create or replace function public.portal_devlead_trigger()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  perform public.portal_make_devlead(new.id, new.data);
+  return new;
+end $$;
+revoke all on function public.portal_devlead_trigger() from public, anon, authenticated;
+
+drop trigger if exists portal_devlead_from_request on public.portal_records;
+create trigger portal_devlead_from_request after insert on public.portal_records
+  for each row when (new.collection = 'serviceRequests') execute function public.portal_devlead_trigger();
+
+-- add the Dev Leads for bigger requests that were sent before this (safe to run again)
+do $$
+declare r record;
+begin
+  for r in select id, data from public.portal_records where collection = 'serviceRequests' and data ->> 'route' = 'devlead' loop
+    perform public.portal_make_devlead(r.id, r.data);
+  end loop;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- 9. Tell the Supabase API about the new table and functions right away

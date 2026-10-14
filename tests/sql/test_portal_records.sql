@@ -974,4 +974,17 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authent
 select t('...but no company does', (select count(*) from portal_records where collection='notifications' and data->>'title'='New vendor assessment: Notify Co') = 0);
 reset role;
 
+-- ===== A bigger MVP Builder request becomes a Dev Lead in the database, whoever sends it
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- Intelsense sends a bigger build
+insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-big','{"id":"sr-big","kind":"mvp","route":"devlead","packageId":"pkg-full","requesterKey":"vendor:intelsense","requesterName":"Intelsense","details":"Loyalty app","status":"new"}','{vendor:intelsense}','{vendor:intelsense}');
+select t('the company cannot see the Dev Lead made from it', (select count(*) from portal_records where collection='projectReferrals' and id='dl-sr-big') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV
+select t('CloudWAV sees it as a new, unassigned Dev Lead', (select data->>'status' || ':' || (data->>'houseId') || ':' || (data->>'source') from portal_records where collection='projectReferrals' and id='dl-sr-big') = 'new::mvp');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-small','{"id":"sr-small","kind":"mvp","route":"mvp","requesterKey":"vendor:intelsense","status":"new"}','{vendor:intelsense}','{vendor:intelsense}');
+select t('a request for a smaller build makes no Dev Lead', (select count(*) from portal_records where collection='projectReferrals' and id='dl-sr-small') = 0);
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;
