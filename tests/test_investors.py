@@ -10,7 +10,7 @@ def inv(pg): return json.loads(pg.evaluate("localStorage.getItem('partnerWAV_inv
 with sync_playwright() as p:
     b, pg = open_page(p)
     labels = pg.evaluate("[...document.querySelectorAll('.role-btn')].map(b => b.textContent.trim())")
-    ok(labels == ["Partner", "Vendor", "Affiliate", "Investor", "Member", "Media", "Operator (CloudWAV)"], "Role buttons: " + ", ".join(labels))
+    ok(labels == ["Partner", "Vendor", "Affiliate", "Investor", "Member", "Promoter", "Operator (CloudWAV)"], "Role buttons: " + ", ".join(labels))
     role(pg, "investor"); pg.wait_for_timeout(200)
     ok(visible_screen(pg) == ["scr-investor-overview"] and pg.get_attribute('[data-role="investor"]', "aria-pressed") == "true", "Investor opens the investor workspace, its button highlighted")
     ov = pg.inner_text("#investorOverviewContent")
@@ -69,7 +69,7 @@ with sync_playwright() as p:
     nav(pg, "operator-accounts"); pg.wait_for_timeout(300)
     pg.locator("[data-acct-any]").first.click(); pg.wait_for_timeout(200)
     opts = pg.evaluate("[...document.querySelectorAll('#acctRole option')].map(o => o.textContent)")
-    ok(opts == ["Partner", "Vendor", "Affiliate", "Investor", "Member", "Media & Events"], "New logins: " + ", ".join(opts))
+    ok(opts == ["Partner", "Vendor", "Affiliate", "Investor", "Member", "Promoter"], "New logins: " + ", ".join(opts))
     pg.click("[data-acct-close]")
     # phone
     pg.set_viewport_size({"width": 390, "height": 844}); pg.wait_for_timeout(200)

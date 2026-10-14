@@ -1,7 +1,7 @@
 from harness import *
 import json
 
-# Media & Events partners (PR, media, creators, event organizers, venues) and CloudWAV's MVP Builder.
+# Promoters (PR agencies, media, creators, event organizers, venues; listed under Media & Events) and CloudWAV's MVP Builder.
 def store(pg):
     return json.loads(pg.evaluate("localStorage.getItem('partnerWAV_mediaMvp')") or "{}")
 
@@ -43,7 +43,7 @@ with sync_playwright() as p:
     pg.check('[data-va-k="programStage"][value="No partner program yet"]'); pg.check('[data-va-k="partners"][value="0"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(150)
     pg.check('[data-va-k="support"][value="self"]'); pg.click("[data-va-next]"); pg.wait_for_timeout(150)
     wiz = pg.inner_text("#publicAssessContent")
-    ok("MVP Builder" in wiz and "Media & Events partners" in wiz, "The vendor wizard offers the MVP Builder and Media & Events as add-ons")
+    ok("MVP Builder" in wiz and "Media & Events promoters" in wiz, "The vendor wizard offers the MVP Builder and Media & Events as add-ons")
     pg.check('[data-va-k="addons"][value="mvp"]'); pg.wait_for_timeout(250)
     ok("What would help most from the MVP Builder?" in pg.inner_text("#publicAssessContent"), "Choosing the MVP Builder asks what would help most")
 
@@ -98,7 +98,7 @@ with sync_playwright() as p:
     # ----- a new partner is checked before it is listed
     role(pg, "operator"); nav(pg, "operator-accounts"); pg.wait_for_timeout(300)
     pg.click("[data-acct-any]"); pg.wait_for_timeout(200)
-    ok("Media & Events" in pg.inner_text("#acctRole"), "Accounts & Logins can set up a Media & Events partner")
+    ok("Promoter" in pg.inner_text("#acctRole"), "Accounts & Logins can set up a Promoter")
     pg.keyboard.press("Escape")
     pg.set_viewport_size({"width": 390, "height": 844}); role(pg, "vendor"); nav(pg, "media-directory"); pg.wait_for_timeout(300)
     ok(pg.evaluate("document.documentElement.scrollWidth - innerWidth") <= 0, "Media & Events fits a phone")

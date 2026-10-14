@@ -1286,7 +1286,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="role-btn" data-role="affiliate" aria-pressed="false">Affiliate</button>
       <button class="role-btn" data-role="investor" aria-pressed="false">Investor</button>
       <button class="role-btn" data-role="member" aria-pressed="false">Member</button>
-      <button class="role-btn" data-role="media" aria-pressed="false" title="Media &amp; Events partner">Media</button>
+      <button class="role-btn" data-role="media" aria-pressed="false" title="Promoters: PR, media, creators and events">Promoter</button>
       <button class="role-btn role-op" data-role="operator" aria-pressed="false">Operator (CloudWAV)</button>
     </div>
 
@@ -1454,7 +1454,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     </nav>
 
     <nav class="navgroup" id="navMedia" hidden>
-      <div class="navgroup-label">Media &amp; Events</div>
+      <div class="navgroup-label">Promoter</div>
       <button class="navlink" data-screen="media-overview"><span class="ic">📊</span>Overview</button>
       <button class="navlink" data-screen="media-events"><span class="ic">📅</span>Events &amp; Sponsoring</button>
       <button class="navlink" data-screen="media-offers"><span class="ic">🎁</span>Event Offers</button>
@@ -2843,7 +2843,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         <div style="height:14px"></div><div id="mediaRequestsContent"></div>
       </section>
       <section id="scr-operator-services" hidden>
-        <div class="section-head"><h2>Services &amp; Sponsors</h2><span class="hint">MVP Builder and Media &amp; Events requests, partners, sponsorships and packages</span></div>
+        <div class="section-head"><h2>Services &amp; Sponsors</h2><span class="hint">MVP Builder and Media &amp; Events requests, promoters, sponsorships and packages</span></div>
         <div style="height:14px"></div><div id="opServicesContent"></div>
       </section>
       <section id="scr-member-events" hidden>
@@ -4141,7 +4141,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
 
   function roleLabel(role){
-    return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "investor" ? "Investor workspace" : role === "member" ? "Member" : role === "media" ? "Media & Events partner" : (role === "operator" ? "Program Operator" : "Partner workspace")));
+    return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "investor" ? "Investor workspace" : role === "member" ? "Member" : role === "media" ? "Promoter workspace" : (role === "operator" ? "Program Operator" : "Partner workspace")));
   }
 
   var titles = {
@@ -4851,7 +4851,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       { id:"projects", name:"Projects & partner collaboration", price:300, blurb:"Post projects, split scopes of work between partners, and find partners for joint projects, meetups and marketing." },
       { id:"referrals", name:"Software referrals", price:0, blurb:"Custom software requests from your customers are referred to trusted development firms, with a tracked referral fee. No monthly fee -- fee share only." },
       { id:"mvp", name:"MVP Builder", price:0, blurb:"Help taking your product to the next level: a secure code review, extra developers, new features for your next funding round, or a quick MVP. Priced per package." },
-      { id:"media", name:"Media & Events partners", price:0, blurb:"PR, media coverage, creators and event sponsorships through PartnerWAV's checked Media & Events partners, with PartnerWAV deals. Priced by each partner." }
+      { id:"media", name:"Media & Events promoters", price:0, blurb:"PR, media coverage, creators and event sponsorships through PartnerWAV's checked promoters, with PartnerWAV deals. Priced by each partner." }
     ] };
   var pricingModel = JSON.parse(JSON.stringify(PRICING_DEFAULT));
   var VA_PLAN_ORDER = ["startup", "launch", "growth", "enterprise"];   // Startup includes the same basics as Launch
@@ -5559,7 +5559,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // link and a calendar file (.ics) that Apple Calendar and desktop Outlook open. No calendar account is connected.
   // Times are stored in UTC and shown in each viewer's own timezone.
   // account set-up and investment rounds (functions live next to the sign-in code)
-  var ACCT_ROLES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member", media:"Media & Events" };
+  var ACCT_ROLES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member", media:"Promoter" };
   var acctList = null, acctListErr = "", acctListBusy = false;
   var FUNDING_KEY = "partnerWAV_funding";
   var fundingProfiles = [];
@@ -17786,7 +17786,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   if (PUBLIC_APPLY) setTimeout(function(){ cloudLoadPublicSettings().then(function(ok){ if (ok && captchaOn()){ ["invite", "pp", "assess", "apply", "meet", "tec"].forEach(function(k){ var el = document.getElementById("hp_" + k);
     if (el && !document.querySelector('[data-captcha="' + k + '"]')){ var box = document.createElement("div"); box.className = "captcha-box"; box.setAttribute("data-captcha", k); el.closest(".hp-field").after(box); } }); captchaMount(); } }); }, 0);
   var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", investor:"investor-overview", member:"member-overview", media:"media-overview", operator:"operator-overview" };
-  var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member", media:"Media & Events", operator:"Program Operator" };
+  var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member", media:"Promoter", operator:"Program Operator" };
   state.account = null;
 
   function setAuthLocked(locked){ document.documentElement.classList.toggle("auth-locked", !!locked); }
@@ -20042,7 +20042,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return '<p class="field-note" style="margin:0 0 12px;">PR agencies, media, creators, event organizers and venues that PartnerWAV works with. Ask through PartnerWAV to get the PartnerWAV deal, and any event-exclusive discount.</p>'
       + '<div class="meet-chips tec-filter" role="group" aria-label="Kind"><button type="button" class="meet-chip" data-med-kind="" aria-pressed="'+!f+'">All</button>'
         + MEDIA_KINDS.map(function(k){ return '<button type="button" class="meet-chip" data-med-kind="'+k[0]+'" aria-pressed="'+(f === k[0])+'">'+esc(k[1])+'</button>'; }).join("")+'</div>'
-      + (list.length ? '<div class="mem-grid med-grid">'+list.map(mediaCardHtml).join("")+'</div>' : '<div class="empty">No Media &amp; Events partners listed yet.</div>')
+      + (list.length ? '<div class="mem-grid med-grid">'+list.map(mediaCardHtml).join("")+'</div>' : '<div class="empty">No promoters listed yet.</div>')
       + (mine.length ? '<div class="section-head" style="margin-top:18px;"><h2 style="font-size:1rem;">Your requests</h2></div>'+svcRequestListHtml(mine, "mine") : '');
   }
   function svcRequestListHtml(list, view){
@@ -20170,7 +20170,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function mediaOverviewHtml(m){
     var reqs = serviceRequests.filter(function(r){ return r.kind === "media" && r.mediaId === m.id; }), sps = mediaSponsorships.filter(function(x){ return x.mediaId === m.id && x.status !== "withdrawn"; });
-    return '<div class="mem-hello"><span class="int-logo" style="background:#6c4cf1;width:56px;height:56px;">'+esc(memberInitials(m.name))+'</span><div><h2 style="margin:0;">'+esc(m.name)+'</h2><span class="field-note">Media &amp; Events partner on PartnerWAV</span></div></div>'
+    return '<div class="mem-hello"><span class="int-logo" style="background:#6c4cf1;width:56px;height:56px;">'+esc(memberInitials(m.name))+'</span><div><h2 style="margin:0;">'+esc(m.name)+'</h2><span class="field-note">Promoter on PartnerWAV: PR, media and events</span></div></div>'
       + (!mediaApproved(m) ? '<div class="card card-pad inv-nudge"><b>'+(m.needsProfile ? 'Finish your profile' : 'Waiting for PartnerWAV')+'</b><span class="field-note">Add what you do, your channels and your services. PartnerWAV checks every partner before it is listed.</span><button type="button" class="btn primary sm" data-goto-screen="media-profile">My profile</button></div>' : '')
       + '<div class="stat-row" style="margin-bottom:14px;"><div class="stat-tile"><span class="stat-label">Requests</span><span class="stat-value">'+reqs.length+'</span><span class="stat-trend">'+reqs.filter(function(r){ return r.status === "new"; }).length+' new</span></div>'
         + '<div class="stat-tile"><span class="stat-label">Sponsoring</span><span class="stat-value">'+sps.filter(function(x){ return x.status === "confirmed"; }).length+'</span><span class="stat-trend">'+sps.filter(function(x){ return x.status === "applied"; }).length+' waiting for PartnerWAV</span></div>'
@@ -20183,16 +20183,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var tab = state.svcTab || "mvp", pending = mediaProfiles.filter(function(m){ return !mediaApproved(m) && !m.archivedAt; });
     var applied = mediaSponsorships.filter(function(x){ return x.status === "applied"; });
     var h = '<div class="cal-views" role="group" aria-label="Show" style="margin-bottom:14px;">'+[["mvp", "MVP Builder requests (" + serviceRequests.filter(function(r){ return r.kind === "mvp"; }).length + ")"], ["media", "Media & Events requests (" + serviceRequests.filter(function(r){ return r.kind === "media"; }).length + ")"],
-      ["partners", "Media & Events partners" + (pending.length ? " (" + pending.length + " to check)" : "")], ["sponsors", "Sponsorships" + (applied.length ? " (" + applied.length + ")" : "")], ["packages", "MVP packages"]].map(function(x){ return '<button type="button" class="cal-view" data-svc-tab="'+x[0]+'" aria-pressed="'+(tab === x[0])+'">'+esc(x[1])+'</button>'; }).join("")+'</div>';
+      ["partners", "Promoters" + (pending.length ? " (" + pending.length + " to check)" : "")], ["sponsors", "Sponsorships" + (applied.length ? " (" + applied.length + ")" : "")], ["packages", "MVP packages"]].map(function(x){ return '<button type="button" class="cal-view" data-svc-tab="'+x[0]+'" aria-pressed="'+(tab === x[0])+'">'+esc(x[1])+'</button>'; }).join("")+'</div>';
     if (tab === "mvp" || tab === "media"){ var list = serviceRequests.filter(function(r){ return r.kind === tab; });
       return h + (list.length ? svcRequestListHtml(list, "op") : '<div class="empty">No requests yet.</div>'); }
-    if (tab === "partners") return h + '<p class="field-note" style="margin:0 0 10px;">Set up a partner\'s login in Accounts &amp; Logins (type Media &amp; Events). Check each one before listing: PR, media, creators, events and venues only, not marketing automation.</p>'
+    if (tab === "partners") return h + '<p class="field-note" style="margin:0 0 10px;">Set up a promoter\'s login in Accounts &amp; Logins (type Promoter). Check each one before listing: PR, media, creators, events and venues only, not marketing automation.</p>'
       + (mediaProfiles.filter(function(m){ return !m.archivedAt; }).length ? '<div style="display:flex;flex-direction:column;gap:8px;">'+mediaProfiles.filter(function(m){ return !m.archivedAt; }).map(function(m){
         return '<div class="card card-pad" data-svc-partner="'+attr(m.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div><b>'+esc(m.name)+'</b> <span class="pill '+(mediaApproved(m) ? 'active' : 'pending')+'">'+(mediaApproved(m) ? 'Listed' : m.status === "paused" ? 'Paused' : 'To check')+'</span>'
           + '<div class="field-note">'+esc(mediaKindNames(m).join(" · ") || "No kind chosen yet")+' · '+(m.services || []).length+' services</div></div>'
           + '<div class="svc-op"><input type="text" inputmode="decimal" placeholder="Fee %" value="'+attr(m.feePct != null ? String(m.feePct) : "")+'" data-svc-feepct="'+attr(m.id)+'" aria-label="PartnerWAV fee percent" style="width:90px;">'
           + (mediaApproved(m) ? '<button type="button" class="btn ghost xs" data-svc-pause="'+attr(m.id)+'">Pause listing</button>' : '<button type="button" class="btn primary xs" data-svc-approve="'+attr(m.id)+'">Approve and list</button>')
-          + '<button type="button" class="btn secondary xs" data-svc-feesave="'+attr(m.id)+'">Save fee</button></div></div></div>'; }).join("")+'</div>' : '<div class="empty">No Media &amp; Events partners yet.</div>');
+          + '<button type="button" class="btn secondary xs" data-svc-feesave="'+attr(m.id)+'">Save fee</button></div></div></div>'; }).join("")+'</div>' : '<div class="empty">No promoters yet.</div>');
     if (tab === "sponsors") return h + (mediaSponsorships.length ? '<div style="display:flex;flex-direction:column;gap:8px;">'+mediaSponsorships.slice().reverse().map(function(x){ var m = mediaById(x.mediaId), pkg = MEDIA_SPONSOR_PACKAGES.filter(function(y){ return y[0] === x.pkg; })[0];
         return '<div class="card card-pad" data-svc-sponsor="'+attr(x.id)+'"><b>'+esc(m ? m.name : x.mediaId)+'</b> wants to sponsor <b>'+esc(x.eventTitle || "")+'</b> <span class="pill '+(x.status === "confirmed" ? 'active' : x.status === "applied" ? 'pending' : '')+'">'+esc(x.status)+'</span>'
           + '<div class="field-note">'+esc(pkg ? pkg[1] : x.pkg)+(x.note ? ' · '+esc(x.note) : '')+' · '+esc(x.createdAt || "")+'</div>'
