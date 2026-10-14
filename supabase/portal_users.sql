@@ -10,7 +10,7 @@
 create table if not exists public.portal_users (
   id           uuid primary key references auth.users(id) on delete cascade,
   email        text not null,
-  role         text not null check (role in ('partner','vendor','affiliate','investor','member','operator')),
+  role         text not null check (role in ('partner','vendor','affiliate','investor','member','media','operator')),
   -- Which company this login acts for. Must match the ids in partnerwav-v11-merged.html:
   --   vendor    -> vendor program id   (intelsense, crossconnect, botnoi, zipevent, portonics-dev, unisense)
   --   partner   -> partner profile id  (siam-digital, gulf-coast, portonics, riverside)

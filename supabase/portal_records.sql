@@ -23,11 +23,12 @@ create table if not exists public.portal_records (
 create index if not exists portal_records_readers_idx on public.portal_records using gin (readers);
 alter table public.portal_records enable row level security;
 
--- Logins can be partner, vendor, affiliate, investor, member (people CloudWAV invites to the community) or operator (CloudWAV)
+-- Logins can be partner, vendor, affiliate, investor, member (people CloudWAV invites to the community),
+-- media (Media & Events partners: PR agencies, media outlets, creators, event organizers, venues) or operator (CloudWAV)
 do $$ begin
   if to_regclass('public.portal_users') is not null then
     alter table public.portal_users drop constraint if exists portal_users_role_check;
-    alter table public.portal_users add constraint portal_users_role_check check (role in ('partner','vendor','affiliate','investor','member','operator'));
+    alter table public.portal_users add constraint portal_users_role_check check (role in ('partner','vendor','affiliate','investor','member','media','operator'));
   end if;
 end $$;
 
@@ -146,7 +147,19 @@ insert into public.portal_field_rules (collection, field, allowed) values
   -- a company's investor-readiness check: it sends it for review; only CloudWAV approves it or asks for changes
   ('investorReadiness','status',       '["draft", "submitted"]'),
   ('investorReadiness','reviewNote',   '["", null]'),
-  ('investorReadiness','reviewedAt',   '["", null]')
+  ('investorReadiness','reviewedAt',   '["", null]'),
+  -- Media & Events partners: CloudWAV approves them and sets PartnerWAV's fee; sponsorships are confirmed by CloudWAV
+  ('mediaProfiles',    'status',       '["pending", null]'),
+  ('mediaProfiles',    'feePct',       '[null]'),
+  ('mediaProfiles',    'approvedAt',   '["", null]'),
+  ('mediaSponsorships','status',       '["applied", "withdrawn"]'),
+  ('mediaSponsorships','reply',        '["", null]'),
+  -- requests for an MVP Builder package or a Media & Events service: CloudWAV tracks them and the fee
+  ('serviceRequests',  'status',       '["new", "withdrawn"]'),
+  ('serviceRequests',  'value',        '[null]'),
+  ('serviceRequests',  'fee',          '[null]'),
+  ('serviceRequests',  'houseId',      '["", null]'),
+  ('serviceRequests',  'opNote',       '["", null]')
 on conflict (collection, field) do update set allowed = excluded.allowed;
 
 -- Collections only CloudWAV can add records to (members may still edit where they're a writer)
@@ -157,7 +170,7 @@ returns boolean language sql immutable as $$
                         'programFees','platformFees','affiliateSignups',
                         'vendorAssessments','pricingModel','agreementReviews',
                         'operatorSettings','vendorReferrals','houseSummaries',
-                        'eventPages','eventConnections','communityOrgs','communityEvents','investorDb','startupPerks','meetInvites'])
+                        'eventPages','eventConnections','communityOrgs','communityEvents','investorDb','startupPerks','meetInvites','mvpPackages'])
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -334,6 +347,33 @@ begin
         or (prev.data ->> 'status' = 'accepted' and new.data ->> 'status' = 'removed')) then
         raise exception 'Only the person asked can accept a connection';
       end if;
+    end if;
+  end if;
+  -- Media & Events partners: each saves its own profile; it is shown to everyone signed in only once CloudWAV approves it
+  if new.collection = 'mediaProfiles' then
+    if 'media:' || new.id <> k then raise exception 'You can only save your own Media & Events profile'; end if;
+    if new.is_public or exists (select 1 from unnest(new.readers) x where x not in ('*', k)) then raise exception 'A Media & Events profile is for signed-in PartnerWAV users only'; end if;
+    if '*' = any(new.readers) and coalesce(new.data ->> 'status', '') <> 'approved' then raise exception 'Your profile is listed once PartnerWAV approves it'; end if;
+  end if;
+  if new.collection in ('mediaOffers', 'mediaSponsorships', 'mediaOfferCodes') and 'media:' || coalesce(new.data ->> 'mediaId', '') <> k then
+    raise exception 'You can only save your own offers and sponsorships';
+  end if;
+  if new.collection in ('mediaSponsorships', 'mediaOfferCodes') and (new.is_public or exists (select 1 from unnest(new.readers) x where x <> k)) then
+    raise exception 'This is only for you and PartnerWAV';
+  end if;
+  if new.collection = 'mediaOffers' then
+    if new.is_public or exists (select 1 from unnest(new.readers) x where x not in ('*', k)) then raise exception 'Offers are for signed-in PartnerWAV users only'; end if;
+    if '*' = any(new.readers) and not exists (select 1 from public.portal_records x where x.collection = 'mediaProfiles' and 'media:' || x.id = k and x.data ->> 'status' = 'approved') then
+      raise exception 'Offers are listed once PartnerWAV approves your profile';
+    end if;
+  end if;
+  -- a request for an MVP Builder package or a Media & Events service: sent by the company or member itself, seen only by
+  -- them, the Media & Events partner it is for, and CloudWAV
+  if new.collection = 'serviceRequests' then
+    if coalesce(new.data ->> 'requesterKey', '') <> k then raise exception 'You can only send requests as yourself'; end if;
+    if coalesce(new.data ->> 'kind', '') not in ('mvp', 'media') then raise exception 'Unknown kind of request'; end if;
+    if new.is_public or exists (select 1 from unnest(new.readers) x where x <> k and x <> 'media:' || coalesce(new.data ->> 'mediaId', '')) then
+      raise exception 'A request is only seen by you, the partner it is for and PartnerWAV';
     end if;
   end if;
   -- calendar events belong to whoever created them; a booking is recorded by the person who booked
@@ -822,11 +862,11 @@ declare u uuid; used_at timestamptz; cur_role text; cur_entity text; mail text :
         hash text; coll text;
 begin
   if not public.is_portal_operator() then raise exception 'Only CloudWAV can set up accounts'; end if;
-  if p_role is null or p_role not in ('partner', 'vendor', 'affiliate', 'investor', 'member') then raise exception 'Choose partner, vendor, affiliate, investor or member'; end if;
+  if p_role is null or p_role not in ('partner', 'vendor', 'affiliate', 'investor', 'member', 'media') then raise exception 'Choose partner, vendor, affiliate, investor, member or media'; end if;
   if ent = '' then raise exception 'The account needs a company'; end if;
   if mail !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' then raise exception 'Enter a valid email address'; end if;
   if p_password is null or length(p_password) < 8 then raise exception 'The temporary password needs at least 8 characters'; end if;
-  coll := case p_role when 'vendor' then 'programs' when 'partner' then 'partnerProfiles' when 'investor' then 'investorProfiles' when 'member' then 'memberProfiles' else 'affiliateProfiles' end;
+  coll := case p_role when 'vendor' then 'programs' when 'partner' then 'partnerProfiles' when 'investor' then 'investorProfiles' when 'member' then 'memberProfiles' when 'media' then 'mediaProfiles' else 'affiliateProfiles' end;
   if not exists (select 1 from public.portal_records where collection = coll and id = ent and coalesce(data->>'_deleted', '') <> 'true') then
     raise exception 'That company could not be found (%). It needs to be saved before it can have a login.', ent;
   end if;

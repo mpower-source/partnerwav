@@ -11,7 +11,7 @@ with sync_playwright() as p:
     role(pg, "member"); pg.wait_for_timeout(300)
     ok(visible_screen(pg) == ["scr-member-overview"], "A member starts on their overview")
     menu = pg.evaluate("[...document.querySelectorAll('#navMember .navlink')].map(b => b.getAttribute('data-screen'))")
-    ok(menu == ["member-overview", "member-events", "member-people", "partner-messages", "startup-perks", "member-profile"], "Member menu: Overview, Events, People, Messages, Startup Perks, My Profile")
+    ok(menu == ["member-overview", "member-events", "member-people", "partner-messages", "startup-perks", "media-directory", "mvp-builder", "member-profile"], "Member menu: Overview, Events, People, Messages, Startup Perks, Media & Events, MVP Builder, My Profile")
     ok(pg.evaluate("[...document.querySelectorAll('#navMember .ic')].every(e => e.querySelector('svg'))"), "Member menu uses line icons")
     ov = pg.inner_text("#memberOverviewContent")
     ok("Welcome, Ploy" in ov and "Coming up" in ov and "1 connection request" in ov, "Overview: welcome, upcoming events and the waiting request")

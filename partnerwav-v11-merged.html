@@ -806,6 +806,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .cp-share .ev-qr .aff-qr img{ width:140px; height:140px; }
   .cp-ev{ display:flex; gap:14px; align-items:flex-start; }
   .evs-list{ display:flex; flex-direction:column; gap:8px; }
+  .med-card{ min-height:0; }
+  .med-top{ display:flex; gap:12px; align-items:center; }
+  .med-svcs{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; font-size:.86rem; }
+  .med-grid{ grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); }
+  .med-svcs li span{ flex:1; min-width:0; }
+  .med-svcs li{ display:flex; justify-content:space-between; gap:10px; border-bottom:1px dashed var(--line); padding-bottom:3px; } .med-svcs b{ white-space:nowrap; font-weight:600; }
+  .med-offer{ display:flex; flex-direction:column; gap:2px; padding:8px 10px; border-radius:10px; background:var(--accent-soft); border:1px solid var(--accent-line); }
+  .med-rows{ display:flex; flex-direction:column; gap:6px; } .med-row{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,1fr); gap:6px; }
+  .med-row[data-med-svrow]{ grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); }
+  .med-row input, .med-apply input, .svc-op input{ padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font:inherit; font-size:.88rem; min-width:0; }
+  .med-apply, .svc-op{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:6px; }
+  .mvp-hero{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; border-color:var(--accent-line); }
+  .mvp-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:12px; }
+  .mvp-pkg{ display:flex; flex-direction:column; gap:8px; } .mvp-pkg .btn{ align-self:flex-start; }
+  .mvp-foot{ margin-top:auto; display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .tec-sponsors{ font-size:.82rem; color:var(--ink-soft); }
+  @media (max-width:560px){ .med-row, .med-row[data-med-svrow]{ grid-template-columns:minmax(0,1fr); } }
   .mem-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:12px; }
   .mem-card{ display:flex; flex-direction:column; gap:10px; min-height:196px; }
   .mem-card-top{ display:flex; gap:12px; align-items:flex-start; }
@@ -1269,6 +1286,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="role-btn" data-role="affiliate" aria-pressed="false">Affiliate</button>
       <button class="role-btn" data-role="investor" aria-pressed="false">Investor</button>
       <button class="role-btn" data-role="member" aria-pressed="false">Member</button>
+      <button class="role-btn" data-role="media" aria-pressed="false" title="Media &amp; Events partner">Media</button>
       <button class="role-btn role-op" data-role="operator" aria-pressed="false">Operator (CloudWAV)</button>
     </div>
 
@@ -1285,6 +1303,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="partner-commissions"><span class="ic">💰</span>Commissions</button>
           <button class="navlink" data-screen="investor-readiness"><span class="ic">💼</span>Investor Readiness</button>
           <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
+          <button class="navlink" data-screen="media-directory"><span class="ic">📣</span>Media &amp; Events</button>
+          <button class="navlink" data-screen="mvp-builder"><span class="ic">🧩</span>MVP Builder</button>
         </div>
       </div>
       <div class="navsec" data-sec="programs">
@@ -1347,6 +1367,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="affiliate-marketplace"><span class="ic">🛍️</span>Affiliate Marketplace</button>
           <button class="navlink" data-screen="investor-readiness"><span class="ic">💼</span>Investor Readiness</button>
           <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
+          <button class="navlink" data-screen="media-directory"><span class="ic">📣</span>Media &amp; Events</button>
+          <button class="navlink" data-screen="mvp-builder"><span class="ic">🧩</span>MVP Builder</button>
         </div>
       </div>
       <div class="navsec" data-sec="learn">
@@ -1426,7 +1448,19 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       <button class="navlink" data-screen="member-people"><span class="ic">👥</span>People</button>
       <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
       <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
+      <button class="navlink" data-screen="media-directory"><span class="ic">📣</span>Media &amp; Events</button>
+      <button class="navlink" data-screen="mvp-builder"><span class="ic">🧩</span>MVP Builder</button>
       <button class="navlink" data-screen="member-profile"><span class="ic">👤</span>My Profile</button>
+    </nav>
+
+    <nav class="navgroup" id="navMedia" hidden>
+      <div class="navgroup-label">Media &amp; Events</div>
+      <button class="navlink" data-screen="media-overview"><span class="ic">📊</span>Overview</button>
+      <button class="navlink" data-screen="media-events"><span class="ic">📅</span>Events &amp; Sponsoring</button>
+      <button class="navlink" data-screen="media-offers"><span class="ic">🎁</span>Event Offers</button>
+      <button class="navlink" data-screen="media-requests"><span class="ic">📋</span>Requests</button>
+      <button class="navlink" data-screen="partner-messages"><span class="ic">💬</span>Messages</button>
+      <button class="navlink" data-screen="media-profile"><span class="ic">👤</span>My Profile</button>
     </nav>
 
     <nav class="navgroup" id="navOperator" hidden>
@@ -1453,6 +1487,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           <button class="navlink" data-screen="operator-events"><span class="ic">📇</span>Event Connect</button>
           <button class="navlink" data-screen="operator-community"><span class="ic">🤝</span>Community Partners</button>
           <button class="navlink" data-screen="operator-meet-invites"><span class="ic">📹</span>Intro Meetings</button>
+          <button class="navlink" data-screen="operator-services"><span class="ic">📦</span>Services &amp; Sponsors</button>
           <button class="navlink" data-screen="operator-investors"><span class="ic">💼</span>Investors</button>
           <button class="navlink" data-screen="operator-investor-db"><span class="ic">🗃️</span>Investor Database</button>
           <button class="navlink" data-screen="startup-perks"><span class="ic">🎁</span>Startup Perks</button>
@@ -2782,6 +2817,35 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       </section>
       <section id="scr-investor-overview" hidden><div id="investorOverviewContent"></div></section>
       <section id="scr-member-overview" hidden><div id="memberOverviewContent"></div></section>
+      <section id="scr-media-directory" hidden>
+        <div class="section-head"><h2>Media &amp; Events</h2><span class="hint">PR, media, creators, event organizers and venues PartnerWAV works with</span></div>
+        <div style="height:14px"></div><div id="mediaDirectoryContent"></div>
+      </section>
+      <section id="scr-mvp-builder" hidden>
+        <div class="section-head"><h2>MVP Builder</h2><span class="hint">Quick MVPs, fixes, security reviews, extra developers and full apps, from CloudWAV</span></div>
+        <div style="height:14px"></div><div id="mvpBuilderContent"></div>
+      </section>
+      <section id="scr-media-overview" hidden><div id="mediaOverviewContent"></div></section>
+      <section id="scr-media-profile" hidden>
+        <div class="section-head"><h2>My Profile</h2><span class="hint">What companies and members see in Media &amp; Events</span></div>
+        <div style="height:14px"></div><div id="mediaProfileContent"></div>
+      </section>
+      <section id="scr-media-events" hidden>
+        <div class="section-head"><h2>Events &amp; Sponsoring</h2><span class="hint">Sponsor events to meet the companies there</span></div>
+        <div style="height:14px"></div><div id="mediaEventsContent"></div>
+      </section>
+      <section id="scr-media-offers" hidden>
+        <div class="section-head"><h2>Event Offers</h2><span class="hint">Event-exclusive discounts with a code</span></div>
+        <div style="height:14px"></div><div id="mediaOffersContent"></div>
+      </section>
+      <section id="scr-media-requests" hidden>
+        <div class="section-head"><h2>Requests</h2><span class="hint">Companies and members asking for your services</span></div>
+        <div style="height:14px"></div><div id="mediaRequestsContent"></div>
+      </section>
+      <section id="scr-operator-services" hidden>
+        <div class="section-head"><h2>Services &amp; Sponsors</h2><span class="hint">MVP Builder and Media &amp; Events requests, partners, sponsorships and packages</span></div>
+        <div style="height:14px"></div><div id="opServicesContent"></div>
+      </section>
       <section id="scr-member-events" hidden>
         <div class="section-head"><h2>Events</h2><span class="hint">Tech, AI, startup, investor and business events in Thailand, in one place</span></div>
         <div style="height:14px"></div><div id="memberEventsContent"></div>
@@ -4077,7 +4141,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
 
   function roleLabel(role){
-    return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "investor" ? "Investor workspace" : role === "member" ? "Member" : (role === "operator" ? "Program Operator" : "Partner workspace")));
+    return role === "vendor" ? "Vendor workspace" : (role === "affiliate" ? "Affiliate workspace" : (role === "investor" ? "Investor workspace" : role === "member" ? "Member" : role === "media" ? "Media & Events partner" : (role === "operator" ? "Program Operator" : "Partner workspace")));
   }
 
   var titles = {
@@ -4144,6 +4208,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     "startup-perks":"Startup Perks",
     "investor-overview":"Overview",
     "member-overview":"Overview",
+    "media-directory":"Media & Events",
+    "mvp-builder":"MVP Builder",
+    "media-overview":"Overview",
+    "media-profile":"My Profile",
+    "media-events":"Events & Sponsoring",
+    "media-offers":"Event Offers",
+    "media-requests":"Requests",
+    "operator-services":"Services & Sponsors",
     "member-events":"Events",
     "member-people":"People",
     "member-profile":"My Profile",
@@ -4777,7 +4849,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       { id:"investor", name:"Investor network", price:1500, blurb:"Raising money? We shortlist investors that fit your round, prepare your pitch materials and run the outreach and tracking with you." },
       { id:"marketing", name:"Marketing services", price:1000, blurb:"Landing pages, incentive flyers, pitch decks, event and meetup promotion, and WhatsApp / LINE campaigns built for you." },
       { id:"projects", name:"Projects & partner collaboration", price:300, blurb:"Post projects, split scopes of work between partners, and find partners for joint projects, meetups and marketing." },
-      { id:"referrals", name:"Software referrals", price:0, blurb:"Custom software requests from your customers are referred to trusted development firms, with a tracked referral fee. No monthly fee -- fee share only." }
+      { id:"referrals", name:"Software referrals", price:0, blurb:"Custom software requests from your customers are referred to trusted development firms, with a tracked referral fee. No monthly fee -- fee share only." },
+      { id:"mvp", name:"MVP Builder", price:0, blurb:"Help taking your product to the next level: a secure code review, extra developers, new features for your next funding round, or a quick MVP. Priced per package." },
+      { id:"media", name:"Media & Events partners", price:0, blurb:"PR, media coverage, creators and event sponsorships through PartnerWAV's checked Media & Events partners, with PartnerWAV deals. Priced by each partner." }
     ] };
   var pricingModel = JSON.parse(JSON.stringify(PRICING_DEFAULT));
   var VA_PLAN_ORDER = ["startup", "launch", "growth", "enterprise"];   // Startup includes the same basics as Launch
@@ -4822,7 +4896,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"addons", title:"Add-on services", intro:"Optional services on top of the platform. Choose any that interest you -- not every vendor needs them.", fields:[
       { k:"addons", label:"Add-on services", type:"addons" },
       { k:"raising", label:"Are you raising investment?", type:"single", when:"investor", options:["Raising now","Planning to raise in the next 12 months","Not raising, just interested"] },
-      { k:"raiseAmount", label:"Round and amount, if you know it", type:"text", when:"investor", ph:"e.g. Seed, USD 1.5M" } ] },
+      { k:"raiseAmount", label:"Round and amount, if you know it", type:"text", when:"investor", ph:"e.g. Seed, USD 1.5M" },
+      { k:"mvpNeeds", label:"What would help most from the MVP Builder?", type:"multi", when:"mvp", options:["Secure code review and fixes","Extra developers for our team","New features for our next funding round","A quick MVP or prototype","A full app build"] },
+      { k:"mvpNote", label:"Tell us more (optional)", type:"text", when:"mvp", ph:"e.g. Our app is on Lovable and needs a security check before launch" } ] },
     { id:"finish", title:"Timing and anything else", fields:[
       { k:"budget", label:"Monthly budget for a partner program today", type:"single", options:["None yet","Under $500","$500 - $2,000","Over $2,000","Not sure"] },
       { k:"timeline", label:"When would you like to start?", type:"single", options:["As soon as possible","In 1-3 months","In 3-6 months","Just exploring"] },
@@ -5483,7 +5559,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // link and a calendar file (.ics) that Apple Calendar and desktop Outlook open. No calendar account is connected.
   // Times are stored in UTC and shown in each viewer's own timezone.
   // account set-up and investment rounds (functions live next to the sign-in code)
-  var ACCT_ROLES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member" };
+  var ACCT_ROLES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member", media:"Media & Events" };
   var acctList = null, acctListErr = "", acctListBusy = false;
   var FUNDING_KEY = "partnerWAV_funding";
   var fundingProfiles = [];
@@ -5520,6 +5596,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   var memberContacts = [{ id:"mem-ploy", whatsapp:"+66 80 000 0001", line:"", sharedWith:["member:mem-arun"] }, { id:"mem-arun", whatsapp:"+66 80 000 0002", line:"arun.fleet", sharedWith:["member:mem-ploy"] }];
   var memberConnections = [{ id:"mc-mem-arun--mem-ploy", from:"member:mem-arun", to:"member:mem-ploy", status:"accepted", createdAt:"2026-10-01 10:00" },
     { id:"mc-mem-nok--mem-ploy", from:"member:mem-nok", to:"member:mem-ploy", status:"pending", createdAt:"2026-10-12 09:30" }];
+  var MEDIA_KEY = "partnerWAV_mediaMvp";   // Media & Events partners and the MVP Builder (see MEDIA & EVENTS); before loadMediaMvp() runs
+  // ZipEvent is PartnerWAV's first Media & Events partner (it is also a vendor, for its event software)
+  var mediaProfiles = [{ id:"zipevent", name:"ZipEvent", kinds:["events"], tagline:"Event platform and ticketing in Thailand", about:"", website:"https://www.zipeventapp.com/",
+    channels:[{ type:"Website", url:"https://www.zipeventapp.com/", audience:"" }], services:[{ name:"Event listing and promotion", price:"" }, { name:"Event ticketing and registration", price:"" }],
+    markets:["Thailand"], partnerDeal:"", status:"approved", approvedAt:"2026-10-14" }];
+  var mediaOffers = [{ id:"mo-demo", sample:true, mediaId:"zipevent", title:"15% off ticketing for your next event", eventId:"ce-demo-1", eventName:"Founder Night: AI for SMEs (example)", validUntil:"2026-12-31",
+    codeHash:"3d62e8664c8db82c63ff992ce5861e4857016631d2033e59447b5164f8873736", active:true }];
+  var mediaOfferCodes = [{ id:"mo-demo", mediaId:"zipevent", code:"FOUNDER15" }];
+  var mediaSponsorships = [], serviceRequests = [];
+  // CloudWAV's MVP Builder packages (CloudWAV edits them in Services & Sponsors; empty price = "Ask for a quote")
+  var mvpPackages = [
+    { id:"pkg-quick-mvp", name:"Quick MVP", tools:"Lovable or Bolt", desc:"A working first version of your idea, to test with users or show investors.", includes:["Working app with sign-in and the core screens", "Hosted and ready to share", "Ready to grow into a full app"], price:"", timeline:"" },
+    { id:"pkg-fix", name:"Quick fix or feature", tools:"Lovable, Bolt or Cursor", desc:"Fix what's broken, or finish a feature, in an app you already have.", includes:[], price:"", timeline:"" },
+    { id:"pkg-security", name:"Secure code review", tools:"Cursor", desc:"Find and fix security issues before a launch, a big customer or investor due diligence.", includes:["Review of sign-in, data access and secrets", "Fixes for what's found", "A short report you can share"], price:"", timeline:"" },
+    { id:"pkg-investor", name:"Investor-ready features", tools:"", desc:"The features and polish that show traction for your next funding round.", includes:[], price:"", timeline:"" },
+    { id:"pkg-team", name:"Extra developers", tools:"", desc:"Add developers to your team for a sprint or a few months.", includes:[], price:"", timeline:"" },
+    { id:"pkg-full", name:"Full MVP", tools:"Cursor and Vercel", desc:"A production app planned, built and deployed, ready for real customers.", includes:["Plan and design", "Built with Cursor, deployed on Vercel", "Handover and support"], price:"", timeline:"" }];
   var MEET_KEY = "partnerWAV_meetInvites";   // intro meeting invites CloudWAV has sent (see INTRO MEETINGS); before loadMeet() runs
   var meetInvites = [];
   // Startup perks: free credits and discounts from software companies. Public program information, checked on the date shown;
@@ -5963,6 +6056,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("navOperator").hidden = state.role !== "operator";
     document.getElementById("navInvestor").hidden = state.role !== "investor";
     document.getElementById("navMember").hidden = state.role !== "member";
+    document.getElementById("navMedia").hidden = state.role !== "media";
     // signed in (not previewing as CloudWAV): only your own account type can be picked
     var roleLock = state.account && !canPreview() ? state.account.role : null;
     document.querySelectorAll(".role-btn").forEach(function(b){
@@ -6141,6 +6235,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderOperatorInvestors();
     renderInvestor();
     renderMember();
+    renderMediaMvp();
     renderReadiness();
     renderInvestorDb();
     renderPerks();
@@ -7800,14 +7895,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ----- direct messages -----
   function myMsgKey(){
     if (state.account && !isPreviewing()) return state.account.role + ":" + (state.account.entityId || "");
-    var id = state.role === "partner" ? state.myProfileId : state.role === "vendor" ? state.myVendorId : state.role === "affiliate" ? myAffiliateProfileId() : state.role === "investor" ? myInvestorId() : state.role === "member" ? myMemberId() : "";
+    var id = state.role === "partner" ? state.myProfileId : state.role === "vendor" ? state.myVendorId : state.role === "affiliate" ? myAffiliateProfileId() : state.role === "investor" ? myInvestorId() : state.role === "member" ? myMemberId() : state.role === "media" ? myMediaId() : "";
     return state.role + ":" + (id || "");
   }
   function keyName(k){
     var r = String(k || "").split(":")[0], id = String(k || "").slice(r.length + 1);
     if (r === "operator") return "PartnerWAV";
     if (r === "community"){ var ce0 = communityEvents.filter(function(x){ return x.id === id; })[0]; return ce0 ? ceHost(ce0) : "Community event"; }
-    var e = r === "partner" ? partnerById(id) : r === "vendor" ? programById(id) : r === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : r === "investor" ? investorById(id) : r === "member" ? memberById(id) : null;
+    var e = r === "partner" ? partnerById(id) : r === "vendor" ? programById(id) : r === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : r === "investor" ? investorById(id) : r === "member" ? memberById(id) : r === "media" ? mediaById(id) : null;
     return e ? e.name : (id || r);
   }
   function keyRoleLabel(k){ var r = String(k).split(":")[0]; return r === "operator" ? "Program operator" : cap(r); }
@@ -7838,7 +7933,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return !seen || seen < last.at;
   }
   function openConversationWith(name, type, subject){
-    var me = myMsgKey(), other = /^(partner|vendor|affiliate|investor|member|operator):/.test(name || "") ? name : resolveMsgKey(name, type);
+    var me = myMsgKey(), other = /^(partner|vendor|affiliate|investor|member|media|operator):/.test(name || "") ? name : resolveMsgKey(name, type);
     if (!other){ toast(name + " isn't on PartnerWAV yet -- invite them first"); return; }
     if (other === me){ toast("That's you"); return; }
     var id = convoIdFor(me, other), c = convoById(id);
@@ -7854,6 +7949,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (/^investor:/.test(me || "")) return out;   // investors reach companies through PartnerWAV introductions
     if (/^member:/.test(me || "")){   // members message PartnerWAV and the members they're connected with
       memberConnectedKeys(me).forEach(function(k){ var mm = memberById(k.slice(7)); if (mm) out.push([k, mm.name + " · Member"]); }); return out; }
+    if (/^media:/.test(me || "")){   // Media & Events partners message PartnerWAV and the people who asked for their services
+      serviceRequests.filter(function(r){ return r.kind === "media" && "media:" + r.mediaId === me; }).forEach(function(r){ if (!out.some(function(x){ return x[0] === r.requesterKey; })) out.push([r.requesterKey, (r.requesterName || keyName(r.requesterKey))]); }); return out; }
     if (me === "operator:") investorProfiles.forEach(function(v){ if (!v.archivedAt) out.push(["investor:" + v.id, v.name + " · Investor"]); });
     partnerProfiles.forEach(function(p){ if (!p.archivedAt) out.push(["partner:" + p.id, p.name + " · Partner"]); });
     programs.forEach(function(v){ out.push(["vendor:" + v.id, v.name + " · Vendor"]); });
@@ -10764,6 +10861,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       access:function(r){ return { readers:["investors", r.id], writers:[r.id] }; } },
     // startup perks: CloudWAV keeps the list; everyone signed in reads the visible ones
     // members: profiles are read by members (never public); WhatsApp / LINE only by their connections
+    // Media & Events partners: listed for everyone signed in once CloudWAV approves them
+    { name:"mediaProfiles", mode:"merge", get:function(){ return mediaProfiles; }, set:function(a){ mediaProfiles = a; },
+      access:function(r){ return { readers: r.status === "approved" && !r.archivedAt ? EVERYONE : ["media:" + r.id], writers:["media:" + r.id] }; } },
+    { name:"mediaOffers", mode:"replace", get:function(){ return mediaOffers; }, set:function(a){ mediaOffers = a; },
+      access:function(r){ var m = mediaById(r.mediaId), live = r.active !== false && m && m.status === "approved"; return { readers: live ? EVERYONE : ["media:" + r.mediaId], writers:["media:" + r.mediaId] }; } },
+    { name:"mediaOfferCodes", mode:"replace", get:function(){ return mediaOfferCodes; }, set:function(a){ mediaOfferCodes = a; },
+      access:function(r){ return { readers:["media:" + r.mediaId], writers:["media:" + r.mediaId] }; } },
+    { name:"mediaSponsorships", mode:"replace", get:function(){ return mediaSponsorships; }, set:function(a){ mediaSponsorships = a; },
+      access:function(r){ return { readers:["media:" + r.mediaId], writers:["media:" + r.mediaId] }; } },
+    // requests for the MVP Builder or a Media & Events partner: the requester, that partner, and CloudWAV
+    { name:"serviceRequests", mode:"replace", get:function(){ return serviceRequests; }, set:function(a){ serviceRequests = a; },
+      access:function(r){ return { readers:[r.requesterKey].concat(r.mediaId ? ["media:" + r.mediaId] : []), writers:[r.requesterKey] }; } },
+    { name:"mvpPackages", mode:"merge", get:function(){ return mvpPackages; }, set:function(a){ mvpPackages = a; },
+      access:function(r){ return { readers: r.hidden ? [] : EVERYONE, writers:[] }; } },
     { name:"memberProfiles", mode:"replace", get:function(){ return memberProfiles; }, set:function(a){ memberProfiles = a; },
       access:function(r){ return { readers: r.hidden ? [] : ["members"], writers:["member:" + r.id] }; } },
     { name:"memberContacts", mode:"replace", get:function(){ return memberContacts; }, set:function(a){ memberContacts = a; },
@@ -17655,6 +17766,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadIdb();
   loadPerks();
   loadMembers();
+  loadMediaMvp();
   loadMeet();
   loadFunding();
   loadBrandKits();
@@ -17673,8 +17785,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // public pages: read the company name and CAPTCHA site key (no sign-in needed), then redraw the form with the CAPTCHA
   if (PUBLIC_APPLY) setTimeout(function(){ cloudLoadPublicSettings().then(function(ok){ if (ok && captchaOn()){ ["invite", "pp", "assess", "apply", "meet", "tec"].forEach(function(k){ var el = document.getElementById("hp_" + k);
     if (el && !document.querySelector('[data-captcha="' + k + '"]')){ var box = document.createElement("div"); box.className = "captcha-box"; box.setAttribute("data-captcha", k); el.closest(".hp-field").after(box); } }); captchaMount(); } }); }, 0);
-  var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", investor:"investor-overview", member:"member-overview", operator:"operator-overview" };
-  var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member", operator:"Program Operator" };
+  var HOME_SCREEN = { partner:"partner-overview", vendor:"vendor-overview", affiliate:"affiliate-overview", investor:"investor-overview", member:"member-overview", media:"media-overview", operator:"operator-overview" };
+  var ROLE_NAMES = { partner:"Partner", vendor:"Vendor", affiliate:"Affiliate", investor:"Investor", member:"Member", media:"Media & Events", operator:"Program Operator" };
   state.account = null;
 
   function setAuthLocked(locked){ document.documentElement.classList.toggle("auth-locked", !!locked); }
@@ -17720,7 +17832,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function entityNameFor(role, id){
     var e = role === "vendor" ? programById(id) : role === "partner" ? partnerById(id)
-      : role === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : role === "investor" ? investorById(id) : role === "member" ? memberById(id) : null;
+      : role === "affiliate" ? affiliateProfiles.filter(function(a){ return a.id === id; })[0] : role === "investor" ? investorById(id) : role === "member" ? memberById(id) : role === "media" ? mediaById(id) : null;
     return e ? e.name : (role === "operator" ? "PartnerWAV" : "");
   }
 
@@ -17768,9 +17880,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (role === "affiliate"){ affiliateProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); }); PREVIEW_KNOWN.affiliate.forEach(function(id){ add(id); }); }
     if (role === "investor") investorProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
     if (role === "member") memberProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
+    if (role === "media") mediaProfiles.filter(function(x){ return !x.archivedAt; }).forEach(function(x){ add(x.id, x.name); });
     return out;
   }
-  function previewCurrentId(role){ return role === "vendor" ? state.myVendorId : role === "partner" ? state.myProfileId : role === "affiliate" ? state.myAffiliateId : role === "investor" ? state.myInvestorId : role === "member" ? state.myMemberId : null; }
+  function previewCurrentId(role){ return role === "vendor" ? state.myVendorId : role === "partner" ? state.myProfileId : role === "affiliate" ? state.myAffiliateId : role === "investor" ? state.myInvestorId : role === "member" ? state.myMemberId : role === "media" ? state.myMediaId : null; }
   function previewPick(role){
     if (role === "operator"){ startPreview("operator"); return; }
     var list = previewChoices(role), cur = previewCurrentId(role) || (state.previewLast || {})[role] || (list[0] || {}).id;
@@ -17800,6 +17913,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (role === "affiliate") state.myAffiliateId = id;
     if (role === "investor") state.myInvestorId = id;
     if (role === "member") state.myMemberId = id;
+    if (role === "media") state.myMediaId = id;
     if (id){ state.previewLast = state.previewLast || {}; state.previewLast[role] = id; }
     state.activeConversation = null;
     state.screen = HOME_SCREEN[role];
@@ -17831,13 +17945,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function acctEntities(role){
     return role === "vendor" ? programs : role === "partner" ? partnerProfiles.filter(function(x){ return !x.archivedAt; })
       : role === "investor" ? investorProfiles.filter(function(x){ return !x.archivedAt; }) : role === "member" ? memberProfiles.filter(function(x){ return !x.archivedAt; })
-      : affiliateProfiles.filter(function(x){ return !x.archivedAt; });
+      : role === "media" ? mediaProfiles.filter(function(x){ return !x.archivedAt; }) : affiliateProfiles.filter(function(x){ return !x.archivedAt; });
   }
   function acctEntity(role, id){ return acctEntities(role).filter(function(x){ return x.id === id; })[0] || null; }
   function acctSlug(role, name){
     var base = String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || role;
     var id = base, n = 2;
-    while (programById(id) || partnerById(id) || affiliateProfiles.some(function(a){ return a.id === id; }) || investorProfiles.some(function(a){ return a.id === id; }) || memberProfiles.some(function(a){ return a.id === id; })) id = base + "-" + (n++);
+    while (programById(id) || partnerById(id) || affiliateProfiles.some(function(a){ return a.id === id; }) || investorProfiles.some(function(a){ return a.id === id; }) || memberProfiles.some(function(a){ return a.id === id; }) || mediaProfiles.some(function(a){ return a.id === id; })) id = base + "-" + (n++);
     return id;
   }
   // 12 characters, no look-alikes (0/O, 1/l/I), always a letter, a digit and a capital
@@ -17855,6 +17969,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         tiers:[{ tier:"Reseller", rate:"To be agreed", base:"To be agreed" }], agreement:{ type:"Vendor Program Agreement", status:"draft" },
         status:"onboarding", logo:"", logoSetup:2, website:"", social:{ linkedin:"", twitter:"", facebook:"" }, referralPartners:[], products:[] };
       programs.push(e); saveVendorEdits();
+    } else if (role === "media"){
+      e = { id:id, needsProfile:true, name:name, kinds:[], tagline:"", about:"", website:"", channels:[], services:[], markets:[], partnerDeal:"", status:"pending", createdAt:nowStamp() };
+      mediaProfiles.push(e); saveMediaMvp();
     } else if (role === "member"){
       e = { id:id, needsProfile:true, name:name, headline:"", company:"", city:"", topics:[], goals:[], linkedin:"", createdAt:nowStamp() };
       memberProfiles.push(e); saveMembers();
@@ -18016,6 +18133,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     state.profilePrompted = true;
     if (role === "vendor"){ state.screen = "vendor-overview"; state.vendorEditId = null; state.vendorOverviewEdit = ent.id; }
     else if (role === "member"){ state.screen = "member-profile"; }
+    else if (role === "media"){ state.screen = "media-profile"; }
     else if (role === "partner"){ state.screen = "partner-profile-editor"; state.editingProfileId = ent.id; setTimeout(function(){ loadPartnerProfileForm(ent.id); }, 0); }
     else { state.screen = "affiliate-profile-editor"; state.editingAffiliateId = ent.id; setTimeout(function(){ loadAffiliateProfileForm(ent.id); }, 0); }
     setTimeout(function(){ toast("Welcome to PartnerWAV -- please finish your company profile"); }, 50);
@@ -19782,6 +19900,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + MEMBER_GOALS.filter(function(g){ return g[0] === "saas" || g[0] === "mvp"; }).map(function(g){ var on = goals.indexOf(g[0]) > -1;
           return '<div class="card card-pad mem-goal" data-mem-goalcard="'+g[0]+'"><b>'+esc(g[1])+'</b><span class="field-note">'+esc(g[2])+'</span>'
             + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;">'+(on ? '<span class="pill active">You\'re interested</span>' : '<button type="button" class="btn secondary xs" data-mem-interest="'+g[0]+'">I\'m interested</button>')
+            + (g[0] === "mvp" ? '<button type="button" class="btn ghost xs" data-goto-screen="mvp-builder">See MVP packages</button>' : '')
             + '<button type="button" class="btn ghost xs" data-mem-talk="'+g[0]+'">Message PartnerWAV</button></div></div>'; }).join("")+'</div>';
   }
   function renderMember(force){
@@ -19867,6 +19986,300 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("[data-mem-save]")){ memberSaveProfile(); return; }
     if ((b = t.closest("[data-mem-interest]"))){ var mi = memberById(myMemberId()); if (mi){ mi.goals = (mi.goals || []).concat([b.getAttribute("data-mem-interest")]).filter(function(x, i, a){ return a.indexOf(x) === i; }); mi.updatedAt = nowStamp(); saveMembers(); renderMember(true); toast("Noted -- PartnerWAV will be in touch"); } return; }
     if ((b = t.closest("[data-mem-talk]"))){ var gt = MEMBER_GOALS.filter(function(g){ return g[0] === b.getAttribute("data-mem-talk"); })[0]; openConversationWith("operator:", null, gt ? gt[1] : ""); return; }
+  });
+  // ===== MEDIA & EVENTS PARTNERS, AND THE MVP BUILDER =====
+  // Media & Events partners (PR agencies, media outlets, creators, event organizers and venues) list their services for
+  // the companies and members on PartnerWAV, sponsor events CloudWAV runs or lists, and give event-exclusive discounts:
+  // a company met at an event enters the event code when it asks for the service. CloudWAV approves every partner (so
+  // the category stays PR, media and events, not marketing automation) and earns a fee on the work that comes from it.
+  // The MVP Builder is CloudWAV's own service for quick ideas and fixes; bigger builds go to the specialty software houses.
+  var MEDIA_KINDS = [["pr", "PR agency"], ["outlet", "Media outlet or publisher"], ["creator", "Creator or influencer"], ["events", "Event organizer"], ["venue", "Venue or event space"]];
+  var MEDIA_CHANNELS = ["Website", "Facebook", "Instagram", "TikTok", "YouTube", "LinkedIn", "X", "LINE Official Account", "Newsletter", "Podcast"];
+  var MEDIA_MARKETS = ["Thailand", "Southeast Asia", "Asia Pacific", "United States", "Global"];
+  var MEDIA_SPONSOR_PACKAGES = [["logo", "Logo and mention"], ["booth", "Booth or table"], ["talk", "Talk or panel slot"], ["prize", "Prize or hackathon challenge"], ["hospitality", "Food and drinks"], ["other", "Something else"]];
+  var REQ_STATUS = [["new", "New"], ["talking", "In talks"], ["won", "Went ahead"], ["lost", "Didn't go ahead"], ["referred", "Sent to a software house"], ["withdrawn", "Withdrawn"]];
+  var MVP_BUDGETS = ["Under USD 2,000", "USD 2,000 - 5,000", "USD 5,000 - 15,000", "USD 15,000 - 50,000", "Over USD 50,000", "Not sure yet"];
+  // apps the MVP Builder is building now (shown as examples)
+  var MVP_EXAMPLES = ["Sports coaching apps", "Course builders", "Digital product stores", "Business dashboards", "Independent real estate apps", "NGO job placement and marketplace apps", "Fashion industry dashboards", "Loyalty programs"];
+  function loadMediaMvp(){ try { var d = JSON.parse(lsGet(MEDIA_KEY) || "null"); if (d){ ["profiles", "offers", "codes", "sponsorships", "requests", "packages"].forEach(function(k){ if (Array.isArray(d[k])){
+      if (k === "profiles") mediaProfiles = d[k]; if (k === "offers") mediaOffers = d[k]; if (k === "codes") mediaOfferCodes = d[k]; if (k === "sponsorships") mediaSponsorships = d[k]; if (k === "requests") serviceRequests = d[k]; if (k === "packages") mvpPackages = d[k]; } }); } } catch(e){} }
+  function saveMediaMvp(){ try { lsSet(MEDIA_KEY, JSON.stringify({ profiles:mediaProfiles, offers:mediaOffers, codes:mediaOfferCodes, sponsorships:mediaSponsorships, requests:serviceRequests, packages:mvpPackages })); } catch(e){}
+    if (typeof cloudSchedule === "function") cloudSchedule(); state.medV = (state.medV || 0) + 1; }
+  function mediaById(id){ return mediaProfiles.filter(function(x){ return x.id === id && !x.archivedAt && !x._deleted; })[0] || null; }
+  function myMediaId(){
+    if (state.role !== "media") return null;
+    if (state.myMediaId) return state.myMediaId;
+    return state.account ? null : ((mediaProfiles.filter(function(x){ return !x.archivedAt; })[0] || {}).id || null);
+  }
+  function mediaApproved(m){ return !!m && m.status === "approved"; }
+  function mediaKindNames(m){ return (m.kinds || []).map(function(k){ var x = MEDIA_KINDS.filter(function(y){ return y[0] === k; })[0]; return x ? x[1] : k; }); }
+  function mediaPrice(s){ return s.price ? s.price : "Ask for a quote"; }
+  function reqStatusName(st){ return (REQ_STATUS.filter(function(x){ return x[0] === st; })[0] || ["", st || "New"])[1]; }
+  function upcomingCE(){ return communityEvents.filter(function(e){ return ceLive(e) && ceUpcoming(e); }).sort(function(a, b){ return new Date(a.start) - new Date(b.start); }); }
+  async function codeHash(code){
+    var c = String(code || "").trim().toUpperCase(); if (!c) return "";
+    try { var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(c)); return [].map.call(new Uint8Array(buf), function(b){ return ("0" + b.toString(16)).slice(-2); }).join(""); } catch(e){ return ""; }
+  }
+  function svcRequesterKey(){ return myMsgKey(); }
+  function svcRequesterName(){ var k = myMsgKey(); return keyName(k); }
+
+  // ----- the directory everyone signed in sees
+  function mediaCardHtml(m){
+    var offers = mediaOffers.filter(function(o){ return o.mediaId === m.id && o.active !== false && (!o.validUntil || o.validUntil >= todayIso()); });
+    return '<div class="card card-pad med-card" data-med-card="'+attr(m.id)+'"><div class="med-top"><span class="int-logo" style="background:#6c4cf1;">'+esc(memberInitials(m.name))+'</span>'
+        + '<div style="min-width:0;"><b>'+esc(m.name)+'</b><div class="field-note">'+esc(mediaKindNames(m).join(" · "))+'</div></div></div>'
+      + (m.tagline ? '<p class="field-note" style="margin:0;">'+esc(m.tagline)+'</p>' : '')
+      + ((m.channels || []).length ? '<div class="meet-chips">'+m.channels.slice(0, 5).map(function(c){ var u = safeHref(c.url || ""); return (u ? '<a class="badge neutral" href="'+attr(u)+'" target="_blank" rel="noopener noreferrer">' : '<span class="badge neutral">')+esc(c.type)+(c.audience ? ' · '+esc(c.audience) : '')+(u ? '</a>' : '</span>'); }).join("")+'</div>' : '')
+      + ((m.services || []).length ? '<ul class="med-svcs">'+m.services.map(function(s){ return '<li><span>'+esc(s.name)+'</span><b>'+esc(mediaPrice(s))+'</b></li>'; }).join("")+'</ul>' : '')
+      + (m.partnerDeal ? '<div class="cp-next"><b>PartnerWAV deal:</b> '+esc(m.partnerDeal)+'</div>' : '')
+      + offers.map(function(o){ return '<div class="med-offer" data-med-offer="'+attr(o.id)+'"><b>Event exclusive: '+esc(o.title)+'</b><span class="field-note">'+(o.eventName ? 'Met them at '+esc(o.eventName)+'? ' : '')+'Use the event code they gave you when you ask'+(o.validUntil ? ', until '+esc(o.validUntil) : '')+'.</span></div>'; }).join("")
+      + '<div class="mem-acts"><button type="button" class="btn primary xs" data-med-request="'+attr(m.id)+'">Request a service</button><button type="button" class="btn ghost xs" data-med-msg="'+attr(m.id)+'">Message</button>'
+        + (safeHref(m.website || "") ? '<a class="btn ghost xs" href="'+attr(safeHref(m.website))+'" target="_blank" rel="noopener noreferrer">Website</a>' : '')+'</div></div>';
+  }
+  function mediaDirectoryHtml(){
+    var f = state.medKind || "", list = mediaProfiles.filter(function(m){ return mediaApproved(m) && !m.archivedAt && (!f || (m.kinds || []).indexOf(f) > -1); }).sort(function(a, b){ return a.name.localeCompare(b.name); });
+    var mine = serviceRequests.filter(function(r){ return r.kind === "media" && r.requesterKey === svcRequesterKey(); });
+    return '<p class="field-note" style="margin:0 0 12px;">PR agencies, media, creators, event organizers and venues that PartnerWAV works with. Ask through PartnerWAV to get the PartnerWAV deal, and any event-exclusive discount.</p>'
+      + '<div class="meet-chips tec-filter" role="group" aria-label="Kind"><button type="button" class="meet-chip" data-med-kind="" aria-pressed="'+!f+'">All</button>'
+        + MEDIA_KINDS.map(function(k){ return '<button type="button" class="meet-chip" data-med-kind="'+k[0]+'" aria-pressed="'+(f === k[0])+'">'+esc(k[1])+'</button>'; }).join("")+'</div>'
+      + (list.length ? '<div class="mem-grid med-grid">'+list.map(mediaCardHtml).join("")+'</div>' : '<div class="empty">No Media &amp; Events partners listed yet.</div>')
+      + (mine.length ? '<div class="section-head" style="margin-top:18px;"><h2 style="font-size:1rem;">Your requests</h2></div>'+svcRequestListHtml(mine, "mine") : '');
+  }
+  function svcRequestListHtml(list, view){
+    return '<div style="display:flex;flex-direction:column;gap:8px;">'+list.slice().sort(function(a, b){ return String(b.createdAt).localeCompare(String(a.createdAt)); }).map(function(r){
+      var m = r.mediaId ? mediaById(r.mediaId) : null, pk = r.packageId ? mvpPackages.filter(function(x){ return x.id === r.packageId; })[0] : null, house = r.houseId ? softwareHouses.filter(function(h){ return h.id === r.houseId; })[0] : null;
+      return '<div class="card card-pad" data-svc-row="'+attr(r.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div style="min-width:0;flex:1;">'
+        + '<b>'+esc(r.kind === "mvp" ? "MVP Builder: " + (pk ? pk.name : r.serviceName || "") : (m ? m.name : "Media & Events") + ": " + (r.serviceName || ""))+'</b> <span class="pill '+(r.status === "won" ? 'active' : r.status === "new" ? 'pending' : '')+'">'+esc(reqStatusName(r.status))+'</span>'
+        + '<div class="field-note">'+(view !== "mine" ? esc(r.requesterName || keyName(r.requesterKey))+' · ' : '')+'sent '+esc(r.createdAt || "")+(r.budget ? ' · budget '+esc(r.budget) : '')+(r.timeline ? ' · '+esc(r.timeline) : '')+'</div>'
+        + (r.offerId ? '<div class="field-note">'+(r.codeOk ? '<span class="badge good">Event code accepted</span> '+esc(r.offerTitle || "") : '<span class="badge warn">Event code didn\'t match</span>')+'</div>' : '')
+        + (r.details ? '<div class="field-note cp-notes">'+esc(r.details)+'</div>' : '')
+        + (house ? '<div class="field-note">Sent to '+esc(house.name)+'</div>' : '')
+        + (view === "op" ? '<div class="svc-op"><select class="filter app-select" data-svc-status="'+attr(r.id)+'" aria-label="Status">'+REQ_STATUS.map(function(x){ return '<option value="'+x[0]+'"'+(r.status === x[0] ? ' selected' : '')+'>'+esc(x[1])+'</option>'; }).join("")+'</select>'
+            + '<input type="text" inputmode="decimal" placeholder="Contract value" value="'+attr(r.value != null ? String(r.value) : "")+'" data-svc-value="'+attr(r.id)+'" aria-label="Contract value">'
+            + '<input type="text" inputmode="decimal" placeholder="PartnerWAV fee" value="'+attr(r.fee != null ? String(r.fee) : "")+'" data-svc-fee="'+attr(r.id)+'" aria-label="PartnerWAV fee">'
+            + (r.kind === "mvp" ? '<select class="filter app-select" data-svc-house="'+attr(r.id)+'" aria-label="Software house"><option value="">Keep with the MVP Builder</option>'+softwareHouses.filter(function(h){ return h.status === "active"; }).map(function(h){ return '<option value="'+attr(h.id)+'"'+(r.houseId === h.id ? ' selected' : '')+'>Send to '+esc(h.name)+'</option>'; }).join("")+'</select>' : '')
+            + '<button type="button" class="btn secondary xs" data-svc-save="'+attr(r.id)+'">Save</button></div>' : '')
+        + '</div><div class="mem-acts" style="margin:0;align-items:flex-start;">'
+          + (view === "op" || view === "media" ? '<button type="button" class="btn ghost xs" data-svc-msg="'+attr(r.requesterKey)+'">Message '+esc(r.requesterName || keyName(r.requesterKey))+'</button>' : '')
+          + (view === "mine" && r.status === "new" ? '<button type="button" class="btn ghost xs" data-svc-withdraw="'+attr(r.id)+'">Withdraw</button>' : '')+'</div></div></div>'; }).join("")+'</div>';
+  }
+  function mediaRequestModal(mid){
+    var m = mediaById(mid); if (!m) return;
+    var offers = mediaOffers.filter(function(o){ return o.mediaId === m.id && o.active !== false && (!o.validUntil || o.validUntil >= todayIso()); });
+    var back = openModal('<div class="modal-head"><h2>Ask '+esc(m.name)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="modal-body meet-form" style="display:flex;flex-direction:column;gap:10px;">'
+        + '<div class="field-row"><label for="medReqSvc">Service</label><select id="medReqSvc" class="filter app-select">'+(m.services || []).map(function(s){ return '<option value="'+attr(s.name)+'">'+esc(s.name)+' ('+esc(mediaPrice(s))+')</option>'; }).join("")+'<option value="Something else">Something else</option></select></div>'
+        + '<div class="field-row"><label for="medReqDetails">What do you need?</label><textarea id="medReqDetails" rows="4" maxlength="1200" placeholder="e.g. Launch coverage in Thailand for our new product in March"></textarea></div>'
+        + '<div class="meet-two"><div class="field-row"><label for="medReqBudget">Budget (optional)</label><input type="text" id="medReqBudget" maxlength="60" placeholder="e.g. THB 50,000"></div>'
+          + '<div class="field-row"><label for="medReqTiming">When (optional)</label><input type="text" id="medReqTiming" maxlength="60" placeholder="e.g. Before 1 March"></div></div>'
+        + (offers.length ? '<div class="field-row"><label for="medReqCode">Event code (if they gave you one)</label><input type="text" id="medReqCode" maxlength="40" autocomplete="off" placeholder="e.g. FOUNDER15"><span class="field-note">For the event-exclusive discount: '+esc(offers.map(function(o){ return o.title; }).join("; "))+'</span></div>' : '')
+        + '<div id="medReqErr" class="login-msg bad" role="alert" hidden></div></div>'
+      + '<div class="modal-actions"><button type="button" class="btn secondary" data-modal-cancel>Cancel</button><button type="button" class="btn primary" id="medReqSend">Send request</button></div>');
+    back.querySelector("[data-modal-cancel]").addEventListener("click", closeModal);
+    back.querySelector("#medReqSend").addEventListener("click", async function(){
+      var g = function(id){ var el = back.querySelector("#" + id); return el ? el.value.trim() : ""; }, err = back.querySelector("#medReqErr");
+      if (!g("medReqDetails")){ err.textContent = "Tell them what you need."; err.hidden = false; return; }
+      var code = g("medReqCode"), hit = null;
+      if (code){ var h = await codeHash(code); hit = offers.filter(function(o){ return o.codeHash && o.codeHash === h; })[0] || null;
+        if (!hit){ err.textContent = "That event code doesn't match. Check it, or leave it empty."; err.hidden = false; return; } }
+      var me = svcRequesterKey();
+      serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"media", requesterKey:me, requesterName:svcRequesterName(), mediaId:m.id, mediaName:m.name,
+        serviceName:g("medReqSvc"), details:g("medReqDetails").slice(0, 1200), budget:g("medReqBudget"), timeline:g("medReqTiming"), offerId:hit ? hit.id : "", offerTitle:hit ? hit.title : "", codeOk:!!hit,
+        status:"new", createdAt:nowStamp() });
+      saveMediaMvp(); closeModal(); renderMediaMvp(true); toast(hit ? "Request sent, with the event discount" : "Request sent -- " + m.name + " and PartnerWAV will be in touch");
+    });
+  }
+
+  // ----- the MVP Builder (vendors, partners and members)
+  function mvpBuilderHtml(){
+    var mine = serviceRequests.filter(function(r){ return r.kind === "mvp" && r.requesterKey === svcRequesterKey(); }), pk = mvpPackages.filter(function(p){ return !p.hidden; });
+    return '<div class="card card-pad mvp-hero"><b>From idea to a working product, fast</b><span class="field-note">CloudWAV\'s MVP Builder takes on quick ideas, fixes and first versions for founders and SaaS companies: a working prototype on Lovable or Bolt, a security review, extra developers or the features you need for your next funding round, up to a full app built with Cursor and deployed on Vercel. Bigger builds go to PartnerWAV\'s specialty software houses.</span></div>'
+      + '<div class="mvp-grid">'+pk.map(function(p){ return '<div class="card card-pad mvp-pkg" data-mvp-pkg="'+attr(p.id)+'"><b>'+esc(p.name)+'</b><span class="field-note">'+esc(p.desc || "")+'</span>'
+          + ((p.includes || []).length ? '<ul class="shop-list" style="margin:0;">'+p.includes.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul>' : '')
+          + '<div class="mvp-foot"><span class="field-note">'+esc([p.tools, p.timeline].filter(Boolean).join(" · "))+'</span><b>'+esc(p.price || "Ask for a quote")+'</b></div>'
+          + '<button type="button" class="btn primary xs" data-mvp-request="'+attr(p.id)+'">Ask about this</button></div>'; }).join("")+'</div>'
+      + '<div class="section-head" style="margin-top:18px;"><h2 style="font-size:1rem;">What we\'re building now</h2></div><div class="meet-chips">'+MVP_EXAMPLES.map(function(x){ return '<span class="badge neutral">'+esc(x)+'</span>'; }).join("")+'</div>'
+      + (mine.length ? '<div class="section-head" style="margin-top:18px;"><h2 style="font-size:1rem;">Your requests</h2></div>'+svcRequestListHtml(mine, "mine") : '');
+  }
+  function mvpRequestModal(pid){
+    var p = mvpPackages.filter(function(x){ return x.id === pid; })[0]; if (!p) return;
+    var back = openModal('<div class="modal-head"><h2>'+esc(p.name)+'</h2><button class="modal-close" aria-label="Close">×</button></div>'
+      + '<div class="modal-body meet-form" style="display:flex;flex-direction:column;gap:10px;">'
+        + '<div class="field-row"><label for="mvpReqDetails">Your idea or what needs doing</label><textarea id="mvpReqDetails" rows="5" maxlength="1500" placeholder="Who it\'s for, what it should do, and what exists today"></textarea></div>'
+        + '<div class="field-row"><label for="mvpReqLink">Link to the app or code, if there is one (optional)</label><input type="text" id="mvpReqLink" maxlength="300" placeholder="https://"></div>'
+        + '<div class="meet-two"><div class="field-row"><label for="mvpReqBudget">Budget</label><select id="mvpReqBudget" class="filter app-select">'+MVP_BUDGETS.map(function(x){ return '<option>'+esc(x)+'</option>'; }).join("")+'</select></div>'
+          + '<div class="field-row"><label for="mvpReqTiming">When do you need it? (optional)</label><input type="text" id="mvpReqTiming" maxlength="60" placeholder="e.g. Before our seed round in May"></div></div>'
+        + '<div id="mvpReqErr" class="login-msg bad" role="alert" hidden></div></div>'
+      + '<div class="modal-actions"><button type="button" class="btn secondary" data-modal-cancel>Cancel</button><button type="button" class="btn primary" id="mvpReqSend">Send to the MVP Builder</button></div>');
+    back.querySelector("[data-modal-cancel]").addEventListener("click", closeModal);
+    back.querySelector("#mvpReqSend").addEventListener("click", function(){
+      var g = function(id){ var el = back.querySelector("#" + id); return el ? el.value.trim() : ""; }, err = back.querySelector("#mvpReqErr");
+      if (!g("mvpReqDetails")){ err.textContent = "Tell us about the idea or the work."; err.hidden = false; return; }
+      var link = g("mvpReqLink"); if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
+      serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"mvp", requesterKey:svcRequesterKey(), requesterName:svcRequesterName(), packageId:p.id, serviceName:p.name,
+        details:g("mvpReqDetails").slice(0, 1500) + (link && safeHref(link) ? "\nLink: " + link : ""), budget:g("mvpReqBudget"), timeline:g("mvpReqTiming"), status:"new", createdAt:nowStamp() });
+      saveMediaMvp(); closeModal(); renderMediaMvp(true); toast("Sent -- the MVP Builder team will be in touch");
+    });
+  }
+
+  // ----- the Media & Events partner's own space
+  function mediaProfileFormHtml(m){
+    var f = function(id, label, val, attrs){ return '<div class="field-row"><label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" value="'+attr(val || "")+'" '+(attrs || "")+'></div>'; };
+    var ch = (m.channels || []).concat([{}]), sv = (m.services || []).concat([{}]);
+    return '<div class="card card-pad meet-form" id="medProfileForm">'
+      + (mediaApproved(m) ? '<div class="field-note" data-med-status><span class="pill active">Listed</span> Companies and members on PartnerWAV can find you under Media &amp; Events.</div>'
+        : '<div class="field-note" data-med-status><span class="pill pending">Waiting for PartnerWAV</span> Finish your profile; PartnerWAV checks it before you\'re listed.</div>')
+      + '<div class="meet-two">'+f("medName", "Name", m.name, 'maxlength="100"')+f("medWebsite", "Website", m.website, 'maxlength="200" placeholder="https://"')+'</div>'
+      + f("medTagline", "One line about you", m.tagline, 'maxlength="160" placeholder="e.g. Tech PR for startups launching in Thailand"')
+      + '<div class="field-row"><label for="medAbout">About</label><textarea id="medAbout" rows="3" maxlength="1000">'+esc(m.about || "")+'</textarea></div>'
+      + '<b>What you are</b><div class="meet-chips" role="group" aria-label="Kind">'+MEDIA_KINDS.map(function(k){ return '<button type="button" class="meet-chip" data-med-pkind="'+k[0]+'" aria-pressed="'+((m.kinds || []).indexOf(k[0]) > -1)+'">'+esc(k[1])+'</button>'; }).join("")+'</div>'
+      + '<b>Markets</b><div class="meet-chips" role="group" aria-label="Markets">'+MEDIA_MARKETS.map(function(k){ return '<button type="button" class="meet-chip" data-med-pmarket="'+attr(k)+'" aria-pressed="'+((m.markets || []).indexOf(k) > -1)+'">'+esc(k)+'</button>'; }).join("")+'</div>'
+      + '<b>Channels and audience</b><div class="med-rows" id="medChannels">'+ch.map(function(c, i){ return '<div class="med-row" data-med-chrow><select class="filter app-select" aria-label="Channel"><option value="">Channel</option>'+MEDIA_CHANNELS.map(function(x){ return '<option'+(c.type === x ? ' selected' : '')+'>'+esc(x)+'</option>'; }).join("")+'</select>'
+          + '<input type="text" maxlength="200" placeholder="Link (https://...)" value="'+attr(c.url || "")+'" aria-label="Link"><input type="text" maxlength="40" placeholder="Audience, e.g. 25k followers" value="'+attr(c.audience || "")+'" aria-label="Audience"></div>'; }).join("")+'</div>'
+      + '<button type="button" class="btn ghost xs" data-med-addrow="channels" style="align-self:flex-start;">+ Another channel</button>'
+      + '<b>Services and prices</b><span class="field-note">Leave the price empty to show "Ask for a quote".</span><div class="med-rows" id="medServices">'+sv.map(function(s){ return '<div class="med-row" data-med-svrow>'
+          + '<input type="text" maxlength="100" placeholder="Service, e.g. Launch press release" value="'+attr(s.name || "")+'" aria-label="Service"><input type="text" maxlength="60" placeholder="Price, e.g. From THB 30,000" value="'+attr(s.price || "")+'" aria-label="Price"></div>'; }).join("")+'</div>'
+      + '<button type="button" class="btn ghost xs" data-med-addrow="services" style="align-self:flex-start;">+ Another service</button>'
+      + f("medDeal", "PartnerWAV deal for companies that ask through PartnerWAV (optional)", m.partnerDeal, 'maxlength="160" placeholder="e.g. 10% off your first campaign"')
+      + '<div id="medErr" class="login-msg bad" role="alert" hidden></div><div><button type="button" class="btn primary sm" data-med-save>Save profile</button></div></div>';
+  }
+  function mediaEventsHtml(m){
+    var evs = upcomingCE(), mine = mediaSponsorships.filter(function(x){ return x.mediaId === m.id; });
+    return '<p class="field-note" style="margin:0 0 12px;">Sponsor an event to meet the founders and companies there. PartnerWAV introduces you on the day; give an event code for an exclusive discount (Event offers).</p>'
+      + (evs.length ? '<div style="display:flex;flex-direction:column;gap:8px;">'+evs.map(function(e){ var sp = mine.filter(function(x){ return x.eventId === e.id && x.status !== "withdrawn"; })[0];
+          return '<div class="card card-pad cp-ev" data-med-ev="'+attr(e.id)+'"><div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span></div>'
+            + '<div style="flex:1;min-width:0;"><b>'+esc(e.title)+'</b> '+(ceKind(e) !== "community" ? '<span class="badge accent">'+esc(ceKindName(e))+'</span>' : '')+'<div class="field-note">'+esc(ceHost(e))+' · '+esc(ceWhen(e))+' · '+esc(ceWhere(e))+'</div>'
+            + (sp ? '<div class="field-note"><span class="pill '+(sp.status === "confirmed" ? 'active' : 'pending')+'">'+(sp.status === "confirmed" ? 'Sponsoring' : sp.status === "declined" ? 'Not this time' : 'Applied to sponsor')+'</span> '+esc((MEDIA_SPONSOR_PACKAGES.filter(function(x){ return x[0] === sp.pkg; })[0] || ["", ""])[1])+(sp.reply ? ' · '+esc(sp.reply) : '')+'</div>'
+              : '<div class="med-apply"><select class="filter app-select" data-med-pkg="'+attr(e.id)+'" aria-label="How you\'d sponsor">'+MEDIA_SPONSOR_PACKAGES.map(function(x){ return '<option value="'+x[0]+'">'+esc(x[1])+'</option>'; }).join("")+'</select>'
+                + '<input type="text" maxlength="200" placeholder="Note for PartnerWAV (optional)" data-med-note="'+attr(e.id)+'" aria-label="Note"><button type="button" class="btn secondary xs" data-med-sponsor="'+attr(e.id)+'"'+(mediaApproved(m) ? '' : ' disabled title="Once PartnerWAV lists you"')+'>Apply to sponsor</button></div>')
+            + '</div></div>'; }).join("")+'</div>' : '<div class="empty">No upcoming events listed yet.</div>');
+  }
+  function mediaOffersHtml(m){
+    var mine = mediaOffers.filter(function(o){ return o.mediaId === m.id; }), evs = upcomingCE();
+    return '<p class="field-note" style="margin:0 0 12px;">An event-exclusive discount: hand out the code at the event. Companies enter it when they ask for your service through PartnerWAV, so you and PartnerWAV know where they came from.</p>'
+      + (mine.length ? '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">'+mine.map(function(o){ var cd = mediaOfferCodes.filter(function(c){ return c.id === o.id; })[0];
+          return '<div class="card card-pad" data-med-myoffer="'+attr(o.id)+'"><b>'+esc(o.title)+'</b> <span class="pill '+(o.active !== false ? 'active' : '')+'">'+(o.active !== false ? 'On' : 'Off')+'</span>'
+            + '<div class="field-note">'+esc([o.eventName ? "Event: " + o.eventName : "Any PartnerWAV event", o.validUntil ? "until " + o.validUntil : "", cd ? "Code: " + cd.code : ""].filter(Boolean).join(" · "))+'</div>'
+            + '<div class="mem-acts"><button type="button" class="btn ghost xs" data-med-offer-toggle="'+attr(o.id)+'">'+(o.active !== false ? 'Turn off' : 'Turn on')+'</button></div></div>'; }).join("")+'</div>' : '')
+      + '<div class="card card-pad meet-form" id="medOfferForm"><b>New event offer</b>'
+        + '<div class="field-row"><label for="medOfTitle">The offer</label><input type="text" id="medOfTitle" maxlength="120" placeholder="e.g. 15% off your launch PR package"></div>'
+        + '<div class="meet-two"><div class="field-row"><label for="medOfEvent">Event</label><select id="medOfEvent" class="filter app-select"><option value="">Any PartnerWAV event</option>'+evs.map(function(e){ return '<option value="'+attr(e.id)+'">'+esc(e.title)+' ('+esc(bkkFmt(e.start, { day:"numeric", month:"short" }))+')</option>'; }).join("")+'</select></div>'
+          + '<div class="field-row"><label for="medOfCode">Event code</label><input type="text" id="medOfCode" maxlength="40" autocomplete="off" placeholder="e.g. FOUNDER15"></div>'
+          + '<div class="field-row"><label for="medOfUntil">Valid until</label><input type="date" id="medOfUntil"></div></div>'
+        + '<div id="medOfErr" class="login-msg bad" role="alert" hidden></div><div><button type="button" class="btn primary sm" data-med-offer-save'+(mediaApproved(m) ? '' : ' disabled title="Once PartnerWAV lists you"')+'>Save offer</button></div></div>';
+  }
+  function mediaOverviewHtml(m){
+    var reqs = serviceRequests.filter(function(r){ return r.kind === "media" && r.mediaId === m.id; }), sps = mediaSponsorships.filter(function(x){ return x.mediaId === m.id && x.status !== "withdrawn"; });
+    return '<div class="mem-hello"><span class="int-logo" style="background:#6c4cf1;width:56px;height:56px;">'+esc(memberInitials(m.name))+'</span><div><h2 style="margin:0;">'+esc(m.name)+'</h2><span class="field-note">Media &amp; Events partner on PartnerWAV</span></div></div>'
+      + (!mediaApproved(m) ? '<div class="card card-pad inv-nudge"><b>'+(m.needsProfile ? 'Finish your profile' : 'Waiting for PartnerWAV')+'</b><span class="field-note">Add what you do, your channels and your services. PartnerWAV checks every partner before it is listed.</span><button type="button" class="btn primary sm" data-goto-screen="media-profile">My profile</button></div>' : '')
+      + '<div class="stat-row" style="margin-bottom:14px;"><div class="stat-tile"><span class="stat-label">Requests</span><span class="stat-value">'+reqs.length+'</span><span class="stat-trend">'+reqs.filter(function(r){ return r.status === "new"; }).length+' new</span></div>'
+        + '<div class="stat-tile"><span class="stat-label">Sponsoring</span><span class="stat-value">'+sps.filter(function(x){ return x.status === "confirmed"; }).length+'</span><span class="stat-trend">'+sps.filter(function(x){ return x.status === "applied"; }).length+' waiting for PartnerWAV</span></div>'
+        + '<div class="stat-tile"><span class="stat-label">Event offers</span><span class="stat-value">'+mediaOffers.filter(function(o){ return o.mediaId === m.id && o.active !== false; }).length+'</span><span class="stat-trend">Live</span></div></div>'
+      + '<div class="section-head"><h2 style="font-size:1rem;">Latest requests</h2><button type="button" class="btn ghost sm" data-goto-screen="media-requests">All requests</button></div>'
+      + (reqs.length ? svcRequestListHtml(reqs.slice(-3), "media") : '<div class="empty">No requests yet. Companies and members ask through your listing under Media &amp; Events.</div>');
+  }
+  // CloudWAV: requests, partners, sponsorships and MVP packages
+  function opServicesHtml(){
+    var tab = state.svcTab || "mvp", pending = mediaProfiles.filter(function(m){ return !mediaApproved(m) && !m.archivedAt; });
+    var applied = mediaSponsorships.filter(function(x){ return x.status === "applied"; });
+    var h = '<div class="cal-views" role="group" aria-label="Show" style="margin-bottom:14px;">'+[["mvp", "MVP Builder requests (" + serviceRequests.filter(function(r){ return r.kind === "mvp"; }).length + ")"], ["media", "Media & Events requests (" + serviceRequests.filter(function(r){ return r.kind === "media"; }).length + ")"],
+      ["partners", "Media & Events partners" + (pending.length ? " (" + pending.length + " to check)" : "")], ["sponsors", "Sponsorships" + (applied.length ? " (" + applied.length + ")" : "")], ["packages", "MVP packages"]].map(function(x){ return '<button type="button" class="cal-view" data-svc-tab="'+x[0]+'" aria-pressed="'+(tab === x[0])+'">'+esc(x[1])+'</button>'; }).join("")+'</div>';
+    if (tab === "mvp" || tab === "media"){ var list = serviceRequests.filter(function(r){ return r.kind === tab; });
+      return h + (list.length ? svcRequestListHtml(list, "op") : '<div class="empty">No requests yet.</div>'); }
+    if (tab === "partners") return h + '<p class="field-note" style="margin:0 0 10px;">Set up a partner\'s login in Accounts &amp; Logins (type Media &amp; Events). Check each one before listing: PR, media, creators, events and venues only, not marketing automation.</p>'
+      + (mediaProfiles.filter(function(m){ return !m.archivedAt; }).length ? '<div style="display:flex;flex-direction:column;gap:8px;">'+mediaProfiles.filter(function(m){ return !m.archivedAt; }).map(function(m){
+        return '<div class="card card-pad" data-svc-partner="'+attr(m.id)+'"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div><b>'+esc(m.name)+'</b> <span class="pill '+(mediaApproved(m) ? 'active' : 'pending')+'">'+(mediaApproved(m) ? 'Listed' : m.status === "paused" ? 'Paused' : 'To check')+'</span>'
+          + '<div class="field-note">'+esc(mediaKindNames(m).join(" · ") || "No kind chosen yet")+' · '+(m.services || []).length+' services</div></div>'
+          + '<div class="svc-op"><input type="text" inputmode="decimal" placeholder="Fee %" value="'+attr(m.feePct != null ? String(m.feePct) : "")+'" data-svc-feepct="'+attr(m.id)+'" aria-label="PartnerWAV fee percent" style="width:90px;">'
+          + (mediaApproved(m) ? '<button type="button" class="btn ghost xs" data-svc-pause="'+attr(m.id)+'">Pause listing</button>' : '<button type="button" class="btn primary xs" data-svc-approve="'+attr(m.id)+'">Approve and list</button>')
+          + '<button type="button" class="btn secondary xs" data-svc-feesave="'+attr(m.id)+'">Save fee</button></div></div></div>'; }).join("")+'</div>' : '<div class="empty">No Media &amp; Events partners yet.</div>');
+    if (tab === "sponsors") return h + (mediaSponsorships.length ? '<div style="display:flex;flex-direction:column;gap:8px;">'+mediaSponsorships.slice().reverse().map(function(x){ var m = mediaById(x.mediaId), pkg = MEDIA_SPONSOR_PACKAGES.filter(function(y){ return y[0] === x.pkg; })[0];
+        return '<div class="card card-pad" data-svc-sponsor="'+attr(x.id)+'"><b>'+esc(m ? m.name : x.mediaId)+'</b> wants to sponsor <b>'+esc(x.eventTitle || "")+'</b> <span class="pill '+(x.status === "confirmed" ? 'active' : x.status === "applied" ? 'pending' : '')+'">'+esc(x.status)+'</span>'
+          + '<div class="field-note">'+esc(pkg ? pkg[1] : x.pkg)+(x.note ? ' · '+esc(x.note) : '')+' · '+esc(x.createdAt || "")+'</div>'
+          + (x.status === "applied" ? '<div class="mem-acts"><button type="button" class="btn primary xs" data-svc-sp-confirm="'+attr(x.id)+'">Confirm sponsor</button><button type="button" class="btn ghost xs" data-svc-sp-decline="'+attr(x.id)+'">Not this time</button></div>' : '')+'</div>'; }).join("")+'</div>' : '<div class="empty">No sponsorship applications yet.</div>');
+    return h + '<p class="field-note" style="margin:0 0 10px;">What the MVP Builder offers. Prices and timelines show to vendors, partners and members; leave the price empty for "Ask for a quote".</p>'
+      + '<div style="display:flex;flex-direction:column;gap:8px;">'+mvpPackages.map(function(p){ return '<div class="card card-pad meet-form" data-svc-pkg="'+attr(p.id)+'"><div class="meet-two">'
+        + '<div class="field-row"><label>Name</label><input type="text" maxlength="80" value="'+attr(p.name)+'" data-pk="name"></div><div class="field-row"><label>Price</label><input type="text" maxlength="60" value="'+attr(p.price || "")+'" placeholder="Ask for a quote" data-pk="price"></div>'
+        + '<div class="field-row"><label>Tools</label><input type="text" maxlength="80" value="'+attr(p.tools || "")+'" data-pk="tools"></div><div class="field-row"><label>Typical timeline</label><input type="text" maxlength="60" value="'+attr(p.timeline || "")+'" placeholder="e.g. 2 weeks" data-pk="timeline"></div></div>'
+        + '<div class="field-row"><label>Description</label><textarea rows="2" maxlength="400" data-pk="desc">'+esc(p.desc || "")+'</textarea></div>'
+        + '<label class="field-note" style="display:flex;gap:6px;align-items:center;"><input type="checkbox" data-pk="hidden"'+(p.hidden ? ' checked' : '')+'> Hidden</label>'
+        + '<div><button type="button" class="btn secondary xs" data-svc-pk-save="'+attr(p.id)+'">Save package</button></div></div>'; }).join("")+'</div>';
+  }
+  function renderMediaMvp(force){
+    var scr = state.screen, map = { "media-directory":"mediaDirectoryContent", "mvp-builder":"mvpBuilderContent", "media-overview":"mediaOverviewContent", "media-profile":"mediaProfileContent",
+      "media-events":"mediaEventsContent", "media-offers":"mediaOffersContent", "media-requests":"mediaRequestsContent", "operator-services":"opServicesContent" };
+    var box = document.getElementById(map[scr] || ""); if (!box) return;
+    var key = JSON.stringify([scr, state.role, myMsgKey(), mediaProfiles.length, mediaOffers.length, mediaSponsorships.length, serviceRequests.length, mvpPackages.length, communityEvents.length, state.medV || 0, state.medKind, state.svcTab]);
+    if (!force && box.getAttribute("data-k") === key) return;
+    box.setAttribute("data-k", key);
+    if (scr === "media-directory"){ box.innerHTML = mediaDirectoryHtml(); return; }
+    if (scr === "mvp-builder"){ box.innerHTML = mvpBuilderHtml(); return; }
+    if (scr === "operator-services"){ box.innerHTML = opServicesHtml(); return; }
+    var m = mediaById(myMediaId()); if (!m){ box.innerHTML = '<div class="empty">This login isn\'t linked to a Media &amp; Events profile yet. Ask PartnerWAV to set it up.</div>'; return; }
+    box.innerHTML = scr === "media-overview" ? mediaOverviewHtml(m) : scr === "media-profile" ? mediaProfileFormHtml(m) : scr === "media-events" ? mediaEventsHtml(m) : scr === "media-offers" ? mediaOffersHtml(m)
+      : (serviceRequests.filter(function(r){ return r.kind === "media" && r.mediaId === m.id; }).length ? svcRequestListHtml(serviceRequests.filter(function(r){ return r.kind === "media" && r.mediaId === m.id; }), "media") : '<div class="empty">No requests yet.</div>');
+  }
+  function mediaSaveProfile(){
+    var m = mediaById(myMediaId()); if (!m) return;
+    var g = function(x){ var el = document.getElementById(x); return el ? el.value.trim() : ""; }, err = document.getElementById("medErr");
+    var web = g("medWebsite"); if (web && !/^https?:\/\//i.test(web)) web = "https://" + web;
+    if (!g("medName")){ err.textContent = "Add your name."; err.hidden = false; return; }
+    if (web && !safeHref(web)){ err.textContent = "Check the website address."; err.hidden = false; return; }
+    var chans = [].slice.call(document.querySelectorAll("[data-med-chrow]")).map(function(r){ var s = r.querySelector("select").value, ins = r.querySelectorAll("input"), u = ins[0].value.trim(); if (u && !/^https?:\/\//i.test(u)) u = "https://" + u;
+      return { type:s, url:safeHref(u) ? u : "", audience:ins[1].value.trim().slice(0, 40) }; }).filter(function(c){ return c.type; });
+    var svcs = [].slice.call(document.querySelectorAll("[data-med-svrow]")).map(function(r){ var ins = r.querySelectorAll("input"); return { name:ins[0].value.trim().slice(0, 100), price:ins[1].value.trim().slice(0, 60) }; }).filter(function(s){ return s.name; });
+    var kinds = [].slice.call(document.querySelectorAll('[data-med-pkind][aria-pressed="true"]')).map(function(b){ return b.getAttribute("data-med-pkind"); });
+    if (!kinds.length){ err.textContent = "Choose what you are: PR agency, media, creator, event organizer or venue."; err.hidden = false; return; }
+    Object.assign(m, { name:g("medName").slice(0, 100), website:web, tagline:g("medTagline").slice(0, 160), about:g("medAbout").slice(0, 1000), kinds:kinds, channels:chans.slice(0, 12), services:svcs.slice(0, 20),
+      markets:[].slice.call(document.querySelectorAll('[data-med-pmarket][aria-pressed="true"]')).map(function(b){ return b.getAttribute("data-med-pmarket"); }), partnerDeal:g("medDeal").slice(0, 160), updatedAt:nowStamp() });
+    if (!m.status) m.status = "pending";
+    delete m.needsProfile;
+    if (state.account && state.account.role === "media"){ state.account.entityName = m.name; updateAccountMenu(); }
+    saveMediaMvp(); renderMediaMvp(true); toast("Profile saved");
+  }
+  document.addEventListener("click", async function(ev){
+    var t = ev.target; if (!t || !t.closest) return; var b;
+    if (!t.closest("#mediaDirectoryContent, #mvpBuilderContent, #mediaOverviewContent, #mediaProfileContent, #mediaEventsContent, #mediaOffersContent, #mediaRequestsContent, #opServicesContent")) return;
+    if ((b = t.closest("[data-med-kind]"))){ state.medKind = b.getAttribute("data-med-kind"); renderMediaMvp(true); return; }
+    if ((b = t.closest("[data-med-request]"))){ mediaRequestModal(b.getAttribute("data-med-request")); return; }
+    if ((b = t.closest("[data-med-msg]"))){ openConversationWith("media:" + b.getAttribute("data-med-msg")); return; }
+    if ((b = t.closest("[data-svc-msg]"))){ openConversationWith(b.getAttribute("data-svc-msg")); return; }
+    if ((b = t.closest("[data-mvp-request]"))){ mvpRequestModal(b.getAttribute("data-mvp-request")); return; }
+    if ((b = t.closest("[data-svc-withdraw]"))){ var rw = serviceRequests.filter(function(r){ return r.id === b.getAttribute("data-svc-withdraw"); })[0]; if (rw){ rw.status = "withdrawn"; rw.updatedAt = nowStamp(); saveMediaMvp(); renderMediaMvp(true); } return; }
+    if ((b = t.closest("[data-med-pkind], [data-med-pmarket]"))){ b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); return; }
+    if ((b = t.closest("[data-med-addrow]"))){ var box = document.getElementById(b.getAttribute("data-med-addrow") === "channels" ? "medChannels" : "medServices"), last = box && box.lastElementChild;
+      if (last){ var cl = last.cloneNode(true); cl.querySelectorAll("input").forEach(function(i){ i.value = ""; }); cl.querySelectorAll("select").forEach(function(s){ s.selectedIndex = 0; }); box.appendChild(cl); } return; }
+    if (t.closest("[data-med-save]")){ mediaSaveProfile(); return; }
+    if ((b = t.closest("[data-med-sponsor]"))){ var m0 = mediaById(myMediaId()), e0 = ceById(b.getAttribute("data-med-sponsor")); if (!m0 || !e0) return;
+      var pk = document.querySelector('[data-med-pkg="' + e0.id + '"]'), nt = document.querySelector('[data-med-note="' + e0.id + '"]');
+      mediaSponsorships.push({ id:"ms-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), mediaId:m0.id, eventId:e0.id, eventTitle:e0.title, pkg:pk ? pk.value : "other", note:nt ? nt.value.trim().slice(0, 200) : "", status:"applied", createdAt:nowStamp() });
+      saveMediaMvp(); renderMediaMvp(true); toast("Sent to PartnerWAV"); return; }
+    if ((b = t.closest("[data-med-offer-toggle]"))){ var o1 = mediaOffers.filter(function(o){ return o.id === b.getAttribute("data-med-offer-toggle"); })[0]; if (o1){ o1.active = o1.active === false; o1.updatedAt = nowStamp(); saveMediaMvp(); renderMediaMvp(true); } return; }
+    if (t.closest("[data-med-offer-save]")){ var m1 = mediaById(myMediaId()); if (!m1) return;
+      var gv = function(x){ var el = document.getElementById(x); return el ? el.value.trim() : ""; }, oe = document.getElementById("medOfErr"), code = gv("medOfCode").toUpperCase();
+      if (!gv("medOfTitle") || !/^[A-Z0-9-]{4,40}$/.test(code)){ oe.textContent = "Add the offer and a code of 4 or more letters or numbers (no spaces)."; oe.hidden = false; return; }
+      var evt = ceById(gv("medOfEvent")), oid = "mo-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      mediaOffers.push({ id:oid, mediaId:m1.id, title:gv("medOfTitle").slice(0, 120), eventId:evt ? evt.id : "", eventName:evt ? evt.title : "", validUntil:gv("medOfUntil"), codeHash:await codeHash(code), active:true, createdAt:nowStamp() });
+      mediaOfferCodes.push({ id:oid, mediaId:m1.id, code:code });
+      saveMediaMvp(); renderMediaMvp(true); toast("Offer saved -- hand out the code " + code + " at the event"); return; }
+    // CloudWAV
+    if ((b = t.closest("[data-svc-tab]"))){ state.svcTab = b.getAttribute("data-svc-tab"); renderMediaMvp(true); return; }
+    if ((b = t.closest("[data-svc-save]"))){ var r2 = serviceRequests.filter(function(r){ return r.id === b.getAttribute("data-svc-save"); })[0]; if (!r2) return;
+      var num = function(sel){ var el = document.querySelector(sel); var v = el ? el.value.replace(/[^0-9.]/g, "") : ""; return v === "" ? null : Number(v); };
+      r2.status = document.querySelector('[data-svc-status="' + r2.id + '"]').value; r2.value = num('[data-svc-value="' + r2.id + '"]'); r2.fee = num('[data-svc-fee="' + r2.id + '"]');
+      var hs = document.querySelector('[data-svc-house="' + r2.id + '"]'); if (hs){ r2.houseId = hs.value; if (hs.value && r2.status === "new") r2.status = "referred"; }
+      r2.updatedAt = nowStamp(); saveMediaMvp(); renderMediaMvp(true); toast("Saved"); return; }
+    if ((b = t.closest("[data-svc-approve]"))){ var m2 = mediaById(b.getAttribute("data-svc-approve")); if (m2){ m2.status = "approved"; m2.approvedAt = todayIso(); saveMediaMvp(); renderMediaMvp(true); toast(m2.name + " is listed"); } return; }
+    if ((b = t.closest("[data-svc-pause]"))){ var m3 = mediaById(b.getAttribute("data-svc-pause")); if (m3){ m3.status = "paused"; saveMediaMvp(); renderMediaMvp(true); } return; }
+    if ((b = t.closest("[data-svc-feesave]"))){ var m4 = mediaById(b.getAttribute("data-svc-feesave")), fp = document.querySelector('[data-svc-feepct="' + b.getAttribute("data-svc-feesave") + '"]');
+      if (m4 && fp){ var pv = fp.value.replace(/[^0-9.]/g, ""); m4.feePct = pv === "" ? null : Math.min(100, Number(pv)); saveMediaMvp(); renderMediaMvp(true); toast("Fee saved"); } return; }
+    if ((b = t.closest("[data-svc-sp-confirm], [data-svc-sp-decline]"))){ var ok1 = b.hasAttribute("data-svc-sp-confirm"), sp = mediaSponsorships.filter(function(x){ return x.id === b.getAttribute(ok1 ? "data-svc-sp-confirm" : "data-svc-sp-decline"); })[0]; if (!sp) return;
+      sp.status = ok1 ? "confirmed" : "declined"; sp.updatedAt = nowStamp();
+      if (ok1){ var ev2 = ceById(sp.eventId), mm = mediaById(sp.mediaId); if (ev2 && mm){ ev2.sponsors = (ev2.sponsors || []).filter(function(x){ return x.mediaId !== mm.id; }).concat([{ mediaId:mm.id, name:mm.name }]); ev2.updatedAt = nowStamp(); saveCommunity(); } }
+      saveMediaMvp(); renderMediaMvp(true); return; }
+    if ((b = t.closest("[data-svc-pk-save]"))){ var p2 = mvpPackages.filter(function(x){ return x.id === b.getAttribute("data-svc-pk-save"); })[0], card = b.closest("[data-svc-pkg]"); if (!p2 || !card) return;
+      card.querySelectorAll("[data-pk]").forEach(function(el){ var k = el.getAttribute("data-pk"); p2[k] = el.type === "checkbox" ? el.checked : el.value.trim(); });
+      p2.updatedAt = todayIso(); saveMediaMvp(); renderMediaMvp(true); toast("Package saved"); return; }
   });
   // ===== INTRO MEETINGS: invites from partnerwav@gmail.com with a Google Meet link =====
   // CloudWAV writes the invite from a template (filled in for each company), and the meet-invite server function
@@ -20573,6 +20986,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="tec-host">'+(host ? '<a href="'+attr(host)+'" target="_blank" rel="noopener noreferrer">'+esc(ceHost(e))+'</a>' : esc(ceHost(e)))+'</div>'
         + '<div class="tec-meta"><span>'+esc(bkkFmt(e.start, { hour:"2-digit", minute:"2-digit" }))+' - '+esc(bkkFmt(ceEnd(e).toISOString(), { hour:"2-digit", minute:"2-digit" }))+'</span><span>'+esc(ceWhere(e))+'</span>'+(e.price ? '<span>'+esc(e.price)+'</span>' : '')+'</div>'
         + (e.desc ? '<p>'+esc(e.desc)+'</p>' : '')
+        + ((e.sponsors || []).length ? '<div class="tec-sponsors" data-tec-sponsors>Sponsored by '+e.sponsors.map(function(x){ return esc(x.name); }).join(", ")+'</div>' : '')
         + '<div class="tec-actions">'+(reg ? '<a class="btn primary sm" href="'+attr(reg)+'" target="_blank" rel="noopener noreferrer" data-tec-register>Register</a>' : '')
           + '<a class="btn secondary sm" href="'+attr(ceGoogleUrl(e))+'" target="_blank" rel="noopener noreferrer" data-tec-google>Add to Google Calendar</a>'
           + '<button type="button" class="btn ghost sm" data-tec-ics="'+attr(e.id)+'">Apple / other (.ics)</button></div></div></article>';
@@ -20823,6 +21237,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (acct.role === "affiliate") state.myAffiliateId = acct.entity_id || null;
     if (acct.role === "investor") state.myInvestorId = acct.entity_id || null;
     if (acct.role === "member") state.myMemberId = acct.entity_id || null;
+    if (acct.role === "media") state.myMediaId = acct.entity_id || null;
     state.screen = HOME_SCREEN[acct.role];
     document.documentElement.classList.toggle("op-preview", canPreview());
     document.documentElement.classList.add("has-account");

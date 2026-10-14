@@ -850,6 +850,55 @@ select pg_temp.as_user(''); set role anon;
 select t('the public cannot see member profiles', (select count(*) from portal_records where collection='memberProfiles') = 0);
 reset role;
 
+-- ===== Media & Events partners, and requests for their services or the MVP Builder
+insert into auth.users(id, email) values ('00000000-0000-0000-0000-000000000041', 'pr@agency.test'), ('00000000-0000-0000-0000-000000000042', 'events@zipevent.test');
+insert into public.portal_users (id,email,role,entity_id,display_name) values
+ ('00000000-0000-0000-0000-000000000041','pr@agency.test','media','bright-pr','Bright PR'),
+ ('00000000-0000-0000-0000-000000000042','events@zipevent.test','media','zipevent','ZipEvent');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
+insert into portal_records(collection,id,data,readers,writers) values
+ ('mediaProfiles','bright-pr','{"id":"bright-pr","name":"Bright PR","status":"pending"}','{media:bright-pr}','{media:bright-pr}'),
+ ('mediaProfiles','zipevent','{"id":"zipevent","name":"ZipEvent","status":"approved"}','{*}','{media:zipevent}'),
+ ('mvpPackages','pkg-x','{"id":"pkg-x","name":"Quick MVP"}','{*}','{}');
+select t('CloudWAV can give a Media & Events partner a login', (select public.portal_setup_account('new.media@test.example','media','bright-pr','Bright PR','TempPass123') ->> 'id') is not null);
+delete from public.portal_users where email = 'new.media@test.example';
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000041'); set role authenticated;   -- Bright PR, not approved yet
+select t('a new partner cannot approve itself', fails($$update portal_records set data = data || '{"status":"approved"}' where collection='mediaProfiles' and id='bright-pr'$$));
+select t('...or list itself before it is approved', fails($$update portal_records set readers = '{*}' where collection='mediaProfiles' and id='bright-pr'$$));
+select t('...or set PartnerWAV''s fee', fails($$update portal_records set data = data || '{"feePct":0}' where collection='mediaProfiles' and id='bright-pr'$$));
+select t('...or publish offers yet', fails($$insert into portal_records(collection,id,data,readers,writers) values ('mediaOffers','mo-x','{"id":"mo-x","mediaId":"bright-pr"}','{*}','{media:bright-pr}')$$));
+select t('...or edit another partner', fails($$update portal_records set data = data || '{"name":"X"}' where collection='mediaProfiles' and id='zipevent'$$) or (select data->>'name' from portal_records where collection='mediaProfiles' and id='zipevent') = 'ZipEvent');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000042'); set role authenticated;   -- ZipEvent, approved
+insert into portal_records(collection,id,data,readers,writers) values ('mediaOffers','mo-z','{"id":"mo-z","mediaId":"zipevent","codeHash":"abc"}','{*}','{media:zipevent}');
+insert into portal_records(collection,id,data,readers,writers) values ('mediaOfferCodes','mo-z','{"id":"mo-z","mediaId":"zipevent","code":"ZIP26"}','{media:zipevent}','{media:zipevent}');
+insert into portal_records(collection,id,data,readers,writers) values ('mediaSponsorships','ms-z','{"id":"ms-z","mediaId":"zipevent","status":"applied"}','{media:zipevent}','{media:zipevent}');
+select t('an approved partner publishes offers and applies to sponsor', (select count(*) from portal_records where collection in ('mediaOffers','mediaOfferCodes','mediaSponsorships')) = 3);
+select t('...but cannot confirm its own sponsorship', fails($$update portal_records set data = data || '{"status":"confirmed"}' where collection='mediaSponsorships' and id='ms-z'$$));
+select t('...or share its codes', fails($$update portal_records set readers = '{*}' where collection='mediaOfferCodes' and id='mo-z'$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- a vendor
+select t('companies see listed partners and their offers, not pending ones or codes', (select array_agg(id order by id) from portal_records where collection in ('mediaProfiles','mediaOffers','mediaOfferCodes')) = array['mo-z','zipevent']);
+select t('companies see the MVP packages', (select count(*) from portal_records where collection='mvpPackages') = 1);
+insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-1','{"id":"sr-1","kind":"media","requesterKey":"vendor:intelsense","mediaId":"zipevent","status":"new"}','{vendor:intelsense,media:zipevent}','{vendor:intelsense}');
+insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-2','{"id":"sr-2","kind":"mvp","requesterKey":"vendor:intelsense","status":"new"}','{vendor:intelsense}','{vendor:intelsense}');
+select t('a company sends requests', (select count(*) from portal_records where collection='serviceRequests') = 2);
+select t('...but cannot mark one won or set the fee', fails($$update portal_records set data = data || '{"status":"won"}' where collection='serviceRequests' and id='sr-1'$$)
+  and fails($$update portal_records set data = data || '{"fee":0}' where collection='serviceRequests' and id='sr-1'$$));
+select t('...or send one as someone else', fails($$insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-3','{"id":"sr-3","kind":"mvp","requesterKey":"vendor:botnoi"}','{vendor:intelsense}','{vendor:intelsense}')$$));
+select t('...or show it to others', fails($$insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-4','{"id":"sr-4","kind":"mvp","requesterKey":"vendor:intelsense"}','{vendor:intelsense,partner:siam-digital}','{vendor:intelsense}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000042'); set role authenticated;   -- ZipEvent
+select t('the partner sees the request for its service, not the MVP request', (select array_agg(id) from portal_records where collection='serviceRequests') = array['sr-1']);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authenticated;   -- another vendor
+select t('other companies cannot see the requests', (select count(*) from portal_records where collection='serviceRequests') = 0);
+reset role;
+select pg_temp.as_user(''); set role anon;
+select t('the public sees none of it', (select count(*) from portal_records where collection in ('mediaProfiles','mediaOffers','serviceRequests','mvpPackages')) = 0);
+reset role;
+
 -- ===== Intro meeting invites: CloudWAV only
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;
 insert into portal_records(collection,id,data,readers,writers) values ('meetInvites','mi-x','{"id":"mi-x","email":"ann@acme.example"}','{}','{}');
