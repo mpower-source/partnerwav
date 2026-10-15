@@ -3731,7 +3731,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   ].sort();
 
   var partnerProfiles = [
-    { id:"siam-digital", name:"Siam Digital MSP", init:"SD", country:"Thailand", tagline:"Enterprise IT and AI-rollout specialists for banks and logistics groups across Bangkok.",
+    // sample partners, archived: hidden from the Partner Network and the partner lists
+    { id:"siam-digital", archivedAt:"2026-10-15", name:"Siam Digital MSP", init:"SD", country:"Thailand", tagline:"Enterprise IT and AI-rollout specialists for banks and logistics groups across Bangkok.",
       specialties:["Conversational AI","Enterprise IT","Banking & Finance"],
       credentials:["Reseller -- Intelsense AI","ISO 27001 (in progress)"],
       services:["Xero Accounting Setup","HubSpot CRM Setup","MSP Training & Certification"],
@@ -3741,7 +3742,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ],
       logo:dataLogo("SD","#5b3df5"), website:"https://siamdigitalmsp.example.com",
       social:{ linkedin:"https://linkedin.com/company/siam-digital-msp", twitter:"", facebook:"" } },
-    { id:"gulf-coast", name:"Gulf Coast VAR", init:"GC", country:"USA", tagline:"Healthcare and consumer-hardware fulfillment across the US Gulf Coast.",
+    { id:"gulf-coast", archivedAt:"2026-10-15", name:"Gulf Coast VAR", init:"GC", country:"USA", tagline:"Healthcare and consumer-hardware fulfillment across the US Gulf Coast.",
       specialties:["Consumer Hardware","Healthcare IT","Wearables"],
       credentials:["Affiliate -- Cross Connect"],
       services:["Wearable Device Integration","Healthcare IT Consulting","Hardware Procurement"],
@@ -3759,7 +3760,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       ],
       logo:VENDOR_LOGOS["portonics-dev"], logoSetup:1, website:"", social:{ linkedin:"", twitter:"", facebook:"" },
       vendorProgramId:"portonics-dev" },
-    { id:"riverside", name:"Riverside Telco", init:"RT", country:"USA", tagline:"Telecom and voice-AI channel manager building a Thai-vendor bench for US carriers.",
+    { id:"riverside", archivedAt:"2026-10-15", name:"Riverside Telco", init:"RT", country:"USA", tagline:"Telecom and voice-AI channel manager building a Thai-vendor bench for US carriers.",
       specialties:["Telecom / UCaaS","Channel Management","Voice AI"],
       credentials:["Channel Manager -- Botnoi Voice (draft)"],
       services:["Voice AI Platform Setup","Telecom Integration","Channel Management Services"],
@@ -4145,7 +4146,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     viewingPartnerId: null,
     viewingVendorId: null,
     activeConversation: null,
-    myProfileId: "siam-digital",
+    myProfileId: "cloudwav-consulting",
     myVendorId: "intelsense",
     tierUpgradeRequests: [],
     mpSpecialtyDraft: [],
@@ -11112,7 +11113,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var missing = CLOUD_COLLECTIONS.some(function(c){ return c.mode === "merge" && !Object.keys(CLOUD.inCloud[c.name] || {}).length; });
       if (isOp() && missing) await cloudSeed(true);
       if (isOp()) addIntelsenseSamples(true);
-      if (isOp()){ ensureOwnPartner(); ensurePortonicsHouse(); ensureBotnoiTiers(); ensureIntelsenseTiers(); ensureBotnoiLogo(); ensureIntelsenseProductLogos(); ensureVendorLogos(); cloudSchedule(); }
+      if (isOp()){ ensureOwnPartner(); retireSamplePartners(); ensurePortonicsHouse(); ensureBotnoiTiers(); ensureIntelsenseTiers(); ensureBotnoiLogo(); ensureIntelsenseProductLogos(); ensureVendorLogos(); cloudSchedule(); }
     } catch(e){
       console.warn("Cloud load failed:", e);
       CLOUD.loadFails = (CLOUD.loadFails || 0) + 1;
@@ -17940,7 +17941,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // The sign-in stays the operator's (the database sees PartnerWAV), so this is safe to leave on;
   // set OPERATOR_PREVIEW = false to turn it off once every company has its own login.
   var OPERATOR_PREVIEW = true;
-  var PREVIEW_KNOWN = { partner:["cloudwav-consulting","siam-digital","gulf-coast","portonics","riverside"], affiliate:["techbridge-aff","asian-connect-aff"] };
+  var PREVIEW_KNOWN = { partner:["cloudwav-consulting","portonics"], affiliate:["techbridge-aff","asian-connect-aff"] };
   // CloudWAV Consulting is also a partner (reselling Intelsense and others) -- same login as the operator.
   var OWN_PARTNER_ID = "cloudwav-consulting", OWN_PARTNER_NAME = "CloudWAV Consulting";
   function isOwnPartner(){ return canPreview() && state.role === "partner" && state.myProfileId === OWN_PARTNER_ID; }
@@ -20617,6 +20618,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // ----- Dev Leads that come from the MVP Builder wizard: sent to CloudWAV at once, then to a software house
   function addUnassignedDevLead(req){ projectReferrals.unshift(newDevLead(req, null, {})); saveReferrals(); }
+  // The three sample partners are archived (hidden), also in the cloud copy: the Operator's session writes it once
+  function retireSamplePartners(){
+    var changed = false;
+    ["siam-digital", "gulf-coast", "riverside"].forEach(function(id){ var p = partnerById(id); if (p && !p.archivedAt){ p.archivedAt = todayIso(); changed = true; } });
+    if (changed){ saveVendorData(); cloudSchedule(); }
+  }
   // Portonics is a software house from the start (its Joint Venture listing). Its terms can be edited under Software houses.
   function ensurePortonicsHouse(){
     if (softwareHouses.some(function(h){ return h.id === "portonics"; })) return;
