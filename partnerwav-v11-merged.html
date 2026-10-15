@@ -11106,7 +11106,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var missing = CLOUD_COLLECTIONS.some(function(c){ return c.mode === "merge" && !Object.keys(CLOUD.inCloud[c.name] || {}).length; });
       if (isOp() && missing) await cloudSeed(true);
       if (isOp()) addIntelsenseSamples(true);
-      if (isOp()){ ensureOwnPartner(); ensureBotnoiTiers(); ensureIntelsenseTiers(); ensureBotnoiLogo(); ensureIntelsenseProductLogos(); ensureVendorLogos(); cloudSchedule(); }
+      if (isOp()){ ensureOwnPartner(); ensurePortonicsHouse(); ensureBotnoiTiers(); ensureIntelsenseTiers(); ensureBotnoiLogo(); ensureIntelsenseProductLogos(); ensureVendorLogos(); cloudSchedule(); }
     } catch(e){
       console.warn("Cloud load failed:", e);
       CLOUD.loadFails = (CLOUD.loadFails || 0) + 1;
@@ -13703,7 +13703,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           return '<div class="deal-row" data-ref-row="'+esc(r.id)+'" style="flex-wrap:wrap;"><span class="deal-row-name">'+esc(r.client.company)
             + '<span class="field-note" style="display:block;font-weight:400;">'+esc(h.name)+' · '+esc(REF_LEVELS[r.level] || r.level)+(isOp ? ' · from '+esc(from) : '')+' · registered '+esc(r.registeredAt)+'</span>'
             + '<span class="field-note" style="display:block;font-weight:400;">'+(f.resell ? 'Resell -- '+esc(f.t.resellDiscount)+'% partner discount' : (f.collected ? 'Collected '+fmtMoney(f.collected, r.currency)+' · '+(isOp ? 'fee '+fmtMoney(f.fee, r.currency) : 'your share '+fmtMoney(f.partnerFee, r.currency)) : 'Estimated fee '+fmtMoney(isOp ? f.estimate : f.estimate * f.partnerPct / 100, r.currency)+' on the stated budget'))+'</span></span>'
-            + refBadge(r) + (r.source === "mvp" && !r.houseId && isOp ? '<div class="svc-op" style="width:100%;"><select class="filter app-select" data-dl-assign-to="'+esc(r.id)+'" aria-label="Software house">'+houseOptions("", "", "Choose a software house")+'</select><button type="button" class="btn primary xs" data-dl-assign="'+esc(r.id)+'">Send to house</button></div>' : '') + '<button type="button" class="btn secondary sm" data-ref-view="'+esc(r.id)+'">Open</button></div>';
+            + refBadge(r) + devLeadSendHtml(r, isOp) + '<button type="button" class="btn secondary sm" data-ref-view="'+esc(r.id)+'">Open</button></div>';
         }).join("") + '</div>' : '<div class="empty">No referrals yet.</div>');
   }
   function vendorReferralsHtml(){
@@ -13864,7 +13864,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     box.innerHTML = '<div class="deal-layout"><div style="display:flex;flex-direction:column;gap:16px;">'
       + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
         + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><h2 style="font-size:1.15rem;margin:0;margin-right:auto;">'+esc(r.client.company)+'</h2>'+refBadge(r)+'</div>'
-        + '<div class="deal-facts">'+fact("Software house", h.name)+fact("Involvement", (REF_LEVELS[r.level] || r.level) + (r.level === "cosell" ? " (" + (r.cosellLead === "cloudwav" ? "PartnerWAV leads" : "partner leads") + ")" : ""))+fact("Referred by", keyName(r.referrerKey))
+        + '<div class="deal-facts">'+fact("Software house", h.name)+fact("Involvement", (REF_LEVELS[r.level] || r.level) + (r.level === "cosell" ? " (" + (r.cosellLead === "cloudwav" ? "PartnerWAV leads" : "partner leads") + ")" : ""))+fact("Referred by", devLeadReq(r) && devLeadReq(r).requesterKey ? keyName(devLeadReq(r).requesterKey) : keyName(r.referrerKey))
           + fact("Contact", [r.client.contact, r.client.email, r.client.phone].filter(Boolean).join(" · "))+fact("Budget", r.budget ? fmtMoney(r.budget, cur) : "")+fact("Timeline", r.timeline)
           + fact("Registered", r.registeredAt)+fact("Respond by", r.respondBy)+fact("Protected until", r.protectedUntil || (st === "registered" ? "after acceptance" : ""))
           + (r.contractValue ? fact("Contract value", fmtMoney(r.contractValue, cur)) : '')+(r.rejectReason ? fact("Reason", r.rejectReason) : '')+(r.lostReason ? fact("Lost because", r.lostReason) : '')+'</div>'
@@ -13879,8 +13879,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<div class="map-stats"><div class="map-stat"><b>'+fmtMoney(f.fee, cur)+'</b>total fee'+(f.minApplied ? ' (minimum)' : '')+(f.capApplied ? ' (capped)' : '')+'</div>'
           + (f.partnerPct ? '<div class="map-stat"><b>'+fmtMoney(f.partnerFee, cur)+'</b>'+esc(keyName(r.referrerKey))+'</div><div class="map-stat"><b>'+fmtMoney(f.cloudwavFee, cur)+'</b>PartnerWAV</div><div class="map-stat"><b>'+fmtMoney(f.paidOut, cur)+'</b>paid out</div>' : '')+'</div>')
       + '</div></div>'
-      + '<div style="display:flex;flex-direction:column;gap:16px;">' + ops
-        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;"><div class="aff-section-title">Notes between '+esc(keyName(r.referrerKey))+' and PartnerWAV</div>'
+      + '<div style="display:flex;flex-direction:column;gap:16px;">' + (r.source === "mvp" && isOp ? devLeadRequestHtml(r) : '') + ops
+        + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;"><div class="aff-section-title">'+(r.source === "mvp" ? 'Notes on this lead' : 'Notes between '+esc(keyName(r.referrerKey))+' and PartnerWAV')+'</div>'
           + '<div class="deal-thread">'+((r.thread || []).length ? r.thread.map(function(m){ var mine = m.from === myMsgKey(); return '<div class="msg-bubble-row'+(mine ? " mine" : "")+'"><div class="msg-bubble">'+(mine ? "" : '<span class="post-author" style="display:block;font-size:.72rem;">'+esc(keyName(m.from))+'</span>')+'<p class="post-text" style="white-space:pre-wrap;">'+esc(m.text)+'</p><span class="post-time">'+esc(timeAgo(m.at))+'</span></div></div>'; }).join("") : '<div class="empty" style="padding:10px;">No notes yet.</div>')+'</div>'
           + '<textarea id="refNote" rows="2" placeholder="Add a note…"></textarea><div class="cfg-actions"><button type="button" class="btn secondary sm" data-ref-note>Add note</button></div></div>'
       + '</div></div>';
@@ -17844,6 +17844,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   loadFlyers();
   loadMessages();
   loadReferrals();
+  ensurePortonicsHouse();
   loadProgramFees();
   loadChannels();
   loadSignups();
@@ -20592,9 +20593,60 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // ----- Dev Leads that come from the MVP Builder wizard: sent to CloudWAV at once, then to a software house
   function addUnassignedDevLead(req){ projectReferrals.unshift(newDevLead(req, null, {})); saveReferrals(); }
+  // Portonics is a software house from the start (its Joint Venture listing). Its terms can be edited under Software houses.
+  function ensurePortonicsHouse(){
+    if (softwareHouses.some(function(h){ return h.id === "portonics"; })) return;
+    softwareHouses.push({ id:"portonics", name:"Portonics Ltd.", website:"", city:"Dhaka", specialties:"Custom software, digital transformation and AI, hardware-linked deployments",
+      contactName:"", contactEmail:"", status:"active", prospectId:"", partnerId:"portonics", programId:"portonics-dev", terms: JSON.parse(JSON.stringify(DEFAULT_REFERRAL_TERMS)) });
+    saveReferrals();
+  }
+  // The Operator checks a bigger request before it goes to a software house. Questions go back to the requester; the answers are typed in here.
+  function devLeadReq(r){ return serviceRequests.filter(function(x){ return x.id === r.mvpRequestId; })[0] || null; }
+  function clarifyOpen(r){ return !!(r && r.clarify && r.clarify.open); }
+  function clarifyAsk(id, text){
+    var r = refById(id), q = String(text || "").trim().slice(0, 1500); if (!r || r.source !== "mvp" || !q) return false;
+    var req = devLeadReq(r), t = nowStamp();
+    r.clarify = { open:true, questions:q, askedAt:t, answer:(r.clarify && r.clarify.answer) || "", answeredAt:(r.clarify && r.clarify.answeredAt) || "" };
+    r.progress = (r.progress || []).concat([{ at:t, stage:"Clarification requested", note:q.slice(0, 200) }]);
+    saveReferrals(); saveMediaMvp();
+    if (req && req.requesterKey) notify([req.requesterKey], "devlead", "Clarification needed: " + (r.client.company || "your request"), q.slice(0, 380), "mvp-builder");
+    return true;
+  }
+  function clarifyAnswer(id, text){
+    var r = refById(id), a = String(text || "").trim().slice(0, 1500); if (!r || !clarifyOpen(r) || !a) return false;
+    var t = nowStamp();
+    r.clarify.open = false; r.clarify.answer = a; r.clarify.answeredAt = t;
+    r.progress = (r.progress || []).concat([{ at:t, stage:"Clarification answered", note:a.slice(0, 200) }]);
+    saveReferrals(); saveMediaMvp(); return true;
+  }
+  // Send to a house from the Software Referrals list: not while a clarification is still open
+  function devLeadSendHtml(r, isOp){
+    if (!isOp || r.source !== "mvp" || r.houseId) return "";
+    if (clarifyOpen(r)) return '<span class="badge warn">Waiting for clarification</span>';
+    return '<div class="svc-op" style="width:100%;"><select class="filter app-select" data-dl-assign-to="'+esc(r.id)+'" aria-label="Software house">'+houseOptions("", "", "Choose a software house")+'</select><button type="button" class="btn primary xs" data-dl-assign="'+esc(r.id)+'">Send to house</button></div>';
+  }
+  // What the requester wrote, with the clarification history and the Operator's checks before it goes out
+  function devLeadRequestHtml(r){
+    var req = devLeadReq(r) || {}, cl = r.clarify || {}, open = clarifyOpen(r), who = req.requesterKey ? keyName(req.requesterKey) : (r.client.company || "the requester");
+    var fact = function(l, v){ return '<div class="deal-fact"><span>'+l+'</span><span>'+(v ? esc(v) : '<span style="color:var(--ink-faint)">--</span>')+'</span></div>'; };
+    return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;"><div class="aff-section-title">The request from '+esc(who)+'</div>'
+      + '<div class="deal-facts">'+fact("Stage", labelOf(PRODUCT_STAGES, req.stage || ""))+fact("Team", labelOf(MVP_TEAMS, req.team || ""))+fact("Needs", (req.needs || []).join(", "))+fact("Budget", req.budget || "")+fact("Timeline", req.timeline || r.timeline || "")+'</div>'
+      + '<div><div class="aff-section-title" style="margin-bottom:6px;">What they wrote</div><p class="program-desc" style="margin:0;white-space:pre-wrap;">'+esc(req.details || r.need || "")+'</p></div>'
+      + (cl.questions ? '<div style="border-top:1px solid var(--line);padding-top:10px;"><div class="aff-section-title">'+(open ? "Waiting for clarification" : "Clarification")+'</div><span class="field-note">Asked '+esc(cl.askedAt || "")+'</span>'
+        + '<p class="program-desc" style="margin:4px 0 0;white-space:pre-wrap;">'+esc(cl.questions)+'</p>'
+        + (cl.answer ? '<div class="aff-section-title" style="margin-top:10px;">Answer'+(cl.answeredAt ? ', '+esc(cl.answeredAt) : '')+'</div><p class="program-desc" style="margin:4px 0 0;white-space:pre-wrap;">'+esc(cl.answer)+'</p>' : '')
+        + (open ? '<div class="field-row" style="margin-top:8px;"><label for="clAnswer">What the requester answered</label><textarea id="clAnswer" rows="3" maxlength="1500"></textarea></div><div class="cfg-actions"><button type="button" class="btn secondary sm" data-cl-answer>Save answer</button></div>' : '')
+        + '</div>' : '')
+      + (!r.houseId && !open ? '<div style="border-top:1px solid var(--line);padding-top:10px;"><div class="aff-section-title">'+(cl.questions ? "Ask again" : "Not clear enough yet?")+'</div>'
+        + '<div class="field-row" style="margin-top:6px;"><label for="clAsk">Questions for the requester</label><textarea id="clAsk" rows="3" maxlength="1500" placeholder="e.g. 1. Which countries and languages? 2. How many users in year one? 3. Who owns the data?"></textarea></div>'
+        + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-cl-ask>Ask for clarification</button></div>'
+        + '<div class="aff-section-title" style="margin-top:10px;">Send to a software house</div><div class="svc-op" style="width:100%;"><select class="filter app-select" data-dl-assign-to="'+esc(r.id)+'" aria-label="Software house">'+houseOptions("", "", "Choose a software house")+'</select><button type="button" class="btn primary xs" data-dl-assign="'+esc(r.id)+'">Send to house</button></div></div>' : '')
+      + '</div>';
+  }
   // CloudWAV sends an unassigned lead (or one moved on) to a software house: the house gets its 5-day clock
   function devLeadAssignHouse(id, houseId){
     var r = refById(id), h = houseById(houseId); if (!r || !h) return false;
+    if (clarifyOpen(r)){ toast("Get the clarification answered first"); return false; }
     var t = todayIso(), req = serviceRequests.filter(function(x){ return x.id === r.mvpRequestId; })[0];
     r.houseId = h.id; r.status = "registered"; r.respondBy = businessDaysFrom(t, DEV_LEAD_DAYS.respond); r.closeBy = daysFrom(t, DEV_LEAD_DAYS.close); r.termsSnapshot = termsOf(h);
     r.progress = (r.progress || []).concat([{ at:nowStamp(), stage:"Sent to " + h.name, note:"" }]);
@@ -20612,7 +20664,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("[data-notif-readall]")){ notifMarkRead(notifMine().map(function(n){ return n.id; })); renderBell(); return; }
     if (t.closest("[data-notif-alerts]")){ notifAsk(); renderBell(); return; }
     if ((b = t.closest("[data-dl-assign]"))){ var aid = b.getAttribute("data-dl-assign"), sel = document.querySelector('[data-dl-assign-to="' + aid + '"]');
-      if (sel && sel.value && devLeadAssignHouse(aid, sel.value)) toast("Sent to the software house"); else toast("Choose a software house first"); return; }
+      if (!sel || !sel.value){ toast("Choose a software house first"); return; }
+      if (devLeadAssignHouse(aid, sel.value)) toast("Sent to the software house"); return; }
+    if (t.closest("[data-cl-ask]")){ var cq = document.getElementById("clAsk");
+      if (!cq || !clarifyAsk(state.refViewId, cq.value)){ toast("Write the questions first"); return; }
+      toast("Questions sent to the requester"); renderReferralView(); return; }
+    if (t.closest("[data-cl-answer]")){ var ca = document.getElementById("clAnswer");
+      if (!ca || !clarifyAnswer(state.refViewId, ca.value)){ toast("Paste the answer first"); return; }
+      toast("Answer saved"); renderReferralView(); return; }
     if (!t.closest(".notif-menu")) openBell(false);
   });
 
