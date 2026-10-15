@@ -1054,4 +1054,20 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authent
 select t('CloudWAV sees the answer', (select data #>> '{clarify,answer}' from portal_records where collection='serviceRequests' and id='sr-clar') = 'Thailand first, then Vietnam');
 reset role;
 
+-- ===== Contact and budget on a Dev Lead: the contact from the wizard is kept; the house's official quote becomes the budget
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- Intelsense sends a bigger build with a contact
+insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-ct','{"id":"sr-ct","kind":"mvp","route":"devlead","requesterKey":"vendor:intelsense","requesterName":"Intelsense","budget":"USD 5,000 - 15,000","contact":{"name":"Dara","email":"dara@example.com","phone":"+66 81 000 0000"},"status":"new"}','{vendor:intelsense}','{vendor:intelsense}');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV
+select t('the Dev Lead carries the contact from the wizard', (select data #>> '{client,contact}' || ' ' || (data #>> '{client,email}') from portal_records where collection='projectReferrals' and id='dl-sr-ct') = 'Dara dara@example.com');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV puts a lead with the house
+insert into portal_records(collection,id,data,readers,writers) values ('projectReferrals','dl-budget','{"id":"dl-budget","source":"mvp","mvpRequestId":"sr-ct","houseId":"sh-x","referrerKey":"operator:","status":"accepted","acceptedAt":"2026-10-15","quoteBy":"2026-10-29","budget":0,"currency":"USD","client":{"company":"Intelsense","contact":"Dara"},"progress":[]}','{operator:,partner:siam-digital}','{operator:,partner:siam-digital}');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;   -- Xray Software, the house (Siam Digital's login)
+update portal_records set data = data || '{"status":"proposal","quoteValue":250000,"budget":250000,"currency":"USD","progress":[{"stage":"Quote sent"}]}' where collection='projectReferrals' and id='dl-budget';
+select t('the house sends its official quote, which becomes the budget', (select data->>'budget' from portal_records where collection='projectReferrals' and id='dl-budget') = '250000');
+select t('...but the house still cannot change the client', fails($$update portal_records set data = data || '{"client":{"company":"Someone else"}}' where collection='projectReferrals' and id='dl-budget'$$));
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

@@ -2037,6 +2037,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             <div><label>Credentials (comma-separated)</label><input type="text" id="profileCredentials" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" placeholder="e.g., Reseller -- Intelsense AI" /></div>
             <div><label>Website</label><input type="url" id="profileWebsite" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div><label>LinkedIn URL</label><input type="url" id="profileLinkedin" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
+            <div><label>Contact person (used to fill in MVP Builder requests)</label><input type="text" id="profileContactName" placeholder="Name" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;margin-bottom:6px;" /><input type="email" id="profileContactEmail" placeholder="Email" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;margin-bottom:6px;" /><input type="text" id="profileContactPhone" placeholder="Phone or WhatsApp" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;" /></div>
             <div class="field-row">
               <label>Logo</label>
               <div class="logo-upload-row">
@@ -9074,6 +9075,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     document.getElementById("profileCredentials").value = profile ? profile.credentials.join(", ") : "";
     document.getElementById("profileWebsite").value = profile ? profile.website : "";
     document.getElementById("profileLinkedin").value = profile ? (profile.social && profile.social.linkedin) : "";
+    document.getElementById("profileContactName").value = profile && profile.contact ? profile.contact.name || "" : "";
+    document.getElementById("profileContactEmail").value = profile && profile.contact ? profile.contact.email || "" : "";
+    document.getElementById("profileContactPhone").value = profile && profile.contact ? profile.contact.phone || "" : "";
     setLogoValue("pe", profile && profile.logo ? profile.logo : "");
     var servicesContainer = document.getElementById("partnerServicesContainer");
     if (servicesContainer){
@@ -9102,6 +9106,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var credentials = document.getElementById("profileCredentials").value.split(",").map(function(c){ return c.trim(); }).filter(Boolean);
     var website = document.getElementById("profileWebsite").value.trim();
     var linkedin = document.getElementById("profileLinkedin").value.trim();
+    var contact = { name: document.getElementById("profileContactName").value.trim().slice(0, 120), email: document.getElementById("profileContactEmail").value.trim().slice(0, 160), phone: document.getElementById("profileContactPhone").value.trim().slice(0, 40) };
+    if (contact.email && !validEmail(contact.email)){ toast("Check the contact email"); return; }
     var logo = document.getElementById("peLogo").value;
 
     var servicesContainer = document.getElementById("partnerServicesContainer");
@@ -9121,7 +9127,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (idx >= 0){
         partnerProfiles[idx] = Object.assign(partnerProfiles[idx], {
           name: name, country: country, tagline: tagline, specialties: specialties,
-          credentials: credentials, website: website, services: services, logo: logo, social: Object.assign({}, partnerProfiles[idx].social || {}, {linkedin: linkedin})
+          credentials: credentials, website: website, services: services, logo: logo, contact: contact, social: Object.assign({}, partnerProfiles[idx].social || {}, {linkedin: linkedin})
         });
         if (state.role === "partner") partnerProfiles[idx].needsProfile = false;
         saveVendorData();
@@ -9132,7 +9138,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       partnerProfiles.push({
         id: newId, name: name, init: name.substring(0,2).toUpperCase(), country: country, tagline: tagline,
         specialties: specialties, credentials: credentials, pastProjects: [], logo: logo, website: website,
-        services: services, social: {linkedin: linkedin, twitter: "", facebook: ""}, status: "active", archivedAt: null
+        services: services, contact: contact, social: {linkedin: linkedin, twitter: "", facebook: ""}, status: "active", archivedAt: null
       });
       toast("Profile created");
     }
@@ -20275,8 +20281,13 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   var MVP_TEAMS = [["inhouse", "We have developers in-house"], ["outsourced", "We work with an agency or freelancers"], ["none", "We have no developers yet"]];
   var MVP_WIZARD_STEPS = ["Where is the product today?", "Who builds it today?", "What do you need?", "Budget and details", "Our suggestion"];
+  // The contact a software house will ask for, pre-filled from the company's partner profile (or its login email)
+  function partnerContactDefaults(){
+    var k = svcRequesterKey(), p = k.indexOf("partner:") === 0 ? partnerById(k.slice(8)) : null, c = (p && p.contact) || {};
+    return { name: c.name || "", email: c.email || (state.account && state.account.email) || "", phone: c.phone || "" };
+  }
   function mvpWizardModal(){
-    var w = { step:0, stage:productStageOf(svcRequesterKey()), team:"", needs:[], roles:[], budget:"", timing:"", details:"", link:"" };
+    var w = { step:0, stage:productStageOf(svcRequesterKey()), team:"", needs:[], roles:[], budget:"", timing:"", details:"", link:"", contact:partnerContactDefaults() };
     var back = openModal('<div class="modal-head"><h2>Find the right help</h2><button class="modal-close" aria-label="Close">×</button></div>'
       + '<div class="modal-body meet-form" id="mvpWizBody" style="display:flex;flex-direction:column;gap:10px;"></div>'
       + '<div id="mvpWizErr" class="login-msg bad" role="alert" hidden></div>'
@@ -20290,7 +20301,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (w.step === 1){ var t = el.querySelector('input[name="mw-team"]:checked'); w.team = t ? t.value : ""; }
       if (w.step === 2){ w.needs = [].map.call(el.querySelectorAll('input[name="mw-need"]:checked'), function(x){ return x.value; });
         w.roles = [].map.call(el.querySelectorAll('input[name="mw-role"]:checked'), function(x){ return x.value; }); }
-      if (w.step === 3){ w.budget = el.querySelector("#mwBudget").value; w.timing = el.querySelector("#mwTiming").value.trim(); w.details = el.querySelector("#mwDetails").value.trim(); w.link = el.querySelector("#mwLink").value.trim(); }
+      if (w.step === 3){ w.budget = el.querySelector("#mwBudget").value; w.timing = el.querySelector("#mwTiming").value.trim(); w.details = el.querySelector("#mwDetails").value.trim(); w.link = el.querySelector("#mwLink").value.trim();
+        w.contact = { name: el.querySelector("#mwCName").value.trim().slice(0, 120), email: el.querySelector("#mwCEmail").value.trim().slice(0, 160), phone: el.querySelector("#mwCPhone").value.trim().slice(0, 40) }; }
     };
     var check = function(){
       var msg = "";
@@ -20299,6 +20311,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (w.step === 2 && !w.needs.length) msg = "Choose at least one thing you need.";
       if (w.step === 2 && w.needs.indexOf("leadership") > -1 && !w.roles.length) msg = "Choose the fractional role or roles you want.";
       if (w.step === 3 && !w.details) msg = "Tell us what is going on.";
+      if (w.step === 3 && !w.contact.name) msg = "Add the contact name, so the software house knows who to call.";
+      if (w.step === 3 && w.contact.name && !w.contact.email) msg = "Add the contact email.";
+      if (w.step === 3 && w.contact.email && !validEmail(w.contact.email)) msg = "Check the contact email.";
       var e = back.querySelector("#mvpWizErr"); e.textContent = msg; e.hidden = !msg; return !msg;
     };
     var paint = function(){
@@ -20310,7 +20325,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (s === 3) h += '<div class="field-row"><label for="mwBudget">Budget</label><select id="mwBudget" class="filter app-select">'+MVP_BUDGETS.map(function(x){ return '<option'+(w.budget === x ? ' selected' : '')+'>'+esc(x)+'</option>'; }).join("")+'</select></div>'
         + '<div class="field-row"><label for="mwTiming">When do you need it? (optional)</label><input type="text" id="mwTiming" maxlength="60" value="'+attr(w.timing)+'"></div>'
         + '<div class="field-row"><label for="mwDetails">What is the idea, or what needs doing?</label><textarea id="mwDetails" rows="4" maxlength="1500">'+esc(w.details)+'</textarea></div>'
-        + '<div class="field-row"><label for="mwLink">Link to the app or code, if there is one (optional)</label><input type="text" id="mwLink" maxlength="300" placeholder="https://" value="'+attr(w.link)+'"></div>';
+        + '<div class="field-row"><label for="mwLink">Link to the app or code, if there is one (optional)</label><input type="text" id="mwLink" maxlength="300" placeholder="https://" value="'+attr(w.link)+'"></div>'
+        + '<div class="field-note" style="margin-top:4px;"><b>Contact for the software house</b> -- filled in from your company profile; change it here if someone else should be contacted.</div>'
+        + '<div class="field-row"><label for="mwCName">Contact name</label><input type="text" id="mwCName" maxlength="120" value="'+attr(w.contact.name)+'"></div>'
+        + '<div class="meet-two"><div class="field-row"><label for="mwCEmail">Email</label><input type="email" id="mwCEmail" maxlength="160" value="'+attr(w.contact.email)+'"></div>'
+        + '<div class="field-row"><label for="mwCPhone">Phone or WhatsApp (optional)</label><input type="text" id="mwCPhone" maxlength="40" value="'+attr(w.contact.phone)+'"></div></div>';
       if (s === 4){ var cards = mvpRouteCards(w);
         h += (cards.length ? cards.map(function(c){ return '<div class="card card-pad"><b>'+esc(c.title)+'</b><p class="field-note" style="margin:6px 0 0;">'+esc(c.text)+'</p></div>'; }).join("") : '<div class="empty">Choose what you need first.</div>');
         h += '<span class="field-note">Sent together as one request, so nothing is lost. Each part goes to the right team, so nothing is lost.</span>'; }
@@ -20329,7 +20348,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (rt.build){ var pk = rt.packageId ? mvpPackages.filter(function(p){ return p.id === rt.packageId; })[0] : null;
         serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"mvp", route:rt.route, requesterKey:me, requesterName:nm, packageId:rt.packageId || "", serviceName:pk ? pk.name : "MVP Builder",
           needs:w.needs.filter(function(x){ return x !== "leadership"; }).map(function(x){ return labelOf(MVP_NEEDS, x); }), stage:w.stage, team:w.team,
-          details: base + (rt.route === "devlead" ? "\nBigger build: for a software house as a Dev Lead." : ""), budget:w.budget, timeline:w.timing, status:"new", createdAt:now }); if (rt.route === "devlead" && !notifLive()) addUnassignedDevLead(serviceRequests[serviceRequests.length - 1]); notify(["operator"], "mvp", (rt.route === "devlead" ? "Bigger build: " : "MVP Builder: ") + nm, base.slice(0, 200), "operator-services"); }
+          details: base + (rt.route === "devlead" ? "\nBigger build: for a software house as a Dev Lead." : ""), budget:w.budget, timeline:w.timing, contact:w.contact, status:"new", createdAt:now }); if (rt.route === "devlead" && !notifLive()) addUnassignedDevLead(serviceRequests[serviceRequests.length - 1]); notify(["operator"], "mvp", (rt.route === "devlead" ? "Bigger build: " : "MVP Builder: ") + nm, base.slice(0, 200), "operator-services"); }
       if (rt.leadership){ serviceRequests.push({ id:"sr-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind:"fractional", requesterKey:me, requesterName:nm, serviceName:"Fractional leadership",
           roles:w.roles.slice(), stage:w.stage, details:base, timeline:w.timing, status:"new", createdAt:now }); notify(["operator"], "fractional", "Fractional leadership request: " + nm, w.roles.join(", "), "operator-services"); }
       setProductStage(me, w.stage); saveMediaMvp(); closeModal(); renderMediaMvp(true); renderFractionalDev(true);
@@ -20393,7 +20412,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var t = todayIso(), from = opts && opts.from ? opts.from : null, old = from ? houseById(from.houseId) : null;
     return { id:"ref-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), source:"mvp", mvpRequestId:req ? req.id : "", movedFrom: from ? from.id : "",
       houseId: h ? h.id : "", referrerKey:"operator:", level:"referral", cosellLead:"cloudwav",
-      client:{ company: req ? req.requesterName || "" : "", contact:"", email:"", phone:"" }, need: req ? req.details || "" : "", budget:0, currency:"USD", timeline: req ? req.timeline || "" : "", disclosed:true,
+      client:{ company: req ? req.requesterName || "" : "", contact: req && req.contact ? req.contact.name || "" : "", email: req && req.contact ? req.contact.email || "" : "", phone: req && req.contact ? req.contact.phone || "" : "" },
+      need: req ? req.details || "" : "", budget:0, currency:"USD", timeline: req ? req.timeline || "" : "", disclosed:true,
       status: h ? "registered" : "new", registeredAt:t, respondBy: h ? businessDaysFrom(t, DEV_LEAD_DAYS.respond) : "", quoteBy:"", closeBy:daysFrom(t, DEV_LEAD_DAYS.close), acceptedAt:"", protectedUntil:"", contractValue:null, wonAt:"", quoteValue:null, rejectReason:"",
       payments:[], payouts:[], thread:[], termsSnapshot: termsOf(h),
       progress:[{ at:nowStamp(), stage: from ? "Moved on from " + (old ? old.name : "another house") : (h ? "Sent by PartnerWAV" : "Waiting for a software house"), note: opts && opts.note ? opts.note : "" }] };
@@ -20427,8 +20447,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var log = function(stage, text){ r.progress = (r.progress || []).concat([{ at:nowStamp(), stage:stage, note:text || "" }]); };
     if (act === "accept"){ r.status = "accepted"; r.acceptedAt = t; r.quoteBy = businessDaysFrom(t, DEV_LEAD_DAYS.quote); log("Accepted", note); }
     else if (act === "decline"){ r.status = "rejected"; r.rejectReason = note || ""; log("Declined", note); }
-    else if (act === "quote"){ r.status = "proposal"; r.quotedAt = t; if (amt) r.quoteValue = amt; log("Quote sent" + (amt ? ": " + usd(amt) : ""), note); }
-    else if (act === "won"){ r.status = "won"; r.wonAt = t; r.contractValue = amt || r.quoteValue || null; log("Won: contract signed", note); if (req){ req.status = "won"; req.value = r.contractValue; } }
+    else if (act === "quote"){ r.status = "proposal"; r.quotedAt = t; if (amt){ r.quoteValue = amt; r.budget = amt; r.currency = "USD"; } log("Quote sent" + (amt ? ": " + usd(amt) : ""), note); }
+    else if (act === "won"){ r.status = "won"; r.wonAt = t; r.contractValue = amt || r.quoteValue || null; if (r.contractValue){ r.budget = r.contractValue; r.currency = "USD"; } log("Won: contract signed", note); if (req){ req.status = "won"; req.value = r.contractValue; } }
     else if (act === "lost"){ r.status = "lost"; log("Lost", note); }
     else if (act === "delivered"){ r.deliveredAt = t; log("Delivered", note); markDelivered(req); }
     else if (act === "note"){ log("Note", note); }
@@ -20672,7 +20692,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var r = refById(id), h = houseById(houseId); if (!r || !h) return false;
     if (clarifyOpen(r)){ toast("Get the clarification answered first"); return false; }
     var t = todayIso(), req = serviceRequests.filter(function(x){ return x.id === r.mvpRequestId; })[0];
-    r.houseId = h.id; r.status = "registered"; r.respondBy = businessDaysFrom(t, DEV_LEAD_DAYS.respond); r.closeBy = daysFrom(t, DEV_LEAD_DAYS.close); r.termsSnapshot = termsOf(h);
+    r.houseId = h.id; r.status = "registered"; r.registeredAt = t; r.respondBy = businessDaysFrom(t, DEV_LEAD_DAYS.respond); r.closeBy = daysFrom(t, DEV_LEAD_DAYS.close); r.termsSnapshot = termsOf(h);
     r.progress = (r.progress || []).concat([{ at:nowStamp(), stage:"Sent to " + h.name, note:"" }]);
     if (req){ req.houseId = h.id; if (req.status === "new") req.status = "referred"; req.updatedAt = nowStamp(); }
     saveReferrals(); saveMediaMvp();

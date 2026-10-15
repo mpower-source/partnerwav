@@ -263,7 +263,7 @@ begin
   end if;
   if house_lead then
     if exists (select 1 from jsonb_object_keys(prev.data || new.data) f
-        where f not in ('status', 'acceptedAt', 'quoteBy', 'quotedAt', 'quoteValue', 'wonAt', 'contractValue', 'rejectReason', 'deliveredAt', 'progress', 'thread', 'unreadPartner', 'unreadVendor', 'unreadOperator', 'unreadAffiliate')
+        where f not in ('status', 'acceptedAt', 'quoteBy', 'quotedAt', 'quoteValue', 'budget', 'currency', 'wonAt', 'contractValue', 'rejectReason', 'deliveredAt', 'progress', 'thread', 'unreadPartner', 'unreadVendor', 'unreadOperator', 'unreadAffiliate')
           and coalesce(new.data -> f, 'null'::jsonb) is distinct from coalesce(prev.data -> f, 'null'::jsonb)) then
       raise exception 'A software house can only update the progress of its own dev leads';
     end if;
@@ -1389,7 +1389,9 @@ begin
   values ('projectReferrals', 'dl-' || p_req_id, jsonb_build_object(
       'id', 'dl-' || p_req_id, 'source', 'mvp', 'mvpRequestId', p_req_id, 'movedFrom', '', 'houseId', '',
       'referrerKey', 'operator:', 'level', 'referral', 'cosellLead', 'cloudwav',
-      'client', jsonb_build_object('company', left(coalesce(p_req ->> 'requesterName', ''), 160), 'contact', '', 'email', '', 'phone', ''),
+      'client', jsonb_build_object('company', left(coalesce(p_req ->> 'requesterName', ''), 160),
+          'contact', left(coalesce(p_req #>> '{contact,name}', ''), 120), 'email', left(coalesce(p_req #>> '{contact,email}', ''), 160),
+          'phone', left(coalesce(p_req #>> '{contact,phone}', ''), 40)),
       'need', left(coalesce(p_req ->> 'details', ''), 1500), 'budget', 0, 'currency', 'USD',
       'timeline', left(coalesce(p_req ->> 'timeline', ''), 60), 'disclosed', true,
       'status', 'new', 'registeredAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD'),
