@@ -6813,7 +6813,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var ens = enrollments.filter(function(e){ return e.programId === v.id && e.status !== "declined"; });
     var active = ens.filter(function(e){ return e.status === "active"; });
     var waiting = ens.filter(function(e){ return e.status === "pending" || e.status === "draft"; });
-    var recent = active.filter(function(e){ return e.joined && (Date.now() - new Date(e.joined + "T00:00:00").getTime()) / 86400000 <= 30; });
+    var recent = active.filter(function(e){ return e.joined && (Date.now() - new Date(e.joined + "T00:00:00").getTime()) / 86400000 <= 365; });
     var revenue = 0, closed = 0;
     ens.forEach(function(e){ var st = enStats(e); revenue += st.revenue; closed += st.deals; });
     var open = state.approvals.filter(function(a){ return (a.programId === v.id || a.program === v.name) && (a.status || "pending") === "pending"; });
@@ -6845,7 +6845,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     };
     var plural = function(n, w){ return n + " " + w + (n === 1 ? "" : "s"); };
     row.innerHTML =
-      vTile("partners", "Active partners", active.length > 0, active.length, recent.length ? "\u2191 " + recent.length + " joined in the last 30 days" : waiting.length ? waiting.length + " more being onboarded" : "Across all tiers", ["6", "\u2191 4 joined in the last 12 months"])
+      vTile("partners", "Active partners", active.length > 0, active.length, recent.length ? "\u2191 " + recent.length + " joined in the last 12 months" : waiting.length ? waiting.length + " more being onboarded" : "Across all tiers", ["6", "\u2191 4 joined in the last 12 months"])
       + vTile("revenue", "Partner-sold revenue", revenue > 0 || closed > 0, money(revenue), plural(closed, "deal") + " closed · last 12 months", ["$254,000", "13 deals closed · last 12 months"])
       + vTile("deals", "Open deals", open.length > 0, open.length, pipeline ? pipeline + " in the pipeline" : "In review with PartnerWAV", ["3", "$61,500 in the pipeline"])
       + vTile("commission", "Commission to partners", comDeals > 0, commission, "Earned on " + plural(comDeals, "approved deal"), ["$38,100", "Earned on 13 approved deals"])
