@@ -2,7 +2,7 @@ from harness import *
 
 with sync_playwright() as p:
     b, pg = open_page(p)
-    for r, tops, secs in [("partner", 1, 5), ("vendor", 1, 4), ("affiliate", 2, 3), ("investor", 2, 2), ("member", 9, 0), ("media", 7, 0), ("operator", 1, 6)]:
+    for r, tops, secs in [("partner", 1, 5), ("vendor", 1, 4), ("affiliate", 2, 3), ("investor", 2, 2), ("member", 9, 0), ("media", 7, 1), ("operator", 1, 6)]:
         role(pg, r)
         nid = "#nav" + r.title()
         ok(pg.locator(nid + " > .navlink:visible").count() == tops and pg.locator(nid + " .navsec-head:visible").count() == secs, f"{r.title()} menu: {tops} top link(s) and {secs} sections")

@@ -1009,4 +1009,28 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authent
 select t('another company does not see it', (select count(*) from portal_records where collection='marketingVideos') = 0);
 reset role;
 
+-- ===== Own Higgsfield keys: only switched-on companies can save one; nobody can read it back; only CloudWAV switches access
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- Intelsense
+select t('a company without access cannot save its own key', fails($$select public.save_video_api_key('sk_test_abcdefghijklmnopqrstuv')$$));
+select t('...and cannot switch its own access on', fails($$select public.set_video_api_access('vendor:intelsense', true)$$));
+select t('...or read the key store', fails($$select value from portal_secrets$$));
+select t('...or add a pitch deck', fails($$insert into portal_records(collection,id,data,readers,writers) values ('pitchDecks','pd-x','{"id":"pd-x"}','{}','{}')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV switches it on
+select t('CloudWAV switches on own-key access for a company', public.set_video_api_access('vendor:intelsense', true));
+select t('...and sees who has it, without any key', (select (public.video_api_access_list())::text like '%vendor:intelsense%' and (public.video_api_access_list())::text not like '%sk_test%'));
+insert into portal_records(collection,id,data,readers,writers) values ('pitchDecks','pd-1','{"id":"pd-1","company":"Intelsense","status":"draft"}','{}','{}');
+select t('CloudWAV adds a pitch deck', (select count(*) from portal_records where collection='pitchDecks') = 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authenticated;   -- Intelsense, now switched on
+select t('a switched-on company saves its key', (select (public.save_video_api_key('sk_test_abcdefghijklmnopqrstuv'))->>'tail') = 'stuv');
+select t('...and sees only that it is connected, with the last four characters', (select (public.video_api_status())->>'connected') = 'true' and (public.video_api_status())::text not like '%abcdefghij%');
+select t('...but a short key is refused', fails($$select public.save_video_api_key('short')$$));
+select t('...and cannot read the stored key', fails($$select value from portal_secrets where key like 'video_api_key:%'$$));
+select t('...or see its pitch decks', (select count(*) from portal_records where collection='pitchDecks') = 0);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authenticated;   -- Botnoi, not switched on
+select t('another company does not get own-key access', (select (public.video_api_status())->>'allowed') = 'false');
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

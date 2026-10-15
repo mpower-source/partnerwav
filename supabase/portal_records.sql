@@ -179,7 +179,7 @@ returns boolean language sql immutable as $$
                         'programFees','platformFees','affiliateSignups',
                         'vendorAssessments','pricingModel','agreementReviews',
                         'operatorSettings','vendorReferrals','houseSummaries',
-                        'eventPages','eventConnections','communityOrgs','communityEvents','investorDb','startupPerks','meetInvites','mvpPackages'])
+                        'eventPages','eventConnections','communityOrgs','communityEvents','investorDb','startupPerks','meetInvites','mvpPackages','pitchDecks'])
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -1276,6 +1276,69 @@ create policy "portal-files delete" on storage.objects
 --    Cloud Data -> "Save all starter records to Supabase", this should list the collections.
 -- ---------------------------------------------------------------------------
 -- select collection, count(*) from public.portal_records group by 1 order by 1;
+
+-- ---------------------------------------------------------------------------
+-- 8c. Own Higgsfield API keys for marketing videos (bigger companies only, switched on by the Operator).
+--     The key is kept in portal_secrets, which nobody can read through the API. A company can save its key and see
+--     only the last four characters. Only the Operator can switch a company's access on or off.
+-- ---------------------------------------------------------------------------
+create or replace function public.set_video_api_access(p_company text, p_allowed boolean)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_portal_operator() then raise exception 'Only CloudWAV can change this'; end if;
+  if p_company is null or p_company !~ '^(partner|vendor|affiliate|investor|member|media):[^\s]{1,120}$' then
+    raise exception 'Unknown company';
+  end if;
+  insert into public.portal_secrets(key, value) values ('video_api_allowed:' || p_company, case when p_allowed then 'yes' else 'no' end)
+  on conflict (key) do update set value = excluded.value;
+  return p_allowed;
+end $$;
+revoke all on function public.set_video_api_access(text, boolean) from public, anon;
+grant execute on function public.set_video_api_access(text, boolean) to authenticated;
+
+create or replace function public.video_api_status()
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare k text := public.portal_key(); allowed boolean; tail text;
+begin
+  if k is null then return jsonb_build_object('allowed', false, 'connected', false, 'tail', ''); end if;
+  allowed := coalesce((select value = 'yes' from public.portal_secrets where key = 'video_api_allowed:' || k), false);
+  tail := coalesce((select value from public.portal_secrets where key = 'video_api_tail:' || k), '');
+  return jsonb_build_object('allowed', allowed, 'connected', tail <> '', 'tail', tail);
+end $$;
+revoke all on function public.video_api_status() from public, anon;
+grant execute on function public.video_api_status() to authenticated;
+
+create or replace function public.save_video_api_key(p_key text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare k text := public.portal_key(); tail text;
+begin
+  if k is null then raise exception 'Sign in to save a key'; end if;
+  if not coalesce((select value = 'yes' from public.portal_secrets where key = 'video_api_allowed:' || k), false) then
+    raise exception 'Your own API key is not switched on for your company. Ask PartnerWAV.';
+  end if;
+  if p_key is null or p_key !~ '^[A-Za-z0-9._:-]{20,200}$' then raise exception 'That does not look like an API key'; end if;
+  tail := right(p_key, 4);
+  insert into public.portal_secrets(key, value) values ('video_api_key:' || k, p_key)
+  on conflict (key) do update set value = excluded.value;
+  insert into public.portal_secrets(key, value) values ('video_api_tail:' || k, tail)
+  on conflict (key) do update set value = excluded.value;
+  return jsonb_build_object('connected', true, 'tail', tail);
+end $$;
+revoke all on function public.save_video_api_key(text) from public, anon;
+grant execute on function public.save_video_api_key(text) to authenticated;
+
+-- the Operator's list of who has own-key access, and whether each has connected a key (never the key itself)
+create or replace function public.video_api_access_list()
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_portal_operator() then raise exception 'Only CloudWAV can see this'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('company', substr(a.key, length('video_api_allowed:') + 1),
+      'allowed', a.value = 'yes',
+      'tail', coalesce((select t.value from public.portal_secrets t where t.key = 'video_api_tail:' || substr(a.key, length('video_api_allowed:') + 1)), '')))
+    from public.portal_secrets a where a.key like 'video_api_allowed:%'), '[]'::jsonb);
+end $$;
+revoke all on function public.video_api_access_list() from public, anon;
+grant execute on function public.video_api_access_list() to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 8b. A bigger MVP Builder request (route 'devlead') becomes a Dev Lead in the database as soon as it is sent, from
