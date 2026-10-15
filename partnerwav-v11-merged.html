@@ -20626,13 +20626,16 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       : v.status === "ready" ? '<div class="field-note">Made. PartnerWAV is checking it before it comes to you.</div>'
       : v.status === "requested" ? '<div class="field-note">Your brief is with PartnerWAV.</div>' : '';
     return '<div class="card card-pad" data-mv-row="' + attr(v.id) + '"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div style="min-width:0;flex:1;"><b>' + esc(v.productName) + '</b> ' + mvBadge(v.status)
-      + '<div class="field-note">60 seconds, English, on-screen text · sent ' + esc(v.createdAt) + '</div>' + note + '</div>'
+      + '<div class="field-note">60 seconds, English, on-screen text · sent ' + esc(v.createdAt) + (v.account === "own" ? ' · in your own Higgsfield account' : '') + '</div>'
+      + (v.cost ? '<div class="field-note">Cost to you: USD ' + esc(String(v.cost)) + ' per video</div>' : '') + note + '</div>'
       + '<div class="mem-acts" style="margin:0;align-items:flex-start;">' + link
       + (v.status === "requested" ? '<button type="button" class="btn ghost xs" data-mv-withdraw="' + attr(v.id) + '">Withdraw</button>' : '') + '</div></div></div>';
   }
   function mvFormHtml(){
     return '<div class="card card-pad meet-form"><b>Ask for a marketing video</b>'
       + '<span class="field-note">PartnerWAV makes a 60-second English video with on-screen text about your product and sends it to you for approval before you can share it.</span>'
+      + '<div class="login-msg" role="note" style="background:#fff7e6;color:#7a4b00;">Making a video carries an extra cost for each one until PartnerWAV\'s API connection and reseller packages are in place. PartnerWAV confirms the cost with you before it is made.</div>'
+      + '<div class="field-row"><label for="mvAccount">How should it be made?</label><select id="mvAccount" class="filter app-select"><option value="partnerwav">PartnerWAV makes it (extra cost, confirmed first)</option><option value="own">In my own Higgsfield account (I pay Higgsfield directly; PartnerWAV sets it up with me)</option></select></div>'
       + '<div class="field-row"><label for="mvProduct">Product or solution</label><input type="text" id="mvProduct" maxlength="120" placeholder="e.g. UniSense AI"></div>'
       + '<div class="field-row"><label for="mvBrief">What should the video say?</label><textarea id="mvBrief" rows="4" maxlength="1500" placeholder="What it does, the main features, and who it is for"></textarea></div>'
       + '<div class="meet-two"><div class="field-row"><label for="mvAudience">Who is it for? (optional)</label><input type="text" id="mvAudience" maxlength="120" placeholder="e.g. sales leaders at SMEs in Thailand"></div>'
@@ -20657,7 +20660,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return '<p class="field-note" style="margin:0 0 10px;">Make each video, attach its link, then send it for approval. Approve it, or send it back with notes. The requester sees the link only once you approve it.</p>'
       + '<div style="display:flex;flex-direction:column;gap:8px;">' + list.map(function(v){
         var ops = "", notes = (v.reviewNotes || []).slice(-3).map(function(n){ return '<li>' + esc(n.at) + ' -- ' + esc(n.text) + '</li>'; }).join("");
-        var linkIn = '<input type="text" placeholder="Video link (https://...)" value="' + attr(v.videoUrl || "") + '" data-mv-link="' + attr(v.id) + '" aria-label="Video link">';
+        var linkIn = '<input type="text" placeholder="Video link (https://...)" value="' + attr(v.videoUrl || "") + '" data-mv-link="' + attr(v.id) + '" aria-label="Video link">'
+          + '<input type="text" inputmode="decimal" placeholder="Cost (USD)" value="' + attr(v.cost ? String(v.cost) : "") + '" data-mv-cost="' + attr(v.id) + '" aria-label="Cost in USD">';
         if (v.status === "requested") ops = '<button type="button" class="btn secondary xs" data-mv-start="' + attr(v.id) + '">Start making it</button>';
         if (v.status === "in_production" || v.status === "changes" || v.status === "requested") ops += linkIn + '<button type="button" class="btn primary xs" data-mv-ready="' + attr(v.id) + '">Send for approval</button>';
         if (v.status === "ready") ops = linkIn + '<button type="button" class="btn primary xs" data-mv-approve="' + attr(v.id) + '">Approve</button><button type="button" class="btn secondary xs" data-mv-ready="' + attr(v.id) + '">Save link</button>';
@@ -20666,7 +20670,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
             + '<button type="button" class="btn ghost xs" data-mv-reject="' + attr(v.id) + '">Not going ahead</button></div>';
         if (v.status === "approved") ops = (v.videoUrl && safeHref(v.videoUrl) ? '<a class="btn secondary xs" href="' + attr(safeHref(v.videoUrl)) + '" target="_blank" rel="noopener noreferrer">Open the video</a>' : '');
         return '<div class="card card-pad" data-mv-op="' + attr(v.id) + '"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><div style="min-width:0;flex:1;"><b>' + esc(v.productName) + '</b> ' + mvBadge(v.status)
-          + ' <span class="field-note">for ' + esc(v.requesterName || keyName(v.requesterKey)) + '</span>'
+          + ' <span class="field-note">for ' + esc(v.requesterName || keyName(v.requesterKey)) + (v.account === "own" ? ' · their own Higgsfield account' : ' · PartnerWAV makes it') + '</span>'
           + '<div class="field-note cp-notes">' + esc(v.brief) + (v.audience ? ' · For: ' + esc(v.audience) : '') + (v.link ? ' · Website: ' + esc(v.link) : '') + (v.notes ? ' · Notes: ' + esc(v.notes) : '') + '</div>'
           + (notes ? '<ul class="field-note" style="margin:6px 0 0;padding-left:16px;">' + notes + '</ul>' : '') + '</div></div>'
           + '<div class="svc-op" style="margin-top:8px;">' + ops + '</div></div>';
@@ -20684,11 +20688,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (!product || !brief){ err.textContent = "Add the product and what the video should say."; err.hidden = false; return; }
     if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
     if (link && !safeHref(link)){ err.textContent = "Check the website address."; err.hidden = false; return; }
-    var me = svcRequesterKey(), nm = svcRequesterName();
-    marketingVideos.push({ id:"mv-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), requesterKey:me, requesterName:nm, productName:product.slice(0, 120),
+    var me = svcRequesterKey(), nm = svcRequesterName(), acct = g("mvAccount") === "own" ? "own" : "partnerwav";
+    marketingVideos.push({ id:"mv-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), requesterKey:me, requesterName:nm, productName:product.slice(0, 120), account:acct,
       brief:brief.slice(0, 1500), audience:g("mvAudience").slice(0, 120), link:link, notes:g("mvNotes").slice(0, 600), videoUrl:"", reviewNotes:[], status:"requested", createdAt:nowStamp(), updatedAt:nowStamp() });
     saveMarketing();
-    notify(["operator"], "marketing", "Marketing video: " + product.slice(0, 80), nm + " -- " + brief.slice(0, 160), "operator-services");
+    notify(["operator"], "marketing", "Marketing video: " + product.slice(0, 80), nm + " -- " + (acct === "own" ? "their own Higgsfield account" : "PartnerWAV makes it") + " -- " + brief.slice(0, 120), "operator-services");
     renderMarketingVideos(true); toast("Sent -- PartnerWAV will make the video and send it to you for approval");
   }
   document.addEventListener("click", function(ev){
@@ -20700,6 +20704,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     v = marketingVideos.filter(function(x){ return x.id === id; })[0]; if (!v) return;
     var linkEl = document.querySelector('[data-mv-link="' + id + '"]'), noteEl = document.querySelector('[data-mv-note="' + id + '"]');
     link = linkEl ? linkEl.value.trim() : (v.videoUrl || "");
+    var costEl = document.querySelector('[data-mv-cost="' + id + '"]');
+    if (costEl){ var cv = Number(costEl.value.replace(/[^0-9.]/g, "")); v.cost = cv > 0 ? cv : (v.cost || null); }
     if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
     if (b.hasAttribute("data-mv-start")){ mvSetStatus(id, "in_production"); mvNotifyRequester(v, "Your video is being made", v.productName); }
     else if (b.hasAttribute("data-mv-ready")){

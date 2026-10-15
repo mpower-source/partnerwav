@@ -166,7 +166,9 @@ insert into public.portal_field_rules (collection, field, allowed) values
   ('marketingVideos',  'status',       '["requested", "withdrawn"]'),
   ('marketingVideos',  'videoUrl',     '[null, ""]'),
   ('marketingVideos',  'reviewNotes',  '[[], null]'),
-  ('marketingVideos',  'reviewedAt',   '["", null]')
+  ('marketingVideos',  'reviewedAt',   '["", null]'),
+  ('marketingVideos',  'cost',         '[null]'),
+  ('marketingVideos',  'account',      '[null, "", "partnerwav", "own"]')
 on conflict (collection, field) do update set allowed = excluded.allowed;
 
 -- Collections only CloudWAV can add records to (members may still edit where they're a writer)
