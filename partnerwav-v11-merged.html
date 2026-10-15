@@ -13865,7 +13865,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<div class="card card-pad" style="display:flex;flex-direction:column;gap:12px;">'
         + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><h2 style="font-size:1.15rem;margin:0;margin-right:auto;">'+esc(r.client.company)+'</h2>'+refBadge(r)+'</div>'
         + '<div class="deal-facts">'+fact("Software house", h.name)+fact("Involvement", (REF_LEVELS[r.level] || r.level) + (r.level === "cosell" ? " (" + (r.cosellLead === "cloudwav" ? "PartnerWAV leads" : "partner leads") + ")" : ""))+fact("Referred by", devLeadReq(r) && devLeadReq(r).requesterKey ? keyName(devLeadReq(r).requesterKey) : keyName(r.referrerKey))
-          + fact("Contact", [r.client.contact, r.client.email, r.client.phone].filter(Boolean).join(" · "))+fact("Budget", r.budget ? fmtMoney(r.budget, cur) : "")+fact("Timeline", r.timeline)
+          + fact("Contact", [r.client.contact, r.client.email, r.client.phone].filter(Boolean).join(" · "))+fact("Budget", r.budget ? fmtMoney(r.budget, cur) : (devLeadReq(r) && devLeadReq(r).budget ? devLeadReq(r).budget : ""))+fact("Timeline", r.timeline)
           + fact("Registered", r.registeredAt)+fact("Respond by", r.respondBy)+fact("Protected until", r.protectedUntil || (st === "registered" ? "after acceptance" : ""))
           + (r.contractValue ? fact("Contract value", fmtMoney(r.contractValue, cur)) : '')+(r.rejectReason ? fact("Reason", r.rejectReason) : '')+(r.lostReason ? fact("Lost because", r.lostReason) : '')+'</div>'
         + '<div><div class="aff-section-title" style="margin-bottom:6px;">What they need</div><p class="program-desc" style="margin:0;white-space:pre-wrap;">'+esc(r.need)+'</p></div>'
