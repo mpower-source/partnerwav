@@ -20412,7 +20412,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var t = todayIso(), from = opts && opts.from ? opts.from : null, old = from ? houseById(from.houseId) : null;
     return { id:"ref-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), source:"mvp", mvpRequestId:req ? req.id : "", movedFrom: from ? from.id : "",
       houseId: h ? h.id : "", referrerKey:"operator:", level:"referral", cosellLead:"cloudwav",
-      client:{ company: req ? req.requesterName || "" : "", contact: req && req.contact ? req.contact.name || "" : "", email: req && req.contact ? req.contact.email || "" : "", phone: req && req.contact ? req.contact.phone || "" : "" },
+      client:{ company: req ? req.requesterName || "" : "", contact:"", email:"", phone:"" },
       need: req ? req.details || "" : "", budget:0, currency:"USD", timeline: req ? req.timeline || "" : "", disclosed:true,
       status: h ? "registered" : "new", registeredAt:t, respondBy: h ? businessDaysFrom(t, DEV_LEAD_DAYS.respond) : "", quoteBy:"", closeBy:daysFrom(t, DEV_LEAD_DAYS.close), acceptedAt:"", protectedUntil:"", contractValue:null, wonAt:"", quoteValue:null, rejectReason:"",
       payments:[], payouts:[], thread:[], termsSnapshot: termsOf(h),
@@ -20477,7 +20477,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + (flag ? '<div style="margin-top:6px;"><span class="badge '+(over ? 'bad' : 'neutral')+'">'+esc(flag)+'</span></div>' : '')
       + (prog ? '<ul class="field-note" style="margin:6px 0 0;padding-left:16px;">'+prog+'</ul>' : '')
       + '</div></div>'
-      + (acts ? '<div class="svc-op" style="margin-top:8px;">'+acts+'</div>' : '') + note + mv + '</div>';
+      + (acts ? '<div class="svc-op" style="margin-top:8px;">'+acts+'</div>' : '') + note + mv
+      + (view === "house" ? (r.introducedAt ? '<div class="field-note" style="margin-top:6px;"><b>Client contact</b> (introduced '+esc(r.introducedAt)+'): '+esc([r.client.contact, r.client.email, r.client.phone].filter(Boolean).join(" · "))+'</div>' : (r.status === "accepted" ? '<div class="field-note" style="margin-top:6px;">PartnerWAV introduces you to the client, and shares their contact then.</div>' : ''))
+        : '') + (view === "op" && r.status === "accepted" && !r.introducedAt ? '<div class="svc-op" style="margin-top:6px;"><button type="button" class="btn primary xs" data-dl-intro="'+attr(r.id)+'">Introduce to client</button></div>' : '')
+      + (view === "op" && r.introducedAt ? '<div class="field-note" style="margin-top:6px;">Introduced '+esc(r.introducedAt)+' -- the house works with the client directly.</div>' : '') + '</div>';
   }
   function devLeadsOpHtml(){
     var list = projectReferrals.filter(function(x){ return x.source === "mvp"; }), open = list.filter(devLeadOpen);
@@ -20664,6 +20667,21 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     return '<div class="field-note"><b>Question from PartnerWAV, '+esc(c.askedAt)+':</b> <span style="white-space:pre-wrap;">'+esc(c.questions)+'</span><br><b>Answer, '+esc(c.answeredAt)+':</b> <span style="white-space:pre-wrap;">'+esc(c.answer)+'</span></div>';
   }
+  // Introduce, then step back: once the house accepts, PartnerWAV introduces the client's contact and the house works with the client directly.
+  // The contact stays on the request until then, so the house can't see it before.
+  function devLeadIntroduce(id){
+    var r = refById(id), h = r ? houseById(r.houseId) : null, req = r ? devLeadReq(r) : null;
+    if (!r || !h || r.status !== "accepted" || r.introducedAt) return false;
+    if (!req || !req.contact || !req.contact.name) return false;
+    var t = todayIso();
+    r.client.contact = req.contact.name || ""; r.client.email = req.contact.email || ""; r.client.phone = req.contact.phone || "";
+    r.introducedAt = t;
+    r.progress = (r.progress || []).concat([{ at:nowStamp(), stage:"Introduced to the client", note:"PartnerWAV steps back: " + h.name + " works with the client directly. Record the official quote and the contract value here." }]);
+    saveReferrals(); saveMediaMvp();
+    notify(houseLoginKeys(h.id), "devlead", "Client introduced: " + (r.client.company || "client"), "Contact: " + [r.client.contact, r.client.email, r.client.phone].filter(Boolean).join(" · ") + ". Work with them directly, and record your official quote here.", "dev-leads");
+    if (req.requesterKey) notify([req.requesterKey], "devlead", "Introduced to " + h.name, h.name + " works with your client directly from here. PartnerWAV has stepped back.", "mvp-builder");
+    return true;
+  }
   // Send to a house from the Software Referrals list: not while a clarification is still open
   function devLeadSendHtml(r, isOp){
     if (!isOp || r.source !== "mvp" || r.houseId) return "";
@@ -20675,6 +20693,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var req = devLeadReq(r) || {}, cl = clarifyOf(req) || {}, open = clarifyOpen(r), who = req.requesterKey ? keyName(req.requesterKey) : (r.client.company || "the requester");
     var fact = function(l, v){ return '<div class="deal-fact"><span>'+l+'</span><span>'+(v ? esc(v) : '<span style="color:var(--ink-faint)">--</span>')+'</span></div>'; };
     return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;"><div class="aff-section-title">The request from '+esc(who)+'</div>'
+      + (r.status === "accepted" && !r.introducedAt ? '<div class="svc-op"><button type="button" class="btn primary xs" data-dl-intro="'+attr(r.id)+'">Introduce to client</button><span class="field-note">Shares the client contact with '+esc((houseById(r.houseId) || {}).name || "the house")+' and steps PartnerWAV back.</span></div>' : '')
       + '<div class="deal-facts">'+fact("Stage", labelOf(PRODUCT_STAGES, req.stage || ""))+fact("Team", labelOf(MVP_TEAMS, req.team || ""))+fact("Needs", (req.needs || []).join(", "))+fact("Budget", req.budget || "")+fact("Timeline", req.timeline || r.timeline || "")+'</div>'
       + '<div><div class="aff-section-title" style="margin-bottom:6px;">What they wrote</div><p class="program-desc" style="margin:0;white-space:pre-wrap;">'+esc(req.details || r.need || "")+'</p></div>'
       + (cl.questions ? '<div style="border-top:1px solid var(--line);padding-top:10px;"><div class="aff-section-title">'+(open ? "Waiting for "+esc(who)+" to answer" : "Clarification answered")+'</div><span class="field-note">Asked '+esc(cl.askedAt || "")+'</span>'
@@ -20713,6 +20732,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("[data-cl-ask]")){ var cq = document.getElementById("clAsk");
       if (!cq || !clarifyAsk(state.refViewId, cq.value)){ toast("Write the questions first"); return; }
       toast("Questions sent to the requester"); renderReferralView(); return; }
+    if ((b = t.closest("[data-dl-intro]"))){ var iid = b.getAttribute("data-dl-intro");
+      if (devLeadIntroduce(iid)){ toast("Introduced -- the house now has the client's contact"); renderDevScreens(); if (state.screen === "referral-view") renderReferralView(); }
+      else toast("The house has to accept first, and the request needs a contact"); return; }
     if ((b = t.closest("[data-cl-reply]"))){ var rid = b.getAttribute("data-cl-reply"), rt = document.querySelector('[data-cl-reply-text="' + rid + '"]');
       if (!rt || !rt.value.trim()){ toast("Write your answers first"); return; }
       clarifyReply(rid, rt.value).then(function(ok){ if (ok) toast("Sent to PartnerWAV"); }); return; }

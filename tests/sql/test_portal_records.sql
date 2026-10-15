@@ -1059,7 +1059,8 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000002'); set role authent
 insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-ct','{"id":"sr-ct","kind":"mvp","route":"devlead","requesterKey":"vendor:intelsense","requesterName":"Intelsense","budget":"USD 5,000 - 15,000","contact":{"name":"Dara","email":"dara@example.com","phone":"+66 81 000 0000"},"status":"new"}','{vendor:intelsense}','{vendor:intelsense}');
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV
-select t('the Dev Lead carries the contact from the wizard', (select data #>> '{client,contact}' || ' ' || (data #>> '{client,email}') from portal_records where collection='projectReferrals' and id='dl-sr-ct') = 'Dara dara@example.com');
+select t('the Dev Lead keeps the client contact back until it is introduced', (select coalesce(data #>> '{client,contact}', '') || coalesce(data #>> '{client,email}', '') from portal_records where collection='projectReferrals' and id='dl-sr-ct') = '');
+select t('...and the house cannot see the client contact before the introduction', (select count(*) from portal_records where collection='projectReferrals' and id='dl-sr-ct' and data #>> '{client,email}' = 'dara@example.com') = 0);
 reset role;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV puts a lead with the house
 insert into portal_records(collection,id,data,readers,writers) values ('projectReferrals','dl-budget','{"id":"dl-budget","source":"mvp","mvpRequestId":"sr-ct","houseId":"sh-x","referrerKey":"operator:","status":"accepted","acceptedAt":"2026-10-15","quoteBy":"2026-10-29","budget":0,"currency":"USD","client":{"company":"Intelsense","contact":"Dara"},"progress":[]}','{operator:,partner:siam-digital}','{operator:,partner:siam-digital}');

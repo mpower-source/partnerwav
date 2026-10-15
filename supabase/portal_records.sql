@@ -1389,9 +1389,8 @@ begin
   values ('projectReferrals', 'dl-' || p_req_id, jsonb_build_object(
       'id', 'dl-' || p_req_id, 'source', 'mvp', 'mvpRequestId', p_req_id, 'movedFrom', '', 'houseId', '',
       'referrerKey', 'operator:', 'level', 'referral', 'cosellLead', 'cloudwav',
-      'client', jsonb_build_object('company', left(coalesce(p_req ->> 'requesterName', ''), 160),
-          'contact', left(coalesce(p_req #>> '{contact,name}', ''), 120), 'email', left(coalesce(p_req #>> '{contact,email}', ''), 160),
-          'phone', left(coalesce(p_req #>> '{contact,phone}', ''), 40)),
+      -- the client's contact stays on the request (seen by the company and CloudWAV only) until CloudWAV introduces the house
+      'client', jsonb_build_object('company', left(coalesce(p_req ->> 'requesterName', ''), 160), 'contact', '', 'email', '', 'phone', ''),
       'need', left(coalesce(p_req ->> 'details', ''), 1500), 'budget', 0, 'currency', 'USD',
       'timeline', left(coalesce(p_req ->> 'timeline', ''), 60), 'disclosed', true,
       'status', 'new', 'registeredAt', to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD'),
