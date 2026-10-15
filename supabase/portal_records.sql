@@ -410,6 +410,12 @@ begin
     if new.is_public or exists (select 1 from unnest(new.readers) x where x <> k and x <> 'media:' || coalesce(new.data ->> 'mediaId', '')) then
       raise exception 'A request is only seen by you, the partner it is for and PartnerWAV';
     end if;
+    -- a clarification is asked by CloudWAV and answered by the requester through answer_clarification() below.
+    -- A normal save by the company can't change it: the stored version is kept.
+    if current_setting('portal.clarify', true) is distinct from 'on' then
+      if prev.data ? 'clarify' then new.data := jsonb_set(new.data, '{clarify}', prev.data -> 'clarify');
+      else new.data := new.data - 'clarify'; end if;
+    end if;
   end if;
   -- calendar events belong to whoever created them; a booking is recorded by the person who booked
   if new.collection = 'calendarEvents' and (new.data ->> 'ownerKey') is distinct from k then
@@ -888,6 +894,34 @@ begin
 end $$;
 revoke all on function public.post_notification(text[], text, text, text, text) from public;
 grant execute on function public.post_notification(text[], text, text, text, text) to authenticated;
+
+-- The requester answers CloudWAV's question on its own request, inside the app. Only the open question can be answered,
+-- and only by the company that sent the request. CloudWAV is told at once.
+create or replace function public.answer_clarification(p_req_id text, p_answer text)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  k text := public.portal_key();
+  rec public.portal_records%rowtype;
+  a text := left(trim(coalesce(p_answer, '')), 1500);
+begin
+  if k is null then raise exception 'Sign in to answer'; end if;
+  if a = '' then raise exception 'Write your answer first'; end if;
+  select * into rec from public.portal_records where collection = 'serviceRequests' and id = p_req_id;
+  if not found then raise exception 'Request not found'; end if;
+  if coalesce(rec.data ->> 'requesterKey', '') <> k then raise exception 'Only the company that sent the request can answer it'; end if;
+  if coalesce(rec.data #>> '{clarify,open}', 'false') <> 'true' then raise exception 'There is no open question on this request'; end if;
+  perform set_config('portal.clarify', 'on', true);
+  update public.portal_records
+     set data = jsonb_set(jsonb_set(jsonb_set(data, '{clarify,open}', 'false'::jsonb), '{clarify,answer}', to_jsonb(a)),
+                          '{clarify,answeredAt}', to_jsonb(to_char(now() at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI')))
+   where collection = 'serviceRequests' and id = p_req_id;
+  perform set_config('portal.clarify', 'off', true);
+  perform public.post_notification(array['operator'], 'devlead', 'Clarification answered: ' || coalesce(rec.data ->> 'requesterName', ''),
+    left(a, 380), 'operator-services');
+  return p_req_id;
+end $$;
+revoke all on function public.answer_clarification(text, text) from public, anon;
+grant execute on function public.answer_clarification(text, text) to authenticated;
 
 revoke all on function public.submit_vendor_assessment(jsonb) from public;
 grant execute on function public.submit_vendor_assessment(jsonb) to anon, authenticated;

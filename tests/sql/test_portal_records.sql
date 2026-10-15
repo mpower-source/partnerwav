@@ -1033,4 +1033,25 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000005'); set role authent
 select t('another company does not get own-key access', (select (public.video_api_status())->>'allowed') = 'false');
 reset role;
 
+-- ===== Clarification: CloudWAV asks a question on a request; only the company that sent it answers, inside the app
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV asks
+insert into portal_records(collection,id,data,readers,writers) values ('serviceRequests','sr-clar','{"id":"sr-clar","kind":"mvp","route":"devlead","requesterKey":"partner:siam-digital","requesterName":"Siam Digital","status":"new","clarify":{"open":true,"questions":"1. Which countries?","askedAt":"2026-10-15"}}','{partner:siam-digital}','{partner:siam-digital}');
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;   -- another partner
+select t('another company cannot answer it', fails($$select public.answer_clarification('sr-clar', 'Thailand')$$));
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;   -- Siam Digital, the requester
+select t('the company sees the question', (select data #>> '{clarify,questions}' from portal_records where collection='serviceRequests' and id='sr-clar') = '1. Which countries?');
+update portal_records set data = jsonb_set(data, '{clarify,questions}', '"changed by the company"') where collection='serviceRequests' and id='sr-clar';
+select t('a normal save cannot change the question', (select data #>> '{clarify,questions}' from portal_records where collection='serviceRequests' and id='sr-clar') = '1. Which countries?');
+select t('...nor reopen or clear it', (select data #>> '{clarify,open}' from portal_records where collection='serviceRequests' and id='sr-clar') = 'true');
+select t('the company answers the open question', (select public.answer_clarification('sr-clar', 'Thailand first, then Vietnam')) = 'sr-clar');
+select t('...and the question is closed', (select data #>> '{clarify,open}' from portal_records where collection='serviceRequests' and id='sr-clar') = 'false');
+select t('...and cannot answer it twice', fails($$select public.answer_clarification('sr-clar', 'again')$$));
+select t('CloudWAV is told it was answered', (select count(*) from portal_records where collection='notifications' and data->>'title' like 'Clarification answered%') >= 1);
+reset role;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001'); set role authenticated;   -- CloudWAV sees the answer
+select t('CloudWAV sees the answer', (select data #>> '{clarify,answer}' from portal_records where collection='serviceRequests' and id='sr-clar') = 'Thailand first, then Vietnam');
+reset role;
+
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

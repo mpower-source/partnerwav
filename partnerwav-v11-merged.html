@@ -20156,6 +20156,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<div class="field-note">'+(view !== "mine" ? esc(r.requesterName || keyName(r.requesterKey))+' · ' : '')+'sent '+esc(r.createdAt || "")+(r.budget ? ' · budget '+esc(r.budget) : '')+(r.timeline ? ' · '+esc(r.timeline) : '')+'</div>'
         + (r.offerId ? '<div class="field-note">'+(r.codeOk ? '<span class="badge good">Event code accepted</span> '+esc(r.offerTitle || "") : '<span class="badge warn">Event code didn\'t match</span>')+'</div>' : '')
         + (r.details ? '<div class="field-note cp-notes">'+esc(r.details)+'</div>' : '')
+        + (r.kind === "mvp" ? clarifyBlockHtml(r, view) : '')
         + (house ? '<div class="field-note">Sent to '+esc(house.name)+'</div>' : '')
         + (view === "op" ? '<div class="svc-op"><select class="filter app-select" data-svc-status="'+attr(r.id)+'" aria-label="Status">'+REQ_STATUS.map(function(x){ return '<option value="'+x[0]+'"'+(r.status === x[0] ? ' selected' : '')+'>'+esc(x[1])+'</option>'; }).join("")+'</select>'
             + '<input type="text" inputmode="decimal" placeholder="Contract value" value="'+attr(r.value != null ? String(r.value) : "")+'" data-svc-value="'+attr(r.id)+'" aria-label="Contract value">'
@@ -20602,22 +20603,46 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   // The Operator checks a bigger request before it goes to a software house. Questions go back to the requester; the answers are typed in here.
   function devLeadReq(r){ return serviceRequests.filter(function(x){ return x.id === r.mvpRequestId; })[0] || null; }
-  function clarifyOpen(r){ return !!(r && r.clarify && r.clarify.open); }
+  // The question is kept on the request, so the company that sent it can read it and answer it inside the app
+  function clarifyOf(req){ return req && req.clarify && req.clarify.questions ? req.clarify : null; }
+  function clarifyOpen(r){ var req = devLeadReq(r); return !!(req && req.clarify && req.clarify.open); }
   function clarifyAsk(id, text){
-    var r = refById(id), q = String(text || "").trim().slice(0, 1500); if (!r || r.source !== "mvp" || !q) return false;
-    var req = devLeadReq(r), t = nowStamp();
-    r.clarify = { open:true, questions:q, askedAt:t, answer:(r.clarify && r.clarify.answer) || "", answeredAt:(r.clarify && r.clarify.answeredAt) || "" };
+    var r = refById(id), q = String(text || "").trim().slice(0, 1500), req = r ? devLeadReq(r) : null;
+    if (!r || r.source !== "mvp" || !q || !req) return false;
+    var t = nowStamp();
+    req.clarify = { open:true, questions:q, askedAt:t, answer:"", answeredAt:"" }; req.updatedAt = t;
     r.progress = (r.progress || []).concat([{ at:t, stage:"Clarification requested", note:q.slice(0, 200) }]);
     saveReferrals(); saveMediaMvp();
-    if (req && req.requesterKey) notify([req.requesterKey], "devlead", "Clarification needed: " + (r.client.company || "your request"), q.slice(0, 380), "mvp-builder");
+    if (req.requesterKey) notify([req.requesterKey], "devlead", "Clarification needed: " + (r.client.company || "your request"), q.slice(0, 380), "mvp-builder");
     return true;
   }
-  function clarifyAnswer(id, text){
-    var r = refById(id), a = String(text || "").trim().slice(0, 1500); if (!r || !clarifyOpen(r) || !a) return false;
-    var t = nowStamp();
-    r.clarify.open = false; r.clarify.answer = a; r.clarify.answeredAt = t;
-    r.progress = (r.progress || []).concat([{ at:t, stage:"Clarification answered", note:a.slice(0, 200) }]);
-    saveReferrals(); saveMediaMvp(); return true;
+  // The company answers in the app. Signed in, the database checks it and tells CloudWAV; in the demo it stays on this device.
+  function clarifyReply(reqId, text){
+    var req = serviceRequests.filter(function(x){ return x.id === reqId; })[0], a = String(text || "").trim().slice(0, 1500);
+    if (!req || !clarifyOf(req) || !req.clarify.open || !a) return Promise.resolve(false);
+    if (notifLive()) return supabase.rpc("answer_clarification", { p_req_id:reqId, p_answer:a }).then(function(r){
+      if (r.error){ toast("Could not send: " + r.error.message); return false; }
+      clarifyApplyAnswer(req, a); return true;
+    }, function(){ toast("Could not send. Check your connection."); return false; });
+    clarifyApplyAnswer(req, a);
+    notify(["operator"], "devlead", "Clarification answered: " + (req.requesterName || "company"), a.slice(0, 380), "operator-services");
+    return Promise.resolve(true);
+  }
+  function clarifyApplyAnswer(req, a){
+    var t = nowStamp(); req.clarify.open = false; req.clarify.answer = a; req.clarify.answeredAt = t; req.updatedAt = t;
+    saveMediaMvp(); renderMediaMvp(true);
+  }
+  // Shown on a request: the company answers the open question; CloudWAV sees who has still to answer
+  function clarifyBlockHtml(req, view){
+    var c = clarifyOf(req); if (!c) return "";
+    if (c.open){
+      if (view === "mine") return '<div class="svc-op" style="width:100%;flex-direction:column;align-items:stretch;"><span class="badge warn">PartnerWAV has a question</span>'
+        + '<p class="program-desc" style="margin:4px 0;white-space:pre-wrap;">'+esc(c.questions)+'</p>'
+        + '<textarea rows="3" maxlength="1500" placeholder="Your answers" aria-label="Your answers" data-cl-reply-text="'+attr(req.id)+'"></textarea>'
+        + '<div><button type="button" class="btn primary xs" data-cl-reply="'+attr(req.id)+'">Send answers</button></div></div>';
+      return '<div class="field-note"><span class="badge warn">Waiting for '+esc(keyName(req.requesterKey))+' to answer</span></div>';
+    }
+    return '<div class="field-note"><b>Question from PartnerWAV, '+esc(c.askedAt)+':</b> <span style="white-space:pre-wrap;">'+esc(c.questions)+'</span><br><b>Answer, '+esc(c.answeredAt)+':</b> <span style="white-space:pre-wrap;">'+esc(c.answer)+'</span></div>';
   }
   // Send to a house from the Software Referrals list: not while a clarification is still open
   function devLeadSendHtml(r, isOp){
@@ -20627,15 +20652,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   // What the requester wrote, with the clarification history and the Operator's checks before it goes out
   function devLeadRequestHtml(r){
-    var req = devLeadReq(r) || {}, cl = r.clarify || {}, open = clarifyOpen(r), who = req.requesterKey ? keyName(req.requesterKey) : (r.client.company || "the requester");
+    var req = devLeadReq(r) || {}, cl = clarifyOf(req) || {}, open = clarifyOpen(r), who = req.requesterKey ? keyName(req.requesterKey) : (r.client.company || "the requester");
     var fact = function(l, v){ return '<div class="deal-fact"><span>'+l+'</span><span>'+(v ? esc(v) : '<span style="color:var(--ink-faint)">--</span>')+'</span></div>'; };
     return '<div class="card card-pad" style="display:flex;flex-direction:column;gap:10px;"><div class="aff-section-title">The request from '+esc(who)+'</div>'
       + '<div class="deal-facts">'+fact("Stage", labelOf(PRODUCT_STAGES, req.stage || ""))+fact("Team", labelOf(MVP_TEAMS, req.team || ""))+fact("Needs", (req.needs || []).join(", "))+fact("Budget", req.budget || "")+fact("Timeline", req.timeline || r.timeline || "")+'</div>'
       + '<div><div class="aff-section-title" style="margin-bottom:6px;">What they wrote</div><p class="program-desc" style="margin:0;white-space:pre-wrap;">'+esc(req.details || r.need || "")+'</p></div>'
-      + (cl.questions ? '<div style="border-top:1px solid var(--line);padding-top:10px;"><div class="aff-section-title">'+(open ? "Waiting for clarification" : "Clarification")+'</div><span class="field-note">Asked '+esc(cl.askedAt || "")+'</span>'
+      + (cl.questions ? '<div style="border-top:1px solid var(--line);padding-top:10px;"><div class="aff-section-title">'+(open ? "Waiting for "+esc(who)+" to answer" : "Clarification answered")+'</div><span class="field-note">Asked '+esc(cl.askedAt || "")+'</span>'
         + '<p class="program-desc" style="margin:4px 0 0;white-space:pre-wrap;">'+esc(cl.questions)+'</p>'
         + (cl.answer ? '<div class="aff-section-title" style="margin-top:10px;">Answer'+(cl.answeredAt ? ', '+esc(cl.answeredAt) : '')+'</div><p class="program-desc" style="margin:4px 0 0;white-space:pre-wrap;">'+esc(cl.answer)+'</p>' : '')
-        + (open ? '<div class="field-row" style="margin-top:8px;"><label for="clAnswer">What the requester answered</label><textarea id="clAnswer" rows="3" maxlength="1500"></textarea></div><div class="cfg-actions"><button type="button" class="btn secondary sm" data-cl-answer>Save answer</button></div>' : '')
         + '</div>' : '')
       + (!r.houseId && !open ? '<div style="border-top:1px solid var(--line);padding-top:10px;"><div class="aff-section-title">'+(cl.questions ? "Ask again" : "Not clear enough yet?")+'</div>'
         + '<div class="field-row" style="margin-top:6px;"><label for="clAsk">Questions for the requester</label><textarea id="clAsk" rows="3" maxlength="1500" placeholder="e.g. 1. Which countries and languages? 2. How many users in year one? 3. Who owns the data?"></textarea></div>'
@@ -20669,9 +20693,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (t.closest("[data-cl-ask]")){ var cq = document.getElementById("clAsk");
       if (!cq || !clarifyAsk(state.refViewId, cq.value)){ toast("Write the questions first"); return; }
       toast("Questions sent to the requester"); renderReferralView(); return; }
-    if (t.closest("[data-cl-answer]")){ var ca = document.getElementById("clAnswer");
-      if (!ca || !clarifyAnswer(state.refViewId, ca.value)){ toast("Paste the answer first"); return; }
-      toast("Answer saved"); renderReferralView(); return; }
+    if ((b = t.closest("[data-cl-reply]"))){ var rid = b.getAttribute("data-cl-reply"), rt = document.querySelector('[data-cl-reply-text="' + rid + '"]');
+      if (!rt || !rt.value.trim()){ toast("Write your answers first"); return; }
+      clarifyReply(rid, rt.value).then(function(ok){ if (ok) toast("Sent to PartnerWAV"); }); return; }
     if (!t.closest(".notif-menu")) openBell(false);
   });
 
