@@ -28,7 +28,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 // Pure functions (no network, no database) so they can be tested on their own: tests/events_sync_test.ts.
 
 export type Source = {
-  id: string; kind: "ical" | "eventbrite" | "manual"; label?: string; url?: string; orgId?: string;
+  id: string; kind: "ical" | "eventbrite" | "page" | "manual"; label?: string; url?: string; orgId?: string;
   city?: string; allTech?: boolean; active?: boolean; source?: string;
 };
 export type Row = {
@@ -173,6 +173,79 @@ export function okUrl(u: string): boolean {
     return true;
   } catch { return false; }
 }
+
+// ----- single event pages (a Luma or Eventbrite event link, not a calendar) -----
+// Event pages carry their details in a standard block (schema.org "Event", as JSON-LD). Times with no
+// offset are Bangkok time, the portal's default.
+export function decodeEntities(t: string): string {
+  return t.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ");
+}
+export function bkkDate(v: string): Date | null {
+  if (!v) return null;
+  if (/([zZ]|[+-]\d{2}:?\d{2})$/.test(v)) { const d = new Date(v); return isNaN(d.getTime()) ? null : d; }
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!m) return null;
+  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)) - 7 * 3600000);
+}
+export function jsonLdEvents(html: string): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  const re = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    let data: unknown;
+    try { data = JSON.parse(m[1].trim()); } catch { continue; }
+    const stack: unknown[] = [data];
+    while (stack.length) {
+      const x = stack.shift() as Record<string, unknown> | unknown[] | null;
+      if (Array.isArray(x)) { stack.push(...x); continue; }
+      if (!x || typeof x !== "object") continue;
+      if (x["@graph"]) stack.push(x["@graph"]);
+      const t = x["@type"];
+      const types = Array.isArray(t) ? t : [t];
+      if (types.some((y) => typeof y === "string" && /Event$/.test(y))) out.push(x);
+    }
+  }
+  return out;
+}
+export function metaContent(html: string, prop: string): string {
+  const a = html.match(new RegExp('<meta[^>]+(?:property|name)=["\']' + prop + '["\'][^>]*content=["\']([^"\']*)["\']', "i"));
+  if (a) return decodeEntities(a[1]);
+  const b = html.match(new RegExp('<meta[^>]+content=["\']([^"\']*)["\'][^>]*(?:property|name)=["\']' + prop + '["\']', "i"));
+  return b ? decodeEntities(b[1]) : "";
+}
+export function parseEventPage(html: string, pageUrl: string): ParsedEvent[] {
+  const out: ParsedEvent[] = [];
+  for (const e of jsonLdEvents(html)) {
+    const loc = Array.isArray(e.location) ? e.location[0] : e.location;
+    let where = "";
+    if (typeof loc === "string") where = loc;
+    else if (loc && typeof loc === "object") {
+      const L = loc as Record<string, unknown>;
+      const addr = L.address;
+      let a = "";
+      if (typeof addr === "string") a = addr;
+      else if (addr && typeof addr === "object") {
+        const A = addr as Record<string, unknown>;
+        a = [A.streetAddress, A.addressLocality, A.addressRegion, A.addressCountry].filter((v) => typeof v === "string" && v).join(", ");
+      }
+      where = [typeof L.name === "string" ? L.name : "", a].filter(Boolean).join(", ");
+    }
+    const org = Array.isArray(e.organizer) ? e.organizer[0] : e.organizer;
+    const orgName = org && typeof org === "object" ? String((org as Record<string, unknown>).name || "") : typeof org === "string" ? org : "";
+    const desc = typeof e.description === "string" ? e.description : metaContent(html, "og:description");
+    out.push({
+      uid: String(e.identifier || e.url || pageUrl),
+      title: decodeEntities(String(e.name || metaContent(html, "og:title") || "")).trim(),
+      start: bkkDate(String(e.startDate || "")),
+      end: bkkDate(String(e.endDate || "")),
+      location: decodeEntities(where),
+      url: typeof e.url === "string" ? e.url : pageUrl,
+      desc: decodeEntities(desc),
+      org: decodeEntities(orgName),
+    });
+  }
+  return out;
+}
 // ===== end of rules =====
 
 const CORS = {
@@ -216,6 +289,22 @@ async function fromIcal(src: Source, kws: string[], until: number): Promise<{ ro
   diag.read = items.length;
   const now = Date.now(), rows: Row[] = [];
   for (const e of items) {
+    const r = icalRow(e, src, kws, until, now);
+    if ("row" in r) rows.push(r.row); else diag[r.drop]++;
+  }
+  diag.kept = rows.length;
+  return { rows, diag };
+}
+
+async function fromPage(src: Source, kws: string[], until: number): Promise<{ rows: Row[]; diag: Diag }> {
+  if (!src.url || !okUrl(src.url)) throw new Error("not a public https event link");
+  const html = await getText(src.url, { Accept: "text/html" });
+  const events = parseEventPage(html, src.url);
+  if (!events.length) throw new Error("no event details found on this page. Check that it is the event's own link (not a list of events)");
+  const diag = newDiag();
+  diag.read = events.length;
+  const now = Date.now(), rows: Row[] = [];
+  for (const e of events) {
     const r = icalRow(e, src, kws, until, now);
     if ("row" in r) rows.push(r.row); else diag[r.drop]++;
   }
@@ -292,7 +381,7 @@ Deno.serve(async (req) => {
   for (const s of sources) {
     const checkedAt = new Date().toISOString();
     try {
-      const got = s.kind === "eventbrite" ? await fromEventbrite(s, kws, until) : await fromIcal(s, kws, until);
+      const got = s.kind === "eventbrite" ? await fromEventbrite(s, kws, until) : s.kind === "page" ? await fromPage(s, kws, until) : await fromIcal(s, kws, until);
       rows.push(...got.rows);
       report.push({ id: s.id, label: s.label || "", found: got.rows.length, checkedAt, ...got.diag });
     } catch (err) {

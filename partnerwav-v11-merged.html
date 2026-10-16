@@ -21694,7 +21694,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ----- Event sources: the feeds the events-sync function reads (supabase/functions/events-sync), and the
   // sites without an open API that CloudWAV checks by hand every Saturday and pastes in. Everything found
   // waits in "Waiting for review". Kept in operatorSettings (CloudWAV only); no keys or tokens live here.
-  var EVS_KINDS = [["ical", "iCal link (Luma, Meetup, Google)"], ["eventbrite", "Eventbrite organizer"], ["manual", "Check by hand on Saturday"]];
+  var EVS_KINDS = [["ical", "iCal link (Luma, Meetup, Google)"], ["page", "One event page (Luma or Eventbrite event link)"], ["eventbrite", "Eventbrite organizer"], ["manual", "Check by hand on Saturday"]];
   var EVS_SOURCE_TAGS = ["luma", "meetup", "eventbrite", "zipevent", "manual"];
   var EVS_KEYWORDS = ["tech", "startup", "AI", "artificial intelligence", "machine learning", "data", "developer", "software", "SaaS", "cloud", "cyber", "security",
     "blockchain", "web3", "fintech", "product", "hackathon", "pitch", "founder", "venture", "investor", "devops", "python", "javascript", "coding", "GDG", "AWS", "LLM",

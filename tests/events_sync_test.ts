@@ -14,7 +14,7 @@ if (from < 0 || to < from) throw new Error("the rules block is missing from inde
 const rulesDir = mkdtempSync(join(tmpdir(), "events-rules-"));
 const rulesFile = join(rulesDir, "rules.ts");
 writeFileSync(rulesFile, indexText.slice(from, to));
-const { DEFAULT_KEYWORDS, newDiag, parseIcs, icalRow, isCalendar, scheduleDue } = await import(pathToFileURL(rulesFile).href);
+const { DEFAULT_KEYWORDS, newDiag, parseIcs, icalRow, isCalendar, scheduleDue, parseEventPage, bkkDate } = await import(pathToFileURL(rulesFile).href);
 type Source = { id: string; kind: string; label?: string; url?: string; orgId?: string; city?: string; allTech?: boolean; active?: boolean; source?: string };
 
 const now = Date.parse("2026-10-16T00:00:00Z");
@@ -88,5 +88,33 @@ assert.equal(scheduleDue({ enabled: true, weekday: 6, hour: 8 }, new Date("2026-
 assert.equal(scheduleDue({ enabled: false, weekday: 6, hour: 8 }, sat0800), false, "a switched-off schedule never runs");
 assert.equal(scheduleDue(undefined, sat0800), false, "no schedule saved: nothing runs");
 assert.equal(scheduleDue({ enabled: true, weekday: 1, hour: 19 }, new Date("2026-10-19T12:00:00Z")), true, "a Monday 19:00 schedule runs on Monday 19:00 Bangkok");
+
+
+// ----- a single event page (Luma event link): its details come from the page's schema.org Event block -----
+const page = `<!doctype html><html><head><meta property="og:title" content="Fallback title"><meta property="og:description" content="Fallback text">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Event","name":"AI Founders &amp; Coffee #tech","startDate":"2026-10-22T18:30:00+07:00","endDate":"2026-10-22T20:30:00+07:00","location":{"@type":"Place","name":"Example Cafe","address":{"@type":"PostalAddress","addressLocality":"Bangkok","addressCountry":"TH"}},"url":"https://luma.com/jdyxq8zp","description":"Meetup for #tech builders in Bangkok.","organizer":{"@type":"Organization","name":"Bangkok Tech Club"}}</script>
+</head><body>Event page</body></html>`;
+const pageEvents = parseEventPage(page, "https://luma.com/jdyxq8zp");
+assert.equal(pageEvents.length, 1, "one event on the page");
+const pe = pageEvents[0];
+assert.equal(pe.title, "AI Founders & Coffee #tech", "title is read and decoded (the #tech hashtag stays in the title)");
+assert.equal(pe.start?.toISOString(), "2026-10-22T11:30:00.000Z", "18:30 at +07:00 is 11:30 UTC");
+assert.equal(pe.end?.toISOString(), "2026-10-22T13:30:00.000Z", "end time is read");
+assert.equal(pe.location, "Example Cafe, Bangkok, TH", "location is the place and its address");
+assert.equal(pe.url, "https://luma.com/jdyxq8zp", "the event link is kept");
+assert.equal(pe.org, "Bangkok Tech Club", "organizer is read");
+const pageRow = icalRow(pe, { id: "src-page", kind: "page", url: "https://luma.com/jdyxq8zp", city: "Bangkok", active: true }, DEFAULT_KEYWORDS, until, now);
+assert.ok("row" in pageRow, "the #tech event is kept by the keyword check");
+
+// a floating time (no offset) is Bangkok time; an @graph wrapper is read too
+const floating = `<script type="application/ld+json">{"@graph":[{"@type":"WebPage","name":"x"},{"@type":["Event"],"name":"Floating time","startDate":"2026-10-22T18:30:00","location":"Bangkok"}]}</script>`;
+const fl = parseEventPage(floating, "https://example.com/e");
+assert.equal(fl.length, 1, "the event inside @graph is found");
+assert.equal(fl[0].start?.toISOString(), "2026-10-22T11:30:00.000Z", "no offset: Bangkok time");
+assert.equal(fl[0].location, "Bangkok", "a text location is kept");
+assert.equal(bkkDate("2026-10-22T18:30:00Z")?.toISOString(), "2026-10-22T18:30:00.000Z", "a UTC time stays as it is");
+
+// a page with no event block gives nothing (the sync reports that for the source)
+assert.equal(parseEventPage("<html><head><meta property='og:title' content='A list of events'></head></html>", "https://luma.com/bangkok").length, 0, "a list page has no event details");
 
 console.log("event feed rules: all checks passed");
