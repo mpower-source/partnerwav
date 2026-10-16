@@ -20742,6 +20742,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-dl-intro]"))){ var iid = b.getAttribute("data-dl-intro");
       if (devLeadIntroduce(iid)){ toast("Introduced -- the house now has the client's contact"); renderDevScreens(); if (state.screen === "referral-view") renderReferralView(); }
       else toast("The house has to accept first, and the request needs a contact"); return; }
+    if (t.closest("[data-cal-feed-make]")){ calFeedMake(); return; }
+    if (t.closest("[data-cal-feed-copy]")){ var cu = calFeedUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(cu).then(function(){ toast("Link copied"); }, function(){ window.prompt("Copy your calendar link", cu); });
+      else window.prompt("Copy your calendar link", cu); return; }
+    if (t.closest("[data-cal-feed-reset]")){ if (confirm("Reset the link? The old link stops working, and you'll need to add the new one to your calendars.")) calFeedMake(); return; }
     if ((b = t.closest("[data-cl-reply]"))){ var rid = b.getAttribute("data-cl-reply"), rt = document.querySelector('[data-cl-reply-text="' + rid + '"]');
       if (!rt || !rt.value.trim()){ toast("Write your answers first"); return; }
       clarifyReply(rid, rt.value).then(function(ok){ if (ok) toast("Sent to PartnerWAV"); }); return; }
@@ -21826,6 +21831,41 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return true;
     } catch(e){ return false; }
   }
+  // ----- Calendar feed: a private link a signed-in login subscribes to in Google Calendar or Outlook. The link is kept
+  // as a calendarFeeds record that only that login can read; the calendar-feed function serves the events with it.
+  var CAL_FEED_URL = SUPABASE_URL + "/functions/v1/calendar-feed";
+  var calFeed = { loaded:false, ready:false, token:"" };
+  function calFeedToken(){ var b = new Uint8Array(24); crypto.getRandomValues(b); return Array.prototype.map.call(b, function(x){ return ("0" + x.toString(16)).slice(-2); }).join(""); }
+  function calFeedUrl(){ return CAL_FEED_URL + "?token=" + calFeed.token; }
+  function calFeedLoad(){
+    if (calFeed.loaded || !notifLive()) return;
+    calFeed.loaded = true;
+    supabase.from("portal_records").select("data").eq("collection", "calendarFeeds").eq("id", myMsgKey()).maybeSingle().then(function(r){
+      calFeed.token = r.data && r.data.data && r.data.data.token ? String(r.data.data.token) : ""; calFeed.ready = true; render();
+    }, function(){ calFeed.loaded = false; });
+  }
+  function calFeedMake(){
+    var k = myMsgKey(), token = calFeedToken();
+    return supabase.from("portal_records").upsert([{ collection:"calendarFeeds", id:k, data:{ id:k, token:token, createdAt:nowStamp() }, readers:[k], writers:[k], is_public:false }], { onConflict:"collection,id" })
+      .then(function(r){ if (r.error){ toast("Could not create the link: " + r.error.message); return; } calFeed.token = token; calFeed.ready = true; render(); toast("Your calendar link is ready"); }, function(){ toast("Could not create the link. Check your connection."); });
+  }
+  function calFeedHtml(){
+    if (!notifLive()) return "";
+    calFeedLoad();
+    if (!calFeed.ready) return '<div class="card card-pad" style="margin-bottom:12px;"><span class="field-note">Loading your calendar link...</span></div>';
+    if (!calFeed.token) return '<div class="card card-pad" style="margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"><b>Subscribe to these events in your calendar</b>'
+      + '<span class="field-note">Get a private link once. Google Calendar and Outlook then pick up new events and changes on their own.</span>'
+      + '<div><button type="button" class="btn primary sm" data-cal-feed-make>Get my calendar link</button></div></div>';
+    var url = calFeedUrl(), g = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(url),
+      o = "https://outlook.live.com/calendar/0/addfromweb?url=" + encodeURIComponent(url) + "&name=" + encodeURIComponent("PartnerWAV: Thailand events");
+    return '<div class="card card-pad" style="margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"><b>Subscribe to these events in your calendar</b>'
+      + '<span class="field-note">Keep this link private: anyone who has it can see the events. Calendars refresh it every few hours.</span>'
+      + '<div class="cfg-actions"><a class="btn primary sm" href="'+attr(g)+'" target="_blank" rel="noopener noreferrer" data-cal-feed-google>Add to Google Calendar</a>'
+      + '<a class="btn secondary sm" href="'+attr(o)+'" target="_blank" rel="noopener noreferrer" data-cal-feed-outlook>Add to Outlook</a>'
+      + '<button type="button" class="btn ghost sm" data-cal-feed-copy>Copy the link</button>'
+      + '<button type="button" class="btn ghost sm" data-cal-feed-reset>Reset the link</button></div>'
+      + '<span class="field-note">Apple Calendar or another app: copy the link and add it as a subscribed calendar.</span></div>';
+  }
   function tecCardHtml(e){
     var reg = safeHref(e.link || ""), host = ceHostUrl(e);
     return '<article class="tec-ev" data-tec-event="'+attr(e.id)+'">'
@@ -21881,6 +21921,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<h1>'+(orgName ? esc(orgName) + ' events' : 'Thailand Tech &amp; Startup Events')+'</h1>'
       + '<p>'+(orgName ? 'Upcoming events from '+esc(orgName)+', on the PartnerWAV Thailand calendar.' : 'Meetups, workshops and founder nights from Thailand\'s tech and business communities, in one place. All times are Bangkok time.')+'</p>'
       + (orgF ? '<a class="tec-all" href="'+attr(calendarUrl())+'">See every community\'s events</a>' : '')+'</header>';
+    html += calFeedHtml();
     if (kinds.length > 1) html += '<div class="meet-chips tec-filter" role="group" aria-label="Kind of event"><button type="button" class="meet-chip" data-tec-kind="" aria-pressed="'+!kindF+'">All events</button>'
       + (kinds.some(function(k){ return k[0] !== "community"; }) ? '<button type="button" class="meet-chip" data-tec-kind="pitch" aria-pressed="'+(kindF === "pitch")+'">Pitch events &amp; hackathons</button>' : '');
     if (kinds.length > 1) html += kinds.map(function(k){ return '<button type="button" class="meet-chip" data-tec-kind="'+k[0]+'" aria-pressed="'+(kindF === k[0])+'">'+esc(k[1] + "s")+'</button>'; }).join("") + '</div>';
