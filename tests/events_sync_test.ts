@@ -117,4 +117,11 @@ assert.equal(bkkDate("2026-10-22T18:30:00Z")?.toISOString(), "2026-10-22T18:30:0
 // a page with no event block gives nothing (the sync reports that for the source)
 assert.equal(parseEventPage("<html><head><meta property='og:title' content='A list of events'></head></html>", "https://luma.com/bangkok").length, 0, "a list page has no event details");
 
+// places written the way Luma writes them: Bangkok as "Krung Thep Maha Nakhon", Thailand as "TH"
+const luma = (location: string) => icalRow({ uid: "x", title: "AI meetup", start: new Date(now + 86400000), end: null, location, url: "https://luma.com/x", desc: "", org: "" }, { id: "s", kind: "page", url: "https://luma.com/x", active: true }, kws, until, now);
+const lumaPlace = luma("True Digital Park, True Digital Park, Krung Thep Maha Nakhon, TH");
+assert.ok("row" in lumaPlace && lumaPlace.row.city === "Bangkok", "Krung Thep Maha Nakhon, TH is Bangkok, even with no City set on the source");
+assert.ok("row" in luma("Thai HealthTech Association, Krung Thep Maha Nakhon, TH"), "a Thai health venue in Bangkok is kept");
+assert.ok("drop" in luma("Berlin, Germany") && luma("Berlin, Germany").drop === "city", "Berlin is still dropped");
+
 console.log("event feed rules: all checks passed");

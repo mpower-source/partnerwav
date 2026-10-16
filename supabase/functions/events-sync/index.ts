@@ -118,8 +118,10 @@ function whereIs(location: string, fallbackCity: string): string | null {
   const l = location.toLowerCase();
   if (!l) return fallbackCity || "Other";
   if (/zoom|google meet|meet\.google|teams|online|virtual|livestream|youtube|webinar|discord/.test(l)) return "Online";
-  for (const c of CITIES) if (l.includes(c.toLowerCase())) return c;
-  if (l.includes("thailand") || /[ก-๙]/.test(l) || l.includes("กรุงเทพ")) return "Other";
+  // Bangkok's official name is Krung Thep Maha Nakhon; "TH" is Thailand's country code
+  const n = l.replace(/krung thep( maha nakhon)?/g, "bangkok");
+  for (const c of CITIES) if (n.includes(c.toLowerCase())) return c;
+  if (l.includes("thailand") || /(^|[\s,])th$/.test(l.trim()) || /[ก-๙]/.test(l) || l.includes("กรุงเทพ")) return "Other";
   // named places outside Thailand: skip, even on a Thai city calendar
   if (FOREIGN.test(l)) return null;
   return fallbackCity ? fallbackCity : null;   // somewhere else in the world: skip unless the source is a Thai one
