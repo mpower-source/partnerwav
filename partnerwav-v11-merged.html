@@ -21837,6 +21837,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + ((e.sponsors || []).length ? '<div class="tec-sponsors" data-tec-sponsors>Sponsored by '+e.sponsors.map(function(x){ return esc(x.name); }).join(", ")+'</div>' : '')
         + '<div class="tec-actions">'+(reg ? '<a class="btn primary sm" href="'+attr(reg)+'" target="_blank" rel="noopener noreferrer" data-tec-register>Register</a>' : '')
           + '<a class="btn secondary sm" href="'+attr(ceGoogleUrl(e))+'" target="_blank" rel="noopener noreferrer" data-tec-google>Add to Google Calendar</a>'
+          + '<a class="btn secondary sm" href="'+attr(calOutlookUrl(ceAsCal(e)))+'" target="_blank" rel="noopener noreferrer" data-tec-outlook>Add to Outlook</a>'
           + '<button type="button" class="btn ghost sm" data-tec-ics="'+attr(e.id)+'">Apple / other (.ics)</button></div></div></article>';
   }
   function tecSubmitFormHtml(){
