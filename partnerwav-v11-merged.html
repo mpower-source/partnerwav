@@ -21751,7 +21751,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (last.error) return '<span class="evs-bad">Last check failed: ' + esc(last.error) + '</span>';
     var left = [["past", "already past"], ["window", "more than 90 days away"], ["keyword", "no tech keyword"], ["city", "not in a listed city"], ["link", "no signup link"], ["nodate", "no date"], ["cancelled", "cancelled"]]
       .filter(function(x){ return last[x[0]]; }).map(function(x){ return last[x[0]] + " " + x[1]; });
-    return 'Read ' + esc(String(last.read || 0)) + ' events, kept ' + esc(String(last.kept != null ? last.kept : (last.found || 0))) + (left.length ? ' · left out: ' + esc(left.join(", ")) : '');
+    return 'Read ' + esc(String(last.read || 0)) + ' events, kept ' + esc(String(last.kept != null ? last.kept : (last.found || 0))) + (left.length ? ' · left out: ' + esc(left.join(", ")) : '') + (last.place ? ' · location read: ' + esc(last.place) : '');
   }
   function evsHtml(){
     var r = evsRec(), run = evsRun(), byId = {}; ((run && run.sources) || []).forEach(function(s){ byId[s.id] = s; });

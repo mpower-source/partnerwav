@@ -38,12 +38,14 @@ export type Row = {
 // How many events each source gave, and why the others were left out
 export type Diag = {
   read: number; cancelled: number; nodate: number; past: number; window: number; keyword: number; city: number; link: number; kept: number;
+  place: string;   // the location the sync read for the first event it could not place (and the source's City)
 };
+export type DropKey = Exclude<keyof Diag, "place">;
 export type Schedule = { enabled?: boolean; weekday?: number; hour?: number };
 export type ParsedEvent = { uid: string; title: string; start: Date | null; end: Date | null; location: string; url: string; desc: string; org: string };
 
 export function newDiag(): Diag {
-  return { read: 0, cancelled: 0, nodate: 0, past: 0, window: 0, keyword: 0, city: 0, link: 0, kept: 0 };
+  return { read: 0, cancelled: 0, nodate: 0, past: 0, window: 0, keyword: 0, city: 0, link: 0, kept: 0, place: "" };
 }
 
 export const DEFAULT_KEYWORDS = ["tech", "startup", "ai", "artificial intelligence", "machine learning", "data", "developer",
@@ -139,13 +141,13 @@ export function isCalendar(text: string): boolean {
 }
 
 // Keep one event from an iCal feed, or say which rule dropped it
-export function icalRow(e: ParsedEvent, src: Source, kws: string[], until: number, now: number): { row: Row } | { drop: keyof Diag } {
+export function icalRow(e: ParsedEvent, src: Source, kws: string[], until: number, now: number): { row: Row } | { drop: DropKey; place?: string } {
   if (!e.title || !e.start) return { drop: "nodate" };
   if (e.start.getTime() < now) return { drop: "past" };
   if (e.start.getTime() > until) return { drop: "window" };
   if (!src.allTech && !hasKeyword(e.title + " " + e.desc, kws)) return { drop: "keyword" };
   const city = whereIs(e.location, src.city || "");
-  if (!city) return { drop: "city" };
+  if (!city) return { drop: "city", place: e.location || "(no location on the page)" };
   const link = okUrl(e.url) ? e.url : (src.url && src.url.startsWith("https://") ? src.url.replace(/\.ics.*$/, "") : "");
   if (!link) return { drop: "link" };
   const dur = e.end ? Math.round((e.end.getTime() - e.start.getTime()) / 60000) : 120;
@@ -290,7 +292,7 @@ async function fromIcal(src: Source, kws: string[], until: number): Promise<{ ro
   const now = Date.now(), rows: Row[] = [];
   for (const e of items) {
     const r = icalRow(e, src, kws, until, now);
-    if ("row" in r) rows.push(r.row); else diag[r.drop]++;
+    if ("row" in r) rows.push(r.row); else { diag[r.drop]++; if (r.drop === "city" && !diag.place) diag.place = (r.place || "") + " (source city: " + (src.city || "none") + ")"; }
   }
   diag.kept = rows.length;
   return { rows, diag };
@@ -306,7 +308,7 @@ async function fromPage(src: Source, kws: string[], until: number): Promise<{ ro
   const now = Date.now(), rows: Row[] = [];
   for (const e of events) {
     const r = icalRow(e, src, kws, until, now);
-    if ("row" in r) rows.push(r.row); else diag[r.drop]++;
+    if ("row" in r) rows.push(r.row); else { diag[r.drop]++; if (r.drop === "city" && !diag.place) diag.place = (r.place || "") + " (source city: " + (src.city || "none") + ")"; }
   }
   diag.kept = rows.length;
   return { rows, diag };
@@ -332,7 +334,7 @@ async function fromEventbrite(src: Source, kws: string[], until: number): Promis
       if (!src.allTech && !hasKeyword(title + " " + desc, kws)) { diag.keyword++; continue; }
       const loc = e.online_event ? "online" : [e.venue?.name, e.venue?.address?.city, e.venue?.address?.country === "TH" ? "Thailand" : ""].filter(Boolean).join(", ");
       const r = icalRow({ uid: "eb-" + e.id, title, start, end: isNaN(end.getTime()) ? null : end, location: loc, url: e.url || "", desc: String(desc), org: e.organizer?.name || "" }, { ...src, source: "eventbrite" }, kws, until, Date.now());
-      if ("row" in r) rows.push(r.row); else diag[r.drop]++;
+      if ("row" in r) rows.push(r.row); else { diag[r.drop]++; if (r.drop === "city" && !diag.place) diag.place = (r.place || "") + " (source city: " + (src.city || "none") + ")"; }
     }
     if (!d.pagination?.has_more_items || !d.pagination?.continuation) break;
     cont = d.pagination.continuation;
