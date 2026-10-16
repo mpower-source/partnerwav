@@ -18229,12 +18229,14 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     renderAccounts(true);
   }
   function accessRequestsHtml(){
+    var alerts = (typeof Notification !== "undefined" && Notification.permission === "default")
+      ? '<div class="card card-pad" style="margin-bottom:12px;"><b>Turn on alerts on this device</b><div class="field-note">New access requests will pop up on this desktop and phone while you are signed in. Tap the button, then allow notifications.</div><button type="button" class="btn primary sm" data-notif-alerts style="margin-top:8px;">Turn on alerts</button></div>' : '';
     var head = '<div class="section-head"><h2 style="font-size:.95rem;">Access requests</h2><span class="hint">People who signed up and asked for Member, Investor or Promoter access. Choose the company or profile, then approve.</span></div>';
     var box = function(inner){ return '<div class="card" style="margin-bottom:16px;">' + inner + '</div>'; };
     if (arErr) return box('<div class="card-pad"><b>Couldn\'t load the requests</b><div class="field-note">' + esc(arErr) + '</div></div>');
     if (!arList) return box('<div class="card-pad field-note">Loading requests...</div>');
-    if (!arList.length) return box('<div class="card-pad field-note">No requests waiting.</div>');
-    return head + box('<div class="table-scroll"><table><thead><tr><th>Person</th><th>Asks for</th><th>Give access to</th><th></th></tr></thead><tbody>'
+    if (!arList.length) return alerts + box('<div class="card-pad field-note">No requests waiting.</div>');
+    return alerts + head + box('<div class="table-scroll"><table><thead><tr><th>Person</th><th>Asks for</th><th>Give access to</th><th></th></tr></thead><tbody>'
       + arList.map(function(q){
           var role = q.kind === "media" ? "media" : q.kind === "investor" ? "investor" : "member";
           var opts = acctEntities(role).map(function(x){ return '<option value="' + esc(x.id) + '">' + esc(x.name) + '</option>'; }).join("");
@@ -20653,11 +20655,25 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     else mine.forEach(function(n){ if (!seen[n.id]){ seen[n.id] = true; notifPopup(n); } });
     renderBell();
   }
+  // Alerts on this device. Phones only show them from a service worker (sw.js), so that is used when it is there;
+  // a desktop browser can also use the plain API. Alerts arrive while the portal is open on the device (realtime).
+  var swReg = null;
+  function notifRegisterWorker(){
+    if (!("serviceWorker" in navigator) || !supabase || DEMO_MODE) return;
+    try {
+      navigator.serviceWorker.register("sw.js").then(function(reg){ swReg = reg; }, function(e){ console.warn("Alerts worker not registered:", e); });
+      navigator.serviceWorker.addEventListener("message", function(ev){ if (ev.data && ev.data.type === "open" && ev.data.id && state.account) notifOpen(ev.data.id); });
+    } catch(e){}
+  }
   function notifPopup(n){
     toast(n.title);
-    if (typeof Notification !== "undefined" && Notification.permission === "granted"){
-      try { var no = new Notification("PartnerWAV: " + n.title, { body:n.body, tag:n.id }); no.onclick = function(){ window.focus(); no.close(); notifOpen(n.id); }; } catch(e){}
-    }
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    var title = "PartnerWAV: " + n.title, opts = { body:n.body, tag:n.id, data:{ id:n.id } };
+    if (swReg && swReg.showNotification){ swReg.showNotification(title, opts).catch(function(){ notifPlain(title, opts, n); }); return; }
+    notifPlain(title, opts, n);
+  }
+  function notifPlain(title, opts, n){
+    try { var no = new Notification(title, opts); no.onclick = function(){ window.focus(); no.close(); notifOpen(n.id); }; } catch(e){}
   }
   function notifOpen(id){
     var n = notifications.filter(function(x){ return x.id === id; })[0]; if (!n) return;
@@ -22500,6 +22516,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function initAuth(){
     updateAccountMenu();
+    notifRegisterWorker();
     var form = document.getElementById("loginForm");
     var submitBtn = document.getElementById("loginSubmit");
 
