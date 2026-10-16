@@ -928,6 +928,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .tec-cal-day i{ position:absolute; bottom:3px; left:50%; transform:translateX(-50%); font-style:normal; font-size:.62rem; line-height:1; }
   .tec-cal-day-h{ margin:6px 0 0; font-size:1rem; }
   .tec-cal .tec-ev{ box-shadow:none; }
+  .ar-focus td{ background:var(--accent-soft); }
   .tec-detail{ display:flex; flex-direction:column; gap:8px; margin-top:6px; padding-top:10px; border-top:1px solid var(--line); }
   .tec-empty{ text-align:center; padding:32px 16px; color:var(--ink-soft); border:1px dashed var(--line); border-radius:16px; }
   .tec-hosts .meet-chip{ text-decoration:none; }
@@ -18217,6 +18218,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   // ----- access requests from Member / Investor / Promoter sign-ups (supabase/portal_access_requests.sql) -----
   var arList = null, arErr = "", arBusy = false;
+  // Plain-language reminder of what each role sees, for the quick review before approving
+  var AR_ROLE_REVIEW = { member:"Member: the member directory, events and their own member profile.", investor:"Investor: the investor pages and companies that choose to share their round.", media:"Promoter: the promoter workspace for PR, media, creator and event offers." };
   async function arLoad(force){
     if (!acctLive() || arBusy || (arList && !force)) return;
     arBusy = true;
@@ -18240,9 +18243,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + arList.map(function(q){
           var role = q.kind === "media" ? "media" : q.kind === "investor" ? "investor" : "member";
           var opts = acctEntities(role).map(function(x){ return '<option value="' + esc(x.id) + '">' + esc(x.name) + '</option>'; }).join("");
-          return '<tr data-ar-row="' + esc(q.id) + '"><td><b>' + esc(q.name || "") + '</b><div class="field-note">' + esc(q.email) + (q.phone ? ' · ' + esc(q.phone) : '') + '</div>'
+          return '<tr data-ar-row="' + esc(q.id) + '"' + (state.arFocus === q.id ? ' class="ar-focus"' : '') + '><td><b>' + esc(q.name || "") + '</b><div class="field-note">' + esc(q.email) + (q.phone ? ' · ' + esc(q.phone) : '') + '</div>'
             + '<div class="field-note">Asked ' + esc(String(q.created_at || "").slice(0, 10)) + '</div></td>'
-            + '<td>' + esc(ACCT_ROLES[role] || role) + '</td>'
+            + '<td><b>' + esc(ACCT_ROLES[role] || role) + '</b><div class="field-note">' + esc(AR_ROLE_REVIEW[role]) + '</div></td>'
             + '<td>' + (opts ? '<select data-ar-entity="' + esc(q.id) + '" aria-label="Company or profile for ' + esc(q.name || q.email) + '">' + opts + '</select>' : '<span class="field-note">Create the ' + esc(ACCT_ROLES[role]) + ' profile first</span>') + '</td>'
             + '<td class="row-actions" style="white-space:nowrap;">' + (opts ? '<button class="btn primary sm" data-ar-approve="' + esc(q.id) + '">Approve</button> ' : '') + '<button class="btn ghost sm" data-ar-decline="' + esc(q.id) + '">Decline</button></td></tr>';
         }).join("")
@@ -18266,6 +18269,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var el = document.getElementById("accountsContent"); if (!el || state.screen !== "operator-accounts") return;
     if (acctLive() && !acctList){ acctLoadList(); }
     if (acctLive() && !arList){ arLoad(); }
+    if (state.arScroll && acctLive()){ state.arScroll = false; setTimeout(function(){ var r = document.querySelector('.ar-focus'); if (r) r.scrollIntoView({ behavior:'smooth', block:'center' }); }, 60); }
     var live = acctLive(), html = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"><button class="btn primary sm" data-acct-setup="vendor" data-acct-any>+ Set up an account</button>'
       + (live ? '<button class="btn secondary sm" data-acct-refresh>Refresh</button>' : '') + '</div>';
     if (live) html += accessRequestsHtml();
@@ -20678,6 +20682,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function notifOpen(id){
     var n = notifications.filter(function(x){ return x.id === id; })[0]; if (!n) return;
     notifMarkRead([id]); openBell(false);
+    if (n.ref){ state.arFocus = n.ref; state.arScroll = true; }
     if (n.screen){ state.screen = n.screen; render(); window.scrollTo(0, 0); }
     renderBell();
   }

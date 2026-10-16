@@ -55,7 +55,7 @@ reset role;
 select public.ar_t('a honeypot-filled request is not stored', not exists (select 1 from public.portal_access_requests where email = 'bot@example.test'));
 
 -- the operator is told about each new request (as a notification addressed to 'operator')
-select public.ar_t('a new request tells the operator', exists (select 1 from public.portal_records where collection = 'notifications' and data ->> 'kind' = 'request' and data -> 'to' = '["operator"]' and data ->> 'title' like 'New access request%'));
+select public.ar_t('a new request tells the operator', exists (select 1 from public.portal_records where collection = 'notifications' and data ->> 'kind' = 'request' and data -> 'to' = '["operator"]' and data ->> 'title' like 'New access request%' and data ->> 'ref' = (select id::text from public.portal_access_requests where email = 'newbie@example.test')));
 -- a declined person can ask again (the request goes back to pending for the operator)
 set role anon;
 select public.ar_t('a declined person can ask again', (public.portal_request_access('{"name":"Promo","email":"promo@example.test","kind":"media","elapsedMs":5000}'::jsonb) ->> 'status') = 'pending');

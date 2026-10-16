@@ -52,7 +52,8 @@ create policy "access requests: operators read" on public.portal_access_requests
 
 -- Tells the operator (CloudWAV) that a login asked for access, so it can be approved right away.
 -- Written as a normal notification (it shows in the bell and triggers the alert on the operator's devices).
-create or replace function public.portal_notify_operator(p_title text, p_body text, p_screen text)
+drop function if exists public.portal_notify_operator(text, text, text);
+create or replace function public.portal_notify_operator(p_title text, p_body text, p_screen text, p_ref text)
 returns void language plpgsql security definer set search_path = public as $$
 declare new_id text := 'n-' || replace(gen_random_uuid()::text, '-', '');
 begin
@@ -60,12 +61,12 @@ begin
   insert into public.portal_records (collection, id, data, readers, writers, is_public)
   values ('notifications', new_id,
     jsonb_build_object('id', new_id, 'kind', 'request', 'title', left(coalesce(p_title, ''), 160), 'body', left(coalesce(p_body, ''), 400),
-      'screen', left(coalesce(p_screen, ''), 60), 'to', jsonb_build_array('operator'), 'from', 'signup',
+      'screen', left(coalesce(p_screen, ''), 60), 'ref', left(coalesce(p_ref, ''), 60), 'to', jsonb_build_array('operator'), 'from', 'signup',
       'at', to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')),
     array[]::text[], array[]::text[], false);
   perform set_config('portal.notification', 'off', true);
 end $$;
-revoke all on function public.portal_notify_operator(text, text, text) from public;
+revoke all on function public.portal_notify_operator(text, text, text, text) from public;
 
 -- The sign-up form calls this right after creating the login (anon key). It stores the
 -- request only; it never gives a role. The same spam checks as the other public forms apply.
@@ -99,7 +100,7 @@ begin
   returning id into rid;
   perform public.portal_notify_operator(
     'New access request: ' || (case kd when 'media' then 'Promoter' when 'investor' then 'Investor' else 'Member' end) || ' -- ' || left(nm, 80),
-    mail || coalesce(' · ' || nullif(ph, ''), '') || '. Approve it under Accounts & Logins.', 'operator-accounts');
+    mail || coalesce(' · ' || nullif(ph, ''), '') || '. Review the role and approve or decline.', 'operator-accounts', rid::text);
   return jsonb_build_object('status', 'pending', 'id', rid);
 end $$;
 revoke all on function public.portal_request_access(jsonb) from public;
