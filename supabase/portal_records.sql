@@ -1431,6 +1431,26 @@ end $$;
 --    (otherwise the portal can say "Could not find the table 'public.portal_records' in the schema cache")
 -- ---------------------------------------------------------------------------
 -- ---------------------------------------------------------------------------
+-- 9b. The weekly event check: an hourly tick runs the events-sync function, which checks the schedule set in the portal
+--     (Community Partners > Event sources > Weekly check) and only runs the sources that are switched on.
+--     Needs pg_cron and pg_net on (Database > Extensions) and the same secret as the function's EVENTS_SYNC_SECRET
+--     saved in Vault as events_sync_secret (Project Settings > Vault). Skipped until both are in place.
+-- ---------------------------------------------------------------------------
+do $$
+begin
+  if to_regclass('vault.decrypted_secrets') is not null
+     and exists (select 1 from pg_extension where extname = 'pg_cron')
+     and exists (select 1 from pg_extension where extname = 'pg_net') then
+    perform cron.schedule('events-sync-tick', '0 * * * *', $cmd$
+      select net.http_post(
+        url := 'https://lnawgyaapcpyrvdtkarp.supabase.co/functions/v1/events-sync',
+        headers := jsonb_build_object('Content-Type', 'application/json', 'x-sync-secret',
+          (select decrypted_secret from vault.decrypted_secrets where name = 'events_sync_secret')),
+        body := '{"scheduled": true}'::jsonb) $cmd$);
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- 10. The calendar feed: one .ics file of the Thailand events, published by CloudWAV from the portal's Integrations screen.
 --     A public bucket: anyone with the link can subscribe, and only CloudWAV can write the file. (Skipped where storage is absent.)
 -- ---------------------------------------------------------------------------

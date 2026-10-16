@@ -21722,7 +21722,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     { id:"src-hackathons", kind:"manual", label:"Hackathons (Devpost and others)", url:"https://devpost.com/hackathons", city:"Online", active:true, note:"Online hackathons open to Thailand, and Thai hackathons announced on Facebook and Techsauce." }];
   // starterV 2 (Oct 14): venues, big-company events, government and hackathon sources added to the hand-checked list
   function evsRec(){ var r = operatorSettings.filter(function(x){ return x.id === "eventSources"; })[0];
-    if (!r) return { id:"eventSources", sources:JSON.parse(JSON.stringify(EVS_STARTERS)), keywords:EVS_KEYWORDS.slice(), starterV:2 };
+    if (!r) return { id:"eventSources", sources:JSON.parse(JSON.stringify(EVS_STARTERS)), keywords:EVS_KEYWORDS.slice(), starterV:2, schedule:{ enabled:true, weekday:6, hour:8 } };
     if ((r.starterV || 1) < 2){ r.sources = r.sources || [];
       EVS_STARTERS.forEach(function(x){ if (!r.sources.some(function(y){ return y.id === x.id; })) r.sources.push(JSON.parse(JSON.stringify(x))); });
       r.keywords = (r.keywords || []).concat(EVS_KEYWORDS.filter(function(k){ return (r.keywords || []).indexOf(k) < 0; })); r.starterV = 2; }
@@ -21733,6 +21733,26 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function evsHash(s){ var a = 0x811c9dc5, b = 0x01000193 ^ 0x5bd1e995; s = String(s);
     for (var i = 0; i < s.length; i++){ var c = s.charCodeAt(i); a = Math.imul(a ^ c, 16777619); b = Math.imul(b ^ c, 2246822519); }
     return ("0000000" + (a >>> 0).toString(16)).slice(-8) + ("0000000" + (b >>> 0).toString(16)).slice(-8); }
+  // ----- Weekly check: the schedule is kept with the sources (Bangkok time). The hourly tick on Supabase runs the check when it is due.
+  var EVS_DAYS = [["0", "Sunday"], ["1", "Monday"], ["2", "Tuesday"], ["3", "Wednesday"], ["4", "Thursday"], ["5", "Friday"], ["6", "Saturday"]];
+  function evsSchedule(){ var s = evsRec().schedule || {}; return { enabled: s.enabled !== false, weekday: s.weekday == null ? 6 : Number(s.weekday), hour: s.hour == null ? 8 : Number(s.hour) }; }
+  function evsScheduleHtml(){
+    var s = evsSchedule(), hours = []; for (var h = 0; h < 24; h++) hours.push(h);
+    return '<div class="card card-pad" style="margin-bottom:14px;" data-evs-sched><b>Weekly check</b>'
+      + '<p class="field-note" style="margin:6px 0 10px;">Every switched-on source is checked once a week at the time below (Bangkok time). Switch a source off in the list to leave it out. New events wait in Waiting for review.</p>'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;"><label class="cfg-check"><input type="checkbox" id="evsSchedOn"' + (s.enabled ? ' checked' : '') + '> Weekly check on</label>'
+      + '<select id="evsSchedDay" class="filter app-select" aria-label="Day">' + EVS_DAYS.map(function(d){ return '<option value="' + d[0] + '"' + (Number(d[0]) === s.weekday ? ' selected' : '') + '>' + d[1] + '</option>'; }).join("") + '</select>'
+      + '<select id="evsSchedHour" class="filter app-select" aria-label="Hour">' + hours.map(function(x){ return '<option value="' + x + '"' + (x === s.hour ? ' selected' : '') + '>' + (x < 10 ? '0' : '') + x + ':00</option>'; }).join("") + '</select>'
+      + '<button type="button" class="btn secondary sm" data-evs-sched-save>Save schedule</button></div>'
+      + '<div class="field-note" style="margin-top:8px;">' + (s.enabled ? 'Next check: ' + esc(EVS_DAYS[s.weekday][1]) + ' at ' + (s.hour < 10 ? '0' : '') + s.hour + ':00 Bangkok time.' : 'The weekly check is off. Check sources now still works.') + '</div></div>';
+  }
+  // What the last check read from a source, and why events were left out
+  function evsDiagText(last){
+    if (last.error) return '<span class="evs-bad">Last check failed: ' + esc(last.error) + '</span>';
+    var left = [["past", "already past"], ["window", "more than 90 days away"], ["keyword", "no tech keyword"], ["city", "not in a listed city"], ["link", "no signup link"], ["nodate", "no date"], ["cancelled", "cancelled"]]
+      .filter(function(x){ return last[x[0]]; }).map(function(x){ return last[x[0]] + " " + x[1]; });
+    return 'Read ' + esc(String(last.read || 0)) + ' events, kept ' + esc(String(last.kept != null ? last.kept : (last.found || 0))) + (left.length ? ' · left out: ' + esc(left.join(", ")) : '');
+  }
   function evsHtml(){
     var r = evsRec(), run = evsRun(), byId = {}; ((run && run.sources) || []).forEach(function(s){ byId[s.id] = s; });
     var auto = r.sources.filter(function(s){ return s.kind !== "manual"; }), manual = r.sources.filter(function(s){ return s.kind === "manual"; });
@@ -21741,7 +21761,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + (s.allTech ? ' <span class="badge accent">Every event is tech</span>' : '')
         + '<div class="field-note">'+esc([s.kind === "eventbrite" ? "Organizer " + (s.orgId || "?") : (s.url || ""), s.city].filter(Boolean).join(" · "))+'</div>'
         + (s.note ? '<div class="field-note">'+esc(s.note)+'</div>' : '')
-        + (last ? '<div class="field-note" data-evs-last>'+(last.error ? '<span class="evs-bad">Last check failed: '+esc(last.error)+'</span>' : 'Last check found '+esc(String(last.found))+' tech event'+(last.found === 1 ? '' : 's'))+'</div>' : '')+'</div>'
+        + (last ? '<div class="field-note" data-evs-last>'+evsDiagText(last)+'</div>' : '')+'</div>'
         + '<div class="evs-actions">'+(href ? '<a class="btn secondary xs" href="'+attr(href)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open</a>' : '')
         + '<button type="button" class="meet-chip" role="switch" aria-checked="'+(s.active !== false)+'" aria-pressed="'+(s.active !== false)+'" data-evs-toggle="'+attr(s.id)+'">'+(s.active !== false ? 'On' : 'Off')+'</button>'
         + '<button type="button" class="btn ghost xs" data-evs-del="'+attr(s.id)+'" aria-label="Remove '+attr(s.label || "source")+'">Remove</button></div></div>'; };
@@ -21749,7 +21769,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<p class="field-note" style="margin:6px 0 10px;">Luma calendars, Meetup group calendars and Eventbrite organizers can be read automatically. Meetup search (Pro accounts only), Eventbrite search and Zipevent have no open API, so they are checked by hand every Saturday and pasted in below. Everything found waits in <b>Waiting for review</b> until you approve it, and an event is never added twice.</p>'
         + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><button type="button" class="btn primary sm" data-evs-run'+(auto.filter(function(s){ return s.active !== false; }).length ? '' : ' disabled')+'>Check sources now</button>'
         + '<span class="field-note" id="evsRunMsg" role="status">'+(run ? 'Last check '+esc(run.at || "")+': '+esc(String(run.added || 0))+' new for review out of '+esc(String(run.seen || 0))+' found' : 'Not checked yet')+'</span></div></div>'
-      + '<div class="section-head"><h2>Read automatically ('+auto.length+')</h2></div>'
+      + evsScheduleHtml() + '<div class="section-head"><h2>Read automatically ('+auto.length+')</h2></div>'
       + (auto.length ? '<div class="evs-list">'+auto.map(row).join("")+'</div>' : '<div class="empty">No feeds yet. Add a Luma calendar\'s iCal link or an Eventbrite organizer below.</div>')
       + '<div class="section-head" style="margin-top:16px;"><h2>Checked by hand on Saturdays ('+manual.length+')</h2></div>'
       + '<div class="evs-list">'+manual.map(row).join("")+'</div>'
@@ -22026,6 +22046,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-ce-decline]"))){ var ed = ceById(b.getAttribute("data-ce-decline")); if (ed){ ed.status = "declined"; delete ed.submitter; ed.updatedAt = nowStamp(); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
     if ((b = t.closest("[data-ce-delete]"))){ var ex = ceById(b.getAttribute("data-ce-delete")); if (ex && confirm("Remove \"" + ex.title + "\" from the calendar?")){ if (ex.source){ ex.status = "declined"; ex.deletedAt = nowStamp(); ex.updatedAt = nowStamp(); } else communityEvents.splice(communityEvents.indexOf(ex), 1); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
     if ((b = t.closest("[data-ce-connect]"))){ var ec = ceById(b.getAttribute("data-ce-connect")); if (ec) ceMakeConnectPage(ec); return; }
+    if (t.closest("[data-evs-sched-save]")){ var sr = evsRec(); sr.schedule = { enabled: document.getElementById("evsSchedOn").checked, weekday: Number(document.getElementById("evsSchedDay").value), hour: Number(document.getElementById("evsSchedHour").value) };
+      evsSave(sr); renderOperatorCommunity(true); toast("Schedule saved"); return; }
     if (t.closest("[data-evs-run]")){ evsRunNow(); return; }
     if (t.closest("[data-evs-add]")){ evsAddSource(); return; }
     if ((b = t.closest("[data-evs-toggle]"))){ var rt = evsRec(), st = rt.sources.filter(function(x){ return x.id === b.getAttribute("data-evs-toggle"); })[0]; if (st){ st.active = st.active === false; evsSave(rt); renderOperatorCommunity(true); } return; }
