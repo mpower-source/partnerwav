@@ -1,7 +1,21 @@
 // Checks the event feed rules: reading an iCal feed, deciding which events to keep, and the weekly schedule.
 // Run: node --experimental-strip-types tests/events_sync_test.ts
 import assert from "node:assert/strict";
-import { DEFAULT_KEYWORDS, newDiag, parseIcs, icalRow, isCalendar, scheduleDue, type Source } from "../supabase/functions/events-sync/rules.ts";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+// The rules live in the function's index.ts (one file, so it deploys with one paste). Load that block as a module.
+const here = dirname(fileURLToPath(import.meta.url));
+const indexText = readFileSync(join(here, "..", "supabase", "functions", "events-sync", "index.ts"), "utf8");
+const from = indexText.indexOf("// ===== rules:"), to = indexText.indexOf("// ===== end of rules =====");
+if (from < 0 || to < from) throw new Error("the rules block is missing from index.ts");
+const rulesDir = mkdtempSync(join(tmpdir(), "events-rules-"));
+const rulesFile = join(rulesDir, "rules.ts");
+writeFileSync(rulesFile, indexText.slice(from, to));
+const { DEFAULT_KEYWORDS, newDiag, parseIcs, icalRow, isCalendar, scheduleDue } = await import(pathToFileURL(rulesFile).href);
+type Source = { id: string; kind: string; label?: string; url?: string; orgId?: string; city?: string; allTech?: boolean; active?: boolean; source?: string };
 
 const now = Date.parse("2026-10-16T00:00:00Z");
 const until = now + 90 * 86400000;
