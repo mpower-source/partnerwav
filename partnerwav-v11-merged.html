@@ -140,7 +140,11 @@
       <div id="loginInfo" class="login-msg good" role="status" hidden></div>
       <button type="submit" class="btn primary login-submit" id="loginSubmit">Sign in</button>
       <button type="button" class="login-link" id="forgotPasswordBtn">Forgot password?</button>
+      <button type="button" class="btn secondary login-submit" id="loginGoogle">Login with Google</button>
+      <button type="button" class="login-link" id="showSignUp">New here? Create an account</button>
     </div>
+    <!-- Filled in by signUpPanelHtml() (dropdown first, then login details). Not a <form>: the sign-in form above submits it. -->
+    <div id="loginPanelSignUp" hidden></div>
     <div id="loginPanelNewPassword" hidden>
       <h1 class="login-title" id="newPasswordTitle">Set a new password</h1>
       <p class="login-sub" id="newPasswordSub">Choose a password with at least 8 characters.</p>
@@ -152,6 +156,7 @@
     <div id="loginPanelNoAccount" hidden>
       <h1 class="login-title">Account not set up yet</h1>
       <p class="login-sub" id="noAccountText"></p>
+      <div id="noAccountRequest"></div>
       <button type="button" class="btn secondary login-submit" id="noAccountSignOut">Sign out</button>
     </div>
   </form>
@@ -17906,7 +17911,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
   function setAuthLocked(locked){ document.documentElement.classList.toggle("auth-locked", !!locked); }
   function showLoginPanel(which){
-    ["SignIn","NewPassword","NoAccount"].forEach(function(n){
+    ["SignIn","SignUp","NewPassword","NoAccount"].forEach(function(n){
       var el = document.getElementById("loginPanel"+n); if (el) el.hidden = (n !== which);
     });
   }
@@ -21951,6 +21956,34 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + '<button type="button" class="btn ghost sm" data-tec-ics="'+attr(e.id)+'">Apple / other (.ics)</button></div></div>' : '')
         + '</div></article>';
   }
+  // Prompt for visitors who have never signed in: a login (name, email, optional phone) for event updates.
+  // The login is created as a Member request; CloudWAV approves it (see supabase/portal_access_requests.sql).
+  function evLoginPromptHtml(){
+    return '<section class="tec-login-prompt" data-ev-login aria-labelledby="evLoginH"><h2 id="evLoginH">Get event updates</h2>'
+      + '<p class="meet-small">Create a login with your name and email. Add a phone number if you want event updates. Already have a login? <a href="'+attr(window.location.pathname)+'">Sign in</a>.</p>'
+      + loginFieldHtml("evName", "Name", "text", "") + loginFieldHtml("evEmail", "Email", "email", "you@company.co.th")
+      + loginFieldHtml("evPhone", "Phone", "tel", "e.g. 081 234 5678", true) + loginFieldHtml("evPassword", "Choose a password (8+ characters)", "password", "")
+      + spamFieldsHtml("evlogin")
+      + '<div id="evError" class="login-msg bad" role="alert" hidden></div>'
+      + '<button type="button" class="btn primary" id="evSubmit">Create my login</button></section>';
+  }
+  async function evSubmit(){
+    var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var name = g("evName"), email = g("evEmail"), phone = g("evPhone"), pw = (document.getElementById("evPassword") || {}).value || "";
+    var err = document.getElementById("evError"), btn = document.getElementById("evSubmit"), probs = [];
+    if (!name) probs.push("Please enter your name.");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) probs.push("Please enter a valid email address.");
+    if (pw.length < 8) probs.push("Choose a password with at least 8 characters.");
+    if (!probs.length && captchaMissing("evlogin")) probs.push("Please complete the security check.");
+    if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+    err.hidden = true; btn.disabled = true; btn.textContent = "Creating…";
+    try {
+      await createLogin({ name: name, email: email, phone: phone, password: pw, kind: "member", spam: spamPayload("evlogin") });
+      state.evDone = true; state.evFirst = name.split(" ")[0]; renderPublicEvents();
+    } catch(e){
+      captchaReset("evlogin"); err.textContent = signUpErrorText(e); err.hidden = false; btn.disabled = false; btn.textContent = "Create my login";
+    }
+  }
   // Calendar view: a month grid (Bangkok dates) with a count on each day with events; tap a day to list its events
   function tecDayKey(iso){ return new Date(new Date(iso).getTime() + 7 * 3600000).toISOString().slice(0, 10); }   // Bangkok is UTC+7, no DST
   function tecCalendarHtml(list){
@@ -21978,6 +22011,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   // Opens or closes one tile's details (both the public calendar and the member calendar use this)
   document.addEventListener("click", function(ev){
+    if (ev.target && ev.target.closest && ev.target.closest("#evSubmit")){ evSubmit(); return; }
     var t = ev.target && ev.target.closest ? ev.target : null, b = t && t.closest ? t.closest("[data-tec-open], [data-tec-view], [data-tec-month], [data-tec-day]") : null;
     if (!b) return;
     if (b.hasAttribute("data-tec-view")){ state.tecView = b.getAttribute("data-tec-view"); renderPublicEvents(); return; }
@@ -22010,7 +22044,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function renderPublicEvents(){
     var box = document.getElementById("publicEventsContent");
     if (!box || state.screen !== "public-events") return;
-    var key = JSON.stringify([communityEvents.length, state.tecCity || "", state.tecKind || "", state.publicEventsOrg || "", state.tecSent ? 1 : 0, state.tecShowForm ? 1 : 0, state.tecV || 0, state.tecOpen || "", state.tecView || "", state.tecMonth || "", state.tecDay || ""]);
+    var key = JSON.stringify([communityEvents.length, state.tecCity || "", state.tecKind || "", state.publicEventsOrg || "", state.tecSent ? 1 : 0, state.tecShowForm ? 1 : 0, state.tecV || 0, state.tecOpen || "", state.tecView || "", state.tecMonth || "", state.tecDay || "", state.account ? 1 : 0, state.evDone ? 1 : 0]);
     if (box.getAttribute("data-k") === key) return;
     if (!state.tecTried && supabase && !DEMO_MODE){
       state.tecTried = true; box.innerHTML = '<div class="empty" style="padding:40px;text-align:center;">Loading events…</div>';
@@ -22032,6 +22066,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<h1>'+(orgName ? esc(orgName) + ' events' : 'Thailand Tech &amp; Startup Events')+'</h1>'
       + '<p>'+(orgName ? 'Upcoming events from '+esc(orgName)+', on the PartnerWAV Thailand calendar.' : 'Meetups, workshops and founder nights from Thailand\'s tech and business communities, in one place. All times are Bangkok time.')+'</p>'
       + (orgF ? '<a class="tec-all" href="'+attr(calendarUrl())+'">See every community\'s events</a>' : '')+'</header>';
+    // someone who has never signed in here is asked to create a login (name, email, optional phone) for event updates
+    if (!state.account) html += state.evDone ? '<div class="login-msg good" role="status">Thanks, '+esc(state.evFirst || "")+'. Check your inbox to confirm your email, then sign in to get event updates.</div>' : evLoginPromptHtml();
     if (kinds.length > 1) html += '<div class="meet-chips tec-filter" role="group" aria-label="Kind of event"><button type="button" class="meet-chip" data-tec-kind="" aria-pressed="'+!kindF+'">All events</button>'
       + (kinds.some(function(k){ return k[0] !== "community"; }) ? '<button type="button" class="meet-chip" data-tec-kind="pitch" aria-pressed="'+(kindF === "pitch")+'">Pitch events &amp; hackathons</button>' : '');
     if (kinds.length > 1) html += kinds.map(function(k){ return '<button type="button" class="meet-chip" data-tec-kind="'+k[0]+'" aria-pressed="'+(kindF === k[0])+'">'+esc(k[1] + "s")+'</button>'; }).join("") + '</div>';
@@ -22050,7 +22086,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '</footer></div>';
     box.innerHTML = html;
     document.title = (orgName ? orgName + " events" : "Thailand Tech & Startup Events") + " · PartnerWAV";
-    if (state.tecShowForm) captchaMount();
+    if (state.tecShowForm || (!state.account && !state.evDone)) captchaMount();
   }
   async function submitTec(ev){
     ev.preventDefault();
@@ -22271,7 +22307,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (res.error) throw res.error;
       if (!res.data || !HOME_SCREEN[res.data.role]){
         document.getElementById("noAccountText").textContent = "You're signed in as " + session.user.email
-          + ", but this account hasn't been given a PartnerWAV role yet. Ask your PartnerWAV program operator to set it up, then sign in again.";
+          + ", but this account hasn't been given a PartnerWAV role yet. Ask for Member, Investor or Promoter access below. CloudWAV approves it, then you can sign in again.";
+        state.accessUser = { email: session.user.email, user_metadata: session.user.user_metadata || {} };
+        renderAccessRequest(state.accessUser);
         showLoginPanel("NoAccount"); setAuthLocked(true); return;
       }
       if (res.data.must_change_password === true && !pwChosenThisSession){
@@ -22288,6 +22326,129 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
   }
 
+  // ----- self sign-up and "Login with Google" -----
+  // A new login gets NO role. Its Member / Investor / Promoter choice is stored as an access request
+  // (supabase/portal_access_requests.sql) and CloudWAV approves it. Login with Google is ready in the app,
+  // but it only works once the Google OAuth client is set up in Google Cloud and Supabase
+  // (Authentication -> Sign In / Providers -> Google) -- see the note at the top of supabase/portal_access_requests.sql.
+  var ACCESS_KINDS = [["member", "Member"], ["investor", "Investor"], ["media", "Promoter"]];
+  function accessKindName(k){ var f = ACCESS_KINDS.filter(function(x){ return x[0] === k; })[0]; return f ? f[1] : "Member"; }
+  function accessKindSelectHtml(id){
+    return '<div class="field-row"><label for="'+id+'">I want access as</label><select id="'+id+'">'
+      + ACCESS_KINDS.map(function(k){ return '<option value="'+k[0]+'">'+k[1]+'</option>'; }).join("") + '</select></div>';
+  }
+  function loginFieldHtml(id, label, type, ph, opt){
+    return '<div class="field-row"><label for="'+id+'">'+label+(opt ? ' <span class="field-note">(optional)</span>' : '')+'</label><input type="'+type+'" id="'+id+'" placeholder="'+attr(ph || "")+'" autocomplete="'+(type === "password" ? "new-password" : "off")+'"></div>';
+  }
+  function signUpPanelHtml(){
+    return '<h1 class="login-title">Create your account</h1>'
+      + '<p class="login-sub">Join PartnerWAV. CloudWAV confirms your access after you sign up.</p>'
+      + accessKindSelectHtml("suKind")
+      + loginFieldHtml("suName", "Full name", "text", "")
+      + loginFieldHtml("suEmail", "Email", "email", "you@company.co.th")
+      + loginFieldHtml("suPhone", "Phone (for event updates)", "tel", "e.g. 081 234 5678", true)
+      + loginFieldHtml("suPassword", "Choose a password (8+ characters)", "password", "")
+      + spamFieldsHtml("signup")
+      + '<div id="suError" class="login-msg bad" role="alert" hidden></div>'
+      + '<div id="suInfo" class="login-msg good" role="status" hidden></div>'
+      + '<button type="button" class="btn primary login-submit" id="suSubmit">Create account</button>'
+      + '<button type="button" class="btn secondary login-submit" id="suGoogle">Login with Google</button>'
+      + '<button type="button" class="login-link" id="suBack">Already have a login? Sign in</button>';
+  }
+  // Creates the login, then stores the access request. The request never gives a role.
+  async function createLogin(o){
+    if (!supabase) throw new Error("Can't reach the sign-in service. Check your connection and reload the page.");
+    var r = await supabase.auth.signUp({ email: o.email, password: o.password, options: { data: { full_name: o.name } } });
+    if (r.error) throw r.error;
+    var q = await supabase.rpc("portal_request_access", { p_data: Object.assign({ name: o.name, email: o.email, phone: o.phone || "", kind: o.kind }, o.spam) });
+    if (q.error) throw q.error;
+    return r.data;
+  }
+  function signUpErrorText(e){
+    var m = (e && e.message) || "";
+    if (/already (registered|been registered)|user already exists/i.test(m)) return "That email already has a login. Sign in instead, or use Forgot password.";
+    return spamErrorText(e, friendlyAuthError(e));
+  }
+  async function signUpSubmit(){
+    var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var kind = g("suKind"), name = g("suName"), email = g("suEmail"), phone = g("suPhone"), pw = (document.getElementById("suPassword") || {}).value || "";
+    var err = document.getElementById("suError"), info = document.getElementById("suInfo"), btn = document.getElementById("suSubmit");
+    var probs = [];
+    if (!name) probs.push("Please enter your name.");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) probs.push("Please enter a valid email address.");
+    if (pw.length < 8) probs.push("Choose a password with at least 8 characters.");
+    if (!probs.length && captchaMissing("signup")) probs.push("Please complete the security check.");
+    info.hidden = true;
+    if (probs.length){ err.innerHTML = probs.map(esc).join("<br>"); err.hidden = false; return; }
+    err.hidden = true; btn.disabled = true; btn.textContent = "Creating…";
+    try {
+      await createLogin({ name: name, email: email, phone: phone, password: pw, kind: kind, spam: spamPayload("signup") });
+      document.getElementById("suPassword").value = "";
+      info.textContent = "Thanks, " + name.split(" ")[0] + ". Your " + accessKindName(kind) + " request is with CloudWAV. If we asked you to confirm your email, check your inbox first, then sign in.";
+      info.hidden = false;
+    } catch(e){
+      captchaReset("signup"); err.textContent = signUpErrorText(e); err.hidden = false;
+    } finally { btn.disabled = false; btn.textContent = "Create account"; }
+  }
+  // Signed in with no role yet (Google, or a sign-up that was confirmed): ask for the access
+  function accessRequestHtml(user){
+    var nm = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || "";
+    return '<div class="login-sub" style="margin:0 0 10px;">Ask for the access you need. CloudWAV approves it.</div>'
+      + accessKindSelectHtml("arKind") + loginFieldHtml("arName", "Full name", "text", "")
+      + '<input type="hidden" id="arNameDefault" value="'+attr(nm)+'">'
+      + loginFieldHtml("arPhone", "Phone (for event updates)", "tel", "e.g. 081 234 5678", true)
+      + spamFieldsHtml("access")
+      + '<div id="arError" class="login-msg bad" role="alert" hidden></div>'
+      + '<div id="arInfo" class="login-msg good" role="status" hidden></div>'
+      + '<button type="button" class="btn primary login-submit" id="arSubmit">Send request</button>';
+  }
+  function renderAccessRequest(user){
+    var box = document.getElementById("noAccountRequest"); if (!box) return;
+    box.innerHTML = accessRequestHtml(user);
+    var nm = document.getElementById("arNameDefault"), name = document.getElementById("arName");
+    if (name && nm) name.value = nm.value;
+    captchaMount();
+  }
+  async function sendAccessRequest(user){
+    var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var err = document.getElementById("arError"), info = document.getElementById("arInfo"), btn = document.getElementById("arSubmit");
+    var name = g("arName"), kind = g("arKind");
+    if (!name){ err.textContent = "Please enter your name."; err.hidden = false; return; }
+    if (captchaMissing("access")){ err.textContent = "Please complete the security check."; err.hidden = false; return; }
+    err.hidden = true; btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      var q = await supabase.rpc("portal_request_access", { p_data: Object.assign({ name: name, email: user.email, phone: g("arPhone"), kind: kind }, spamPayload("access")) });
+      if (q.error) throw q.error;
+      info.textContent = "Thanks. Your " + accessKindName(kind) + " request is with CloudWAV. You'll be able to sign in once it's approved.";
+      info.hidden = false; btn.hidden = true;
+    } catch(e){
+      captchaReset("access"); err.textContent = signUpErrorText(e); err.hidden = false;
+      btn.disabled = false; btn.textContent = "Send request";
+    }
+  }
+  async function signInWithGoogle(where){
+    var box = where === "signup" ? document.getElementById("suError") : document.getElementById("loginError");
+    if (!supabase){ box.textContent = "Can't reach the sign-in service. Check your connection and reload the page."; box.hidden = false; return; }
+    try {
+      var r = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } });
+      if (r.error) throw r.error;   // the browser leaves for Google; nothing more to do here
+    } catch(e){
+      var m = (e && e.message) || "";
+      box.textContent = /provider|not enabled|unsupported/i.test(m) ? "Login with Google isn't available yet. Use your email and password for now." : friendlyAuthError(e);
+      box.hidden = false;
+    }
+  }
+  document.addEventListener("click", function(ev){
+    var b = ev.target && ev.target.closest ? ev.target.closest("#showSignUp, #suBack, #suSubmit, #suGoogle, #loginGoogle, #arSubmit") : null;
+    if (!b) return;
+    var id = b.id;
+    if (id === "showSignUp"){ document.getElementById("loginPanelSignUp").innerHTML = signUpPanelHtml(); showLoginPanel("SignUp"); captchaMount(); return; }
+    if (id === "suBack"){ showLoginPanel("SignIn"); return; }
+    if (id === "suSubmit"){ signUpSubmit(); return; }
+    if (id === "suGoogle" || id === "loginGoogle"){ signInWithGoogle(id === "suGoogle" ? "signup" : "signin"); return; }
+    if (id === "arSubmit" && state.accessUser){ sendAccessRequest(state.accessUser); }
+  });
+
   function initAuth(){
     updateAccountMenu();
     var form = document.getElementById("loginForm");
@@ -22295,6 +22456,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
 
     form.addEventListener("submit", async function(e){
       e.preventDefault();
+      // Enter in the sign-up panel creates the account instead of signing in
+      var su = document.getElementById("loginPanelSignUp");
+      if (su && !su.hidden){ signUpSubmit(); return; }
       var email = document.getElementById("loginEmail").value.trim();
       var password = document.getElementById("loginPassword").value;
       if (!email || !password){ loginMsg("error", "Enter your email and password."); return; }
