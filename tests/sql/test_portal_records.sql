@@ -1071,14 +1071,4 @@ select t('the house sends its official quote, which becomes the budget', (select
 select t('...but the house still cannot change the client', fails($$update portal_records set data = data || '{"client":{"company":"Someone else"}}' where collection='projectReferrals' and id='dl-budget'$$));
 reset role;
 
--- ===== Calendar feed link: each login keeps its own private link to the events; nobody else can read it
-select pg_temp.as_user('00000000-0000-0000-0000-000000000003'); set role authenticated;   -- Siam Digital gets its link
-insert into portal_records(collection,id,data,readers,writers,is_public) values ('calendarFeeds','partner:siam-digital','{"id":"partner:siam-digital","token":"abcdefghijklmnopqrstuvwxyz012345"}','{partner:siam-digital}','{partner:siam-digital}',false);
-select t('a login saves its own calendar link', (select count(*) from portal_records where collection='calendarFeeds' and id='partner:siam-digital') = 1);
-reset role;
-select pg_temp.as_user('00000000-0000-0000-0000-000000000004'); set role authenticated;   -- another partner
-select t('another login cannot read the link', (select count(*) from portal_records where collection='calendarFeeds' and id='partner:siam-digital') = 0);
-select t('...nor replace it', fails($$insert into portal_records(collection,id,data,readers,writers,is_public) values ('calendarFeeds','partner:siam-digital','{"id":"partner:siam-digital","token":"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"}','{partner:other}','{partner:other}',false) on conflict (collection,id) do update set data = excluded.data$$));
-reset role;
-
 select case when ok then 'PASS ' else 'FAIL ' end || name from public.results;

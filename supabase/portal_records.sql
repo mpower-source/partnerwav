@@ -1430,4 +1430,20 @@ end $$;
 -- 9. Tell the Supabase API about the new table and functions right away
 --    (otherwise the portal can say "Could not find the table 'public.portal_records' in the schema cache")
 -- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- 10. The calendar feed: one .ics file of the Thailand events, published by CloudWAV from the portal's Integrations screen.
+--     A public bucket: anyone with the link can subscribe, and only CloudWAV can write the file. (Skipped where storage is absent.)
+-- ---------------------------------------------------------------------------
+do $$
+begin
+  if to_regclass('storage.buckets') is not null then
+    insert into storage.buckets (id, name, public) values ('calendar', 'calendar', true)
+      on conflict (id) do update set public = true;
+    drop policy if exists "calendar feed write" on storage.objects;
+    create policy "calendar feed write" on storage.objects for all to authenticated
+      using (bucket_id = 'calendar' and public.is_portal_operator())
+      with check (bucket_id = 'calendar' and public.is_portal_operator());
+  end if;
+end $$;
+
 notify pgrst, 'reload schema';

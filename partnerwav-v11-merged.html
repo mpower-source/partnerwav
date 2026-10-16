@@ -5440,7 +5440,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function integrationsFor(me){ var c = contactFor(me) || {}; return c.integrations || {}; }
   // Integrations are same-size tiles (tool, status and a short description), grouped by type; clicking one opens
   // its settings across the full width. One is open at a time. The type filter keeps a growing list manageable.
-  var INT_TYPES = [["crm", "CRM"], ["scheduling", "Scheduling"], ["messaging", "Messaging"], ["workspace", "Workspace & docs"], ["security", "Security"], ["custom", "Your own tools"], ["planned", "Coming soon"]];
+  var INT_TYPES = [["crm", "CRM"], ["scheduling", "Scheduling"], ["messaging", "Messaging"], ["workspace", "Workspace & docs"], ["security", "Security"], ["custom", "Your own tools"], ["system", "CloudWAV system"], ["planned", "Coming soon"]];
   function intTile(id, type, head, blurb, body){ return { id:id, type:type, head:head, blurb:blurb, body:body, name:String((head.match(/<h3>(.*?)<\/h3>/) || [])[1] || id).replace(/&amp;/g, "&") }; }
   function intTilesHtml(tiles){
     var open = state.intOpen || "", f = state.intType || "";
@@ -5540,6 +5540,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         '<ul class="shop-list" style="margin:0;"><li>What your tool does and who uses it</li><li>What it should send to or get from PartnerWAV: leads, deals, events or contacts</li><li>A link to its API documentation, if it has one</li></ul>'
         + '<div class="cfg-actions"><button type="button" class="btn secondary sm" data-goto-screen="partner-messages">Message PartnerWAV</button></div>'
         + '<p class="field-note" style="margin:0;">As companies build their own connections, they will be listed here under Your own tools.</p>'));
+    if (isOperator) tiles.push(calFeedTile());
     box.innerHTML = intTilesHtml(tiles)
       + (isOperator ? '<div class="section-head" style="margin-top:22px;"><h2 style="font-size:1rem;">HubSpot connection requests</h2><span class="hint">Accounts that asked to be connected</span></div>'
         + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;" id="intRequests">'+(requests.length ? requests.map(function(x){ var h = x.integrations.hubspot;
@@ -20742,11 +20743,6 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-dl-intro]"))){ var iid = b.getAttribute("data-dl-intro");
       if (devLeadIntroduce(iid)){ toast("Introduced -- the house now has the client's contact"); renderDevScreens(); if (state.screen === "referral-view") renderReferralView(); }
       else toast("The house has to accept first, and the request needs a contact"); return; }
-    if (t.closest("[data-cal-feed-make]")){ calFeedMake(); return; }
-    if (t.closest("[data-cal-feed-copy]")){ var cu = calFeedUrl();
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(cu).then(function(){ toast("Link copied"); }, function(){ window.prompt("Copy your calendar link", cu); });
-      else window.prompt("Copy your calendar link", cu); return; }
-    if (t.closest("[data-cal-feed-reset]")){ if (confirm("Reset the link? The old link stops working, and you'll need to add the new one to your calendars.")) calFeedMake(); return; }
     if ((b = t.closest("[data-cl-reply]"))){ var rid = b.getAttribute("data-cl-reply"), rt = document.querySelector('[data-cl-reply-text="' + rid + '"]');
       if (!rt || !rt.value.trim()){ toast("Write your answers first"); return; }
       clarifyReply(rid, rt.value).then(function(ok){ if (ok) toast("Sent to PartnerWAV"); }); return; }
@@ -21831,41 +21827,72 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       return true;
     } catch(e){ return false; }
   }
-  // ----- Calendar feed: a private link a signed-in login subscribes to in Google Calendar or Outlook. The link is kept
-  // as a calendarFeeds record that only that login can read; the calendar-feed function serves the events with it.
-  var CAL_FEED_URL = SUPABASE_URL + "/functions/v1/calendar-feed";
-  var calFeed = { loaded:false, ready:false, token:"" };
-  function calFeedToken(){ var b = new Uint8Array(24); crypto.getRandomValues(b); return Array.prototype.map.call(b, function(x){ return ("0" + x.toString(16)).slice(-2); }).join(""); }
-  function calFeedUrl(){ return CAL_FEED_URL + "?token=" + calFeed.token; }
-  function calFeedLoad(){
-    if (calFeed.loaded || !notifLive()) return;
-    calFeed.loaded = true;
-    supabase.from("portal_records").select("data").eq("collection", "calendarFeeds").eq("id", myMsgKey()).maybeSingle().then(function(r){
-      calFeed.token = r.data && r.data.data && r.data.data.token ? String(r.data.data.token) : ""; calFeed.ready = true; render();
-    }, function(){ calFeed.loaded = false; });
+  // ----- Calendar feed for everyone: one .ics file that CloudWAV publishes to a public storage bucket.
+  // Google Calendar, Outlook and Apple subscribe to its link and pick up changes every few hours.
+  var CAL_FEED_FILE = "partnerwav-events.ics";
+  var CAL_FEED_LINK = SUPABASE_URL + "/storage/v1/object/public/calendar/" + CAL_FEED_FILE;
+  function icsEsc(v){ return String(v || "").replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/([,;])/g, "\\$1"); }
+  function icsFold(line){
+    var out = [], cur = "", bytes = 0, limit = 75, enc = new TextEncoder();
+    Array.from(line).forEach(function(ch){ var n = enc.encode(ch).length;
+      if (bytes + n > limit){ out.push(cur); cur = " " + ch; bytes = 1 + n; limit = 75; } else { cur += ch; bytes += n; } });
+    out.push(cur); return out.join("\r\n");
   }
-  function calFeedMake(){
-    var k = myMsgKey(), token = calFeedToken();
-    return supabase.from("portal_records").upsert([{ collection:"calendarFeeds", id:k, data:{ id:k, token:token, createdAt:nowStamp() }, readers:[k], writers:[k], is_public:false }], { onConflict:"collection,id" })
-      .then(function(r){ if (r.error){ toast("Could not create the link: " + r.error.message); return; } calFeed.token = token; calFeed.ready = true; render(); toast("Your calendar link is ready"); }, function(){ toast("Could not create the link. Check your connection."); });
+  function icsStamp(d){ return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); }
+  function icsFeedBuild(events, now){
+    var from = now.getTime() - 86400000, to = now.getTime() + 180 * 86400000;
+    var list = events.filter(function(e){ return e && e.status === "published" && !e.deletedAt && e.start && e.title; })
+      .map(function(e){ return { e:e, t:new Date(e.start).getTime() }; })
+      .filter(function(x){ return !isNaN(x.t) && x.t >= from && x.t <= to; })
+      .sort(function(a, b){ return a.t - b.t; }).slice(0, 500);
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//PartnerWAV//Thailand events//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+      "X-WR-CALNAME:PartnerWAV: Thailand events", "REFRESH-INTERVAL;VALUE=DURATION:PT6H", "X-PUBLISHED-TTL:PT6H"];
+    list.forEach(function(x){
+      var e = x.e, start = new Date(x.t), end = new Date(x.t + (Number(e.durationMin) || 120) * 60000);
+      var where = [e.venue, e.city].filter(Boolean).join(", ");
+      var desc = [e.desc, e.orgName ? "Organizer: " + e.orgName : "", e.price ? "Entry: " + e.price : "", e.link ? "Sign up: " + e.link : ""].filter(Boolean).join("\n");
+      lines.push("BEGIN:VEVENT", "UID:" + icsEsc(e.id) + "@partnerwav", "DTSTAMP:" + icsStamp(now), "DTSTART:" + icsStamp(start), "DTEND:" + icsStamp(end), "SUMMARY:" + icsEsc(e.title));
+      if (desc) lines.push("DESCRIPTION:" + icsEsc(desc));
+      if (where) lines.push("LOCATION:" + icsEsc(where));
+      if (e.link && /^https?:\/\//i.test(e.link)) lines.push("URL:" + e.link);
+      lines.push("END:VEVENT");
+    });
+    lines.push("END:VCALENDAR");
+    return { text: lines.map(icsFold).join("\r\n") + "\r\n", count: list.length };
   }
-  function calFeedHtml(){
-    if (!notifLive()) return "";
-    calFeedLoad();
-    if (!calFeed.ready) return '<div class="card card-pad" style="margin-bottom:12px;"><span class="field-note">Loading your calendar link...</span></div>';
-    if (!calFeed.token) return '<div class="card card-pad" style="margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"><b>Subscribe to these events in your calendar</b>'
-      + '<span class="field-note">Get a private link once. Google Calendar and Outlook then pick up new events and changes on their own.</span>'
-      + '<div><button type="button" class="btn primary sm" data-cal-feed-make>Get my calendar link</button></div></div>';
-    var url = calFeedUrl(), g = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(url),
-      o = "https://outlook.live.com/calendar/0/addfromweb?url=" + encodeURIComponent(url) + "&name=" + encodeURIComponent("PartnerWAV: Thailand events");
-    return '<div class="card card-pad" style="margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"><b>Subscribe to these events in your calendar</b>'
-      + '<span class="field-note">Keep this link private: anyone who has it can see the events. Calendars refresh it every few hours.</span>'
-      + '<div class="cfg-actions"><a class="btn primary sm" href="'+attr(g)+'" target="_blank" rel="noopener noreferrer" data-cal-feed-google>Add to Google Calendar</a>'
-      + '<a class="btn secondary sm" href="'+attr(o)+'" target="_blank" rel="noopener noreferrer" data-cal-feed-outlook>Add to Outlook</a>'
-      + '<button type="button" class="btn ghost sm" data-cal-feed-copy>Copy the link</button>'
-      + '<button type="button" class="btn ghost sm" data-cal-feed-reset>Reset the link</button></div>'
-      + '<span class="field-note">Apple Calendar or another app: copy the link and add it as a subscribed calendar.</span></div>';
+  // ----- end of the calendar feed text (tests read everything above this line)
+  function calFeedStatus(){ return operatorSettings.filter(function(x){ return x.id === "calendarFeed"; })[0] || null; }
+  // CloudWAV publishes the file to the public 'calendar' bucket (created by portal_records.sql). Only CloudWAV can write it.
+  function calFeedPublish(quiet){
+    if (!notifLive() || !isOp()){ if (!quiet) toast("Publish from a signed-in CloudWAV login"); return Promise.resolve(false); }
+    var built = icsFeedBuild(communityEvents, new Date());
+    return supabase.storage.from("calendar").upload(CAL_FEED_FILE, new Blob([built.text], { type:"text/calendar;charset=utf-8" }),
+      { upsert:true, contentType:"text/calendar; charset=utf-8", cacheControl:"900" }).then(function(r){
+        if (r.error){ if (!quiet) toast("Could not publish: " + r.error.message); return false; }
+        var rec = { id:"calendarFeed", publishedAt:nowStamp(), events:built.count, updatedAt:nowStamp() };
+        operatorSettings = operatorSettings.filter(function(x){ return x.id !== "calendarFeed"; }).concat([rec]);
+        if (typeof saveReferrals === "function") saveReferrals(); if (typeof cloudSchedule === "function") cloudSchedule();
+        if (!quiet) toast("Calendar feed published: " + built.count + " events");
+        state.coV = (state.coV || 0) + 1; render(); return true;
+      }, function(){ if (!quiet) toast("Could not publish. Check your connection."); return false; });
   }
+  // The operator's Integrations tile: the link, when it was last published, and how to add it
+  function calFeedTile(){
+    var st = calFeedStatus();
+    var body = '<div class="field-note">'+(st ? 'Last published '+esc(st.publishedAt)+' with '+st.events+' events.' : 'Not published yet.')+'</div>'
+      + '<div class="field-row"><label for="calFeedLink">Calendar link (anyone can subscribe)</label><input type="text" id="calFeedLink" readonly value="'+attr(CAL_FEED_LINK)+'"></div>'
+      + '<div class="cfg-actions"><button type="button" class="btn primary sm" data-calfeed-publish>Publish now</button><button type="button" class="btn secondary sm" data-calfeed-copy>Copy the link</button></div>'
+      + '<div class="field-note">The feed updates when you approve an event, and when you press Publish now. Calendars check the link every few hours.</div>'
+      + '<div class="field-note"><b>Google Calendar:</b> Other calendars, then From URL, paste the link. <b>Outlook:</b> Add calendar, then Subscribe from web, paste the link. <b>Apple:</b> File, then New Calendar Subscription.</div>';
+    return intTile("calfeed", "system", '<span class="int-logo" style="background:#2563eb;">31</span><h3>Calendar feed</h3>', "Subscribe Google Calendar, Outlook or Apple to the Thailand events", body);
+  }
+  document.addEventListener("click", function(ev){
+    var t = ev.target; if (!t || !t.closest) return;
+    if (t.closest("[data-calfeed-publish]")){ calFeedPublish(false); return; }
+    if (t.closest("[data-calfeed-copy]")){ var cu = CAL_FEED_LINK;
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(cu).then(function(){ toast("Link copied"); }, function(){ window.prompt("Copy the calendar link", cu); });
+      else window.prompt("Copy the calendar link", cu); return; }
+  });
   function tecCardHtml(e){
     var reg = safeHref(e.link || ""), host = ceHostUrl(e);
     return '<article class="tec-ev" data-tec-event="'+attr(e.id)+'">'
@@ -21921,7 +21948,6 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + '<h1>'+(orgName ? esc(orgName) + ' events' : 'Thailand Tech &amp; Startup Events')+'</h1>'
       + '<p>'+(orgName ? 'Upcoming events from '+esc(orgName)+', on the PartnerWAV Thailand calendar.' : 'Meetups, workshops and founder nights from Thailand\'s tech and business communities, in one place. All times are Bangkok time.')+'</p>'
       + (orgF ? '<a class="tec-all" href="'+attr(calendarUrl())+'">See every community\'s events</a>' : '')+'</header>';
-    html += calFeedHtml();
     if (kinds.length > 1) html += '<div class="meet-chips tec-filter" role="group" aria-label="Kind of event"><button type="button" class="meet-chip" data-tec-kind="" aria-pressed="'+!kindF+'">All events</button>'
       + (kinds.some(function(k){ return k[0] !== "community"; }) ? '<button type="button" class="meet-chip" data-tec-kind="pitch" aria-pressed="'+(kindF === "pitch")+'">Pitch events &amp; hackathons</button>' : '');
     if (kinds.length > 1) html += kinds.map(function(k){ return '<button type="button" class="meet-chip" data-tec-kind="'+k[0]+'" aria-pressed="'+(kindF === k[0])+'">'+esc(k[1] + "s")+'</button>'; }).join("") + '</div>';
@@ -21996,7 +22022,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if ((b = t.closest("[data-ce-edit]"))){ var ee = ceById(b.getAttribute("data-ce-edit")); if (!ee) return; state.coTab = "events"; state.ceEdit = ee.id; renderOperatorCommunity(true); return; }
     if (t.closest("[data-ce-cancel]")){ state.ceEdit = null; renderOperatorCommunity(true); return; }
     if ((b = t.closest("[data-ce-save]"))){ ceSave(b.getAttribute("data-ce-save")); return; }
-    if ((b = t.closest("[data-ce-approve]"))){ var ea = ceById(b.getAttribute("data-ce-approve")); if (ea){ ceApprove(ea); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); toast("Listed on the Thailand calendar"); } return; }
+    if ((b = t.closest("[data-ce-approve]"))){ var ea = ceById(b.getAttribute("data-ce-approve")); if (ea){ ceApprove(ea); state.coV = (state.coV || 0) + 1; saveCommunity(); calFeedPublish(true); renderOperatorCommunity(true); toast("Listed on the Thailand calendar"); } return; }
     if ((b = t.closest("[data-ce-decline]"))){ var ed = ceById(b.getAttribute("data-ce-decline")); if (ed){ ed.status = "declined"; delete ed.submitter; ed.updatedAt = nowStamp(); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
     if ((b = t.closest("[data-ce-delete]"))){ var ex = ceById(b.getAttribute("data-ce-delete")); if (ex && confirm("Remove \"" + ex.title + "\" from the calendar?")){ if (ex.source){ ex.status = "declined"; ex.deletedAt = nowStamp(); ex.updatedAt = nowStamp(); } else communityEvents.splice(communityEvents.indexOf(ex), 1); state.coV = (state.coV || 0) + 1; saveCommunity(); renderOperatorCommunity(true); } return; }
     if ((b = t.closest("[data-ce-connect]"))){ var ec = ceById(b.getAttribute("data-ce-connect")); if (ec) ceMakeConnectPage(ec); return; }
