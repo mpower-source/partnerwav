@@ -21833,6 +21833,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var d = res && res.data; if (typeof d === "string"){ try { d = JSON.parse(d); } catch(e){ d = null; } }
       if (res.error || !d || d.error){ say("The check didn't run: " + ((d && d.error) || "the events-sync function isn't reachable. Is it deployed?")); return; }
       say("Found " + (d.seen || 0) + " tech events; " + (d.added || 0) + " new ones are waiting for review.");
+      // what each source gave, right away (no reload needed)
+      var det = document.getElementById("evsRunDetail");
+      if (!det && msg){ det = document.createElement("div"); det.id = "evsRunDetail"; det.style.marginTop = "8px"; msg.parentNode.parentNode.appendChild(det); }
+      if (det) det.innerHTML = ((d.sources || []).length ? (d.sources || []).map(function(x){
+        return '<div class="field-note">' + esc(x.label || x.id) + ': ' + (x.error ? '<span class="evs-bad">' + esc(x.error) + '</span>' : esc('read ' + (x.read || 0) + ', kept ' + (x.kept != null ? x.kept : (x.found || 0)) + (evsDiagText(x).indexOf('left out') > -1 ? ' · ' + evsDiagText(x).split('left out: ')[1] : ''))) + '</div>';
+      }).join("") : '<div class="field-note">No sources were checked. Switch on at least one source that is not "Check by hand".</div>');
       if (typeof cloudRefresh === "function") cloudRefresh();
     }).catch(function(){ if (btn) btn.disabled = false; say("The check didn't run: the events-sync function isn't reachable."); });
   }
