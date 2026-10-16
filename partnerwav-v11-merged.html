@@ -910,6 +910,20 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .tec-body p{ margin:0; font-size:.92rem; color:var(--ink-soft); line-height:1.5; }
   .tec-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
   .tec-actions .btn{ text-decoration:none; }
+  .tec-view{ margin-top:-4px; }
+  .tec-cal{ display:flex; flex-direction:column; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:var(--shadow); }
+  .tec-cal-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .tec-cal-grid{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:4px; text-align:center; }
+  .tec-cal-wd{ font-size:.72rem; font-weight:700; color:var(--ink-faint); text-transform:uppercase; padding:4px 0; }
+  .tec-cal-blank{ min-height:44px; }
+  .tec-cal-day{ position:relative; min-height:44px; border:1px solid transparent; border-radius:10px; background:var(--surface-2); color:var(--ink); font:inherit; font-size:.95rem; cursor:default; }
+  .tec-cal-day.has{ cursor:pointer; background:var(--accent-soft); color:var(--accent-strong); font-weight:700; border-color:var(--accent-line); }
+  .tec-cal-day.today{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .tec-cal-day[aria-pressed="true"]{ background:var(--accent); color:#fff; }
+  .tec-cal-day i{ position:absolute; bottom:3px; left:50%; transform:translateX(-50%); font-style:normal; font-size:.62rem; line-height:1; }
+  .tec-cal-day-h{ margin:6px 0 0; font-size:1rem; }
+  .tec-cal .tec-ev{ box-shadow:none; }
+  .tec-detail{ display:flex; flex-direction:column; gap:8px; margin-top:6px; padding-top:10px; border-top:1px solid var(--line); }
   .tec-empty{ text-align:center; padding:32px 16px; color:var(--ink-soft); border:1px dashed var(--line); border-radius:16px; }
   .tec-hosts .meet-chip{ text-decoration:none; }
   .tec-submit{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px; }
@@ -21919,20 +21933,64 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(cu).then(function(){ toast("Link copied"); }, function(){ window.prompt("Copy the calendar link", cu); });
       else window.prompt("Copy the calendar link", cu); return; }
   });
+  // The tile shows the essentials only (title, host, time, place, price). The description, sponsors and calendar
+  // buttons open under the tile on Details, one tile at a time (same pattern as the investor tiles).
   function tecCardHtml(e){
-    var reg = safeHref(e.link || ""), host = ceHostUrl(e);
-    return '<article class="tec-ev" data-tec-event="'+attr(e.id)+'">'
+    var reg = safeHref(e.link || ""), host = ceHostUrl(e), open = state.tecOpen === e.id;
+    return '<article class="tec-ev'+(open ? ' open' : '')+'" data-tec-event="'+attr(e.id)+'">'
       + '<div class="tec-date" aria-hidden="true"><b>'+esc(bkkFmt(e.start, { day:"numeric" }))+'</b><span>'+esc(bkkFmt(e.start, { month:"short" }))+'</span><i>'+esc(bkkFmt(e.start, { weekday:"short" }))+'</i></div>'
       + '<div class="tec-body">'+(ceKind(e) !== "community" ? '<span class="tec-kind tec-kind-'+ceKind(e)+'">'+esc(ceKindName(e))+'</span>' : '')+'<h3>'+esc(e.title)+'</h3>'
         + '<div class="tec-host">'+(host ? '<a href="'+attr(host)+'" target="_blank" rel="noopener noreferrer">'+esc(ceHost(e))+'</a>' : esc(ceHost(e)))+'</div>'
         + '<div class="tec-meta"><span>'+esc(bkkFmt(e.start, { hour:"2-digit", minute:"2-digit" }))+' - '+esc(bkkFmt(ceEnd(e).toISOString(), { hour:"2-digit", minute:"2-digit" }))+'</span><span>'+esc(ceWhere(e))+'</span>'+(e.price ? '<span>'+esc(e.price)+'</span>' : '')+'</div>'
-        + (e.desc ? '<p>'+esc(e.desc)+'</p>' : '')
-        + ((e.sponsors || []).length ? '<div class="tec-sponsors" data-tec-sponsors>Sponsored by '+e.sponsors.map(function(x){ return esc(x.name); }).join(", ")+'</div>' : '')
         + '<div class="tec-actions">'+(reg ? '<a class="btn primary sm" href="'+attr(reg)+'" target="_blank" rel="noopener noreferrer" data-tec-register>Register</a>' : '')
-          + '<a class="btn secondary sm" href="'+attr(ceGoogleUrl(e))+'" target="_blank" rel="noopener noreferrer" data-tec-google>Add to Google Calendar</a>'
+          + '<button type="button" class="btn ghost sm" data-tec-open="'+attr(e.id)+'" aria-expanded="'+open+'">'+(open ? 'Hide details' : 'Details')+'</button></div>'
+        + (open ? '<div class="tec-detail" data-tec-detail>'+(e.desc ? '<p>'+esc(e.desc)+'</p>' : '')
+          + ((e.sponsors || []).length ? '<div class="tec-sponsors" data-tec-sponsors>Sponsored by '+e.sponsors.map(function(x){ return esc(x.name); }).join(", ")+'</div>' : '')
+          + '<div class="tec-actions"><a class="btn secondary sm" href="'+attr(ceGoogleUrl(e))+'" target="_blank" rel="noopener noreferrer" data-tec-google>Add to Google Calendar</a>'
           + '<a class="btn secondary sm" href="'+attr(calOutlookUrl(ceAsCal(e)))+'" target="_blank" rel="noopener noreferrer" data-tec-outlook>Add to Outlook</a>'
-          + '<button type="button" class="btn ghost sm" data-tec-ics="'+attr(e.id)+'">Apple / other (.ics)</button></div></div></article>';
+          + '<button type="button" class="btn ghost sm" data-tec-ics="'+attr(e.id)+'">Apple / other (.ics)</button></div></div>' : '')
+        + '</div></article>';
   }
+  // Calendar view: a month grid (Bangkok dates) with a count on each day with events; tap a day to list its events
+  function tecDayKey(iso){ return new Date(new Date(iso).getTime() + 7 * 3600000).toISOString().slice(0, 10); }   // Bangkok is UTC+7, no DST
+  function tecCalendarHtml(list){
+    var today = tecDayKey(new Date().toISOString()), mk = state.tecMonth || today.slice(0, 7);
+    var y = +mk.slice(0, 4), mo = +mk.slice(5, 7) - 1, first = new Date(Date.UTC(y, mo, 1));
+    var daysIn = new Date(Date.UTC(y, mo + 1, 0)).getUTCDate(), lead = first.getUTCDay();
+    var counts = {}; list.forEach(function(e){ var k = tecDayKey(e.start); counts[k] = (counts[k] || 0) + 1; });
+    var day = state.tecDay && state.tecDay.slice(0, 7) === mk ? state.tecDay : "";
+    var cells = "", i;
+    for (i = 0; i < lead; i++) cells += '<span class="tec-cal-blank" aria-hidden="true"></span>';
+    for (var d = 1; d <= daysIn; d++){
+      var k = mk + "-" + (d < 10 ? "0" : "") + d, n = counts[k] || 0;
+      cells += '<button type="button" class="tec-cal-day'+(n ? ' has' : '')+(k === today ? ' today' : '')+'" data-tec-day="'+k+'" aria-pressed="'+(k === day)+'"'+(n ? '' : ' disabled')+' aria-label="'+d+' '+esc(first.toLocaleString("en-GB", { month:"long", timeZone:"UTC" }))+(n ? ', '+n+' event'+(n > 1 ? 's' : '') : '')+'">'+d+(n ? '<i>'+n+'</i>' : '')+'</button>';
+    }
+    var label = first.toLocaleString("en-GB", { month:"long", year:"numeric", timeZone:"UTC" });
+    var dayEvents = day ? list.filter(function(e){ return tecDayKey(e.start) === day; }) : [];
+    return '<section class="tec-cal" aria-label="Calendar">'
+      + '<div class="tec-cal-head"><button type="button" class="btn ghost sm" data-tec-month="-1" aria-label="Previous month">&lsaquo;</button><b>'+esc(label)+'</b><button type="button" class="btn ghost sm" data-tec-month="1" aria-label="Next month">&rsaquo;</button></div>'
+      + '<div class="tec-cal-grid" role="group" aria-label="'+esc(label)+'">'
+        + ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(w){ return '<span class="tec-cal-wd">'+w+'</span>'; }).join("") + cells + '</div>'
+      + (day ? '<h2 class="tec-cal-day-h">'+esc(bkkFmt(day + "T12:00:00+07:00", { weekday:"long", day:"numeric", month:"long" }))+'</h2>'
+        + (dayEvents.length ? dayEvents.map(tecCardHtml).join("") : '<div class="tec-empty">No events that day.</div>')
+        : '<div class="tec-empty">Tap a day with a dot to see its events.</div>')
+      + '</section>';
+  }
+  // Opens or closes one tile's details (both the public calendar and the member calendar use this)
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null, b = t && t.closest ? t.closest("[data-tec-open], [data-tec-view], [data-tec-month], [data-tec-day]") : null;
+    if (!b) return;
+    if (b.hasAttribute("data-tec-view")){ state.tecView = b.getAttribute("data-tec-view"); renderPublicEvents(); return; }
+    if (b.hasAttribute("data-tec-day")){ state.tecDay = state.tecDay === b.getAttribute("data-tec-day") ? "" : b.getAttribute("data-tec-day"); renderPublicEvents(); return; }
+    if (b.hasAttribute("data-tec-month")){
+      var mk0 = state.tecMonth || tecDayKey(new Date().toISOString()).slice(0, 7), dt = new Date(Date.UTC(+mk0.slice(0, 4), +mk0.slice(5, 7) - 1 + (+b.getAttribute("data-tec-month")), 1));
+      state.tecMonth = dt.toISOString().slice(0, 7); state.tecDay = ""; renderPublicEvents(); return;
+    }
+    if (!b.hasAttribute("data-tec-open")) return;
+    var id = b.getAttribute("data-tec-open");
+    state.tecOpen = state.tecOpen === id ? "" : id;
+    if (b.closest("#memberEventsContent")) renderMember(true); else renderPublicEvents();
+  });
   function tecSubmitFormHtml(){
     var f = function(id, label, ph, type, opt){ return '<div class="meet-field"><label for="'+id+'">'+label+(opt ? ' <span class="meet-opt">(optional)</span>' : '')+'</label><input type="'+(type || "text")+'" id="'+id+'" placeholder="'+attr(ph || "")+'" maxlength="300"></div>'; };
     return '<form id="tecForm" class="tec-form" novalidate><h3>Add your community\'s event</h3>'
@@ -21952,7 +22010,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function renderPublicEvents(){
     var box = document.getElementById("publicEventsContent");
     if (!box || state.screen !== "public-events") return;
-    var key = JSON.stringify([communityEvents.length, state.tecCity || "", state.tecKind || "", state.publicEventsOrg || "", state.tecSent ? 1 : 0, state.tecShowForm ? 1 : 0, state.tecV || 0]);
+    var key = JSON.stringify([communityEvents.length, state.tecCity || "", state.tecKind || "", state.publicEventsOrg || "", state.tecSent ? 1 : 0, state.tecShowForm ? 1 : 0, state.tecV || 0, state.tecOpen || "", state.tecView || "", state.tecMonth || "", state.tecDay || ""]);
     if (box.getAttribute("data-k") === key) return;
     if (!state.tecTried && supabase && !DEMO_MODE){
       state.tecTried = true; box.innerHTML = '<div class="empty" style="padding:40px;text-align:center;">Loading events…</div>';
@@ -21979,7 +22037,10 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (kinds.length > 1) html += kinds.map(function(k){ return '<button type="button" class="meet-chip" data-tec-kind="'+k[0]+'" aria-pressed="'+(kindF === k[0])+'">'+esc(k[1] + "s")+'</button>'; }).join("") + '</div>';
     if (cities.length > 1) html += '<div class="meet-chips tec-filter" role="group" aria-label="City"><button type="button" class="meet-chip" data-tec-city="" aria-pressed="'+!cityF+'">All cities</button>'
       + cities.map(function(c){ return '<button type="button" class="meet-chip" data-tec-city="'+attr(c)+'" aria-pressed="'+(c === cityF)+'">'+esc(c)+'</button>'; }).join("") + '</div>';
-    html += months.length ? months.map(function(m){ return '<section class="tec-month"><h2>'+esc(m)+'</h2>'+byMonth[m].map(tecCardHtml).join("")+'</section>'; }).join("")
+    var tecView = state.tecView === "calendar" ? "calendar" : "list";
+    html += '<div class="meet-chips tec-filter tec-view" role="group" aria-label="How to view the events"><button type="button" class="meet-chip" data-tec-view="list" aria-pressed="'+(tecView === "list")+'">List</button><button type="button" class="meet-chip" data-tec-view="calendar" aria-pressed="'+(tecView === "calendar")+'">Calendar</button></div>';
+    if (tecView === "calendar") html += tecCalendarHtml(list);
+    else html += months.length ? months.map(function(m){ return '<section class="tec-month"><h2>'+esc(m)+'</h2>'+byMonth[m].map(tecCardHtml).join("")+'</section>'; }).join("")
       : '<div class="tec-empty">No upcoming events listed yet'+(cityF ? ' in '+esc(cityF) : '')+'. Check back soon, or add yours below.</div>';
     if (hosts.length && !orgF) html += '<section class="tec-hosts"><h2>Communities on the calendar</h2><div class="meet-chips">'+hosts.map(function(h){ return h[1] ? '<a class="meet-chip" href="'+attr(h[1])+'" target="_blank" rel="noopener noreferrer">'+esc(h[0])+'</a>' : '<span class="meet-chip">'+esc(h[0])+'</span>'; }).join("")+'</div></section>';
     html += '<section class="tec-submit">'+(state.tecSent ? '<div class="tec-done" data-tec-done><h3>Thanks! Your event is with us.</h3><p class="meet-intro">We\'ll check it and list it, usually within a day.</p><button type="button" class="btn secondary sm" data-tec-again>Send another event</button></div>'
