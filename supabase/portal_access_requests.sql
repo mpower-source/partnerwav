@@ -78,7 +78,7 @@ begin
   values (mail, left(nm, 120), nullif(ph, ''), kd)
   on conflict (email) do update
     set name = excluded.name, phone = excluded.phone, kind = excluded.kind, status = 'pending', decided_at = null
-    where public.portal_access_requests.status = 'pending'
+    where public.portal_access_requests.status <> 'approved'
   returning id into rid;
   return jsonb_build_object('status', 'pending', 'id', rid);
 end $$;

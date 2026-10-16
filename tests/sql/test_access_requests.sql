@@ -54,6 +54,12 @@ reset role;
 -- the honeypot request was not stored (checked as the owner, since visitors can't read the table)
 select public.ar_t('a honeypot-filled request is not stored', not exists (select 1 from public.portal_access_requests where email = 'bot@example.test'));
 
+-- a declined person can ask again (the request goes back to pending for the operator)
+set role anon;
+select public.ar_t('a declined person can ask again', (public.portal_request_access('{"name":"Promo","email":"promo@example.test","kind":"media","elapsedMs":5000}'::jsonb) ->> 'status') = 'pending');
+reset role;
+select public.ar_t('the re-request is pending again', (select status = 'pending' from public.portal_access_requests where email = 'promo@example.test'));
+
 -- once approved, signing up again does not change the role or the request
 set role anon;
 select public.ar_t('an approved person signing up again keeps their approval', (public.portal_request_access('{"name":"New Person","email":"newbie@example.test","kind":"investor","elapsedMs":5000}'::jsonb) ->> 'status') = 'approved');

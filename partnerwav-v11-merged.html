@@ -18215,11 +18215,58 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   function acctFor(role, id){ return (acctList || []).filter(function(a){ return a.role === role && a.entity_id === id; }); }
 
+  // ----- access requests from Member / Investor / Promoter sign-ups (supabase/portal_access_requests.sql) -----
+  var arList = null, arErr = "", arBusy = false;
+  async function arLoad(force){
+    if (!acctLive() || arBusy || (arList && !force)) return;
+    arBusy = true;
+    try {
+      var r = await supabase.from("portal_access_requests").select("id,email,name,phone,kind,created_at").eq("status", "pending").order("created_at", { ascending: true });
+      if (r.error) throw r.error;
+      arList = r.data || []; arErr = "";
+    } catch(e){ arList = []; arErr = acctRpcError(e, ""); }
+    arBusy = false;
+    renderAccounts(true);
+  }
+  function accessRequestsHtml(){
+    var head = '<div class="section-head"><h2 style="font-size:.95rem;">Access requests</h2><span class="hint">People who signed up and asked for Member, Investor or Promoter access. Choose the company or profile, then approve.</span></div>';
+    var box = function(inner){ return '<div class="card" style="margin-bottom:16px;">' + inner + '</div>'; };
+    if (arErr) return box('<div class="card-pad"><b>Couldn\'t load the requests</b><div class="field-note">' + esc(arErr) + '</div></div>');
+    if (!arList) return box('<div class="card-pad field-note">Loading requests...</div>');
+    if (!arList.length) return box('<div class="card-pad field-note">No requests waiting.</div>');
+    return head + box('<div class="table-scroll"><table><thead><tr><th>Person</th><th>Asks for</th><th>Give access to</th><th></th></tr></thead><tbody>'
+      + arList.map(function(q){
+          var role = q.kind === "media" ? "media" : q.kind === "investor" ? "investor" : "member";
+          var opts = acctEntities(role).map(function(x){ return '<option value="' + esc(x.id) + '">' + esc(x.name) + '</option>'; }).join("");
+          return '<tr data-ar-row="' + esc(q.id) + '"><td><b>' + esc(q.name || "") + '</b><div class="field-note">' + esc(q.email) + (q.phone ? ' · ' + esc(q.phone) : '') + '</div>'
+            + '<div class="field-note">Asked ' + esc(String(q.created_at || "").slice(0, 10)) + '</div></td>'
+            + '<td>' + esc(ACCT_ROLES[role] || role) + '</td>'
+            + '<td>' + (opts ? '<select data-ar-entity="' + esc(q.id) + '" aria-label="Company or profile for ' + esc(q.name || q.email) + '">' + opts + '</select>' : '<span class="field-note">Create the ' + esc(ACCT_ROLES[role]) + ' profile first</span>') + '</td>'
+            + '<td class="row-actions" style="white-space:nowrap;">' + (opts ? '<button class="btn primary sm" data-ar-approve="' + esc(q.id) + '">Approve</button> ' : '') + '<button class="btn ghost sm" data-ar-decline="' + esc(q.id) + '">Decline</button></td></tr>';
+        }).join("")
+      + '</tbody></table></div>');
+  }
+  async function arDecide(id, approve){
+    var q = (arList || []).filter(function(x){ return x.id === id; })[0]; if (!q) return;
+    var sel = document.querySelector('[data-ar-entity="' + id + '"]');
+    if (approve && (!sel || !sel.value)){ toast("Choose the company or profile first"); return; }
+    try {
+      var r = approve ? await supabase.rpc("portal_approve_access", { p_request: id, p_entity: sel.value })
+                      : await supabase.rpc("portal_decline_access", { p_request: id });
+      if (r.error) throw r.error;
+      toast(approve ? q.name + " can now sign in as " + ACCT_ROLES[q.kind === "media" ? "media" : q.kind === "investor" ? "investor" : "member"] : "Request declined");
+      arList = null; acctList = null;
+      arLoad(true); acctLoadList(true);
+    } catch(e){ toast(acctRpcError(e, q.email)); }
+  }
+
   function renderAccounts(force){
     var el = document.getElementById("accountsContent"); if (!el || state.screen !== "operator-accounts") return;
     if (acctLive() && !acctList){ acctLoadList(); }
+    if (acctLive() && !arList){ arLoad(); }
     var live = acctLive(), html = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"><button class="btn primary sm" data-acct-setup="vendor" data-acct-any>+ Set up an account</button>'
       + (live ? '<button class="btn secondary sm" data-acct-refresh>Refresh</button>' : '') + '</div>';
+    if (live) html += accessRequestsHtml();
     if (!live) html += '<div class="card card-pad" style="margin-bottom:14px;"><b>Demo mode</b><div class="field-note">You can add companies here, but real logins and temporary passwords are only created when you are signed in to the live portal as PartnerWAV.</div></div>';
     if (acctListErr) html += '<div class="card card-pad" style="margin-bottom:14px;border-color:var(--bad);"><b>Couldn\'t load the logins</b><div class="field-note">' + esc(acctListErr) + '</div></div>';
     if (live){
@@ -18287,7 +18334,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (setup && state.role === "operator"){ acctSetupModal(setup.getAttribute("data-acct-setup"), setup.getAttribute("data-acct-entity") || ""); return; }
     if (t.closest("[data-acct-close]")){ state.acctResult = null; closeModal(); return; }
     if (t.closest("#acctCreateBtn")){ acctCreate(); return; }
-    if (t.closest("[data-acct-refresh]")){ acctList = null; acctLoadList(true); return; }
+    if (t.closest("[data-acct-refresh]")){ acctList = null; arList = null; acctLoadList(true); arLoad(true); return; }
+    var arOk = t.closest("[data-ar-approve]"); if (arOk && acctLive()){ arDecide(arOk.getAttribute("data-ar-approve"), true); return; }
+    var arNo = t.closest("[data-ar-decline]"); if (arNo && acctLive()){ arDecide(arNo.getAttribute("data-ar-decline"), false); return; }
     if (t.closest("#changePwBtn")){ var pop = document.getElementById("accountPop"); if (pop) pop.hidden = true; changePasswordModal(); return; }
     if (t.closest("#cpwSave")){ changePasswordSave(); return; }
     if (t.closest("[data-acct-copy]") && state.acctResult){
