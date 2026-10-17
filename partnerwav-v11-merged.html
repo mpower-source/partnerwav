@@ -19577,7 +19577,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + (fl ? '<span class="badge warn idb-warn-b">'+fl+' to check</span>' : '');
     if (fitAn) tags = '<span class="idb-fit-chip ' + fitAn.cls + '" data-idb-fit title="' + attr(fitAn.reasons.join(' · ')) + '">' + idbFitMeterHtml(fitAn.cls) + esc(fitAn.label) + ' · ' + fitAn.score + '/9</span>' + tags;
     return '<button type="button" class="idb-row'+(sel ? ' sel' : '')+'" data-idb-row="'+attr(x.id)+'" data-idb-open="'+attr(x.id)+'" aria-pressed="'+sel+'">'
-      + '<span class="idb-row-main"><b class="idb-name"><span class="idb-name-txt">'+esc(x.name)+'</span>'+(x.parentCountry ? ' <span class="idb-parent-note" data-idb-parent title="Parent company abroad">('+esc(idbParentLabel(x.parentCountry))+')</span>' : '')+'</b><span class="idb-row-sub">'+esc(sub)+'</span></span>'
+      + '<span class="idb-row-main"><b class="idb-name">'+esc(x.name)+'</b><span class="idb-row-sub">'+esc(sub)+'</span></span>'
       + '<span class="idb-row-tags">'+tags+'</span>'
       + '<span class="idb-ticket'+(idbTicket(x) ? '' : ' none')+'">'+esc(idbTicket(x) || "Cheque n/a")+'</span></button>';
   }
