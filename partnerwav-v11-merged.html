@@ -744,6 +744,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .idb-row-tags .badge{ font-size:.6rem; white-space:nowrap; padding-top:1px; padding-bottom:1px; }
   /* the tag line in each investor row: smaller, and whole badges only, so nothing is cut through at the edge */
   .idb-row-tags{ gap:3px; min-width:0; }
+  .idb-parent-note{ font-weight:500; font-size:.8rem; color:var(--ink-faint); flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .idb-row-main .idb-name{ display:flex; gap:4px; align-items:baseline; min-width:0; }
+  .idb-name-txt{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:0 1 auto; min-width:6em; }
   .idb-row-tags > *{ flex-shrink:0; }
   .idb-row-tags .badge, .idb-row-tags .idb-fit-chip{ font-size:.55rem; padding:2px 5px; letter-spacing:.03em; }
   .idb-row-tags .idb-meter{ gap:1px; margin-right:3px; }
@@ -19520,6 +19523,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function idbUsd(n){ if (n == null || n === "") return ""; n = Number(n); return n >= 1e6 ? "$" + (Math.round(n / 1e5) / 10) + "M" : n >= 1e3 ? "$" + Math.round(n / 1e3) + "K" : "$" + n; }
   function idbTicket(x){ return x.ticketMin || x.ticketMax ? (x.ticketMin === x.ticketMax || !x.ticketMax ? idbUsd(x.ticketMin) : idbUsd(x.ticketMin) + " - " + idbUsd(x.ticketMax)) : (x.ticketText || ""); }
   function idbBasedIn(x){ return x.basedIn || x.country || "Thailand"; }
+  // "USA (Plug and Play)" reads as "Plug and Play, USA" next to the name
+  function idbParentLabel(v){ var m = /^(.*?)\s*\((.+)\)\s*$/.exec(String(v || "")); return m ? m[2] + ", " + m[1] : String(v || ""); }
   function idbAbroad(x){ return !/^thailand$/i.test(idbBasedIn(x)); }
   // The country a record is based in as recorded ("" when none is recorded; the app's default is not used here)
   function idbCountryOf(x){ return String(x.basedIn || x.country || "").trim(); }
@@ -19567,13 +19572,12 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var sel = state.idbOpen === x.id, fl = idbOpenFlags(x), f = idbFor(x, idbCo()), fitAn = idbFitAnalysis(x, idbCo());
     var sub = [x.typeLabel || x.type, x.city && x.city !== idbBasedIn(x) ? x.city : "", idbAbroad(x) ? "" : idbBasedIn(x)].filter(Boolean).join(" · ");
     var tags = (idbAbroad(x) ? '<span class="badge warn" data-idb-abroad>Based in '+esc(idbBasedIn(x))+'</span>' : '')
-      + (x.parentCountry ? '<span class="badge neutral" data-idb-parent title="Run from Thailand, with a parent company abroad">Parent: '+esc(x.parentCountry)+'</span>' : '')
       + (x.pilot ? '<span class="badge accent" data-idb-pilot>Pilot first</span>' : '')
       + (f && (f.groups || []).length ? '<span class="badge accent" data-idb-groups>'+esc(IDB_GROUP_NAMES[f.groups[f.groups.length - 1]] || f.groups[0])+(f.groups.length > 1 ? ' +'+(f.groups.length - 1) : '')+'</span>' : '')
       + (fl ? '<span class="badge warn idb-warn-b">'+fl+' to check</span>' : '');
     if (fitAn) tags = '<span class="idb-fit-chip ' + fitAn.cls + '" data-idb-fit title="' + attr(fitAn.reasons.join(' · ')) + '">' + idbFitMeterHtml(fitAn.cls) + esc(fitAn.label) + ' · ' + fitAn.score + '/9</span>' + tags;
     return '<button type="button" class="idb-row'+(sel ? ' sel' : '')+'" data-idb-row="'+attr(x.id)+'" data-idb-open="'+attr(x.id)+'" aria-pressed="'+sel+'">'
-      + '<span class="idb-row-main"><b class="idb-name">'+esc(x.name)+'</b><span class="idb-row-sub">'+esc(sub)+'</span></span>'
+      + '<span class="idb-row-main"><b class="idb-name"><span class="idb-name-txt">'+esc(x.name)+'</span>'+(x.parentCountry ? ' <span class="idb-parent-note" data-idb-parent title="Parent company abroad">('+esc(idbParentLabel(x.parentCountry))+')</span>' : '')+'</b><span class="idb-row-sub">'+esc(sub)+'</span></span>'
       + '<span class="idb-row-tags">'+tags+'</span>'
       + '<span class="idb-ticket'+(idbTicket(x) ? '' : ' none')+'">'+esc(idbTicket(x) || "Cheque n/a")+'</span></button>';
   }
