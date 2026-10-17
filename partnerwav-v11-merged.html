@@ -19598,8 +19598,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   // ----- Fit for a company (e.g. Intelsense): a colour scale from Very High (best) to Poor. A rating set by hand under
   // "Notes for" wins. Otherwise the score is worked out from what the database already holds: focus, stages, cheque size,
   // type and where the investor is based. Placeholder until the Investor Readiness check is in place.
-  var IDB_CO_PROFILE = { intelsense: { stages:["seed","series a"], cheque:[100000, 2000000], based:"Thailand",
-    assumed:"Based on what we know so far: AI and enterprise software raising a seed or Series A round, cheques of $100K to $2M. Confirm this before relying on the score." } };
+  var IDB_CO_PROFILE = { intelsense: { raise:1500000, stages:["seed","pre-seed"], cheque:[100000, 1000000], sectors:["ai"],
+    verticals:["fintech","telecom","enterprise","saas","digital","healthcare","education","ecommerce","real estate"], based:["thailand","singapore","bangladesh"],
+    assumed:"Based on the latest pitch deck: a $1.5M seed round, cheques of $100K to $1M, AI with live verticals (fintech and banking, telecom, enterprise, healthcare, education, eCommerce, real estate), and investors based in Thailand, Singapore or Bangladesh. Confirm this before relying on the score." } };
   var IDB_FIT_BANDS = [[8,"idb-f1","Very High"],[6,"idb-f2","High"],[4,"idb-f3","Medium"],[2,"idb-f4","Low"],[0,"idb-f5","Poor"]];
   var IDB_FIT_MANUAL = { "Very High":8, "High":6, "Medium":4, "Low":2 };
   function idbFitAnalysis(x, co){
@@ -19607,11 +19608,11 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var f = idbFor(x, co) || {}, fo = (x.focus || []).map(function(v){ return String(v).toLowerCase(); }), st = (x.stages || []).map(function(v){ return String(v).toLowerCase(); });
     var reasons = [], s = 0, sec = 0;
     if (fo.indexOf("ai") > -1){ sec += 2; reasons.push("AI focus"); }
-    if (fo.some(function(v){ return v === "enterprise" || v === "saas"; })){ sec += 1; reasons.push("Enterprise or SaaS focus"); }
+    if (fo.some(function(v){ return prof.verticals.indexOf(v) > -1; })){ sec += 1; reasons.push("Invests in a live vertical"); }
     if (!sec && (fo.indexOf("all") > -1 || fo.indexOf("all sectors") > -1)){ sec = 1; reasons.push("Invests across sectors"); }
     s += Math.min(sec, 3);
-    if (st.some(function(v){ return prof.stages.indexOf(v) > -1; })){ s += 2; reasons.push("Invests at seed or Series A"); }
-    else if (st.length){ s += 1; reasons.push("Stages: " + (x.stages || []).join(", ")); }
+    if (st.some(function(v){ return prof.stages.indexOf(v) > -1; })){ s += 2; reasons.push("Invests at seed"); }
+    else if (st.length){ reasons.push("Invests at " + (x.stages || []).join(", ") + " (not seed)"); }
     if (x.ticketMin == null && x.ticketMax == null){ s += 1; reasons.push("Cheque size not published"); }
     else {
       var lo = x.ticketMin != null ? x.ticketMin : 0, hi = x.ticketMax != null ? x.ticketMax : Infinity;
@@ -19619,7 +19620,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     }
     var seg = idbSegment(x);
     if (seg === "firms"){ s += 1; reasons.push("Investment firm"); } else if (seg === "programs"){ s += 1; reasons.push("Program or grant"); }
-    if (idbBasedIn(x) === prof.based){ s += 1; reasons.push("Based in " + prof.based); }
+    if (prof.based.indexOf(String(idbBasedIn(x) || "").toLowerCase()) > -1){ s += 1; reasons.push("Based in " + idbBasedIn(x)); }
     if (/government/i.test(x.type || "") && s > 6){ s = 6; reasons.push("Grants, not equity: capped at High"); }
     var manual = !!(f.fit && IDB_FIT_MANUAL[f.fit] != null);
     if (manual){ s = IDB_FIT_MANUAL[f.fit]; reasons = ["Rated by hand: " + f.fit]; }
@@ -19631,7 +19632,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var n = esc(idbCompany(co).name);
     return '<div class="idb-fit-legend" aria-label="Fit colours, most to least favourable"><b>Fit for ' + n + '</b> '
       + '<span class="idb-fit-chip idb-f1">Very High</span><span class="idb-fit-chip idb-f2">High</span><span class="idb-fit-chip idb-f3">Medium</span><span class="idb-fit-chip idb-f4">Low</span><span class="idb-fit-chip idb-f5">Poor</span>'
-      + '<span class="field-note">Most to least favourable, best first. A rating set by hand under Notes for ' + n + ' overrides the automatic score.</span></div>';
+      + '<span class="field-note">Scored for the $' + (IDB_CO_PROFILE[co].raise / 1000000).toFixed(1) + 'M seed round. Most to least favourable, best first. A rating set by hand under Notes for ' + n + ' overrides the automatic score.</span></div>';
   }
   function idbFitWhyHtml(x, co){
     var a = idbFitAnalysis(x, co); if (!a) return '';
