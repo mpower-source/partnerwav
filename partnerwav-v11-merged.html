@@ -19503,6 +19503,18 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   function idbTicket(x){ return x.ticketMin || x.ticketMax ? (x.ticketMin === x.ticketMax || !x.ticketMax ? idbUsd(x.ticketMin) : idbUsd(x.ticketMin) + " - " + idbUsd(x.ticketMax)) : (x.ticketText || ""); }
   function idbBasedIn(x){ return x.basedIn || x.country || "Thailand"; }
   function idbAbroad(x){ return !/^thailand$/i.test(idbBasedIn(x)); }
+  // The country a record is based in as recorded ("" when none is recorded; the app's default is not used here)
+  function idbCountryOf(x){ return String(x.basedIn || x.country || "").trim(); }
+  // The country filter. Unset means Thailand for the Intelsense view (Thailand first), otherwise any country.
+  function idbLocNow(){ return state.idbLoc == null ? (idbCo() ? "thailand" : "") : state.idbLoc; }
+  function idbCountrySelectHtml(){
+    var loc = idbLocNow(), names = {};
+    investorDb.forEach(function(x){ var c = idbCountryOf(x); if (c) names[c.toLowerCase()] = c; });
+    var keys = Object.keys(names).sort(function(a, b){ var r = { thailand:0, singapore:1 }; return (r[a] ?? 2) - (r[b] ?? 2) || a.localeCompare(b); });
+    var opt = function(v, label){ return '<option value="' + attr(v) + '"' + (loc === v ? ' selected' : '') + '>' + esc(label) + '</option>'; };
+    return '<select id="idbLoc" class="filter app-select" aria-label="Country">' + opt("", "Any country")
+      + keys.map(function(k){ return opt(k, "Based in " + names[k]); }).join("") + opt("__none", "Country not recorded") + '</select>';
+  }
   function idbOpenFlags(x){ return (x.contacts || []).reduce(function(n, c){ return n + (c.checked ? 0 : (c.flags || []).length); }, 0); }
   function idbParseMoney(v){ v = String(v || "").replace(/,/g, "").trim(); var m = /^\$?\s*([\d.]+)\s*([kKmM])?/.exec(v); if (!m) return null; var n = parseFloat(m[1]); return Math.round(n * ({ k:1e3, m:1e6 }[(m[2] || "").toLowerCase()] || 1)); }
   function idbMatches(x){
@@ -19512,8 +19524,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     if (fo && !(x.focus || []).some(function(f){ return f.toLowerCase() === fo.toLowerCase(); })) return false;
     if (amt && x.ticketMin != null && x.ticketMax != null && (amt < x.ticketMin * 0.5 || amt > x.ticketMax * 2)) return false;   // within a sensible range of their usual ticket
     if (chk === "needs" && !idbOpenFlags(x)) return false;
-    if (state.idbLoc === "thailand" && idbAbroad(x)) return false;
-    if (state.idbLoc === "abroad" && !idbAbroad(x)) return false;
+    var loc = idbLocNow();
+    if (loc === "__none" && idbCountryOf(x)) return false;
+    if (loc && loc !== "__none" && idbCountryOf(x).toLowerCase() !== loc) return false;
     if (state.idbRoute === "pilot" && !x.pilot) return false;
     if (IDB_GROUP_NAMES[state.idbRoute]){ var fr = idbFor(x, idbCo()); if (!fr || (fr.groups || []).indexOf(state.idbRoute) < 0) return false; }
     if (chk === "checked" && (idbOpenFlags(x) || !(x.contacts || []).length)) return false;
@@ -19840,7 +19853,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + '<select id="idbFocus" class="filter app-select" aria-label="Focus"><option value="">Any focus</option>'+topFocus.map(function(f){ return '<option'+(f === state.idbFocus ? ' selected' : '')+'>'+esc(f)+'</option>'; }).join("")+'</select>'
         + '<input type="text" id="idbAmount" class="list-search" style="max-width:190px;" placeholder="Raising (e.g. 1.5M)" value="'+attr(state.idbAmount || "")+'" aria-label="Amount being raised, in USD">'
         + '<select id="idbCheck" class="filter app-select" aria-label="Contacts"><option value="">All contacts</option><option value="needs"'+(state.idbCheck === "needs" ? ' selected' : '')+'>Contacts to check</option><option value="checked"'+(state.idbCheck === "checked" ? ' selected' : '')+'>All checked</option></select>'
-        + '<select id="idbLoc" class="filter app-select" aria-label="Based in"><option value="">Based anywhere</option><option value="thailand"'+(state.idbLoc === "thailand" ? ' selected' : '')+'>Based in Thailand</option><option value="abroad"'+(state.idbLoc === "abroad" ? ' selected' : '')+'>Based outside Thailand</option></select>'
+        + idbCountrySelectHtml()
         + '<select id="idbRoute" class="filter app-select" aria-label="Route in"><option value="">Any route in</option><option value="pilot"'+(state.idbRoute === "pilot" ? ' selected' : '')+'>Pilot first (corporates)</option>'
           + (co ? (function(){ var have = {}; investorDb.forEach(function(x){ ((idbFor(x, co) || {}).groups || []).forEach(function(g){ have[g] = 1; }); });
               var ks = Object.keys(IDB_GROUP_NAMES).filter(function(k){ return have[k]; });
