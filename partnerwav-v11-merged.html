@@ -940,14 +940,23 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .ce-tag-community{ color:#5c6b7a; background:#eef1f4; border-color:#5c6b7a; }
   .ar-focus td{ background:var(--accent-soft); }
   .ce-tag-martech{ color:#a61e4d; background:#fbe9f0; border-color:#a61e4d; } .ce-tag-edtech{ color:#9a6700; background:#fff4d6; border-color:#9a6700; }
-  .idb-fit-chip{ display:inline-block; font-size:.72rem; font-weight:700; padding:2px 9px; border-radius:999px; color:#fff; vertical-align:middle; }
-  .idb-f1{ background:#0b7a3b; } .idb-f2{ background:#5aa02c; } .idb-f3{ background:#e8a317; color:#231f3a; } .idb-f4{ background:#e8590c; } .idb-f5{ background:#adb5bd; color:#231f3a; }
-  .idb-row.idb-f1{ box-shadow:inset 4px 0 0 #0b7a3b; } .idb-row.idb-f2{ box-shadow:inset 4px 0 0 #5aa02c; } .idb-row.idb-f3{ box-shadow:inset 4px 0 0 #e8a317; } .idb-row.idb-f4{ box-shadow:inset 4px 0 0 #e8590c; } .idb-row.idb-f5{ box-shadow:inset 4px 0 0 #adb5bd; }
   .idb-fit-legend{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0 0 12px; }
   .idb-fit-why{ display:flex; flex-direction:column; gap:4px; margin-top:8px; }
   .idb-research{ margin-top:10px; border-top:1px solid var(--line); padding-top:8px; } .idb-research summary{ cursor:pointer; font-weight:600; }
   .idb-verify{ font-size:.85rem; color:var(--warn); background:var(--warn-soft); border-radius:8px; padding:6px 8px; }
   .idb-check{ display:flex; flex-direction:column; gap:4px; border-left:3px solid var(--accent); padding-left:8px; }
+  /* Fit: tinted labels and a five-bar meter, in the app's own palette (no solid tile colours) */
+  .idb-fit-chip{ font-family:"IBM Plex Mono"; font-size:.66rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; padding:4px 8px; border-radius:6px; white-space:nowrap; display:inline-block; vertical-align:middle; }
+  .idb-fit-chip.idb-f1{ background:var(--good-soft); color:var(--good); }
+  .idb-fit-chip.idb-f2{ background:var(--accent2-soft); color:var(--accent2); }
+  .idb-fit-chip.idb-f3{ background:var(--warn-soft); color:var(--warn); }
+  .idb-fit-chip.idb-f4{ background:var(--bad-soft); color:var(--bad); }
+  .idb-fit-chip.idb-f5{ background:var(--surface-2); color:var(--ink-faint); border:1px solid var(--line); }
+  .idb-meter{ display:inline-flex; gap:2px; align-items:flex-end; vertical-align:middle; margin-right:6px; }
+  .idb-meter i{ display:block; width:5px; border-radius:2px; background:var(--line); }
+  .idb-meter i.on{ background:currentColor; }
+  .idb-meter.idb-f1{ color:var(--good); } .idb-meter.idb-f2{ color:var(--accent2); } .idb-meter.idb-f3{ color:var(--warn); } .idb-meter.idb-f4{ color:var(--bad); } .idb-meter.idb-f5{ color:var(--ink-faint); }
+  .idb-meter i:nth-child(1){ height:6px; } .idb-meter i:nth-child(2){ height:9px; } .idb-meter i:nth-child(3){ height:12px; } .idb-meter i:nth-child(4){ height:15px; } .idb-meter i:nth-child(5){ height:18px; }
   .idb-deals{ display:flex; flex-direction:column; gap:6px; margin-top:6px; } .idb-deal-list{ margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:.92rem; }
   .tec-detail{ display:flex; flex-direction:column; gap:8px; margin-top:6px; padding-top:10px; border-top:1px solid var(--line); }
   .tec-empty{ text-align:center; padding:32px 16px; color:var(--ink-soft); border:1px dashed var(--line); border-radius:16px; }
@@ -19555,8 +19564,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       + (x.pilot ? '<span class="badge accent" data-idb-pilot>Pilot first</span>' : '')
       + (f && (f.groups || []).length ? '<span class="badge accent" data-idb-groups>'+esc(IDB_GROUP_NAMES[f.groups[f.groups.length - 1]] || f.groups[0])+(f.groups.length > 1 ? ' +'+(f.groups.length - 1) : '')+'</span>' : '')
       + (fl ? '<span class="badge warn idb-warn-b">'+fl+' to check</span>' : '');
-    if (fitAn) tags = '<span class="idb-fit-chip ' + fitAn.cls + '" data-idb-fit title="' + attr(fitAn.reasons.join(' · ')) + '">' + esc(fitAn.label) + ' · ' + fitAn.score + '/9</span>' + tags;
-    return '<button type="button" class="idb-row'+(sel ? ' sel' : '')+(fitAn ? ' ' + fitAn.cls : '')+'" data-idb-row="'+attr(x.id)+'" data-idb-open="'+attr(x.id)+'" aria-pressed="'+sel+'">'
+    if (fitAn) tags = '<span class="idb-fit-chip ' + fitAn.cls + '" data-idb-fit title="' + attr(fitAn.reasons.join(' · ')) + '">' + idbFitMeterHtml(fitAn.cls) + esc(fitAn.label) + ' · ' + fitAn.score + '/9</span>' + tags;
+    return '<button type="button" class="idb-row'+(sel ? ' sel' : '')+'" data-idb-row="'+attr(x.id)+'" data-idb-open="'+attr(x.id)+'" aria-pressed="'+sel+'">'
       + '<span class="idb-row-main"><b class="idb-name">'+esc(x.name)+'</b><span class="idb-row-sub">'+esc(sub)+'</span></span>'
       + '<span class="idb-row-tags">'+tags+'</span>'
       + '<span class="idb-ticket'+(idbTicket(x) ? '' : ' none')+'">'+esc(idbTicket(x) || "Cheque n/a")+'</span></button>';
@@ -19741,16 +19750,22 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var band = IDB_FIT_BANDS.filter(function(b){ return s >= b[0]; })[0];
     return { score:s, cls:band[1], label:band[2], reasons:reasons, manual:manual, assumed:prof.assumed };
   }
+  // Five bars: more bars for a better fit, in the same colour as its label
+  function idbFitMeterHtml(cls){
+    var n = { "idb-f1":5, "idb-f2":4, "idb-f3":3, "idb-f4":2, "idb-f5":1 }[cls] || 1, h = "";
+    for (var i = 1; i <= 5; i++) h += '<i' + (i <= n ? ' class="on"' : '') + '></i>';
+    return '<span class="idb-meter ' + cls + '" aria-hidden="true">' + h + '</span>';
+  }
   function idbFitScore(x, co){ var a = idbFitAnalysis(x, co); return a ? a.score : 0; }
   function idbFitLegendHtml(co){
     var n = esc(idbCompany(co).name);
     return '<div class="idb-fit-legend" aria-label="Fit colours, most to least favourable"><b>Fit for ' + n + '</b> '
-      + '<span class="idb-fit-chip idb-f1">Very High</span><span class="idb-fit-chip idb-f2">High</span><span class="idb-fit-chip idb-f3">Medium</span><span class="idb-fit-chip idb-f4">Low</span><span class="idb-fit-chip idb-f5">Poor</span>'
+      + '<span class="idb-fit-chip idb-f1">' + idbFitMeterHtml('idb-f1') + 'Very High</span><span class="idb-fit-chip idb-f2">' + idbFitMeterHtml('idb-f2') + 'High</span><span class="idb-fit-chip idb-f3">' + idbFitMeterHtml('idb-f3') + 'Medium</span><span class="idb-fit-chip idb-f4">' + idbFitMeterHtml('idb-f4') + 'Low</span><span class="idb-fit-chip idb-f5">' + idbFitMeterHtml('idb-f5') + 'Poor</span>'
       + '<span class="field-note">Scored for the $' + (IDB_CO_PROFILE[co].raise / 1000000).toFixed(1) + 'M seed round. Most to least favourable, best first. A rating set by hand under Notes for ' + n + ' overrides the automatic score.</span></div>';
   }
   function idbFitWhyHtml(x, co){
     var a = idbFitAnalysis(x, co); if (!a) return '';
-    return '<div class="idb-fit-why"><span class="idb-fit-chip ' + a.cls + '">' + esc(a.label) + ' · ' + a.score + '/9</span> <b>Fit for ' + esc(idbCompany(co).name) + '</b>'
+    return '<div class="idb-fit-why"><span class="idb-fit-chip ' + a.cls + '">' + idbFitMeterHtml(a.cls) + esc(a.label) + ' · ' + a.score + '/9</span> <b>Fit for ' + esc(idbCompany(co).name) + '</b>'
       + '<div class="field-note">' + esc(a.reasons.join(" · ")) + '</div>' + (a.manual ? '' : '<div class="field-note">' + esc(a.assumed) + '</div>') + '</div>';
   }
   function idbDetailHtml(x){
