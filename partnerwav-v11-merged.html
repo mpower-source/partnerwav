@@ -946,6 +946,8 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   .idb-fit-legend{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0 0 12px; }
   .idb-fit-why{ display:flex; flex-direction:column; gap:4px; margin-top:8px; }
   .idb-research{ margin-top:10px; border-top:1px solid var(--line); padding-top:8px; } .idb-research summary{ cursor:pointer; font-weight:600; }
+  .idb-verify{ font-size:.85rem; color:var(--warn); background:var(--warn-soft); border-radius:8px; padding:6px 8px; }
+  .idb-check{ display:flex; flex-direction:column; gap:4px; border-left:3px solid var(--accent); padding-left:8px; }
   .idb-deals{ display:flex; flex-direction:column; gap:6px; margin-top:6px; } .idb-deal-list{ margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:.92rem; }
   .tec-detail{ display:flex; flex-direction:column; gap:8px; margin-top:6px; padding-top:10px; border-top:1px solid var(--line); }
   .tec-empty{ text-align:center; padding:32px 16px; color:var(--ink-soft); border:1px dashed var(--line); border-radius:16px; }
@@ -19579,6 +19581,102 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
         + (items.length ? items.map(function(x){ return idbRowHtml(x) + (state.idbOpen === x.id ? '<div class="idb-inline" id="idbPanel">'+idbDetailHtml(x)+'</div>' : ''); }).join("") : '<div class="idb-col-empty">None match these filters.</div>')
         + '</section>'; }).join("")+'</div>';
   }
+  // ----- Confirming an investor with the firm: the questions we go through with each firm. Saved on the record, so the
+  // database stays up to date. Ticking the last box marks the record confirmed; until then it says "confirm directly".
+  var INV_CHECK_STEPS = [
+    { title:"Who we spoke with", intro:"Who was on the call, and when.", fields:[
+      { k:"ck_name", type:"text", label:"Name" }, { k:"ck_title", type:"text", label:"Role" }, { k:"ck_date", type:"text", label:"Date of the conversation", ph:"e.g. 17 Oct 2026" } ] },
+    { title:"What you invest in", fields:[
+      { k:"ck_sectors", type:"multi", label:"Sectors you back", options:["AI","Fintech","Telecom","Enterprise software","Healthcare","Education","eCommerce","Real estate","Other"] },
+      { k:"ck_focus_other", type:"text", label:"Other focus (comma separated)", ph:"e.g. Climate tech, Mobility" } ] },
+    { title:"How you invest", fields:[
+      { k:"ck_stages", type:"multi", label:"Stages you invest at", options:["Pre-seed","Seed","Series A","Series B+","Growth"] },
+      { k:"ck_cheque", type:"text", label:"Typical cheque (min - max)", ph:"e.g. $100K - $1M" },
+      { k:"ck_role", type:"single", label:"Your usual role", options:["Lead","Co-lead","Follow-on only","Any"] },
+      { k:"ck_geo", type:"single", label:"Do you invest outside Thailand and Singapore?", options:["No","Yes, sometimes","Yes, regularly"] } ] },
+    { title:"What you need before investing", intro:"Ask about AI-specific needs too.", fields:[
+      { k:"ck_requirements", type:"textarea", label:"Requirements before you invest" },
+      { k:"ck_traction", type:"textarea", label:"Traction you look for (revenue, customers, growth)" },
+      { k:"ck_ai", type:"textarea", label:"AI requirements (data residency, model governance, security, evaluation)" },
+      { k:"ck_timing", type:"text", label:"Next investment window" } ] },
+    { title:"How we can help", intro:"Tell them how PartnerWAV prepares AI and tech companies for investment.", fields:[
+      { k:"ck_interest", type:"single", label:"Would you like to meet the companies we prepare?", options:["Yes","Later","No"] },
+      { k:"ck_notes", type:"textarea", label:"Notes from the conversation" } ] },
+    { title:"Confirm", intro:"Tick the box once they have confirmed what is on this record.", fields:[
+      { k:"ck_confirmed", type:"consent", label:"They confirmed these details are correct" } ] }
+  ];
+  var ICK = null;
+  function icFieldHtml(f, d){
+    var v = d[f.k];
+    if (f.type === "text") return '<div class="field-row"><label for="ick_' + f.k + '">' + esc(f.label) + '</label><input type="text" id="ick_' + f.k + '" data-ick-k="' + f.k + '" value="' + attr(v || "") + '" placeholder="' + attr(f.ph || "") + '"></div>';
+    if (f.type === "textarea") return '<div class="field-row"><label for="ick_' + f.k + '">' + esc(f.label) + '</label><textarea id="ick_' + f.k + '" data-ick-k="' + f.k + '" rows="3" maxlength="1500">' + esc(v || "") + '</textarea></div>';
+    if (f.type === "single") return '<fieldset class="va-set"><legend>' + esc(f.label) + '</legend><div class="va-opts">' + f.options.map(function(o){ return '<label class="va-opt' + (v === o ? ' on' : '') + '"><input type="radio" name="ick_' + f.k + '" data-ick-k="' + f.k + '" data-ick-type="single" value="' + attr(o) + '"' + (v === o ? ' checked' : '') + '><span><b>' + esc(o) + '</b></span></label>'; }).join("") + '</div></fieldset>';
+    if (f.type === "multi") return '<fieldset class="va-set"><legend>' + esc(f.label) + ' <span class="field-note">(choose any)</span></legend><div class="va-opts">' + f.options.map(function(o){ var on = (v || []).indexOf(o) > -1; return '<label class="va-opt' + (on ? ' on' : '') + '"><input type="checkbox" data-ick-k="' + f.k + '" data-ick-type="multi" value="' + attr(o) + '"' + (on ? ' checked' : '') + '><span><b>' + esc(o) + '</b></span></label>'; }).join("") + '</div></fieldset>';
+    if (f.type === "consent") return '<label class="cfg-check"><input type="checkbox" data-ick-k="' + f.k + '" data-ick-type="consent"' + (v ? ' checked' : '') + '> <span>' + esc(f.label) + '</span></label>';
+    return '';
+  }
+  function icBody(){ return document.querySelector("#modalBackdrop .ick-body"); }
+  // Keeps what is typed or ticked on this step before moving on
+  function icRead(){
+    var box = icBody(); if (!box || !ICK) return;
+    var multi = {};
+    box.querySelectorAll("[data-ick-k]").forEach(function(el){
+      var k = el.getAttribute("data-ick-k"), t = el.getAttribute("data-ick-type");
+      if (t === "multi"){ multi[k] = multi[k] || []; if (el.checked) multi[k].push(el.value); }
+      else if (t === "single"){ if (el.checked) ICK.data[k] = el.value; }
+      else if (t === "consent") ICK.data[k] = el.checked;
+      else ICK.data[k] = el.value;
+    });
+    Object.keys(multi).forEach(function(k){ ICK.data[k] = multi[k]; });
+  }
+  function icRender(){
+    var box = icBody(); if (!box || !ICK) return;
+    var st = INV_CHECK_STEPS[ICK.step], last = ICK.step === INV_CHECK_STEPS.length - 1;
+    box.innerHTML = '<div class="va-stepline">Step ' + (ICK.step + 1) + ' of ' + INV_CHECK_STEPS.length + '</div><h3 class="va-title">' + esc(st.title) + '</h3>'
+      + (st.intro ? '<p class="field-note" style="margin:0;">' + esc(st.intro) + '</p>' : '')
+      + '<div class="va-fields">' + st.fields.map(function(f){ return icFieldHtml(f, ICK.data); }).join("") + '</div>'
+      + '<div class="va-nav">' + (ICK.step > 0 ? '<button type="button" class="btn secondary" data-ick-back>Back</button>' : '<span></span>')
+      + '<button type="button" class="btn primary" ' + (last ? 'data-ick-save>Save confirmation' : 'data-ick-next>Next') + '</button></div>';
+  }
+  function idbCheckOpen(id){
+    var x = investorDb.filter(function(r){ return r.id === id; })[0]; if (!x) return;
+    ICK = { id:id, step:0, data: Object.assign({ ck_sectors:[], ck_stages:[] }, (x.check && x.check.answers) || {}) };
+    openModal('<div class="modal-head"><h2>Confirm ' + esc(x.name) + '</h2><button class="modal-close" aria-label="Close">×</button></div><div class="modal-body ick-body"></div>');
+    icRender();
+  }
+  function idbCheckSave(){
+    var x = investorDb.filter(function(r){ return r.id === ICK.id; })[0]; if (!x) return;
+    var d = ICK.data, at = new Date().toISOString().slice(0, 10), sectorName = { "Enterprise software":"Enterprise" };
+    var focus = (d.ck_sectors || []).map(function(v){ return sectorName[v] || v; }).concat(String(d.ck_focus_other || "").split(",").map(function(v){ return v.trim(); }).filter(Boolean));
+    if (focus.length) x.focus = focus.filter(function(v, i){ return focus.indexOf(v) === i; });
+    if ((d.ck_stages || []).length) x.stages = d.ck_stages.slice();
+    if (d.ck_cheque){
+      var parts = String(d.ck_cheque).split(/[-–]/), lo = idbParseMoney(parts[0]), hi = parts[1] ? idbParseMoney(parts[1]) : lo;
+      if (lo != null) x.ticketMin = lo; if (hi != null) x.ticketMax = hi; x.ticketText = String(d.ck_cheque).trim();
+    }
+    x.check = { answers: d, at: at };
+    if (d.ck_confirmed){ x.verified = true; x.verifiedAt = at; }
+    saveIdb(); closeModal(); ICK = null; renderInvestorDb(true);
+    toast(d.ck_confirmed ? "Confirmed with " + x.name : "Saved. It stays marked to confirm until the last box is ticked");
+  }
+  // The questionnaire sits in a modal, outside the investor screen, so its buttons have their own listener
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t || !ICK) return;
+    if (t.closest("[data-ick-next]")){ icRead(); ICK.step++; icRender(); return; }
+    if (t.closest("[data-ick-back]")){ icRead(); ICK.step--; icRender(); return; }
+    if (t.closest("[data-ick-save]")){ icRead(); idbCheckSave(); return; }
+  });
+  // Shown in the details: the note to confirm, and what the firm told us
+  function idbCheckBlockHtml(x){
+    var out = '';
+    if (!x.verified) out += '<div class="idb-verify">Terms from web search: confirm directly with the firm.</div>';
+    if (x.check && x.check.answers){
+      var a = x.check.answers, rows = [["Requirements before investing", a.ck_requirements], ["Traction they look for", a.ck_traction], ["AI requirements", a.ck_ai], ["Next window", a.ck_timing], ["Would meet our companies", a.ck_interest], ["Notes", a.ck_notes]].filter(function(r){ return r[1]; });
+      out += '<div class="idb-check"><b>' + (x.verified ? 'Confirmed with the firm' : 'Talked with the firm (not yet confirmed)') + ' on ' + esc(x.check.at || "") + '</b>'
+        + rows.map(function(r){ return '<div class="field-note"><b>' + esc(r[0]) + ':</b> ' + esc(r[1]) + '</div>'; }).join("") + '</div>';
+    }
+    return out;
+  }
   // The source line reads the same on every investor record
   var IDB_SOURCE_TEXT = "PartnerWAV web search, 16 Oct 2026";
   function idbSourceText(x){ return "PartnerWAV web search, " + (x.searchedOn || "16 Oct 2026"); }
@@ -19661,7 +19759,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     return '<div class="idb-detail" data-idb-detail="'+attr(x.id)+'">'
       + '<div class="idb-dp-head"><div style="min-width:0;" class="field-note">'+(org ? 'Part of <a href="#" data-idb-open="'+attr(org.id)+'">'+esc(org.name)+'</a>' : esc(x.typeLabel || x.type))+'</div>'
         + '<button type="button" class="btn ghost xs idb-dp-close" data-idb-close aria-label="Close details">Close</button></div>'
-      + (co && idbFitAnalysis(x, co) ? idbFitWhyHtml(x, co) : '')
+      + (idbCo() && idbFitAnalysis(x, idbCo()) ? idbFitWhyHtml(x, idbCo()) : '')
       + '<div class="idb-dp-key"><span><b>Cheque</b>'+esc(idbTicket(x) || "Not known")+'</span><span><b>Stages</b>'+esc((x.stages || []).join(", ") || "Not known")+'</span></div>'
       + ((x.focus || []).length ? '<div class="meet-chips idb-chips">'+x.focus.slice(0, 8).map(function(f){ return '<span class="badge neutral">'+esc(f)+'</span>'; }).join("")+'</div>' : '')
       + ((li || site) ? '<div class="idb-actions">'+(li ? '<a class="btn idb-li xs" href="'+attr(li)+'" target="_blank" rel="noopener noreferrer">LinkedIn</a>' : '')+(site ? '<a class="btn secondary xs" href="'+attr(site)+'" target="_blank" rel="noopener noreferrer">Website</a>' : '')+'</div>' : '')
@@ -19673,8 +19771,9 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
           + idbForHtml(x)
           + (x.notes ? '<div class="field-note cp-notes"><b>Notes:</b> '+esc(x.notes)+'</div>' : '')
           + '<div class="idb-contacts">'+((x.contacts || []).length ? x.contacts.map(function(c, i){ return idbContactHtml(x, c, i); }).join("") : '<span class="field-note">No contacts yet.</span>')+'</div>'
+          + idbCheckBlockHtml(x)
           + '<div class="field-note">Source: '+esc(idbSourceText(x))+(x.tags && x.tags.length ? ' · Tags: '+esc(x.tags.join(", ")) : '')+'</div>'
-          + '<div style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="btn secondary xs" data-idb-edit="'+attr(x.id)+'">Edit</button><button type="button" class="btn ghost xs" data-idb-delete="'+attr(x.id)+'">Remove</button></div>'
+          + '<div style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="btn primary xs" data-idb-check-start="'+attr(x.id)+'">Confirm with the firm</button><button type="button" class="btn secondary xs" data-idb-edit="'+attr(x.id)+'">Edit</button><button type="button" class="btn ghost xs" data-idb-delete="'+attr(x.id)+'">Remove</button></div>'
           + idbResearchFooter(x)
       + '</div>';
   }
@@ -19926,6 +20025,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
       var pn = document.getElementById("idbPanel"), rw = document.querySelector('.idb-row[data-idb-row="' + oid + '"]');
       if (pn && rw && rw.getBoundingClientRect().top < 70 && rw.scrollIntoView) rw.scrollIntoView({ block:"start" }); return; }
     if (t.closest("[data-idb-new]")){ state.idbEdit = "new"; state.idbImport = false; renderInvestorDb(true); var nm = document.getElementById("idbName"); if (nm) nm.focus(); return; }
+    if ((b = t.closest("[data-idb-check-start]"))){ idbCheckOpen(b.getAttribute("data-idb-check-start")); return; }
     if ((b = t.closest("[data-idb-edit]"))){ state.idbEdit = b.getAttribute("data-idb-edit"); state.idbImport = false; renderInvestorDb(true); var fm = document.getElementById("idbForm"); if (fm && fm.scrollIntoView) fm.scrollIntoView({ block:"start" }); return; }
     if (t.closest("[data-idb-cancel]")){ state.idbEdit = null; renderInvestorDb(true); return; }
     if ((b = t.closest("[data-idb-stage]")) || (b = t.closest("[data-idb-cogroup]"))){ b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); return; }
