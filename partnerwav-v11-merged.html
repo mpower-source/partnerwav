@@ -19548,7 +19548,7 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
   }
   // One row per investor, all the same size; the chosen one opens in the details panel (beside the list on desktop, over it on a phone)
   function idbRowHtml(x){
-    var sel = state.idbOpen === x.id, fl = idbOpenFlags(x), f = idbFor(x, idbCo()), fitAn = idbFitAnalysis(x, idbCo());
+    var sel = state.idbOpen === x.id, fl = idbOpenFlags(x), f = idbFor(x, idbCo()), fitAn = x.verified ? idbFitAnalysis(x, idbCo()) : null;   // colours only once confirmed with the firm
     var sub = [x.typeLabel || x.type, x.city && x.city !== idbBasedIn(x) ? x.city : "", idbAbroad(x) ? "" : idbBasedIn(x)].filter(Boolean).join(" · ");
     var tags = (idbAbroad(x) ? '<span class="badge warn" data-idb-abroad>Based in '+esc(idbBasedIn(x))+'</span>' : '')
       + (x.parentCountry ? '<span class="badge neutral" data-idb-parent title="Run from Thailand, with a parent company abroad">Parent: '+esc(x.parentCountry)+'</span>' : '')
@@ -19741,16 +19741,17 @@ button.avatar{ border:0; cursor:pointer; font-family:inherit; }
     var band = IDB_FIT_BANDS.filter(function(b){ return s >= b[0]; })[0];
     return { score:s, cls:band[1], label:band[2], reasons:reasons, manual:manual, assumed:prof.assumed };
   }
-  function idbFitScore(x, co){ var a = idbFitAnalysis(x, co); return a ? a.score : 0; }
+  // Ranking uses the fit only once the firm has confirmed the record; until then the list keeps its normal order
+  function idbFitScore(x, co){ var a = idbFitAnalysis(x, co); return (a && x.verified) ? a.score : 0; }
   function idbFitLegendHtml(co){
     var n = esc(idbCompany(co).name);
     return '<div class="idb-fit-legend" aria-label="Fit colours, most to least favourable"><b>Fit for ' + n + '</b> '
       + '<span class="idb-fit-chip idb-f1">Very High</span><span class="idb-fit-chip idb-f2">High</span><span class="idb-fit-chip idb-f3">Medium</span><span class="idb-fit-chip idb-f4">Low</span><span class="idb-fit-chip idb-f5">Poor</span>'
-      + '<span class="field-note">Scored for the $' + (IDB_CO_PROFILE[co].raise / 1000000).toFixed(1) + 'M seed round. Most to least favourable, best first. A rating set by hand under Notes for ' + n + ' overrides the automatic score.</span></div>';
+      + '<span class="field-note">Scored for the $' + (IDB_CO_PROFILE[co].raise / 1000000).toFixed(1) + 'M seed round. Colours and ranking apply to investors confirmed with the firm; others show a provisional score from current information. A rating set by hand under Notes for ' + n + ' overrides the automatic score.</span></div>';
   }
   function idbFitWhyHtml(x, co){
     var a = idbFitAnalysis(x, co); if (!a) return '';
-    return '<div class="idb-fit-why"><span class="idb-fit-chip ' + a.cls + '">' + esc(a.label) + ' · ' + a.score + '/9</span> <b>Fit for ' + esc(idbCompany(co).name) + '</b>'
+    return '<div class="idb-fit-why"><span class="idb-fit-chip ' + a.cls + '">' + (x.verified ? '' : 'Provisional: ') + esc(a.label) + ' · ' + a.score + '/9</span> <b>Fit for ' + esc(idbCompany(co).name) + '</b>'
       + '<div class="field-note">' + esc(a.reasons.join(" · ")) + '</div>' + (a.manual ? '' : '<div class="field-note">' + esc(a.assumed) + '</div>') + '</div>';
   }
   function idbDetailHtml(x){
